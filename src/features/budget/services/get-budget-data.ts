@@ -14,6 +14,7 @@ import {
   DEFAULT_FORMULA_CONFIG,
 } from "./formula-engine"
 import { computeTotals } from "../lib/totals"
+import { dedupCustomCardMembers } from "../lib/custom-card-members"
 import { periodFromDate } from "@/lib/financial"
 
 // Chaves de dados: nomes de grupos vindos do banco (pt), usados só para casar emoji.
@@ -374,6 +375,7 @@ export async function getBudgetData(
   // 6.5 Add aggregated Custom Cards
   const customCards = formulaConfig.customCards || []
   for (const cCard of customCards) {
+    const members = dedupCustomCardMembers(cCard, groups)
     let spent = 0
 
     // Referência = início do range; getBudgetHistory exclui o próprio mês da
@@ -381,7 +383,7 @@ export async function getBudgetData(
     const historyReferenceDate = filterFrom
     const historyPromises: Promise<any>[] = []
 
-    for (const catId of cCard.categoryIds) {
+    for (const catId of members.categoryIds) {
       const cat = groups.flatMap((g) => g.categories).find((c) => c.id === catId)
       if (cat) {
         spent += spentCatMap.get(cat.code) || 0
@@ -390,7 +392,7 @@ export async function getBudgetData(
         )
       }
     }
-    for (const groupId of cCard.groupIds) {
+    for (const groupId of members.groupIds) {
       const grp = groups.find((g) => g.id === groupId)
       if (grp) {
         spent += spentGroupMap.get(grp.code) || 0
@@ -444,11 +446,11 @@ export async function getBudgetData(
     }
 
     let paidForCard = 0
-    for (const catId of cCard.categoryIds) {
+    for (const catId of members.categoryIds) {
       const cat = groups.flatMap((g) => g.categories).find((c) => c.id === catId)
       if (cat) paidForCard += paidCatMap.get(cat.code) || 0
     }
-    for (const groupId of cCard.groupIds) {
+    for (const groupId of members.groupIds) {
       const grp = groups.find((g) => g.id === groupId)
       if (grp) paidForCard += paidGroupMap.get(grp.code) || 0
     }
