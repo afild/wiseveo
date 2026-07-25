@@ -11,7 +11,7 @@ export type FormulaId =
 export interface CustomFormulaDefinition {
   id: string
   name: string
-  expression: string // e.g. "([MEDIA] + [DESVIO_P]) * (1 - [CONTENCAO]/100)"
+  expression: string // ex.: "([MEDIA] + [DESVIO_P]) * (1 - [CONTENCAO])" — [CONTENCAO]/[MARGEM] já chegam como fração (10% → 0.10)
 }
 
 export interface FormulaParams {

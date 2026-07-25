@@ -215,16 +215,23 @@ function evaluateCustomExpression(
   const u_receita = history.monthlyIncome[0] ?? 0
 
   let parsedExpr = expression.toUpperCase()
-  
-  parsedExpr = parsedExpr.replace(/\[MEDIA\]/g, media.toString())
-  parsedExpr = parsedExpr.replace(/\[MAX\]/g, max.toString())
-  parsedExpr = parsedExpr.replace(/\[MIN\]/g, min.toString())
-  parsedExpr = parsedExpr.replace(/\[DESVIO_P\]/g, desvio_p.toString())
-  parsedExpr = parsedExpr.replace(/\[ULTIMO\]/g, ultimo.toString())
-  parsedExpr = parsedExpr.replace(/\[M_RECEITAS\]/g, m_receitas.toString())
-  parsedExpr = parsedExpr.replace(/\[U_RECEITA\]/g, u_receita.toString())
-  parsedExpr = parsedExpr.replace(/\[CONTENCAO\]/g, (containment / 100).toString())
-  parsedExpr = parsedExpr.replace(/\[MARGEM\]/g, (margin / 100).toString())
+
+  // Exponenciação passaria no regex de segurança (** são dois '*'), mas
+  // produz Infinity trivialmente — bloqueada.
+  if (parsedExpr.includes("**")) {
+    console.error("Blocked exponent operator in custom formula:", parsedExpr)
+    return 0
+  }
+
+  parsedExpr = parsedExpr.replace(/\[MEDIA\]/g, media.toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[MAX\]/g, max.toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[MIN\]/g, min.toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[DESVIO_P\]/g, desvio_p.toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[ULTIMO\]/g, ultimo.toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[M_RECEITAS\]/g, m_receitas.toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[U_RECEITA\]/g, u_receita.toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[CONTENCAO\]/g, (containment / 100).toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[MARGEM\]/g, (margin / 100).toFixed(6))
 
   // Secure eval: only digits, Math operators, dots, parens, spaces
   const safeRegex = /^[\d.+\-*/\(\)\s]+$/
@@ -236,7 +243,7 @@ function evaluateCustomExpression(
   try {
     // eslint-disable-next-line no-new-func
     const result = new Function(`return ${parsedExpr}`)()
-    return isNaN(result) ? 0 : Number(result)
+    return Number.isFinite(result) ? Number(result) : 0
   } catch (error) {
     console.error("Failed to evaluate formula:", parsedExpr, error)
     return 0

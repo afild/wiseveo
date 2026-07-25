@@ -354,11 +354,11 @@
       "save": "Salvar Mecanismo",
       "title": "Mecanismo Matemático",
       "variables": {
-        "containment": "Input de contenção % da UI (ex: 5%).",
+        "containment": "Contenção como fração — 10% vira 0,10; use direto: (1 - [CONTENCAO]).",
         "incomeAvg": "Média total de receitas no período.",
         "lastIncome": "Receita do último mês.",
         "lastMonth": "Valor fechado do mês anterior.",
-        "margin": "Margem customizável.",
+        "margin": "Margem como fração — 10% vira 0,10.",
         "max": "Gasto máximo histórico.",
         "mean": "Média dos gastos nos últimos meses.",
         "min": "Gasto mínimo histórico.",

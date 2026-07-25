@@ -354,11 +354,11 @@
       "save": "Save Mechanism",
       "title": "Math Mechanism",
       "variables": {
-        "containment": "Containment % input from the UI (e.g. 5%).",
+        "containment": "Containment as a fraction — 10% becomes 0.10; use directly: (1 - [CONTENCAO]).",
         "incomeAvg": "Average total income in the period.",
         "lastIncome": "Last month's income.",
         "lastMonth": "Closed amount of the previous month.",
-        "margin": "Customizable margin.",
+        "margin": "Margin as a fraction — 10% becomes 0.10.",
         "max": "Highest historical spending.",
         "mean": "Average spending over recent months.",
         "min": "Lowest historical spending.",
