@@ -36,8 +36,8 @@ export async function computeBudgetPacing(
   const pacing = monthPct > 0 ? usagePct / monthPct : 0
 
   let projectedOverrunDay: number | null = null
-  if (pacing > 1 && data.totalSpent > 0) {
-    const dailyRate = data.totalSpent / dayOfMonth
+  if (pacing > 1 && data.totalPaid > 0) {
+    const dailyRate = data.totalPaid / dayOfMonth
     const overrunDay = Math.ceil(data.totalLimit / dailyRate)
     projectedOverrunDay = overrunDay <= daysInMonth ? overrunDay : null
   }

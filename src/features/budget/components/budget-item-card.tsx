@@ -216,8 +216,8 @@ export function BudgetItemCard({
           </div>
           <SplitProgressBar paidPct={paidPct} totalPct={pct} delay={index * 60} />
 
-          {/* Values — 3 colunas: Orçado | Pago | Agendado */}
-          <div className="grid grid-cols-3 gap-1 pt-1">
+          {/* Values — 3 colunas (+ 4ª condicional Projetado): Orçado | Pago | Agendado | Projetado? */}
+          <div className={`grid gap-1 pt-1 ${item.projectedAmount ? "@[300px]/card:grid-cols-4 grid-cols-3" : "grid-cols-3"}`}>
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] text-muted-foreground">{t("itemCard.budgeted")}</span>
               <span className="text-xs font-medium tabular-nums">
@@ -239,6 +239,14 @@ export function BudgetItemCard({
                 {monetary.formatMonetaryValue(item.scheduledAmount)}
               </span>
             </div>
+            {item.projectedAmount ? (
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] text-muted-foreground">{t("itemCard.projected")}</span>
+                <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                  {monetary.formatMonetaryValue(item.projectedAmount)}
+                </span>
+              </div>
+            ) : null}
           </div>
         </div>
       </CardContent>
