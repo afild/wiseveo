@@ -4,18 +4,18 @@ export const CARD_SIZE = {
 }
 
 export const cardTheme = {
-  background: "#0a0c10",
-  gradientStart: "#11141d",
-  gradientEnd: "#0a0c10",
-  panel: "rgba(27, 31, 42, 0.7)",
-  panelSoft: "rgba(36, 42, 54, 0.5)",
-  foreground: "#f7f8fb",
-  muted: "#94a3b8",
-  border: "rgba(255, 255, 255, 0.08)",
-  positive: "#10b981",
-  negative: "#ef4444",
-  warning: "#f59e0b",
-  accent: "#3b82f6",
+  background: "#0B1220",
+  gradientStart: "#111827",
+  gradientEnd: "#0B1220",
+  panel: "rgba(26, 36, 54, 0.7)",
+  panelSoft: "rgba(18, 54, 66, 0.5)",
+  foreground: "#E6EBF2",
+  muted: "#8B99AE",
+  border: "#273244",
+  positive: "#4ADE80",
+  negative: "#FCA5A5",
+  warning: "#FBBF24",
+  accent: "#22D3EE",
 }
 
 export function toneColor(tone?: "default" | "positive" | "negative" | "warning") {
