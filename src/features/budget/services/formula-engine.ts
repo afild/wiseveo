@@ -116,7 +116,9 @@ function applyContainment(value: number, containment: number): number {
 
 export function clampParamValue(variable: FormulaVariable, raw: number): number {
   if (!Number.isFinite(raw)) return variable.defaultValue
-  return Math.min(variable.max, Math.max(variable.min, raw))
+  const clamped = Math.min(variable.max, Math.max(variable.min, raw))
+  // Params de tipo "number" (ex: months) devem ser inteiros; frações causam Array(3.5)→RangeError.
+  return variable.type === "number" ? Math.round(clamped) : clamped
 }
 
 /**

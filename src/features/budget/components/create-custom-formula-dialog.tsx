@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { Save, Loader2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -46,6 +46,14 @@ export function CreateCustomFormulaDialog({
   const [name, setName] = useState(editPreset?.name || "")
   const [expression, setExpression] = useState(editPreset?.expression || "")
   const [validationError, setValidationError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      setName(editPreset?.name ?? "")
+      setExpression(editPreset?.expression ?? "")
+      setValidationError(null)
+    }
+  }, [open, editPreset])
 
   const handleSave = () => {
     if (!name.trim() || !expression.trim()) return

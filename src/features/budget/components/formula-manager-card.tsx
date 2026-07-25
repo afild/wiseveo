@@ -88,6 +88,7 @@ export function FormulaManagerCard({
       }
       await saveBudgetFormula(newConfig)
       setSelectedId(newConfig.global.id)
+      setParams(newConfig.global.params)
       router.refresh()
     })
   }
