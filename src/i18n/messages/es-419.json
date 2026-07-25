@@ -395,32 +395,51 @@
     },
     "formulas": {
       "descriptions": {
+        "active_avg": "Promedio solo de los meses con gasto — ideal para gastos esporádicos",
+        "banded_avg": "Promedio de los últimos meses, limitado por un piso y un techo que defines",
+        "declining_target": "Reduce el límite gradualmente cada mes para ayudar a recortar un gasto",
         "fixed_target": "Valor fijo definido manualmente",
         "historical_max": "Máximo histórico con margen de seguridad",
         "income_pct": "Porcentaje del ingreso promedio del período",
+        "median": "El valor de tu mes típico — inmune a meses fuera de lo normal",
         "moving_avg": "Promedio ponderado con más peso en los meses recientes",
-        "simple_avg": "Promedio de gastos de los últimos N meses"
+        "percentile_n": "Un límite que cubriría la mayoría de tus últimos meses",
+        "simple_avg": "Promedio de gastos de los últimos N meses",
+        "trimmed_mean": "Promedio ignorando los meses más extremos del período"
       },
       "names": {
+        "active_avg": "Promedio de Meses Activos",
+        "banded_avg": "Promedio con Piso y Techo",
+        "declining_target": "Meta Decreciente",
         "fixed_target": "Meta Fija",
         "historical_max": "Límite Histórico",
         "income_pct": "% del Ingreso",
+        "median": "Mediana",
         "moving_avg": "Promedio Móvil",
+        "percentile_n": "Percentil del Historial",
         "simple_avg": "Promedio Simple",
+        "trimmed_mean": "Media Recortada",
         "unknown": "Fórmula desconocida"
       },
       "summary": {
         "containment": "{value} contención",
         "margin": "+{value}% margen",
-        "months": "{count, plural, one {# mes} other {# meses}}"
+        "months": "{count, plural, one {# mes} other {# meses}}",
+        "reduction": "-{value}%/mes",
+        "trim": "corte {value}%"
       },
       "variables": {
         "amount": "Valor",
+        "ceilingAmount": "Techo",
         "containment": "Contención",
+        "floorAmount": "Piso",
         "margin": "Margen",
         "months": "Meses",
         "monthsIncome": "Meses de ingreso",
-        "percentage": "Porcentaje"
+        "percentage": "Porcentaje",
+        "percentile": "Percentil",
+        "reduction": "Reducción mensual",
+        "trimPct": "Recorte"
       }
     },
     "itemCard": {

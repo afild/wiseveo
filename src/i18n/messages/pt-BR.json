@@ -395,32 +395,51 @@
     },
     "formulas": {
       "descriptions": {
+        "active_avg": "Média apenas dos meses em que houve gasto — ideal para despesas esporádicas",
+        "banded_avg": "Média dos últimos meses, limitada por um piso e um teto que você define",
+        "declining_target": "Reduz o limite gradualmente todo mês para ajudar a cortar um gasto",
         "fixed_target": "Valor fixo definido manualmente",
         "historical_max": "Máximo histórico com margem de segurança",
         "income_pct": "Percentual da receita média do período",
+        "median": "O valor do seu mês típico — imune a meses fora do padrão",
         "moving_avg": "Média ponderada com mais peso nos meses recentes",
-        "simple_avg": "Média dos gastos dos últimos N meses"
+        "percentile_n": "Um limite que cobriria a maior parte dos seus últimos meses",
+        "simple_avg": "Média dos gastos dos últimos N meses",
+        "trimmed_mean": "Média ignorando os meses mais extremos do período"
       },
       "names": {
+        "active_avg": "Média dos Meses Ativos",
+        "banded_avg": "Média com Piso e Teto",
+        "declining_target": "Meta Decrescente",
         "fixed_target": "Meta Fixa",
         "historical_max": "Limite Histórico",
         "income_pct": "% da Receita",
+        "median": "Mediana",
         "moving_avg": "Média Móvel",
+        "percentile_n": "Percentil do Histórico",
         "simple_avg": "Média Simples",
+        "trimmed_mean": "Média Aparada",
         "unknown": "Fórmula desconhecida"
       },
       "summary": {
         "containment": "{value} contenção",
         "margin": "+{value}% margem",
-        "months": "{count, plural, one {# mês} other {# meses}}"
+        "months": "{count, plural, one {# mês} other {# meses}}",
+        "reduction": "-{value}%/mês",
+        "trim": "corte {value}%"
       },
       "variables": {
         "amount": "Valor",
+        "ceilingAmount": "Teto",
         "containment": "Contenção",
+        "floorAmount": "Piso",
         "margin": "Margem",
         "months": "Meses",
         "monthsIncome": "Meses de receita",
-        "percentage": "Percentual"
+        "percentage": "Percentual",
+        "percentile": "Percentil",
+        "reduction": "Redução mensal",
+        "trimPct": "Corte"
       }
     },
     "itemCard": {

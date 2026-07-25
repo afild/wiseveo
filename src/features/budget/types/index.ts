@@ -19,7 +19,12 @@ export interface FormulaParams {
   containment?: number
   percentage?: number
   amount?: number
+  ceilingAmount?: number
+  floorAmount?: number
   margin?: number
+  percentile?: number
+  reduction?: number
+  trimPct?: number
 }
 
 export interface FormulaConfig {

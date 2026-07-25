@@ -395,32 +395,51 @@
     },
     "formulas": {
       "descriptions": {
+        "active_avg": "Average of months with spending only — ideal for irregular expenses",
+        "banded_avg": "Average of recent months, bounded by a floor and ceiling you define",
+        "declining_target": "Gradually reduces the limit each month to help cut a recurring expense",
         "fixed_target": "Fixed amount set manually",
         "historical_max": "Historical maximum with a safety margin",
         "income_pct": "Percentage of the period's average income",
+        "median": "Your typical month's value — immune to outlier months",
         "moving_avg": "Weighted average favoring recent months",
-        "simple_avg": "Average spending over the last N months"
+        "percentile_n": "A limit that would cover most of your recent months",
+        "simple_avg": "Average spending over the last N months",
+        "trimmed_mean": "Average excluding the most extreme months in the period"
       },
       "names": {
+        "active_avg": "Active Months Average",
+        "banded_avg": "Banded Average",
+        "declining_target": "Declining Target",
         "fixed_target": "Fixed Target",
         "historical_max": "Historical Limit",
         "income_pct": "% of Income",
+        "median": "Median",
         "moving_avg": "Moving Average",
+        "percentile_n": "Historical Percentile",
         "simple_avg": "Simple Average",
+        "trimmed_mean": "Trimmed Mean",
         "unknown": "Unknown formula"
       },
       "summary": {
         "containment": "{value} containment",
         "margin": "+{value}% margin",
-        "months": "{count, plural, one {# month} other {# months}}"
+        "months": "{count, plural, one {# month} other {# months}}",
+        "reduction": "-{value}%/mo",
+        "trim": "{value}% trim"
       },
       "variables": {
         "amount": "Amount",
+        "ceilingAmount": "Ceiling",
         "containment": "Containment",
+        "floorAmount": "Floor",
         "margin": "Margin",
         "months": "Months",
         "monthsIncome": "Income months",
-        "percentage": "Percentage"
+        "percentage": "Percentage",
+        "percentile": "Percentile",
+        "reduction": "Monthly reduction",
+        "trimPct": "Trim"
       }
     },
     "itemCard": {

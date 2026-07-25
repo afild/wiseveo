@@ -13,14 +13,25 @@ export type BuiltinFormulaId =
   | "income_pct"
   | "fixed_target"
   | "historical_max"
+  | "median"
+  | "trimmed_mean"
+  | "percentile_n"
+  | "active_avg"
+  | "banded_avg"
+  | "declining_target"
 
 export type FormulaVariableLabelKey =
   | "amount"
+  | "ceilingAmount"
   | "containment"
+  | "floorAmount"
   | "margin"
   | "months"
   | "monthsIncome"
   | "percentage"
+  | "percentile"
+  | "reduction"
+  | "trimPct"
 
 export interface FormulaVariable {
   key: keyof FormulaParams
@@ -42,19 +53,31 @@ export interface FormulaDefinition {
 export type FormulasTranslator = ReturnType<typeof useTranslations<"budget.formulas">>
 
 export const FORMULA_NAME_KEYS = {
+  active_avg: "names.active_avg",
+  banded_avg: "names.banded_avg",
+  declining_target: "names.declining_target",
   fixed_target: "names.fixed_target",
   historical_max: "names.historical_max",
   income_pct: "names.income_pct",
+  median: "names.median",
   moving_avg: "names.moving_avg",
+  percentile_n: "names.percentile_n",
   simple_avg: "names.simple_avg",
+  trimmed_mean: "names.trimmed_mean",
 } as const
 
 export const FORMULA_DESCRIPTION_KEYS = {
+  active_avg: "descriptions.active_avg",
+  banded_avg: "descriptions.banded_avg",
+  declining_target: "descriptions.declining_target",
   fixed_target: "descriptions.fixed_target",
   historical_max: "descriptions.historical_max",
   income_pct: "descriptions.income_pct",
+  median: "descriptions.median",
   moving_avg: "descriptions.moving_avg",
+  percentile_n: "descriptions.percentile_n",
   simple_avg: "descriptions.simple_avg",
+  trimmed_mean: "descriptions.trimmed_mean",
 } as const
 
 export const FORMULA_DEFINITIONS: FormulaDefinition[] = [
@@ -62,7 +85,7 @@ export const FORMULA_DEFINITIONS: FormulaDefinition[] = [
     id: "simple_avg",
     icon: "📊",
     variables: [
-      { key: "months", labelKey: "months", type: "number", min: 1, max: 24, step: 1, defaultValue: 3 },
+      { key: "months", labelKey: "months", type: "number", min: 1, max: 24, step: 1, defaultValue: 6 },
       { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
     ],
   },
@@ -70,7 +93,7 @@ export const FORMULA_DEFINITIONS: FormulaDefinition[] = [
     id: "moving_avg",
     icon: "📈",
     variables: [
-      { key: "months", labelKey: "months", type: "number", min: 2, max: 24, step: 1, defaultValue: 3 },
+      { key: "months", labelKey: "months", type: "number", min: 2, max: 24, step: 1, defaultValue: 6 },
       { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
     ],
   },
@@ -78,7 +101,7 @@ export const FORMULA_DEFINITIONS: FormulaDefinition[] = [
     id: "income_pct",
     icon: "💰",
     variables: [
-      { key: "months", labelKey: "monthsIncome", type: "number", min: 1, max: 12, step: 1, defaultValue: 3 },
+      { key: "months", labelKey: "monthsIncome", type: "number", min: 1, max: 12, step: 1, defaultValue: 12 },
       { key: "percentage", labelKey: "percentage", type: "percent", min: 1, max: 100, step: 1, defaultValue: 30 },
       { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
     ],
@@ -100,11 +123,65 @@ export const FORMULA_DEFINITIONS: FormulaDefinition[] = [
       { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
     ],
   },
+  {
+    id: "median",
+    icon: "⚖️",
+    variables: [
+      { key: "months", labelKey: "months", type: "number", min: 3, max: 24, step: 1, defaultValue: 6 },
+      { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
+    ],
+  },
+  {
+    id: "trimmed_mean",
+    icon: "✂️",
+    variables: [
+      { key: "months", labelKey: "months", type: "number", min: 4, max: 24, step: 1, defaultValue: 6 },
+      { key: "trimPct", labelKey: "trimPct", type: "percent", min: 5, max: 40, step: 5, defaultValue: 20 },
+      { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
+    ],
+  },
+  {
+    id: "percentile_n",
+    icon: "📶",
+    variables: [
+      { key: "months", labelKey: "months", type: "number", min: 4, max: 24, step: 1, defaultValue: 12 },
+      { key: "percentile", labelKey: "percentile", type: "percent", min: 50, max: 95, step: 5, defaultValue: 75 },
+      { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
+    ],
+  },
+  {
+    id: "active_avg",
+    icon: "🧮",
+    variables: [
+      { key: "months", labelKey: "months", type: "number", min: 3, max: 24, step: 1, defaultValue: 6 },
+      { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
+    ],
+  },
+  {
+    id: "banded_avg",
+    icon: "🚧",
+    variables: [
+      { key: "months", labelKey: "months", type: "number", min: 1, max: 24, step: 1, defaultValue: 6 },
+      { key: "floorAmount", labelKey: "floorAmount", type: "currency", min: 0, max: 999999, step: 50, defaultValue: 0 },
+      { key: "ceilingAmount", labelKey: "ceilingAmount", type: "currency", min: 0, max: 999999, step: 50, defaultValue: 0 },
+      { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
+    ],
+  },
+  {
+    id: "declining_target",
+    icon: "📉",
+    variables: [
+      { key: "months", labelKey: "months", type: "number", min: 1, max: 24, step: 1, defaultValue: 3 },
+      { key: "reduction", labelKey: "reduction", type: "percent", min: 1, max: 30, step: 1, defaultValue: 5 },
+      { key: "floorAmount", labelKey: "floorAmount", type: "currency", min: 0, max: 999999, step: 50, defaultValue: 0 },
+      { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
+    ],
+  },
 ]
 
 export const DEFAULT_FORMULA_CONFIG = {
   id: "simple_avg" as FormulaId,
-  params: { months: 3, containment: 0 },
+  params: { months: 6, containment: 0 },
 }
 
 // ── Pure Calculation Functions ──
@@ -133,7 +210,7 @@ export function trimInactiveTail(values: number[]): number[] {
 }
 
 function calcSimpleAvg(history: HistoryData, params: FormulaParams): number {
-  const months = params.months ?? 3
+  const months = params.months ?? 6
   const spent = trimInactiveTail(history.monthlySpent.slice(0, months))
   if (spent.length === 0) return 0
   const avg = spent.reduce((s, v) => s + v, 0) / spent.length
@@ -141,7 +218,7 @@ function calcSimpleAvg(history: HistoryData, params: FormulaParams): number {
 }
 
 function calcMovingAvg(history: HistoryData, params: FormulaParams): number {
-  const months = params.months ?? 3
+  const months = params.months ?? 6
   const spent = trimInactiveTail(history.monthlySpent.slice(0, months))
   if (spent.length === 0) return 0
 
@@ -159,7 +236,7 @@ function calcMovingAvg(history: HistoryData, params: FormulaParams): number {
 }
 
 function calcIncomePct(history: HistoryData, params: FormulaParams): number {
-  const months = params.months ?? 3
+  const months = params.months ?? 12
   const percentage = params.percentage ?? 30
   const income = trimInactiveTail(history.monthlyIncome.slice(0, months))
   if (income.length === 0) return 0
@@ -183,12 +260,84 @@ function calcHistoricalMax(history: HistoryData, params: FormulaParams): number 
   return applyContainment(result, params.containment ?? 0)
 }
 
+function sortedWindow(history: HistoryData, months: number): number[] {
+  const spent = trimInactiveTail(history.monthlySpent.slice(0, months))
+  return [...spent].sort((a, b) => a - b)
+}
+
+function calcMedian(history: HistoryData, params: FormulaParams): number {
+  const sorted = sortedWindow(history, params.months ?? 6)
+  if (sorted.length === 0) return 0
+  const mid = Math.floor(sorted.length / 2)
+  const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+  return applyContainment(median, params.containment ?? 0)
+}
+
+function calcTrimmedMean(history: HistoryData, params: FormulaParams): number {
+  const sorted = sortedWindow(history, params.months ?? 6)
+  if (sorted.length === 0) return 0
+  const trimPct = params.trimPct ?? 20
+  const k = Math.floor((sorted.length * trimPct) / 100)
+  const kept = sorted.slice(k, sorted.length - k)
+  const base = kept.length
+    ? kept.reduce((s, v) => s + v, 0) / kept.length
+    : sorted[Math.floor(sorted.length / 2)]
+  return applyContainment(base, params.containment ?? 0)
+}
+
+function calcPercentile(history: HistoryData, params: FormulaParams): number {
+  const sorted = sortedWindow(history, params.months ?? 12)
+  if (sorted.length === 0) return 0
+  const p = Math.min(100, Math.max(0, params.percentile ?? 75))
+  const idx = ((sorted.length - 1) * p) / 100
+  const lo = Math.floor(idx)
+  const hi = Math.ceil(idx)
+  const value = sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo)
+  return applyContainment(value, params.containment ?? 0)
+}
+
+function calcActiveAvg(history: HistoryData, params: FormulaParams): number {
+  const months = params.months ?? 6
+  const active = history.monthlySpent.slice(0, months).filter((v) => v > 0)
+  if (active.length === 0) return 0
+  const avg = active.reduce((s, v) => s + v, 0) / active.length
+  return applyContainment(avg, params.containment ?? 0)
+}
+
+function calcBandedAvg(history: HistoryData, params: FormulaParams): number {
+  const base = calcSimpleAvg(history, { months: params.months, containment: 0 })
+  if (base === 0) return 0
+  const floor = params.floorAmount ?? 0
+  const ceiling = params.ceilingAmount ?? 0
+  let value = Math.max(base, floor)
+  if (ceiling > 0) value = Math.min(value, ceiling)
+  return applyContainment(value, params.containment ?? 0)
+}
+
+function calcDecliningTarget(history: HistoryData, params: FormulaParams): number {
+  const months = params.months ?? 3
+  const spent = trimInactiveTail(history.monthlySpent.slice(0, months))
+  if (spent.length === 0) return 0
+  const avg = spent.reduce((s, v) => s + v, 0) / spent.length
+  const last = spent[0]
+  const base = Math.min(last, avg) // catraca: nunca sobe acima do menor entre último e média
+  const reduction = Math.min(100, Math.max(0, params.reduction ?? 5))
+  const target = Math.max(base * (1 - reduction / 100), params.floorAmount ?? 0)
+  return applyContainment(target, params.containment ?? 0)
+}
+
 const CALCULATORS: Record<FormulaId, (h: HistoryData, p: FormulaParams) => number> = {
-  simple_avg: calcSimpleAvg,
-  moving_avg: calcMovingAvg,
-  income_pct: calcIncomePct,
+  active_avg: calcActiveAvg,
+  banded_avg: calcBandedAvg,
+  declining_target: calcDecliningTarget,
   fixed_target: calcFixedTarget,
   historical_max: calcHistoricalMax,
+  income_pct: calcIncomePct,
+  median: calcMedian,
+  moving_avg: calcMovingAvg,
+  percentile_n: calcPercentile,
+  simple_avg: calcSimpleAvg,
+  trimmed_mean: calcTrimmedMean,
 }
 
 // ── Math Expression Evaluator ──
@@ -363,6 +512,23 @@ export function getFormulaDescription(
   }
   if (params.margin) {
     parts.push(t("summary.margin", { value: params.margin }))
+  }
+  if (params.trimPct && formulaId === "trimmed_mean") {
+    parts.push(t("summary.trim", { value: params.trimPct }))
+  }
+  if (params.percentile && formulaId === "percentile_n") {
+    parts.push(`P${params.percentile}`)
+  }
+  if (params.reduction && formulaId === "declining_target") {
+    parts.push(t("summary.reduction", { value: params.reduction }))
+  }
+  if (formulaId === "banded_avg" && (params.floorAmount || params.ceilingAmount)) {
+    parts.push(
+      [params.floorAmount ? formatMonetaryValue(params.floorAmount) : null,
+       params.ceilingAmount ? formatMonetaryValue(params.ceilingAmount) : null]
+        .filter(Boolean)
+        .join("–")
+    )
   }
   if (params.containment && params.containment > 0) {
     parts.push(t("summary.containment", { value: formatPercentValue(-params.containment, 0) }))
