@@ -13,6 +13,7 @@ import {
   hasUsableHistory,
   DEFAULT_FORMULA_CONFIG,
 } from "./formula-engine"
+import { computeTotals } from "../lib/totals"
 import { periodFromDate } from "@/lib/financial"
 
 // Chaves de dados: nomes de grupos vindos do banco (pt), usados só para casar emoji.
@@ -284,6 +285,7 @@ export async function getBudgetData(
       amountSetting: budgetSetup?.amount || 0,
       groupId: group.id,
       categoryId: undefined,
+      includeInTotals: true,
     })
 
     // Category-level budgets (only if individually configured)
@@ -361,6 +363,7 @@ export async function getBudgetData(
           amountSetting: catSetup.amount || 0,
           groupId: group.id,
           categoryId: cat.id,
+          includeInTotals: false,
         })
       }
     }
@@ -473,6 +476,7 @@ export async function getBudgetData(
       amountSetting: cCard.amount || 0,
       groupIds: cCard.groupIds,
       categoryIds: cCard.categoryIds,
+      includeInTotals: false,
     })
   }
 
@@ -491,11 +495,7 @@ export async function getBudgetData(
     items.sort((a, b) => a.name.localeCompare(b.name))
   }
 
-  const totalLimit = items.reduce((s, b) => s + b.limit, 0)
-  const totalSpent = items.reduce((s, b) => s + b.spent, 0)
-  const totalPaid = items.reduce((s, b) => s + b.paidAmount, 0)
-  const totalScheduled = items.reduce((s, b) => s + b.scheduledAmount, 0)
-  const overallPct = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0
+  const totals = computeTotals(items)
 
   // 8. Build groups data for the CreateBudgetDialog
   const groupsData: GroupWithCategories[] = groups.map((g) => ({
@@ -511,11 +511,7 @@ export async function getBudgetData(
 
   return {
     items,
-    totalLimit,
-    totalSpent,
-    totalPaid,
-    totalScheduled,
-    overallPct,
+    ...totals,
     formulaConfig,
     groups: groupsData,
   }

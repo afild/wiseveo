@@ -64,6 +64,8 @@ export interface BudgetItem {
   hasHistory: boolean
   isCustomFormula?: boolean
   hasFutureProjection?: boolean
+  projectedAmount?: number   // projeção de meses futuros do range (NUNCA somada a spent/paidAmount)
+  includeInTotals?: boolean  // true apenas para cards nativos de grupo (evita dupla contagem)
   amountSetting?: number
   groupIds?: string[]
   categoryIds?: string[]
@@ -84,6 +86,7 @@ export interface BudgetPageData {
   totalSpent: number
   totalPaid: number
   totalScheduled: number
+  totalProjected: number
   overallPct: number
   formulaConfig: BudgetFormulaPreferences
   groups: GroupWithCategories[]
