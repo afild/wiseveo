@@ -58,20 +58,17 @@ export function CreateCustomFormulaDialog({
 
     startTransition(async () => {
       const newPreset: CustomFormulaDefinition = {
-        id: "custom_" + Math.random().toString(36).substring(2, 9),
+        id: editPreset ? editPreset.id : "custom_" + Math.random().toString(36).substring(2, 9),
         name: name.trim(),
         expression: expression.trim().toUpperCase(),
       }
 
       const newConfig: BudgetFormulaPreferences = {
         ...formulaConfig,
-        customPresets: editPreset 
-          ? formulaConfig.customPresets?.map(p => p.id === editPreset.id ? newPreset : p)
+        customPresets: editPreset
+          ? formulaConfig.customPresets?.map((p) => (p.id === editPreset.id ? newPreset : p))
           : [...(formulaConfig.customPresets || []), newPreset],
-        global: {
-          id: newPreset.id,
-          params: { months: 3, containment: 0, margin: 0 }
-        }
+        // Criar/editar um mecanismo NÃO altera a fórmula global nem overrides.
       }
 
       await saveBudgetFormula(newConfig)

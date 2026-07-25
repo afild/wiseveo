@@ -384,6 +384,7 @@
       "applied": "Aplicado",
       "applyAll": "Aplicar a todos",
       "applying": "Aplicando...",
+      "confirmDelete": "Excluir o mecanismo \"{name}\"? Cartões que o usam voltarão para a fórmula global.",
       "deleteMechanism": "Excluir Mecanismo",
       "editMechanism": "Editar Mecanismo",
       "expression": "Expressão:",

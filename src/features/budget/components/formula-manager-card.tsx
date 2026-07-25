@@ -72,16 +72,21 @@ export function FormulaManagerCard({
 
   const handleDeleteCustomPreset = () => {
     if (!isCustomDef) return
+    if (!window.confirm(t("formulaManager.confirmDelete", { name: isCustomDef.name }))) return
     startTransition(async () => {
+      const cleanedPerCard = Object.fromEntries(
+        Object.entries(formulaConfig.perCard).filter(([, cfg]) => cfg.id !== selectedId)
+      )
       const newConfig: BudgetFormulaPreferences = {
         ...formulaConfig,
         customPresets: formulaConfig.customPresets?.filter((p) => p.id !== selectedId),
+        perCard: cleanedPerCard,
       }
       if (newConfig.global.id === selectedId) {
         newConfig.global = { id: "simple_avg", params: { months: 3, containment: 0 } }
       }
       await saveBudgetFormula(newConfig)
-      setSelectedId("simple_avg")
+      setSelectedId(newConfig.global.id)
       router.refresh()
     })
   }

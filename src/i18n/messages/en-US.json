@@ -384,6 +384,7 @@
       "applied": "Applied",
       "applyAll": "Apply to all",
       "applying": "Applying...",
+      "confirmDelete": "Delete the \"{name}\" mechanism? Cards using it will revert to the global formula.",
       "deleteMechanism": "Delete Mechanism",
       "editMechanism": "Edit Mechanism",
       "expression": "Expression:",
