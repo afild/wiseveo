@@ -10,6 +10,7 @@ import type {
 import { getBudgetHistory } from "./get-budget-history"
 import {
   calculateFormulaLimit,
+  hasUsableHistory,
   DEFAULT_FORMULA_CONFIG,
 } from "./formula-engine"
 import { periodFromDate } from "@/lib/financial"
@@ -231,7 +232,7 @@ export async function getBudgetData(
         type: "group",
         code: group.code,
       })
-      hasHistory = history.monthlySpent.some((v) => v > 0)
+      hasHistory = hasUsableHistory(activeFormula.id, activeFormula.params, history)
 
       if (hasHistory) {
         const formulaLimit = calculateFormulaLimit(
@@ -308,7 +309,7 @@ export async function getBudgetData(
             maxMonths,
             { type: "category", code: cat.code }
           )
-          catHasHistory = catHistory.monthlySpent.some((v) => v > 0)
+          catHasHistory = hasUsableHistory(activeCatFormula.id, activeCatFormula.params, catHistory)
 
           if (catHasHistory) {
             const catFormulaLimit = calculateFormulaLimit(
@@ -414,7 +415,7 @@ export async function getBudgetData(
     const isCustomFormula = !!cardFormula
 
     let limit = cCard.amount || 0
-    let hasHistory = aggregatedHistory.monthlySpent.some((v) => v > 0)
+    let hasHistory = hasUsableHistory(activeFormula.id, activeFormula.params, aggregatedHistory)
 
     if (activeFormula.id !== "fixed_target") {
       if (hasHistory) {

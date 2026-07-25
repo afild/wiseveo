@@ -263,6 +263,30 @@ export function calculateFormulaLimit(
   return Math.round(result * 100) / 100 // Round to 2 decimal places
 }
 
+/**
+ * Um card tem histórico utilizável para a fórmula ativa? Avalia a JANELA do
+ * próprio card (params.months) e a série que a fórmula realmente usa:
+ * income_pct depende de receita; custom pode usar ambas; fixed_target, nenhuma.
+ */
+export function hasUsableHistory(
+  formulaId: FormulaId,
+  params: FormulaParams,
+  history: HistoryData
+): boolean {
+  if (formulaId === "fixed_target") return true
+  const months = params.months ?? 3
+  const spentActive = history.monthlySpent.slice(0, months).some((v) => v > 0)
+  if (formulaId === "income_pct") {
+    return history.monthlyIncome.slice(0, months).some((v) => v > 0)
+  }
+  const isBuiltin = FORMULA_DEFINITIONS.some((f) => f.id === formulaId)
+  if (!isBuiltin) {
+    // Fórmula custom: tokens podem referenciar gasto ou receita.
+    return spentActive || history.monthlyIncome.slice(0, months).some((v) => v > 0)
+  }
+  return spentActive
+}
+
 export function getFormulaDescription(
   t: FormulasTranslator,
   formulaId: FormulaId,
