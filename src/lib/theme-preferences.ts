@@ -19,9 +19,9 @@ export interface ThemePreferences {
 export const THEME_PREFERENCES_STORAGE_KEY = "wiseveo-theme-preferences"
 
 export const defaultThemePreferences: ThemePreferences = {
-  selectedTheme: "default",
+  selectedTheme: "wiseveo",
   selectedTweakcnTheme: "",
-  selectedRadius: "0.5rem",
+  selectedRadius: "0.625rem",
   importedTheme: null,
   brandColorOverrides: {},
   sidebarVariant: "inset",
@@ -143,8 +143,8 @@ function resolveBaseStyles(preferences: ThemePreferences) {
   }
 
   const preset =
-    shadcnThemePresets[preferences.selectedTheme || "default"]
-    ?? shadcnThemePresets.default
+    shadcnThemePresets[preferences.selectedTheme || "wiseveo"]
+    ?? shadcnThemePresets.wiseveo
 
   return {
     light: preset.styles.light,

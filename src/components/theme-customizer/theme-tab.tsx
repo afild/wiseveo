@@ -161,7 +161,7 @@ export function ThemeTab({
 
       <div className="space-y-3">
         <Label className="text-sm font-medium">{t("radius")}</Label>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-6 gap-2">
           {radiusOptions.map((option) => (
             <button
               key={option.value}

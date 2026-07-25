@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import type { CSSProperties } from "react"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Figtree, JetBrains_Mono, Manrope } from "next/font/google"
 import { AppProviders } from "@/components/app-providers"
 import { getUserAppearanceSettings } from "@/features/settings/services/user-settings-service"
 import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id"
@@ -16,13 +16,20 @@ import { getIntlLocale } from "@/i18n/format"
 import { ZodLocaleSync } from "@/components/zod-locale-sync"
 import "./globals.css"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Trio tipográfico da marca (Brand Book cap. 6): Figtree = texto/UI,
+// Manrope = display/títulos/KPIs, JetBrains Mono = só código e IDs.
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
 })
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 })
 
@@ -81,7 +88,7 @@ export default async function RootLayout({
     >
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${figtree.variable} ${manrope.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <script
           dangerouslySetInnerHTML={{

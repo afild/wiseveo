@@ -50,8 +50,8 @@ function resolveBaseStyles(
     }
   }
 
-  const preset = shadcnThemePresets[preferences.selectedTheme || "default"]
-    ?? shadcnThemePresets.default
+  const preset = shadcnThemePresets[preferences.selectedTheme || "wiseveo"]
+    ?? shadcnThemePresets.wiseveo
 
   return {
     light: preset.styles.light,
