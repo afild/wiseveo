@@ -250,6 +250,32 @@ function evaluateCustomExpression(
   }
 }
 
+export type CustomExpressionValidation =
+  | { ok: true }
+  | { ok: false; errorCode: "unknown_token" | "syntax" | "non_finite" }
+
+const KNOWN_TOKENS_RE = /\[(MEDIA|MAX|MIN|DESVIO_P|ULTIMO|M_RECEITAS|U_RECEITA|CONTENCAO|MARGEM)\]/g
+
+/** Valida a expressão contra um histórico sintético não trivial. */
+export function validateCustomExpression(expression: string): CustomExpressionValidation {
+  const upper = expression.toUpperCase()
+  const leftover = upper.replace(KNOWN_TOKENS_RE, "1").match(/\[[A-Z_0-9]*\]?|\]/)
+  if (leftover) return { ok: false, errorCode: "unknown_token" }
+  const dryHistory: HistoryData = { monthlySpent: [300, 200, 100], monthlyIncome: [1000, 900, 800] }
+  const result = evaluateCustomExpression(upper, dryHistory, { months: 3, containment: 10, margin: 10 })
+  if (result === 0) {
+    // 0 pode ser resultado legítimo OU falha silenciosa; verifica via probe
+    const probe = evaluateCustomExpression(
+      "1 + 0 * (" + upper + ")",
+      dryHistory,
+      { months: 3, containment: 10, margin: 10 }
+    )
+    if (probe !== 1) return { ok: false, errorCode: "syntax" }
+  }
+  if (!Number.isFinite(result)) return { ok: false, errorCode: "non_finite" }
+  return { ok: true }
+}
+
 export function calculateFormulaLimit(
   formulaId: FormulaId,
   params: FormulaParams,

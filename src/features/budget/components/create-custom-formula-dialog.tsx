@@ -9,8 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { DetailPanel } from "@/components/detail-panel"
 import { saveBudgetFormula } from "../services/save-budget-formula"
+import { validateCustomExpression } from "../services/formula-engine"
 import type { BudgetFormulaPreferences, CustomFormulaDefinition } from "../types"
-import { randomUUID } from "crypto"
 import { useRouter } from "next/navigation"
 
 interface CreateCustomFormulaDialogProps {
@@ -45,9 +45,16 @@ export function CreateCustomFormulaDialog({
   const [isPending, startTransition] = useTransition()
   const [name, setName] = useState(editPreset?.name || "")
   const [expression, setExpression] = useState(editPreset?.expression || "")
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   const handleSave = () => {
     if (!name.trim() || !expression.trim()) return
+
+    const validation = validateCustomExpression(expression.trim())
+    if (!validation.ok) {
+      setValidationError(validation.errorCode)
+      return
+    }
 
     startTransition(async () => {
       const newPreset: CustomFormulaDefinition = {
@@ -129,10 +136,19 @@ export function CreateCustomFormulaDialog({
           </Label>
           <Textarea
             value={expression}
-            onChange={(e) => setExpression(e.target.value)}
+            onChange={(e) => { setExpression(e.target.value); setValidationError(null) }}
             placeholder={t("expressionPlaceholder")}
             className="font-mono"
           />
+          {validationError && (
+            <p className="text-xs text-destructive">
+              {validationError === "non_finite"
+                ? t("validation.non_finite")
+                : validationError === "unknown_token"
+                  ? t("validation.unknown_token")
+                  : t("validation.syntax")}
+            </p>
+          )}
           <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded flex flex-col gap-1 h-32 overflow-y-auto">
             <span className="font-semibold text-foreground mb-1">{t("variables.title")}</span>
             {EXPRESSION_TOKENS.map((v) => (

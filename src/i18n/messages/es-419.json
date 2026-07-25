@@ -353,6 +353,11 @@
       "namePlaceholder": "Ej.: Tope Inflacionario",
       "save": "Guardar Mecanismo",
       "title": "Mecanismo Matemático",
+      "validation": {
+        "non_finite": "La expresión produce un valor inválido (¿división por cero?).",
+        "syntax": "Expresión inválida — revisa los operadores y los paréntesis.",
+        "unknown_token": "La expresión contiene una variable desconocida. Usa los tokens de la biblioteca."
+      },
       "variables": {
         "containment": "Contención como fracción — 10% equivale a 0,10; úsalo directo: (1 - [CONTENCAO]).",
         "incomeAvg": "Promedio total de ingresos en el período.",

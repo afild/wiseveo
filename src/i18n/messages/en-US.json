@@ -353,6 +353,11 @@
       "namePlaceholder": "E.g.: Inflation Cap",
       "save": "Save Mechanism",
       "title": "Math Mechanism",
+      "validation": {
+        "non_finite": "The expression produces an invalid value (division by zero?).",
+        "syntax": "Invalid expression — check your operators and parentheses.",
+        "unknown_token": "The expression contains an unknown variable. Use tokens from the library."
+      },
       "variables": {
         "containment": "Containment as a fraction — 10% becomes 0.10; use directly: (1 - [CONTENCAO]).",
         "incomeAvg": "Average total income in the period.",

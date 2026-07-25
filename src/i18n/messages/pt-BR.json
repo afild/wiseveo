@@ -353,6 +353,11 @@
       "namePlaceholder": "Ex: Teto Inflacionário",
       "save": "Salvar Mecanismo",
       "title": "Mecanismo Matemático",
+      "validation": {
+        "non_finite": "A expressão produz um valor inválido (divisão por zero?).",
+        "syntax": "Expressão inválida — revise operadores e parênteses.",
+        "unknown_token": "Há uma variável desconhecida na expressão. Use os tokens da biblioteca."
+      },
       "variables": {
         "containment": "Contenção como fração — 10% vira 0,10; use direto: (1 - [CONTENCAO]).",
         "incomeAvg": "Média total de receitas no período.",
