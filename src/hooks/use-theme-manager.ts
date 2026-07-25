@@ -36,14 +36,14 @@ export function useThemeManager() {
       "primary", "primary-foreground", "secondary", "secondary-foreground", "muted", "muted-foreground",
       "accent", "accent-foreground", "destructive", "destructive-foreground", "border", "input",
       "ring", "radius",
-      "chart-1", "chart-2", "chart-3", "chart-4", "chart-5",
+      "chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6",
       "sidebar", "sidebar-background", "sidebar-foreground", "sidebar-primary", "sidebar-primary-foreground",
       "sidebar-accent", "sidebar-accent-foreground", "sidebar-border", "sidebar-ring",
       "font-sans", "font-serif", "font-mono",
       "shadow-2xs", "shadow-xs", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-2xl",
       "spacing", "tracking-normal",
       "card-header", "card-content", "card-footer", "muted-background", "accent-background",
-      "destructive-background", "warning", "warning-foreground", "success", "success-foreground",
+      "destructive-background", "positive", "warning", "warning-foreground", "success", "success-foreground",
       "info", "info-foreground",
     ]
 

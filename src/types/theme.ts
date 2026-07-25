@@ -23,6 +23,7 @@ export type ThemeStyleProps = {
   "chart-3": string;
   "chart-4": string;
   "chart-5": string;
+  "chart-6"?: string;
   sidebar: string;
   "sidebar-foreground": string;
   "sidebar-primary": string;
@@ -42,6 +43,9 @@ export type ThemeStyleProps = {
   "shadow-offset-x"?: string;
   "shadow-offset-y"?: string;
   "letter-spacing"?: string;
+  positive?: string;
+  warning?: string;
+  info?: string;
   spacing?: string;
 };
 
