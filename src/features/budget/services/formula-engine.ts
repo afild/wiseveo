@@ -110,7 +110,13 @@ export const DEFAULT_FORMULA_CONFIG = {
 // ── Pure Calculation Functions ──
 
 function applyContainment(value: number, containment: number): number {
-  return value * (1 - containment / 100)
+  const c = Math.min(100, Math.max(0, containment))
+  return value * (1 - c / 100)
+}
+
+export function clampParamValue(variable: FormulaVariable, raw: number): number {
+  if (!Number.isFinite(raw)) return variable.defaultValue
+  return Math.min(variable.max, Math.max(variable.min, raw))
 }
 
 /**
@@ -335,9 +341,11 @@ export function getFormulaDescription(
     }
   }
 
-  const def = FORMULA_DEFINITIONS.find((f) => f.id === formulaId)
-  if (def) {
-    name = t(FORMULA_NAME_KEYS[def.id])
+  if (name === t("names.unknown")) {
+    const def = FORMULA_DEFINITIONS.find((f) => f.id === formulaId)
+    if (def) {
+      name = t(FORMULA_NAME_KEYS[def.id])
+    }
   }
 
   const parts: string[] = [name]

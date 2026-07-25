@@ -18,6 +18,7 @@ import {
   FORMULA_DEFINITIONS,
   FORMULA_DESCRIPTION_KEYS,
   FORMULA_NAME_KEYS,
+  clampParamValue,
   getFormulaDefinition,
   type FormulaVariable,
 } from "../services/formula-engine"
@@ -132,7 +133,7 @@ export function ConfigCardFormulaDialog({
           ) : <div />}
           <Button
             onClick={handleSave}
-            disabled={isPending}
+            disabled={isPending || (selectedId === "fixed_target" && (params.amount ?? 0) <= 0)}
           >
             {isPending ? (
               <Loader2 className="h-4 w-4 animate-spin mr-1" />
@@ -209,7 +210,7 @@ export function ConfigCardFormulaDialog({
                 onChange={(e) =>
                   handleParamChange(
                     v.key,
-                    parseFloat(e.target.value) || 0
+                    clampParamValue(v, parseFloat(e.target.value.replace(",", ".")))
                   )
                 }
                 className="tabular-nums font-mono text-sm h-9"
@@ -223,15 +224,15 @@ export function ConfigCardFormulaDialog({
         <div className="grid grid-cols-2 gap-3 mt-2">
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.customParams.months")}</Label>
-            <Input type="number" min={1} max={24} value={params.months ?? 3} onChange={(e) => handleParamChange("months", parseFloat(e.target.value)||0)} className="tabular-nums font-mono text-sm h-9" />
+            <Input type="number" min={1} max={24} value={params.months ?? 3} onChange={(e) => handleParamChange("months", Math.min(24, Math.max(1, parseFloat(e.target.value.replace(",", ".")) || 3)))} className="tabular-nums font-mono text-sm h-9" />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.customParams.containment")}</Label>
-            <Input type="number" min={0} value={params.containment ?? 0} onChange={(e) => handleParamChange("containment", parseFloat(e.target.value)||0)} className="tabular-nums font-mono text-sm h-9" />
+            <Input type="number" min={0} max={100} value={params.containment ?? 0} onChange={(e) => handleParamChange("containment", Math.min(100, Math.max(0, parseFloat(e.target.value.replace(",", ".")) || 0)))} className="tabular-nums font-mono text-sm h-9" />
           </div>
           <div className="flex flex-col gap-1.5 col-span-2">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.customParams.margin")}</Label>
-            <Input type="number" min={0} value={params.margin ?? 0} onChange={(e) => handleParamChange("margin", parseFloat(e.target.value)||0)} className="tabular-nums font-mono text-sm h-9" />
+            <Input type="number" min={0} max={100} value={params.margin ?? 0} onChange={(e) => handleParamChange("margin", Math.min(100, Math.max(0, parseFloat(e.target.value.replace(",", ".")) || 0)))} className="tabular-nums font-mono text-sm h-9" />
           </div>
         </div>
       )}

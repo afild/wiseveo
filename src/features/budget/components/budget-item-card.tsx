@@ -93,8 +93,16 @@ export function BudgetItemCard({
   const wouldExceed =
     item.paidAmount + item.scheduledAmount > item.limit && item.paidAmount <= item.limit
 
+  const activeFormulaCfg = formulaConfig
+    ? formulaConfig.perCard[item.id] ?? formulaConfig.global
+    : undefined
   const formulaDesc = item.formulaId
-    ? getFormulaDescription(tFormulas, item.formulaId, {})
+    ? getFormulaDescription(
+        tFormulas,
+        item.formulaId,
+        activeFormulaCfg?.params ?? {},
+        formulaConfig?.customPresets
+      )
     : undefined
 
   // Cartões agregados guardam a sentinela "Múltiplos" em originalName; a UI
