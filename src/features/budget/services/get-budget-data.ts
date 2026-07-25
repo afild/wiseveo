@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns"
+import { startOfMonth, endOfMonth, addMonths } from "date-fns"
 import type {
   BudgetItem,
   BudgetPageData,
@@ -223,8 +223,9 @@ export async function getBudgetData(
     let hasHistory = false
 
     if (activeFormula.id !== "fixed_target") {
-      // History is calculated based on the month PRECEDING the range start
-      const historyReferenceDate = endOfMonth(subMonths(filterFrom, 1))
+      // Referência = início do range; getBudgetHistory exclui o próprio mês da
+      // referência, então o slot 0 é o mês fechado imediatamente anterior ao range.
+      const historyReferenceDate = filterFrom
       
       const history = await getBudgetHistory(userId, historyReferenceDate, maxMonths, {
         type: "group",
@@ -298,7 +299,9 @@ export async function getBudgetData(
         let catHasHistory = false
 
         if (activeCatFormula.id !== "fixed_target") {
-          const historyReferenceDate = endOfMonth(subMonths(filterFrom, 1))
+          // Referência = início do range; getBudgetHistory exclui o próprio mês da
+          // referência, então o slot 0 é o mês fechado imediatamente anterior ao range.
+          const historyReferenceDate = filterFrom
           const catHistory = await getBudgetHistory(
             userId,
             historyReferenceDate,
@@ -367,13 +370,15 @@ export async function getBudgetData(
   for (const cCard of customCards) {
     let spent = 0
 
+    // Referência = início do range; getBudgetHistory exclui o próprio mês da
+    // referência, então o slot 0 é o mês fechado imediatamente anterior ao range.
+    const historyReferenceDate = filterFrom
     const historyPromises: Promise<any>[] = []
 
     for (const catId of cCard.categoryIds) {
       const cat = groups.flatMap((g) => g.categories).find((c) => c.id === catId)
       if (cat) {
         spent += spentCatMap.get(cat.code) || 0
-        const historyReferenceDate = endOfMonth(subMonths(filterFrom, 1))
         historyPromises.push(
           getBudgetHistory(userId, historyReferenceDate, maxMonths, { type: "category", code: cat.code })
         )
@@ -383,7 +388,6 @@ export async function getBudgetData(
       const grp = groups.find((g) => g.id === groupId)
       if (grp) {
         spent += spentGroupMap.get(grp.code) || 0
-        const historyReferenceDate = endOfMonth(subMonths(filterFrom, 1))
         historyPromises.push(
           getBudgetHistory(userId, historyReferenceDate, maxMonths, { type: "group", code: grp.code })
         )
