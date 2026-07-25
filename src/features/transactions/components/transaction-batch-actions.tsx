@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react"
 
+import { DetailPanel } from "@/components/detail-panel"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,14 +26,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import {
   Tooltip,
   TooltipContent,
@@ -320,24 +313,14 @@ export function TransactionBatchActions<TData>({
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={showEditDateDialog} onOpenChange={setShowEditDateDialog}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>{t("editDateTitle")}</DialogTitle>
-            <DialogDescription>
-              {t("editDateDescription", { count: selectedCount })}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="batch-transaction-date">{t("dateLabel")}</Label>
-            <Input
-              id="batch-transaction-date"
-              type="date"
-              value={selectedDate}
-              onChange={(event) => setSelectedDate(event.target.value)}
-            />
-          </div>
-          <DialogFooter>
+      <DetailPanel
+        open={showEditDateDialog}
+        onOpenChange={setShowEditDateDialog}
+        title={t("editDateTitle")}
+        description={t("editDateDescription", { count: selectedCount })}
+        className="space-y-4"
+        footer={
+          <>
             <Button
               variant="outline"
               onClick={() => setShowEditDateDialog(false)}
@@ -351,33 +334,31 @@ export function TransactionBatchActions<TData>({
             >
               {batchLoading ? t("saving") : t("saveDate")}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <p className="text-muted-foreground text-sm">
+          {t("editDateDescription", { count: selectedCount })}
+        </p>
+        <div className="space-y-2">
+          <Label htmlFor="batch-transaction-date">{t("dateLabel")}</Label>
+          <Input
+            id="batch-transaction-date"
+            type="date"
+            value={selectedDate}
+            onChange={(event) => setSelectedDate(event.target.value)}
+          />
+        </div>
+      </DetailPanel>
 
-      <Dialog open={showEditPeriodDialog} onOpenChange={setShowEditPeriodDialog}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>{t("editPeriodTitle")}</DialogTitle>
-            <DialogDescription>
-              {t("editPeriodDescription", { count: selectedCount })}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="batch-transaction-period">{t("periodLabel")}</Label>
-            <Input
-              id="batch-transaction-period"
-              value={selectedPeriod}
-              onChange={(event) =>
-                setSelectedPeriod(event.target.value.replace(/\D/g, "").slice(0, 6))
-              }
-              placeholder={t("periodPlaceholder")}
-              maxLength={6}
-              inputMode="numeric"
-              className="tabular-nums"
-            />
-          </div>
-          <DialogFooter>
+      <DetailPanel
+        open={showEditPeriodDialog}
+        onOpenChange={setShowEditPeriodDialog}
+        title={t("editPeriodTitle")}
+        description={t("editPeriodDescription", { count: selectedCount })}
+        className="space-y-4"
+        footer={
+          <>
             <Button
               variant="outline"
               onClick={() => setShowEditPeriodDialog(false)}
@@ -393,28 +374,36 @@ export function TransactionBatchActions<TData>({
             >
               {batchLoading ? t("saving") : t("savePeriod")}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <p className="text-muted-foreground text-sm">
+          {t("editPeriodDescription", { count: selectedCount })}
+        </p>
+        <div className="space-y-2">
+          <Label htmlFor="batch-transaction-period">{t("periodLabel")}</Label>
+          <Input
+            id="batch-transaction-period"
+            value={selectedPeriod}
+            onChange={(event) =>
+              setSelectedPeriod(event.target.value.replace(/\D/g, "").slice(0, 6))
+            }
+            placeholder={t("periodPlaceholder")}
+            maxLength={6}
+            inputMode="numeric"
+            className="tabular-nums"
+          />
+        </div>
+      </DetailPanel>
 
-      <Dialog open={showCopyDateDialog} onOpenChange={setShowCopyDateDialog}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>{t("copyTitle")}</DialogTitle>
-            <DialogDescription>
-              {t("copyDescription", { count: selectedCount })}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="batch-copy-transaction-date">{t("newDateLabel")}</Label>
-            <Input
-              id="batch-copy-transaction-date"
-              type="date"
-              value={selectedCopyDate}
-              onChange={(event) => setSelectedCopyDate(event.target.value)}
-            />
-          </div>
-          <DialogFooter>
+      <DetailPanel
+        open={showCopyDateDialog}
+        onOpenChange={setShowCopyDateDialog}
+        title={t("copyTitle")}
+        description={t("copyDescription", { count: selectedCount })}
+        className="space-y-4"
+        footer={
+          <>
             <Button
               variant="outline"
               onClick={() => setShowCopyDateDialog(false)}
@@ -428,9 +417,22 @@ export function TransactionBatchActions<TData>({
             >
               {batchLoading ? t("copying") : t("copy")}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <p className="text-muted-foreground text-sm">
+          {t("copyDescription", { count: selectedCount })}
+        </p>
+        <div className="space-y-2">
+          <Label htmlFor="batch-copy-transaction-date">{t("newDateLabel")}</Label>
+          <Input
+            id="batch-copy-transaction-date"
+            type="date"
+            value={selectedCopyDate}
+            onChange={(event) => setSelectedCopyDate(event.target.value)}
+          />
+        </div>
+      </DetailPanel>
 
       <AlertDialog open={showMakeRecurringConfirm} onOpenChange={setShowMakeRecurringConfirm}>
         <AlertDialogContent>

@@ -3,15 +3,17 @@
 /**
  * DetailPanel — componente universal de painel de detalhes responsivo.
  *
- * Comportamento por device-class:
+ * Padrão de modal do WISEVEO (estilo QuickBooks):
  *  - Mobile  (<768px): Drawer bottom (vaul) — gesto de swipe para fechar
- *  - Tablet  (768–1024px): Sheet lateral direita (radix/dialog)
- *  - Desktop (>1024px): Dialog centralizado (comportamento atual)
+ *  - Tablet/Desktop (≥768px): Sheet lateral direita (radix/dialog)
+ *
+ * Confirmações destrutivas continuam em AlertDialog centralizado; o command
+ * palette (Ctrl+K) continua centralizado — ambos por convenção de UX.
  *
  * Props:
  *  - open / onOpenChange: controle padrão de visibilidade
  *  - title: título exibido no cabeçalho
- *  - description (opcional): descrição acessível (sr-only no desktop)
+ *  - description (opcional): descrição acessível (sr-only fora do mobile)
  *  - children: conteúdo scrollável
  *  - footer (opcional): area fixa de rodapé com botões de ação
  *  - className: classes extras para o container de conteúdo
@@ -19,7 +21,6 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
-import { X } from "lucide-react"
 
 import { useDeviceClass } from "@/hooks/use-device-class"
 import { cn } from "@/lib/utils"
@@ -43,14 +44,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -118,56 +111,24 @@ export function DetailPanel({
     )
   }
 
-  // ── Tablet: Sheet lateral direita ─────────────────────────────────────────
-
-  if (mode === "tablet") {
-    return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent
-          side="right"
-          className="w-[480px] sm:max-w-[480px] p-0 flex flex-col gap-0"
-        >
-          <SheetHeader className="px-6 pt-6 pb-4 border-b space-y-1">
-            <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
-            {description && (
-              <SheetDescription className="sr-only">{description}</SheetDescription>
-            )}
-          </SheetHeader>
-
-          <div
-            className={cn(
-              "flex-1 overflow-y-auto overscroll-contain scroll-touch px-6 py-5",
-              className
-            )}
-          >
-            {children}
-          </div>
-
-          {footer && (
-            <SheetFooter className="px-6 py-4 border-t flex-row gap-2 mt-0">
-              {footer}
-            </SheetFooter>
-          )}
-        </SheetContent>
-      </Sheet>
-    )
-  }
-
-  // ── Desktop: Dialog centralizado ──────────────────────────────────────────
+  // ── Tablet/Desktop: Sheet lateral direita ─────────────────────────────────
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] gap-0 p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-full gap-0 p-0 flex flex-col sm:w-[480px] sm:max-w-[480px] xl:w-[560px] xl:max-w-[560px]"
+      >
+        <SheetHeader className="px-6 pt-6 pb-4 border-b space-y-1">
+          <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
           {description && (
-            <DialogDescription className="sr-only">{description}</DialogDescription>
+            <SheetDescription className="sr-only">{description}</SheetDescription>
           )}
-        </DialogHeader>
+        </SheetHeader>
 
         <div
           className={cn(
-            "flex flex-col overflow-y-auto px-6 py-5 max-h-[65vh]",
+            "flex-1 overflow-y-auto overscroll-contain scroll-touch px-6 py-5",
             className
           )}
         >
@@ -175,10 +136,36 @@ export function DetailPanel({
         </div>
 
         {footer && (
-          <DialogFooter className="px-6 py-4 border-t">{footer}</DialogFooter>
+          <SheetFooter className="px-6 py-4 border-t flex-row justify-end gap-2 mt-0">
+            {footer}
+          </SheetFooter>
         )}
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+// ── Section header (agrupamento visual dentro do painel) ─────────────────────
+
+export function DetailPanelSection({
+  title,
+  children,
+  className,
+}: {
+  title: React.ReactNode
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <section className={cn("flex flex-col gap-4", className)}>
+      <div className="flex items-center gap-3 pt-1">
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-foreground/70 shrink-0">
+          {title}
+        </span>
+        <div className="h-px flex-1 bg-border/70" />
+      </div>
+      {children}
+    </section>
   )
 }
 

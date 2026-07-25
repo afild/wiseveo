@@ -638,6 +638,10 @@
     "delete": "Eliminar",
     "edit": "Editar",
     "error": "Error",
+    "formSections": {
+      "classification": "Clasificación",
+      "details": "Detalles"
+    },
     "loading": "Cargando...",
     "loginDemo": {
       "createAccount": "Crear una cuenta",

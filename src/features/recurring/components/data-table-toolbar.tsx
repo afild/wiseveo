@@ -27,14 +27,6 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
-import {
     Sheet,
     SheetContent,
     SheetHeader,
@@ -43,6 +35,7 @@ import {
     SheetFooter,
     SheetClose,
 } from "@/components/ui/sheet"
+import { DetailPanel } from "@/components/detail-panel"
 import { DataTableViewOptions } from "@/features/transactions/components/data-table-view-options"
 import type { RecurringFilterOptions } from "../types"
 
@@ -307,24 +300,14 @@ export function DataTableToolbar<TData>({
                 </AlertDialogContent>
             </AlertDialog>
 
-            <Dialog open={showEditDateDialog} onOpenChange={setShowEditDateDialog}>
-                <DialogContent className="sm:max-w-[420px]">
-                    <DialogHeader>
-                        <DialogTitle>{tBatch("editDateTitle")}</DialogTitle>
-                        <DialogDescription>
-                            {tBatch("editDateDescription", { count: selectedRows.length })}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-2">
-                        <Label htmlFor="batch-recurring-date">{tBatch("dateLabel")}</Label>
-                        <Input
-                            id="batch-recurring-date"
-                            type="date"
-                            value={selectedDate}
-                            onChange={(event) => setSelectedDate(event.target.value)}
-                        />
-                    </div>
-                    <DialogFooter>
+            <DetailPanel
+                open={showEditDateDialog}
+                onOpenChange={setShowEditDateDialog}
+                title={tBatch("editDateTitle")}
+                description={tBatch("editDateDescription", { count: selectedRows.length })}
+                className="space-y-4"
+                footer={
+                    <>
                         <Button
                             variant="outline"
                             onClick={() => setShowEditDateDialog(false)}
@@ -338,9 +321,22 @@ export function DataTableToolbar<TData>({
                         >
                             {batchLoading ? tBatch("saving") : tBatch("saveDate")}
                         </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </>
+                }
+            >
+                <p className="text-muted-foreground text-sm">
+                    {tBatch("editDateDescription", { count: selectedRows.length })}
+                </p>
+                <div className="space-y-2">
+                    <Label htmlFor="batch-recurring-date">{tBatch("dateLabel")}</Label>
+                    <Input
+                        id="batch-recurring-date"
+                        type="date"
+                        value={selectedDate}
+                        onChange={(event) => setSelectedDate(event.target.value)}
+                    />
+                </div>
+            </DetailPanel>
 
             <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
                 <AlertDialogContent>

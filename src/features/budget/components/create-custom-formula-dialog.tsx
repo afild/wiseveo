@@ -7,14 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { DetailPanel } from "@/components/detail-panel"
 import { saveBudgetFormula } from "../services/save-budget-formula"
 import type { BudgetFormulaPreferences, CustomFormulaDefinition } from "../types"
 import { randomUUID } from "crypto"
@@ -86,49 +79,13 @@ export function CreateCustomFormulaDialog({
   const isValid = name.trim().length > 0 && expression.trim().length > 0
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{t("title")}</DialogTitle>
-          <DialogDescription>
-            {t("description")}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-col gap-4 py-2">
-          {/* Custom name */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              {t("nameLabel")} *
-            </Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("namePlaceholder")}
-            />
-          </div>
-
-          {/* Expression */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              {t("expressionLabel")} *
-            </Label>
-            <Textarea
-              value={expression}
-              onChange={(e) => setExpression(e.target.value)}
-              placeholder={t("expressionPlaceholder")}
-              className="font-mono"
-            />
-            <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded flex flex-col gap-1 h-32 overflow-y-auto">
-              <span className="font-semibold text-foreground mb-1">{t("variables.title")}</span>
-              {EXPRESSION_TOKENS.map((v) => (
-                <p key={v.key}><code>{v.token}</code>: {t(`variables.${v.key}`)}</p>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter>
+    <DetailPanel
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t("title")}
+      description={t("description")}
+      footer={
+        <>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -147,8 +104,43 @@ export function CreateCustomFormulaDialog({
             )}
             {t("save")}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <p className="text-sm text-muted-foreground">{t("description")}</p>
+
+      <div className="flex flex-col gap-4 py-2">
+        {/* Custom name */}
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            {t("nameLabel")} *
+          </Label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t("namePlaceholder")}
+          />
+        </div>
+
+        {/* Expression */}
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            {t("expressionLabel")} *
+          </Label>
+          <Textarea
+            value={expression}
+            onChange={(e) => setExpression(e.target.value)}
+            placeholder={t("expressionPlaceholder")}
+            className="font-mono"
+          />
+          <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded flex flex-col gap-1 h-32 overflow-y-auto">
+            <span className="font-semibold text-foreground mb-1">{t("variables.title")}</span>
+            {EXPRESSION_TOKENS.map((v) => (
+              <p key={v.key}><code>{v.token}</code>: {t(`variables.${v.key}`)}</p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </DetailPanel>
   )
 }

@@ -28,7 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { DetailPanel, DetailPanelCloseButton } from "@/components/detail-panel"
+import {
+  DetailPanel,
+  DetailPanelCloseButton,
+  DetailPanelSection,
+} from "@/components/detail-panel"
 import type {
   FormCategory,
   FormCategoryGroup,
@@ -756,7 +760,7 @@ export function RecurringClient({
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[180px_1fr_140px]">
+          <div className="grid grid-cols-[1fr_150px] gap-3">
             <div className="space-y-1.5">
               <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
                 {t("dialogs.editRecurring.dateLabel")} <span className="text-destructive">*</span>
@@ -768,18 +772,6 @@ export function RecurringClient({
                   setEditForm((prev) => ({ ...prev, date: event.target.value }))
                 }
                 className="w-full"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-                {t("dialogs.editRecurring.refLabel")}
-              </Label>
-              <Input
-                value={editForm.reference}
-                onChange={(event) =>
-                  setEditForm((prev) => ({ ...prev, reference: event.target.value }))
-                }
-                placeholder={t("dialogs.editRecurring.refPlaceholder")}
               />
             </div>
             <div className="space-y-1.5">
@@ -864,131 +856,149 @@ export function RecurringClient({
             )}
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-              {t("dialogs.editRecurring.descriptionLabel")}
-            </Label>
-            <Input
-              value={editForm.description}
-              onChange={(event) =>
-                setEditForm((prev) => ({ ...prev, description: event.target.value }))
-              }
-              placeholder={t("dialogs.editRecurring.descriptionPlaceholder")}
-            />
-          </div>
+          {/* Classificação: Grupo · Categoria · Banco · Status */}
+          <DetailPanelSection title={tCommon("formSections.classification")}>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                  {t("dialogs.editRecurring.groupLabel")} <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={editForm.groupCode}
+                  onValueChange={(value) =>
+                    setEditForm((prev) => ({ ...prev, groupCode: value }))
+                  }
+                >
+                  <SelectTrigger className="w-full cursor-pointer">
+                    <SelectValue placeholder={t("dialogs.editRecurring.selectPlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredGroups.map((group) => (
+                      <SelectItem
+                        key={group.id}
+                        value={String(group.code)}
+                        className="cursor-pointer"
+                      >
+                        {group.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-                {t("dialogs.editRecurring.groupLabel")} <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={editForm.groupCode}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({ ...prev, groupCode: value }))
-                }
-              >
-                <SelectTrigger className="w-full cursor-pointer">
-                  <SelectValue placeholder={t("dialogs.editRecurring.selectPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredGroups.map((group) => (
-                    <SelectItem
-                      key={group.id}
-                      value={String(group.code)}
-                      className="cursor-pointer"
-                    >
-                      {group.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-1.5">
+                <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                  {t("dialogs.editRecurring.categoryLabel")} <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={editForm.categoryCode}
+                  onValueChange={(value) =>
+                    setEditForm((prev) => ({ ...prev, categoryCode: value }))
+                  }
+                  disabled={!editForm.groupCode}
+                >
+                  <SelectTrigger className="w-full cursor-pointer">
+                    <SelectValue placeholder={t("dialogs.editRecurring.selectPlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredCategories.map((category) => (
+                      <SelectItem
+                        key={category.id}
+                        value={category.code}
+                        className="cursor-pointer"
+                      >
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-                {t("dialogs.editRecurring.categoryLabel")} <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={editForm.categoryCode}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({ ...prev, categoryCode: value }))
-                }
-                disabled={!editForm.groupCode}
-              >
-                <SelectTrigger className="w-full cursor-pointer">
-                  <SelectValue placeholder={t("dialogs.editRecurring.selectPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredCategories.map((category) => (
-                    <SelectItem
-                      key={category.id}
-                      value={category.code}
-                      className="cursor-pointer"
-                    >
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                  {t("dialogs.editRecurring.accountLabel")} <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={editForm.accountId}
+                  onValueChange={(value) =>
+                    setEditForm((prev) => ({ ...prev, accountId: value }))
+                  }
+                >
+                  <SelectTrigger className="w-full cursor-pointer">
+                    <SelectValue placeholder={t("dialogs.editRecurring.selectPlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formOptions.accounts.map((account) => (
+                      <SelectItem
+                        key={account.id}
+                        value={String(account.id)}
+                        className="cursor-pointer"
+                      >
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-                {t("dialogs.editRecurring.accountLabel")} <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={editForm.accountId}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({ ...prev, accountId: value }))
-                }
-              >
-                <SelectTrigger className="w-full cursor-pointer">
-                  <SelectValue placeholder={t("dialogs.editRecurring.selectPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {formOptions.accounts.map((account) => (
-                    <SelectItem
-                      key={account.id}
-                      value={String(account.id)}
-                      className="cursor-pointer"
-                    >
-                      {account.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-1.5">
+                <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                  {t("dialogs.editRecurring.statusLabel")} <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={editForm.statusCode}
+                  onValueChange={(value) =>
+                    setEditForm((prev) => ({ ...prev, statusCode: value }))
+                  }
+                >
+                  <SelectTrigger className="w-full cursor-pointer">
+                    <SelectValue placeholder={t("dialogs.editRecurring.selectPlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formOptions.statuses.map((status) => (
+                      <SelectItem
+                        key={status.id}
+                        value={String(status.code)}
+                        className="cursor-pointer"
+                      >
+                        {status.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+          </DetailPanelSection>
 
+          {/* Detalhes: REF · Descrição */}
+          <DetailPanelSection title={tCommon("formSections.details")}>
             <div className="space-y-1.5">
               <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-                {t("dialogs.editRecurring.statusLabel")} <span className="text-destructive">*</span>
+                {t("dialogs.editRecurring.refLabel")}
               </Label>
-              <Select
-                value={editForm.statusCode}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({ ...prev, statusCode: value }))
+              <Input
+                value={editForm.reference}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, reference: event.target.value }))
                 }
-              >
-                <SelectTrigger className="w-full cursor-pointer">
-                  <SelectValue placeholder={t("dialogs.editRecurring.selectPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {formOptions.statuses.map((status) => (
-                    <SelectItem
-                      key={status.id}
-                      value={String(status.code)}
-                      className="cursor-pointer"
-                    >
-                      {status.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={t("dialogs.editRecurring.refPlaceholder")}
+              />
             </div>
-          </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                {t("dialogs.editRecurring.descriptionLabel")}
+              </Label>
+              <Input
+                value={editForm.description}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, description: event.target.value }))
+                }
+                placeholder={t("dialogs.editRecurring.descriptionPlaceholder")}
+              />
+            </div>
+          </DetailPanelSection>
         </div>
       </DetailPanel>
 

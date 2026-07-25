@@ -6,14 +6,7 @@ import { Check, Loader2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { DetailPanel } from "@/components/detail-panel"
 import {
   Select,
   SelectContent,
@@ -115,106 +108,17 @@ export function ConfigCardFormulaDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{t("configFormulaDialog.title")}</DialogTitle>
-          <DialogDescription>
-            {t.rich("configFormulaDialog.description", {
-              name: cardName,
-              strong: (chunks) => <strong>{chunks}</strong>,
-            })}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-col gap-4 py-2">
-          {/* Formula Selector */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.approach")}</Label>
-            <div className="flex gap-2 w-full">
-              <Select value={selectedId} onValueChange={handleFormulaChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FORMULA_DEFINITIONS.map((f) => (
-                    <SelectItem key={f.id} value={f.id}>
-                      <span className="flex items-center gap-2">
-                        <span>{f.icon}</span>
-                        <span>{tFormulas(FORMULA_NAME_KEYS[f.id])}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                  {formulaConfig.customPresets && formulaConfig.customPresets.length > 0 && (
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
-                      {t("formulaCommon.customMechanisms")}
-                    </div>
-                  )}
-                  {formulaConfig.customPresets?.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      <span className="flex items-center gap-2">
-                        <span>⚡</span>
-                        <span>{p.name}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {definition && (
-              <p className="text-xs text-muted-foreground">
-                {tFormulas(FORMULA_DESCRIPTION_KEYS[definition.id])}
-              </p>
-            )}
-          </div>
-
-          {/* Dynamic Variables */}
-          {definition && (
-            <div className="grid grid-cols-2 gap-3">
-              {definition.variables.map((v: FormulaVariable) => (
-                <div key={v.key} className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    {tFormulas(`variables.${v.labelKey}`)}
-                    {v.type === "percent" && " (%)"}
-                  </Label>
-                  <Input
-                    type="number"
-                    min={v.min}
-                    max={v.max}
-                    step={v.step}
-                    value={(params as any)[v.key] ?? v.defaultValue}
-                    onChange={(e) =>
-                      handleParamChange(
-                        v.key,
-                        parseFloat(e.target.value) || 0
-                      )
-                    }
-                    className="tabular-nums font-mono text-sm h-9"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {isCustomDef && (
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.customParams.months")}</Label>
-                <Input type="number" min={1} max={24} value={params.months ?? 3} onChange={(e) => handleParamChange("months", parseFloat(e.target.value)||0)} className="tabular-nums font-mono text-sm h-9" />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.customParams.containment")}</Label>
-                <Input type="number" min={0} value={params.containment ?? 0} onChange={(e) => handleParamChange("containment", parseFloat(e.target.value)||0)} className="tabular-nums font-mono text-sm h-9" />
-              </div>
-              <div className="flex flex-col gap-1.5 col-span-2">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.customParams.margin")}</Label>
-                <Input type="number" min={0} value={params.margin ?? 0} onChange={(e) => handleParamChange("margin", parseFloat(e.target.value)||0)} className="tabular-nums font-mono text-sm h-9" />
-              </div>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter className="flex items-center sm:justify-between w-full mt-2">
+    <DetailPanel
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t("configFormulaDialog.title")}
+      description={t.markup("configFormulaDialog.description", {
+        name: cardName,
+        strong: (chunks) => chunks,
+      })}
+      className="flex flex-col gap-4"
+      footer={
+        <div className="flex w-full items-center justify-between gap-2">
           {existingOverride ? (
              <Button
                variant="outline"
@@ -237,8 +141,100 @@ export function ConfigCardFormulaDialog({
             )}
             {tCommon("confirm")}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      }
+    >
+      <p className="text-sm text-muted-foreground">
+        {t.rich("configFormulaDialog.description", {
+          name: cardName,
+          strong: (chunks) => <strong>{chunks}</strong>,
+        })}
+      </p>
+
+      {/* Formula Selector */}
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.approach")}</Label>
+        <div className="flex gap-2 w-full">
+          <Select value={selectedId} onValueChange={handleFormulaChange}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FORMULA_DEFINITIONS.map((f) => (
+                <SelectItem key={f.id} value={f.id}>
+                  <span className="flex items-center gap-2">
+                    <span>{f.icon}</span>
+                    <span>{tFormulas(FORMULA_NAME_KEYS[f.id])}</span>
+                  </span>
+                </SelectItem>
+              ))}
+              {formulaConfig.customPresets && formulaConfig.customPresets.length > 0 && (
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                  {t("formulaCommon.customMechanisms")}
+                </div>
+              )}
+              {formulaConfig.customPresets?.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  <span className="flex items-center gap-2">
+                    <span>⚡</span>
+                    <span>{p.name}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {definition && (
+          <p className="text-xs text-muted-foreground">
+            {tFormulas(FORMULA_DESCRIPTION_KEYS[definition.id])}
+          </p>
+        )}
+      </div>
+
+      {/* Dynamic Variables */}
+      {definition && (
+        <div className="grid grid-cols-2 gap-3">
+          {definition.variables.map((v: FormulaVariable) => (
+            <div key={v.key} className="flex flex-col gap-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {tFormulas(`variables.${v.labelKey}`)}
+                {v.type === "percent" && " (%)"}
+              </Label>
+              <Input
+                type="number"
+                min={v.min}
+                max={v.max}
+                step={v.step}
+                value={(params as any)[v.key] ?? v.defaultValue}
+                onChange={(e) =>
+                  handleParamChange(
+                    v.key,
+                    parseFloat(e.target.value) || 0
+                  )
+                }
+                className="tabular-nums font-mono text-sm h-9"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isCustomDef && (
+        <div className="grid grid-cols-2 gap-3 mt-2">
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.customParams.months")}</Label>
+            <Input type="number" min={1} max={24} value={params.months ?? 3} onChange={(e) => handleParamChange("months", parseFloat(e.target.value)||0)} className="tabular-nums font-mono text-sm h-9" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.customParams.containment")}</Label>
+            <Input type="number" min={0} value={params.containment ?? 0} onChange={(e) => handleParamChange("containment", parseFloat(e.target.value)||0)} className="tabular-nums font-mono text-sm h-9" />
+          </div>
+          <div className="flex flex-col gap-1.5 col-span-2">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("formulaCommon.customParams.margin")}</Label>
+            <Input type="number" min={0} value={params.margin ?? 0} onChange={(e) => handleParamChange("margin", parseFloat(e.target.value)||0)} className="tabular-nums font-mono text-sm h-9" />
+          </div>
+        </div>
+      )}
+    </DetailPanel>
   )
 }

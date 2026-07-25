@@ -6,14 +6,7 @@ import { Save, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { DetailPanel } from "@/components/detail-panel"
 import {
   Select,
   SelectContent,
@@ -160,160 +153,20 @@ export function CreateBudgetDialog({
   const isValid = (selectedGroupId || selectedMultiGroups.length > 0 || selectedMultiCats.length > 0)
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[460px]">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-lg">
-              {selectedCategoryId ? "📌" : groupEmoji}
-            </div>
-            <div>
-              <DialogTitle>{editItem ? t("editTitle") : tBudget("newBudget")}</DialogTitle>
-              <DialogDescription>
-                {editItem ? t("editDescription") : t("newDescription")}
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-
-        <div className="flex flex-col gap-4 py-2">
-          <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="w-full flex">
-              <TabsTrigger value="simples" className="flex-1">{t("simpleTab")}</TabsTrigger>
-              <TabsTrigger value="agregado" className="flex-1">{t("aggregatedTab")}</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="simples" className="flex flex-col gap-4 mt-4">
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {t("groupLabel")} *
-                </Label>
-                <Select value={selectedGroupId} onValueChange={handleGroupChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("groupPlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groups.map((g) => (
-                      <SelectItem key={g.id} value={g.id}>
-                        <span className="flex items-center gap-2">
-                          <span>
-                            {GROUP_EMOJI_MAP[g.name.toLowerCase()] || "📁"}
-                          </span>
-                          <span>{g.name}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {t("categoryLabel")}
-                </Label>
-                <Select
-                  value={selectedCategoryId}
-                  onValueChange={setSelectedCategoryId}
-                  disabled={!selectedGroup}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("categoryNone")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">
-                      {t("categoryNone")}
-                    </SelectItem>
-                    {selectedGroup?.categories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        📌 {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="agregado" className="flex flex-col gap-4 mt-4">
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {t("componentsLabel")} *
-                </Label>
-                <ScrollArea className="h-[200px] rounded-md border p-4">
-                  <div className="flex flex-col gap-4">
-                    {groups.map((g) => (
-                      <div key={g.id} className="flex flex-col gap-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`grp-${g.id}`}
-                            checked={selectedMultiGroups.includes(g.id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) setSelectedMultiGroups(prev => [...prev, g.id])
-                              else setSelectedMultiGroups(prev => prev.filter(id => id !== g.id))
-                            }}
-                          />
-                          <Label htmlFor={`grp-${g.id}`} className="font-semibold text-sm">
-                            {GROUP_EMOJI_MAP[g.name.toLowerCase()] || "📁"} {g.name}
-                          </Label>
-                        </div>
-                        <div className="flex flex-col gap-2 pl-6">
-                          {g.categories.map((c) => (
-                            <div key={c.id} className="flex items-center space-x-2">
-                              <Checkbox 
-                                id={`cat-${c.id}`}
-                                checked={selectedMultiCats.includes(c.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) setSelectedMultiCats(prev => [...prev, c.id])
-                                  else setSelectedMultiCats(prev => prev.filter(id => id !== c.id))
-                                }}
-                              />
-                              <Label htmlFor={`cat-${c.id}`} className="text-sm font-normal text-muted-foreground cursor-pointer">
-                                📌 {c.name}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          {/* Removed Categories single select since it's in Tabs */}
-
-          {/* Custom name */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              {t("nicknameLabel")}
-            </Label>
-            <Input
-              value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
-              placeholder={t("nicknamePlaceholder")}
-            />
-          </div>
-
-          {/* Amount */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              {t("amountLabel")}
-            </Label>
-            <div className="relative">
-              <Input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder={t("amountPlaceholder")}
-                className="tabular-nums font-mono font-normal text-sm"
-                min={0}
-                step={50}
-              />
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter>
+    <DetailPanel
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        <span className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-lg">
+            {selectedCategoryId ? "📌" : groupEmoji}
+          </span>
+          <span>{editItem ? t("editTitle") : tBudget("newBudget")}</span>
+        </span>
+      }
+      description={editItem ? t("editDescription") : t("newDescription")}
+      footer={
+        <>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -332,8 +185,148 @@ export function CreateBudgetDialog({
             )}
             {tCommon("confirm")}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-muted-foreground">
+          {editItem ? t("editDescription") : t("newDescription")}
+        </p>
+        <Tabs defaultValue={defaultTab} className="w-full">
+          <TabsList className="w-full flex">
+            <TabsTrigger value="simples" className="flex-1">{t("simpleTab")}</TabsTrigger>
+            <TabsTrigger value="agregado" className="flex-1">{t("aggregatedTab")}</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="simples" className="flex flex-col gap-4 mt-4">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("groupLabel")} *
+              </Label>
+              <Select value={selectedGroupId} onValueChange={handleGroupChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("groupPlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {groups.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>
+                      <span className="flex items-center gap-2">
+                        <span>
+                          {GROUP_EMOJI_MAP[g.name.toLowerCase()] || "📁"}
+                        </span>
+                        <span>{g.name}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("categoryLabel")}
+              </Label>
+              <Select
+                value={selectedCategoryId}
+                onValueChange={setSelectedCategoryId}
+                disabled={!selectedGroup}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("categoryNone")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    {t("categoryNone")}
+                  </SelectItem>
+                  {selectedGroup?.categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      📌 {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="agregado" className="flex flex-col gap-4 mt-4">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("componentsLabel")} *
+              </Label>
+              <ScrollArea className="h-[200px] rounded-md border p-4">
+                <div className="flex flex-col gap-4">
+                  {groups.map((g) => (
+                    <div key={g.id} className="flex flex-col gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`grp-${g.id}`}
+                          checked={selectedMultiGroups.includes(g.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) setSelectedMultiGroups(prev => [...prev, g.id])
+                            else setSelectedMultiGroups(prev => prev.filter(id => id !== g.id))
+                          }}
+                        />
+                        <Label htmlFor={`grp-${g.id}`} className="font-semibold text-sm">
+                          {GROUP_EMOJI_MAP[g.name.toLowerCase()] || "📁"} {g.name}
+                        </Label>
+                      </div>
+                      <div className="flex flex-col gap-2 pl-6">
+                        {g.categories.map((c) => (
+                          <div key={c.id} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`cat-${c.id}`}
+                              checked={selectedMultiCats.includes(c.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) setSelectedMultiCats(prev => [...prev, c.id])
+                                else setSelectedMultiCats(prev => prev.filter(id => id !== c.id))
+                              }}
+                            />
+                            <Label htmlFor={`cat-${c.id}`} className="text-sm font-normal text-muted-foreground cursor-pointer">
+                              📌 {c.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Removed Categories single select since it's in Tabs */}
+
+        {/* Custom name */}
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            {t("nicknameLabel")}
+          </Label>
+          <Input
+            value={customName}
+            onChange={(e) => setCustomName(e.target.value)}
+            placeholder={t("nicknamePlaceholder")}
+          />
+        </div>
+
+        {/* Amount */}
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            {t("amountLabel")}
+          </Label>
+          <div className="relative">
+            <Input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder={t("amountPlaceholder")}
+              className="tabular-nums font-mono font-normal text-sm"
+              min={0}
+              step={50}
+            />
+          </div>
+        </div>
+      </div>
+    </DetailPanel>
   )
 }

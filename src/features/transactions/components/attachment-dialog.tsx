@@ -24,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { DetailPanel } from "@/components/detail-panel"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { cn } from "@/lib/utils"
 import type { SerializedTransaction } from "../types"
@@ -204,21 +205,29 @@ export function AttachmentDialog({
     }
   }
 
+  const panelDescription = `${transaction?.note || tDialogs("transactionFallback")} — ${
+    transaction ? monetary.formatMonetaryValue(transaction.amount) : ""
+  }`
+
   return (
-    <Dialog open={!!transaction} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <>
+      <DetailPanel
+        open={!!transaction}
+        onOpenChange={(open) => !open && onClose()}
+        title={
+          <span className="flex items-center gap-2">
             <Paperclip className="h-4 w-4" />
             {t("title")}
-          </DialogTitle>
-          <DialogDescription>
+          </span>
+        }
+        description={panelDescription}
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
             {transaction?.note || tDialogs("transactionFallback")} —{" "}
             {transaction ? monetary.formatMonetaryValue(transaction.amount) : ""}
-          </DialogDescription>
-        </DialogHeader>
+          </p>
 
-        <div className="space-y-3">
           {loading ? (
             <p className="text-sm text-muted-foreground">{tCommon("loading")}</p>
           ) : attachments.length === 0 ? (
@@ -342,7 +351,7 @@ export function AttachmentDialog({
             </Button>
           </div>
         </div>
-      </DialogContent>
+      </DetailPanel>
 
       <Dialog
         open={!!previewAttachment}
@@ -428,6 +437,6 @@ export function AttachmentDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Dialog>
+    </>
   )
 }

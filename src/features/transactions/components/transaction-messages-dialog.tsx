@@ -5,13 +5,7 @@ import { MessageSquare, SendHorizontal, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { useLocale, useTranslations } from "next-intl"
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { DetailPanel } from "@/components/detail-panel"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -175,21 +169,26 @@ export function TransactionMessagesDialog({
 
   const remainingChars = MAX_MESSAGE_LENGTH - draft.length
 
+  const descriptionText = `${transaction?.note || tDialogs("transactionFallback")} — ${
+    transaction ? monetary.formatMonetaryValue(transaction.amount) : ""
+  }`
+
   return (
-    <Dialog open={!!transaction} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[560px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <>
+      <DetailPanel
+        open={!!transaction}
+        onOpenChange={(open) => !open && onClose()}
+        title={
+          <span className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             {t("title")}
-          </DialogTitle>
-          <DialogDescription>
-            {transaction?.note || tDialogs("transactionFallback")} —{" "}
-            {transaction ? monetary.formatMonetaryValue(transaction.amount) : ""}
-          </DialogDescription>
-        </DialogHeader>
-
+          </span>
+        }
+        description={descriptionText}
+      >
         <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">{descriptionText}</p>
+
           {!loading && messages.length > 0 && (
             <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
               {t("unreadNotice", { count: messages.length })}
@@ -260,7 +259,7 @@ export function TransactionMessagesDialog({
             </div>
           </div>
         </div>
-      </DialogContent>
+      </DetailPanel>
 
       <AlertDialog
         open={!!messageToDelete}
@@ -290,6 +289,6 @@ export function TransactionMessagesDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Dialog>
+    </>
   )
 }
