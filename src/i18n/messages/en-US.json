@@ -359,6 +359,7 @@
         "unknown_token": "The expression contains an unknown variable. Use tokens from the library."
       },
       "variables": {
+        "activeMean": "Average of months with spending.",
         "containment": "Containment as a fraction — 10% becomes 0.10; use directly: (1 - [CONTENCAO]).",
         "incomeAvg": "Average total income in the period.",
         "lastIncome": "Last month's income.",
@@ -366,7 +367,10 @@
         "margin": "Margin as a fraction — 10% becomes 0.10.",
         "max": "Highest historical spending.",
         "mean": "Average spending over recent months.",
+        "median": "Median spending for the period.",
         "min": "Lowest historical spending.",
+        "p75": "75th percentile of spending.",
+        "p90": "90th percentile of spending.",
         "stdDev": "Standard deviation of spending.",
         "title": "Variable Library (Case-Insensitive):"
       }

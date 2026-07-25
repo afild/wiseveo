@@ -371,6 +371,20 @@ function evaluateCustomExpression(
   const m_receitas = income.length ? income.reduce((s, v) => s + v, 0) / income.length : 0
   const u_receita = history.monthlyIncome[0] ?? 0
 
+  const sorted = [...spent].sort((a, b) => a - b)
+  const percentileOf = (p: number): number => {
+    if (sorted.length === 0) return 0
+    const idx = ((sorted.length - 1) * p) / 100
+    const lo = Math.floor(idx)
+    const hi = Math.ceil(idx)
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo)
+  }
+  const mediana = percentileOf(50)
+  const p75 = percentileOf(75)
+  const p90 = percentileOf(90)
+  const ativos = spent.filter((v) => v > 0)
+  const media_ativos = ativos.length ? ativos.reduce((s, v) => s + v, 0) / ativos.length : 0
+
   let parsedExpr = expression.toUpperCase()
 
   // Exponenciação passaria no regex de segurança (** são dois '*'), mas
@@ -380,6 +394,10 @@ function evaluateCustomExpression(
     return 0
   }
 
+  parsedExpr = parsedExpr.replace(/\[MEDIA_ATIVOS\]/g, media_ativos.toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[MEDIANA\]/g, mediana.toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[P75\]/g, p75.toFixed(6))
+  parsedExpr = parsedExpr.replace(/\[P90\]/g, p90.toFixed(6))
   parsedExpr = parsedExpr.replace(/\[MEDIA\]/g, media.toFixed(6))
   parsedExpr = parsedExpr.replace(/\[MAX\]/g, max.toFixed(6))
   parsedExpr = parsedExpr.replace(/\[MIN\]/g, min.toFixed(6))
@@ -411,7 +429,7 @@ export type CustomExpressionValidation =
   | { ok: true }
   | { ok: false; errorCode: "unknown_token" | "syntax" | "non_finite" }
 
-const KNOWN_TOKENS_RE = /\[(MEDIA|MAX|MIN|DESVIO_P|ULTIMO|M_RECEITAS|U_RECEITA|CONTENCAO|MARGEM)\]/g
+const KNOWN_TOKENS_RE = /\[(MEDIA_ATIVOS|MEDIANA|P75|P90|MEDIA|MAX|MIN|DESVIO_P|ULTIMO|M_RECEITAS|U_RECEITA|CONTENCAO|MARGEM)\]/g
 
 /** Valida a expressão contra um histórico sintético não trivial. */
 export function validateCustomExpression(expression: string): CustomExpressionValidation {

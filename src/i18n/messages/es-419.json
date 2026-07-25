@@ -359,6 +359,7 @@
         "unknown_token": "La expresión contiene una variable desconocida. Usa los tokens de la biblioteca."
       },
       "variables": {
+        "activeMean": "Promedio de los meses con gasto.",
         "containment": "Contención como fracción — 10% equivale a 0,10; úsalo directo: (1 - [CONTENCAO]).",
         "incomeAvg": "Promedio total de ingresos en el período.",
         "lastIncome": "Ingreso del último mes.",
@@ -366,7 +367,10 @@
         "margin": "Margen como fracción — 10% equivale a 0,10.",
         "max": "Gasto máximo histórico.",
         "mean": "Promedio de gastos de los últimos meses.",
+        "median": "Mediana de los gastos del período.",
         "min": "Gasto mínimo histórico.",
+        "p75": "Percentil 75 de los gastos.",
+        "p90": "Percentil 90 de los gastos.",
         "stdDev": "Desviación estándar del gasto.",
         "title": "Biblioteca de Variables (no distingue mayúsculas):"
       }

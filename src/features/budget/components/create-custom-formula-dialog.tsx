@@ -22,6 +22,10 @@ interface CreateCustomFormulaDialogProps {
 
 // Tokens de sintaxe da expressão (dados, não UI); as descrições são traduzidas.
 const EXPRESSION_TOKENS = [
+  { token: "[MEDIA_ATIVOS]", key: "activeMean" },
+  { token: "[MEDIANA]", key: "median" },
+  { token: "[P75]", key: "p75" },
+  { token: "[P90]", key: "p90" },
   { token: "[MEDIA]", key: "mean" },
   { token: "[MAX]", key: "max" },
   { token: "[MIN]", key: "min" },
