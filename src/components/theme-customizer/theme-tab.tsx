@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
-import { Dices, ExternalLink, Moon, Palette, Sun, Upload, MonitorCog } from "lucide-react"
+import { Check, Dices, ExternalLink, Moon, Palette, Sun, Upload, MonitorCog } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -11,6 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { colorThemes, tweakcnThemes } from "@/config/theme-data"
 import { radiusOptions, baseColors } from "@/config/theme-customizer-constants"
 import { ColorPicker } from "@/components/color-picker"
+import { Logo } from "@/components/logo"
 import type { ThemeMode } from "@/lib/theme-preferences"
 
 interface ThemeTabProps {
@@ -42,10 +43,17 @@ export function ThemeTab({
 }: ThemeTabProps) {
   const t = useTranslations("themeCustomizer")
 
+  // O tema oficial sai da lista de secundários: ele tem o card de destaque próprio.
+  const secondaryColorThemes = React.useMemo(
+    () => colorThemes.filter((theme) => theme.value !== "wiseveo"),
+    [],
+  )
+  const isWiseveoActive = selectedTheme === "wiseveo" && !selectedTweakcnTheme
+
   const handleRandomShadcn = React.useCallback(() => {
-    const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)]
+    const randomTheme = secondaryColorThemes[Math.floor(Math.random() * secondaryColorThemes.length)]
     onSelectedThemeChange(randomTheme.value)
-  }, [onSelectedThemeChange])
+  }, [onSelectedThemeChange, secondaryColorThemes])
 
   const handleRandomTweakcn = React.useCallback(() => {
     const randomTheme = tweakcnThemes[Math.floor(Math.random() * tweakcnThemes.length)]
@@ -90,6 +98,35 @@ export function ThemeTab({
       <Separator />
 
       <div className="space-y-3">
+        <Label className="text-sm font-medium">{t("officialTheme")}</Label>
+        <button
+          type="button"
+          onClick={() => onSelectedThemeChange("wiseveo")}
+          aria-pressed={isWiseveoActive}
+          className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border p-3 text-left transition-colors ${
+            isWiseveoActive
+              ? "border-primary bg-accent/40"
+              : "border-border hover:border-primary/50"
+          }`}
+        >
+          <Logo size={28} />
+          <span className="flex-1">
+            {/* i18n-ignore: wordmark da marca, palavra única e não traduzível */}
+            <span className="block text-sm font-semibold tracking-tight">WISEVEO</span>
+            <span className="block text-xs text-muted-foreground">{t("officialThemeDesc")}</span>
+          </span>
+          {isWiseveoActive && <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />}
+        </button>
+      </div>
+
+      <Separator />
+
+      <div className="space-y-1">
+        <Label className="text-sm font-medium">{t("secondaryThemes")}</Label>
+        <p className="text-xs text-muted-foreground">{t("secondaryThemesDesc")}</p>
+      </div>
+
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium">{t("shadcnPresets")}</Label>
           <Button variant="outline" size="sm" onClick={handleRandomShadcn} className="cursor-pointer">
@@ -104,7 +141,7 @@ export function ThemeTab({
           </SelectTrigger>
           <SelectContent className="max-h-60">
             <div className="p-2">
-              {colorThemes.map((theme) => (
+              {secondaryColorThemes.map((theme) => (
                 <SelectItem key={theme.value} value={theme.value} className="cursor-pointer">
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
