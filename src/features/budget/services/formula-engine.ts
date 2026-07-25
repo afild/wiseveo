@@ -113,9 +113,20 @@ function applyContainment(value: number, containment: number): number {
   return value * (1 - containment / 100)
 }
 
+/**
+ * Remove os zeros consecutivos do FIM do array (lado mais antigo — arrays são
+ * mais-recente-primeiro). Meses anteriores à primeira atividade registrada não
+ * são dado; um zero no meio da janela é gasto real e permanece.
+ */
+export function trimInactiveTail(values: number[]): number[] {
+  let end = values.length
+  while (end > 0 && values[end - 1] === 0) end--
+  return values.slice(0, end)
+}
+
 function calcSimpleAvg(history: HistoryData, params: FormulaParams): number {
   const months = params.months ?? 3
-  const spent = history.monthlySpent.slice(0, months)
+  const spent = trimInactiveTail(history.monthlySpent.slice(0, months))
   if (spent.length === 0) return 0
   const avg = spent.reduce((s, v) => s + v, 0) / spent.length
   return applyContainment(avg, params.containment ?? 0)
@@ -123,7 +134,7 @@ function calcSimpleAvg(history: HistoryData, params: FormulaParams): number {
 
 function calcMovingAvg(history: HistoryData, params: FormulaParams): number {
   const months = params.months ?? 3
-  const spent = history.monthlySpent.slice(0, months)
+  const spent = trimInactiveTail(history.monthlySpent.slice(0, months))
   if (spent.length === 0) return 0
 
   // Weights: most recent = N, oldest = 1
@@ -142,7 +153,7 @@ function calcMovingAvg(history: HistoryData, params: FormulaParams): number {
 function calcIncomePct(history: HistoryData, params: FormulaParams): number {
   const months = params.months ?? 3
   const percentage = params.percentage ?? 30
-  const income = history.monthlyIncome.slice(0, months)
+  const income = trimInactiveTail(history.monthlyIncome.slice(0, months))
   if (income.length === 0) return 0
   const avgIncome = income.reduce((s, v) => s + v, 0) / income.length
   const result = avgIncome * (percentage / 100)
