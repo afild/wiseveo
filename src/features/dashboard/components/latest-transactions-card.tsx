@@ -145,7 +145,7 @@ export function LatestTransactionsCard() {
           {t("description")}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0 overflow-hidden p-0 font-[system-ui]">
+      <CardContent className="flex-1 min-h-0 overflow-hidden p-0 font-sans">
         {error ? (
           <div className="mx-4 mb-4 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
             {error}

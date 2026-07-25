@@ -119,7 +119,7 @@ export function DailyMovementCard() {
         </CardDescription>
       </CardHeader>
       {/* Reduce horizontal padding on mobile so all 5 columns fit */}
-      <CardContent className="font-[system-ui] px-2 md:px-6">
+      <CardContent className="font-sans px-2 md:px-6">
         {error ? (
           <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
             {error}
