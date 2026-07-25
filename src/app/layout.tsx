@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import type { CSSProperties } from "react"
 import { Figtree, JetBrains_Mono, Manrope } from "next/font/google"
+import { cn } from "@/lib/utils"
 import { AppProviders } from "@/components/app-providers"
 import { getUserAppearanceSettings } from "@/features/settings/services/user-settings-service"
 import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id"
@@ -83,13 +84,17 @@ export default async function RootLayout({
     <html
       lang={getIntlLocale(locale)}
       suppressHydrationWarning
-      className={htmlClassName}
+      // Variáveis do next/font ficam no <html>: o --font-sans dos presets e do
+      // preflight do Tailwind resolve neste nível — no <body> o var() quebra.
+      className={cn(
+        figtree.variable,
+        manrope.variable,
+        jetbrainsMono.variable,
+        htmlClassName,
+      )}
       style={htmlStyle}
     >
-      <body
-        suppressHydrationWarning
-        className={`${figtree.variable} ${manrope.variable} ${jetbrainsMono.variable} antialiased`}
-      >
+      <body suppressHydrationWarning className="antialiased">
         <script
           dangerouslySetInnerHTML={{
             __html: buildThemeBootstrapScript(initialThemePreferences, "wiseveo-theme"),
