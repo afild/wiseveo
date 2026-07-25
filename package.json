@@ -102,6 +102,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "eslint-plugin-i18next": "^6.1.5",
+    "png-to-ico": "^3.0.2",
     "prisma": "^7.4.2",
     "shadcn": "^3.8.5",
     "tailwindcss": "^4",

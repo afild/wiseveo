@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Logo } from "@/components/logo"
+import { Wordmark } from "@/components/wordmark"
 import { useLoginForm } from "../hooks/useLoginForm"
 import { useSignupForm } from "../hooks/useSignupForm"
 import { useState } from "react"
@@ -311,12 +312,9 @@ export function AuthPage({
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-6 flex justify-between items-center">
-          <div className="flex items-center gap-2 font-medium">
-            <div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Logo size={20} className="text-current" />
-            </div>
-            {/* i18n-ignore: nome da marca, idêntico em todos os idiomas */}
-            <span className="text-xl font-semibold">WISEVEO</span>
+          <div className="flex items-center gap-2">
+            <Logo size={28} />
+            <Wordmark className="text-xl" />
           </div>
           <LocaleSwitcher />
         </div>

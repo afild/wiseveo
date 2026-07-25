@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Logo } from "@/components/logo"
+import { Wordmark } from "@/components/wordmark"
 
 export default async function CadastroPendentePage() {
   const t = await getTranslations("auth")
@@ -12,12 +13,9 @@ export default async function CadastroPendentePage() {
     <main className="flex min-h-svh w-full items-center justify-center bg-background p-6 md:p-10">
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center">
-          <div className="flex items-center gap-2 font-medium">
-            <div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Logo size={20} className="text-current" />
-            </div>
-            {/* i18n-ignore: nome da marca, idêntico em todos os idiomas */}
-            <span className="text-xl font-semibold">WISEVEO</span>
+          <div className="flex items-center gap-2">
+            <Logo size={28} />
+            <Wordmark className="text-xl" />
           </div>
         </div>
 

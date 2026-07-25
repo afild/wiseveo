@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
+import { Wordmark } from "@/components/wordmark"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -131,11 +132,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <div className="flex aspect-square size-8 items-center justify-center">
                   <Logo size={28} />
                 </div>
-                <span className="flex-1 truncate text-left text-base tracking-tight">
-                  {/* i18n-ignore: wordmark da marca, palavra única e não traduzível (Brand Book cap. 04) */}
-                  <span className="font-medium">WISE</span>
-                  {/* i18n-ignore: wordmark da marca (Brand Book cap. 04) */}
-                  <span className="font-extrabold">VEO</span>
+                <span className="flex-1 truncate text-left text-base">
+                  <Wordmark />
                 </span>
               </Link>
             </SidebarMenuButton>

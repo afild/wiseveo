@@ -121,7 +121,7 @@ export function SiteHeader({ onOpenThemeCustomizer }: SiteHeaderProps) {
           <div className="flex-1 flex flex-col justify-center min-w-0">
             <h1
               className={cn(
-                "font-semibold tracking-tight leading-none truncate",
+                "font-display font-semibold tracking-tight leading-none truncate",
                 isMobile ? "text-base" : "text-sm md:text-base"
               )}
             >
