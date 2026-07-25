@@ -61,12 +61,12 @@ function LoginTabContent({ showGoogle }: { showGoogle: boolean }) {
   return (
     <div className="flex flex-col gap-4 pt-4">
       {successMessage && (
-        <div className="rounded-md bg-green-50 p-3 text-center text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+        <div className="rounded-md bg-positive/10 p-3 text-center text-sm text-positive">
           {successMessage}
         </div>
       )}
       {serverError && (
-        <div className="rounded-md bg-red-50 p-3 text-center text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div className="rounded-md bg-destructive/10 p-3 text-center text-sm text-destructive">
           {serverError}
         </div>
       )}
@@ -84,7 +84,7 @@ function LoginTabContent({ showGoogle }: { showGoogle: boolean }) {
               onBlur={() => handleBlur("email")}
             />
             {touched.email && errors.email && (
-              <FieldDescription className="text-red-600 dark:text-red-400">
+              <FieldDescription className="text-destructive">
                 {errors.email}
               </FieldDescription>
             )}
@@ -108,7 +108,7 @@ function LoginTabContent({ showGoogle }: { showGoogle: boolean }) {
               onBlur={() => handleBlur("password")}
             />
             {touched.password && errors.password && (
-              <FieldDescription className="text-red-600 dark:text-red-400">
+              <FieldDescription className="text-destructive">
                 {errors.password}
               </FieldDescription>
             )}
@@ -161,12 +161,12 @@ function SignupTabContent({ showGoogle }: { showGoogle: boolean }) {
   return (
     <div className="flex flex-col gap-4 pt-4">
       {successMessage && (
-        <div className="rounded-md bg-green-50 p-3 text-center text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+        <div className="rounded-md bg-positive/10 p-3 text-center text-sm text-positive">
           {successMessage}
         </div>
       )}
       {serverError && (
-        <div className="rounded-md bg-red-50 p-3 text-center text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div className="rounded-md bg-destructive/10 p-3 text-center text-sm text-destructive">
           {serverError}
         </div>
       )}
@@ -184,7 +184,7 @@ function SignupTabContent({ showGoogle }: { showGoogle: boolean }) {
               onBlur={() => handleBlur("name")}
             />
             {touched.name && errors.name && (
-              <FieldDescription className="text-red-600 dark:text-red-400">
+              <FieldDescription className="text-destructive">
                 {errors.name}
               </FieldDescription>
             )}
@@ -201,7 +201,7 @@ function SignupTabContent({ showGoogle }: { showGoogle: boolean }) {
               onBlur={() => handleBlur("email")}
             />
             {touched.email && errors.email && (
-              <FieldDescription className="text-red-600 dark:text-red-400">
+              <FieldDescription className="text-destructive">
                 {errors.email}
               </FieldDescription>
             )}
@@ -217,7 +217,7 @@ function SignupTabContent({ showGoogle }: { showGoogle: boolean }) {
               onBlur={() => handleBlur("password")}
             />
             {touched.password && errors.password && (
-              <FieldDescription className="text-red-600 dark:text-red-400">
+              <FieldDescription className="text-destructive">
                 {errors.password}
               </FieldDescription>
             )}
@@ -233,7 +233,7 @@ function SignupTabContent({ showGoogle }: { showGoogle: boolean }) {
               onBlur={() => handleBlur("confirmPassword")}
             />
             {touched.confirmPassword && errors.confirmPassword && (
-              <FieldDescription className="text-red-600 dark:text-red-400">
+              <FieldDescription className="text-destructive">
                 {errors.confirmPassword}
               </FieldDescription>
             )}
@@ -281,7 +281,7 @@ function GoogleErrorMessage({ error }: { error: string | null }) {
   }
 
   return (
-    <div className="rounded-md bg-red-50 p-3 text-center text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+    <div className="rounded-md bg-destructive/10 p-3 text-center text-sm text-destructive">
       {messages[error] || t("errors.genericAuth")}
     </div>
   )

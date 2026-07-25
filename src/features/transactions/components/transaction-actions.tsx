@@ -46,7 +46,7 @@ export function TransactionActions({
       id: "quick-pay",
       label: t("quickPay"),
       icon: CheckCircle,
-      iconClassName: "text-chart-2",
+      iconClassName: "text-positive",
       onClick: () => onQuickPay(transaction),
     },
     {
@@ -66,7 +66,7 @@ export function TransactionActions({
       id: "make-recurring",
       label: t("makeRecurring"),
       icon: RotateCcw,
-      iconClassName: "text-chart-1",
+      iconClassName: "text-info",
       onClick: () => onMakeRecurring(transaction),
     },
     {
@@ -75,7 +75,7 @@ export function TransactionActions({
       icon: Paperclip,
       badge: transaction.attachmentCount > 0 ? transaction.attachmentCount : undefined,
       badgeClassName: "bg-yellow-400 text-yellow-950",
-      iconClassName: "text-chart-4",
+      iconClassName: "text-warning",
       onClick: () => onAttachments(transaction),
     },
     {

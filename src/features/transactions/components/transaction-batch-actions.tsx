@@ -186,7 +186,7 @@ export function TransactionBatchActions<TData>({
                 disabled={batchLoading}
                 onClick={() => setShowQuickPayConfirm(true)}
               >
-                <CheckCircle className="h-4 w-4 text-chart-2" />
+                <CheckCircle className="h-4 w-4 text-positive" />
                 <span className="sr-only">{t("pay")}</span>
               </Button>
             </TooltipTrigger>
@@ -234,7 +234,7 @@ export function TransactionBatchActions<TData>({
                 disabled={batchLoading}
                 onClick={() => setShowMakeRecurringConfirm(true)}
               >
-                <RotateCcw className="h-4 w-4 text-chart-1" />
+                <RotateCcw className="h-4 w-4 text-info" />
                 <span className="sr-only">{t("makeRecurring")}</span>
               </Button>
             </TooltipTrigger>
@@ -250,7 +250,7 @@ export function TransactionBatchActions<TData>({
                 disabled={batchLoading}
                 onClick={() => setShowCopyDateDialog(true)}
               >
-                <Copy className="h-4 w-4 text-blue-500" />
+                <Copy className="h-4 w-4 text-info" />
                 <span className="sr-only">{t("copy")}</span>
               </Button>
             </TooltipTrigger>

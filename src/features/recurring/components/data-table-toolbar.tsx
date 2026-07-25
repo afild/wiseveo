@@ -247,7 +247,7 @@ export function DataTableToolbar<TData>({
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-chart-2 border-chart-2/30 hover:bg-chart-2/10 h-8 gap-2"
+                                className="text-positive border-positive/30 hover:bg-positive/10 h-8 gap-2"
                                 title={tBatch("launchTooltip")}
                                 disabled={batchLoading}
                                 onClick={() => setShowLaunchConfirm(true)}

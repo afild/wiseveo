@@ -39,28 +39,28 @@ type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER"
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function getTypeAccentClass(t: TransactionType) {
-  if (t === "INCOME") return "text-chart-2 border-l-chart-2"
+  if (t === "INCOME") return "text-positive border-l-positive"
   if (t === "EXPENSE") return "text-destructive border-l-destructive"
-  return "text-chart-1 border-l-chart-1"
+  return "text-info border-l-info"
 }
 
 function getTypeDotClass(t: TransactionType) {
-  if (t === "INCOME") return "bg-chart-2"
+  if (t === "INCOME") return "bg-positive"
   if (t === "EXPENSE") return "bg-destructive"
-  return "bg-chart-1"
+  return "bg-info"
 }
 
 function getTypeTextClass(t: TransactionType) {
-  if (t === "INCOME") return "text-chart-2"
+  if (t === "INCOME") return "text-positive"
   if (t === "EXPENSE") return "text-destructive"
-  return "text-chart-1"
+  return "text-info"
 }
 
 function FileIcon({ mimeType }: { mimeType: string }) {
   if (mimeType === "application/pdf")
     return <FileText className="size-3.5 text-destructive shrink-0" />
   if (mimeType.startsWith("image/"))
-    return <ImageIcon className="size-3.5 text-chart-1 shrink-0" />
+    return <ImageIcon className="size-3.5 text-info shrink-0" />
   return <File className="size-3.5 text-muted-foreground shrink-0" />
 }
 
@@ -367,7 +367,7 @@ export function NewTransactionDialog({
                 onChange={(e) => updateField("amount", e.target.value)}
                 placeholder={t("amountPlaceholder")}
                 required
-                className={`font-bold text-right font-mono border-l-4 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${valueAccentClass}`}
+                className={`font-bold text-right border-l-4 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${valueAccentClass}`}
               />
             </div>
           </div>
@@ -379,7 +379,7 @@ export function NewTransactionDialog({
                 {t("historyLabel")} <span className="text-destructive">*</span>
               </Label>
               {showSuggestions && suggestions.length > 0 && (
-                <span className="text-[10px] text-chart-1 font-medium">
+                <span className="text-[10px] text-info font-medium">
                   {t("suggestionsCount", { count: suggestions.length })}
                 </span>
               )}
@@ -422,16 +422,16 @@ export function NewTransactionDialog({
           {/* Row 5: Anexos */}
           <div className="space-y-1.5">
             <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
-              <Paperclip className="size-3 text-yellow-500" />
+              <Paperclip className="size-3 text-warning" />
               {t("attachmentsLabel")}
               {queuedFiles.length > 0 && (
-                <span className="text-yellow-500">({queuedFiles.length})</span>
+                <span className="text-warning">({queuedFiles.length})</span>
               )}
             </Label>
             <div
               className={`border-2 border-dashed rounded-lg px-3 py-2.5 cursor-pointer transition-all min-h-[40px] ${queuedFiles.length > 0
-                ? "border-yellow-400/60 bg-yellow-500/5"
-                : "border-border hover:border-yellow-400/50 hover:bg-yellow-500/5"
+                ? "border-warning/60 bg-warning/5"
+                : "border-border hover:border-warning/50 hover:bg-warning/5"
                 }`}
               onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
@@ -470,14 +470,14 @@ export function NewTransactionDialog({
                       e.stopPropagation()
                       fileInputRef.current?.click()
                     }}
-                    className="text-[11px] text-yellow-500 hover:text-yellow-400 transition-colors text-left mt-0.5"
+                    className="text-[11px] text-warning hover:text-warning/80 transition-colors text-left mt-0.5"
                   >
                     {t("addFileButton")}
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                  <Paperclip className="size-3.5 text-yellow-500 shrink-0" />
+                  <Paperclip className="size-3.5 text-warning shrink-0" />
                   <span>
                     {t("dropHint")}
                   </span>

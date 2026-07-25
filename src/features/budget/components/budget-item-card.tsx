@@ -38,17 +38,17 @@ import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 function getZoneInfo(pct: number) {
   if (pct <= 50)
     return {
-      color: "text-chart-2",
-      bgColor: "bg-chart-2/15",
-      borderColor: "border-chart-2/30",
+      color: "text-positive",
+      bgColor: "bg-positive/15",
+      borderColor: "border-positive/30",
       icon: <Shield className="h-3 w-3" />,
       labelKey: "safe" as const,
     }
   if (pct <= 80)
     return {
-      color: "text-chart-4",
-      bgColor: "bg-chart-4/15",
-      borderColor: "border-chart-4/30",
+      color: "text-warning",
+      bgColor: "bg-warning/15",
+      borderColor: "border-warning/30",
       icon: <AlertTriangle className="h-3 w-3" />,
       labelKey: "warning" as const,
     }
@@ -162,7 +162,7 @@ export function BudgetItemCard({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className={`inline-flex items-center ${item.isCustomFormula ? "text-chart-1" : "text-muted-foreground/50"}`}>
+                  <span className={`inline-flex items-center ${item.isCustomFormula ? "text-info" : "text-muted-foreground/50"}`}>
                     <FlaskConical className="h-3 w-3" />
                   </span>
                 </TooltipTrigger>
@@ -181,12 +181,12 @@ export function BudgetItemCard({
         </CardTitle>
         <div className="flex flex-wrap items-center gap-1.5 mt-1">
           {!item.hasHistory && (
-            <Badge variant="outline" className="bg-chart-4/10 text-chart-4 border-chart-4/30 text-[10px]">
+            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 text-[10px]">
               {t("itemCard.noData")}
             </Badge>
           )}
           {item.isCustomFormula && (
-            <Badge variant="outline" className="bg-chart-1/10 text-chart-1 border-chart-1/30 text-[10px]">
+            <Badge variant="outline" className="bg-info/10 text-info border-info/30 text-[10px]">
               {t("itemCard.customBadge")}
             </Badge>
           )}
@@ -198,7 +198,7 @@ export function BudgetItemCard({
             <span className="ml-1">{t(`zones.${zone.labelKey}`)}</span>
           </Badge>
           {wouldExceed && (
-            <Badge variant="outline" className="bg-chart-4/10 text-chart-4 border-chart-4/30 text-[10px]">
+            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 text-[10px]">
               <AlertTriangle className="h-2.5 w-2.5" />
               <span className="ml-1">{t("itemCard.mayExceed")}</span>
             </Badge>
@@ -220,13 +220,13 @@ export function BudgetItemCard({
           <div className="grid grid-cols-3 gap-1 pt-1">
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] text-muted-foreground">{t("itemCard.budgeted")}</span>
-              <span className="text-xs font-medium tabular-nums font-mono">
+              <span className="text-xs font-medium tabular-nums">
                 {monetary.formatMonetaryValue(item.limit)}
               </span>
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] text-muted-foreground">{t("itemCard.paid")}</span>
-              <span className="text-xs font-medium tabular-nums font-mono">
+              <span className="text-xs font-medium tabular-nums">
                 {monetary.formatMonetaryValue(item.paidAmount)}
               </span>
             </div>
@@ -235,7 +235,7 @@ export function BudgetItemCard({
                 <Clock className="h-2.5 w-2.5" />
                 {t("itemCard.scheduled")}
               </span>
-              <span className={`text-xs font-medium tabular-nums font-mono ${item.scheduledAmount === 0 ? "text-muted-foreground/40" : ""}`}>
+              <span className={`text-xs font-medium tabular-nums ${item.scheduledAmount === 0 ? "text-muted-foreground/40" : ""}`}>
                 {monetary.formatMonetaryValue(item.scheduledAmount)}
               </span>
             </div>
@@ -246,7 +246,7 @@ export function BudgetItemCard({
         <span className="text-xs text-muted-foreground">
           {remaining >= 0 ? t("status.remaining") : t("status.exceeded")}
         </span>
-        <span className={`text-sm font-semibold tabular-nums font-mono ${zone.color}`}>
+        <span className={`text-sm font-semibold tabular-nums ${zone.color}`}>
           {monetary.formatMonetaryValue(remaining)}
         </span>
       </CardFooter>

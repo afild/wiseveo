@@ -233,9 +233,9 @@ export function AttachmentDialog({
                   className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2 rounded-md border p-2 text-sm"
                 >
                   {att.mimeType.startsWith("image/") ? (
-                    <ImageIcon className="h-4 w-4 shrink-0 text-chart-4" />
+                    <ImageIcon className="h-4 w-4 shrink-0 text-warning" />
                   ) : (
-                    <FileText className="h-4 w-4 shrink-0 text-chart-1" />
+                    <FileText className="h-4 w-4 shrink-0 text-info" />
                   )}
                   <span className="min-w-0 truncate">{att.fileName}</span>
                   <span className="w-14 text-right text-xs text-muted-foreground">

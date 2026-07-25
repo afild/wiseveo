@@ -19,17 +19,17 @@ import { formatPercentValue } from "@/lib/monetary"
 function getZoneInfo(pct: number) {
   if (pct <= 50)
     return {
-      color: "text-chart-2",
-      bgColor: "bg-chart-2/15",
-      borderColor: "border-chart-2/30",
+      color: "text-positive",
+      bgColor: "bg-positive/15",
+      borderColor: "border-positive/30",
       icon: <Shield className="h-3.5 w-3.5" />,
       labelKey: "safe" as const,
     }
   if (pct <= 80)
     return {
-      color: "text-chart-4",
-      bgColor: "bg-chart-4/15",
-      borderColor: "border-chart-4/30",
+      color: "text-warning",
+      bgColor: "bg-warning/15",
+      borderColor: "border-warning/30",
       icon: <AlertTriangle className="h-3.5 w-3.5" />,
       labelKey: "warning" as const,
     }

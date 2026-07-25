@@ -55,7 +55,7 @@ function StatementSection({
         ? ArrowUpCircle
         : ArrowDownCircle
   const accentClass = isIncome
-    ? "text-chart-2"
+    ? "text-positive"
     : isExpense
       ? "text-destructive"
       : "text-primary"
@@ -95,7 +95,7 @@ function StatementSection({
               </div>
               <p
                 className={cn(
-                  "text-sm font-semibold font-mono tabular-nums",
+                  "text-sm font-semibold tabular-nums",
                   accentClass,
                 )}
               >
@@ -121,7 +121,7 @@ function StatementSection({
         </div>
         <p
           className={cn(
-            "text-sm font-semibold font-mono tabular-nums",
+            "text-sm font-semibold tabular-nums",
             accentClass,
           )}
         >
@@ -178,7 +178,7 @@ function TransferSection({ data }: { data: DreData | null }) {
         </div>
         <p
           className={cn(
-            "text-lg font-semibold font-mono tabular-nums",
+            "text-lg font-semibold tabular-nums",
             transferNet < 0 ? "text-destructive" : "text-primary",
           )}
         >
@@ -244,8 +244,8 @@ export function AnalysisStatementCard({
               </div>
               <p
                 className={cn(
-                  "text-lg font-semibold font-mono tabular-nums",
-                  operationalNet < 0 ? "text-destructive" : "text-chart-2",
+                  "text-lg font-semibold tabular-nums",
+                  operationalNet < 0 ? "text-destructive" : "text-positive",
                 )}
               >
                 {monetary.formatMonetaryValue(operationalNet)}
@@ -265,8 +265,8 @@ export function AnalysisStatementCard({
               </div>
               <p
                 className={cn(
-                  "text-xl font-semibold font-mono tabular-nums",
-                  net < 0 ? "text-destructive" : "text-chart-2",
+                  "text-xl font-semibold tabular-nums",
+                  net < 0 ? "text-destructive" : "text-positive",
                 )}
               >
                 {monetary.formatMonetaryValue(net)}

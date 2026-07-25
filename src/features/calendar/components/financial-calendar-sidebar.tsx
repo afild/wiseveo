@@ -56,13 +56,13 @@ export function FinancialCalendarSidebar({
         <CardContent className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("summary.income")}</span>
-            <span className="font-mono text-chart-2">
+            <span className="text-positive">
               {monetary.formatMonetaryValue(totalIncome)}
             </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("summary.expense")}</span>
-            <span className="font-mono text-destructive">
+            <span className="text-destructive">
               {monetary.formatMonetaryValue(totalExpense)}
             </span>
           </div>
@@ -70,8 +70,8 @@ export function FinancialCalendarSidebar({
             <span className="font-medium">{t("summary.net")}</span>
             <span
               className={cn(
-                "font-mono font-semibold",
-                totalNet < 0 ? "text-destructive" : "text-chart-2",
+                "font-semibold",
+                totalNet < 0 ? "text-destructive" : "text-positive",
               )}
             >
               {monetary.formatMonetaryValue(totalNet)}
@@ -82,7 +82,7 @@ export function FinancialCalendarSidebar({
               <span className="text-muted-foreground">{t("balance.closing")}</span>
               <span
                 className={cn(
-                  "font-mono font-semibold",
+                  "font-semibold",
                   lastDay.closingBalance < 0 && "text-destructive",
                 )}
               >

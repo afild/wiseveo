@@ -28,13 +28,13 @@ const ZONE_STYLES: Record<
   { badge: string; Icon: LucideIcon; value: string }
 > = {
   good: {
-    value: "text-chart-2",
-    badge: "bg-chart-2/15 text-chart-2 border-chart-2/30",
+    value: "text-positive",
+    badge: "bg-positive/15 text-positive border-positive/30",
     Icon: Shield,
   },
   warning: {
-    value: "text-chart-4",
-    badge: "bg-chart-4/15 text-chart-4 border-chart-4/30",
+    value: "text-warning",
+    badge: "bg-warning/15 text-warning border-warning/30",
     Icon: AlertTriangle,
   },
   critical: {
@@ -99,7 +99,7 @@ export function KpiCard({
         </CardDescription>
         <CardTitle
           className={cn(
-            "text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-mono",
+            "text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-display",
             muted ? "text-muted-foreground" : zoneStyle?.value,
           )}
         >

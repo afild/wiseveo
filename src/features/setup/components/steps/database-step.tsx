@@ -121,7 +121,7 @@ export function DatabaseStep({
           onClick={handleUseDocker}
           className="flex items-center gap-3 p-4 rounded-xl border-2 border-muted hover:border-primary/50 transition-all text-left cursor-pointer"
         >
-          <Container className="w-8 h-8 text-blue-500 shrink-0" />
+          <Container className="w-8 h-8 text-info shrink-0" />
           <div>
             <p className="font-medium text-sm">{t("dockerTitle")}</p>
             <p className="text-xs text-muted-foreground">{t("dockerSubtitle")}</p>
@@ -136,7 +136,7 @@ export function DatabaseStep({
           }}
           className="flex items-center gap-3 p-4 rounded-xl border-2 border-muted hover:border-primary/50 transition-all text-left cursor-pointer"
         >
-          <PlugZap className="w-8 h-8 text-green-500 shrink-0" />
+          <PlugZap className="w-8 h-8 text-positive shrink-0" />
           <div>
             <p className="font-medium text-sm">{t("existingTitle")}</p>
             <p className="text-xs text-muted-foreground">{t("existingSubtitle")}</p>
@@ -216,8 +216,8 @@ export function DatabaseStep({
 
       {/* Connection Result */}
       {connectionStatus === "success" && (
-        <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-4 animate-in fade-in duration-300">
-          <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
+        <div className="rounded-xl border border-positive/30 bg-positive/5 p-4 animate-in fade-in duration-300">
+          <div className="flex items-center gap-2 text-positive font-medium">
             <CheckCircle2 className="w-5 h-5" />
             {t("success")}
           </div>

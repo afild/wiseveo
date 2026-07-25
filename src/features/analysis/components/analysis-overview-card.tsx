@@ -68,7 +68,7 @@ function HighlightRow({ label, item, tone }: HighlightRowProps) {
         ? ArrowUpCircle
         : ArrowDownCircle
   const valueClassName = isIncome
-    ? "text-chart-2"
+    ? "text-positive"
     : isExpense
       ? "text-destructive"
       : "text-primary"
@@ -83,7 +83,7 @@ function HighlightRow({ label, item, tone }: HighlightRowProps) {
           className={cn(
             "size-4",
             isIncome
-              ? "text-chart-2"
+              ? "text-positive"
               : isExpense
                 ? "text-destructive"
                 : "text-primary",
@@ -98,7 +98,7 @@ function HighlightRow({ label, item, tone }: HighlightRowProps) {
           <p className="text-sm font-semibold">{item.groupName}</p>
           <p
             className={cn(
-              "text-sm font-mono tabular-nums",
+              "text-sm tabular-nums",
               valueClassName,
             )}
           >
@@ -176,7 +176,7 @@ export function AnalysisOverviewCard({
                 valueClassName={
                   (summary?.operationalNet ?? 0) < 0
                     ? "text-destructive"
-                    : "text-chart-2"
+                    : "text-positive"
                 }
               />
               <MetricBox
@@ -185,7 +185,7 @@ export function AnalysisOverviewCard({
                 valueClassName={
                   (summary?.net ?? 0) < 0
                     ? "text-destructive"
-                    : "text-chart-2"
+                    : "text-positive"
                 }
               />
               <MetricBox
@@ -208,7 +208,7 @@ export function AnalysisOverviewCard({
                 valueClassName={
                   (summary?.averageDailyNet ?? 0) < 0
                     ? "text-destructive"
-                    : "text-chart-2"
+                    : "text-positive"
                 }
               />
               <MetricBox

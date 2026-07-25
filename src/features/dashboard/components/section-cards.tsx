@@ -58,7 +58,7 @@ export function SectionCards({ balance, income, expense, savings }: SectionCards
       change: balance.change,
       footerText: t("balanceFooter"),
       icon: Wallet,
-      colorClass: balance.total >= 0 ? "text-chart-2" : "text-destructive",
+      colorClass: balance.total >= 0 ? "text-positive" : "text-destructive",
       invertTrend: false,
     },
     {
@@ -67,7 +67,7 @@ export function SectionCards({ balance, income, expense, savings }: SectionCards
       change: income.change,
       footerText: t("incomeFooter"),
       icon: ArrowUpCircle,
-      colorClass: "text-chart-2",
+      colorClass: "text-positive",
       invertTrend: false,
     },
     {
@@ -85,7 +85,7 @@ export function SectionCards({ balance, income, expense, savings }: SectionCards
       change: savings.change,
       footerText: t("savingsFooter"),
       icon: PiggyBank,
-      colorClass: savings.value >= 0 ? "text-chart-2" : "text-destructive",
+      colorClass: savings.value >= 0 ? "text-positive" : "text-destructive",
       invertTrend: false,
     },
   ]
@@ -102,7 +102,7 @@ export function SectionCards({ balance, income, expense, savings }: SectionCards
             <CardHeader className="pb-2 md:pb-4">
               <CardDescription className="text-xs md:text-sm">{card.label}</CardDescription>
               <CardTitle
-                className={`text-xl font-semibold tabular-nums @[250px]/card:text-3xl font-mono ${card.colorClass} md:text-2xl`}
+                className={`text-xl font-semibold tabular-nums @[250px]/card:text-3xl font-display ${card.colorClass} md:text-2xl`}
               >
                 {monetary.formatMonetaryValue(card.value)}
               </CardTitle>

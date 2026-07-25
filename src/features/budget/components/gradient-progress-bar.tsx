@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 
-const G_GREEN = "#22c55e"
-const G_YELLOW = "#eab308"
-const G_RED = "#ef4444"
+const G_GREEN = "var(--positive)"
+const G_YELLOW = "var(--warning)"
+const G_RED = "var(--destructive)"
 
 interface GradientProgressBarProps {
   pct: number

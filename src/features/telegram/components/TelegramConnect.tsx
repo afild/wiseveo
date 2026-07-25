@@ -17,7 +17,7 @@ export function TelegramConnect() {
     <Card className="border-0 shadow-none border-b rounded-none mb-6">
       <CardHeader className="px-0">
         <div className="flex items-center gap-2">
-          <Send className="h-5 w-5 text-blue-500" />
+          <Send className="h-5 w-5 text-info" />
           <CardTitle>{t("title")}</CardTitle>
         </div>
         <CardDescription>
@@ -26,7 +26,7 @@ export function TelegramConnect() {
       </CardHeader>
       <CardContent className="px-0">
         {!isConfigured ? (
-          <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
+          <div className="rounded-md bg-warning/10 p-3 text-sm text-warning">
             {t.rich("notConfigured", { code: (chunks) => <code className="font-mono text-xs">{chunks}</code> })}
           </div>
         ) : status?.connected ? (

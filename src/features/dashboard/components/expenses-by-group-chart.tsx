@@ -89,7 +89,7 @@ function GroupBarRow({ row, maxAmount, index, mounted }: GroupBarRowProps) {
             <span className="min-w-0 truncate text-xs font-medium text-foreground">
               {row.groupName}
             </span>
-            <span className="flex shrink-0 items-baseline gap-2 font-mono text-xs tabular-nums">
+            <span className="flex shrink-0 items-baseline gap-2 text-xs tabular-nums">
               <span className="font-medium text-foreground">
                 {monetary.formatMonetaryValue(Math.abs(row.amount))}
               </span>
@@ -141,7 +141,7 @@ function GroupBarRow({ row, maxAmount, index, mounted }: GroupBarRowProps) {
               />
               {t("paid")}
             </span>
-            <span className="font-mono font-medium tabular-nums">
+            <span className="font-medium tabular-nums">
               {monetary.formatMonetaryValue(row.paid)}
             </span>
           </div>
@@ -154,14 +154,14 @@ function GroupBarRow({ row, maxAmount, index, mounted }: GroupBarRowProps) {
               />
               {t("toPay")}
             </span>
-            <span className="font-mono font-medium tabular-nums">
+            <span className="font-medium tabular-nums">
               {monetary.formatMonetaryValue(row.scheduled)}
             </span>
           </div>
 
           <div className="mt-0.5 flex items-center justify-between gap-4 border-t border-border/50 pt-1">
             <span className="font-medium">{t("total")}</span>
-            <span className="font-mono font-bold tabular-nums">
+            <span className="font-bold tabular-nums">
               {monetary.formatMonetaryValue(row.amount)}
             </span>
           </div>
@@ -245,7 +245,7 @@ export function ExpensesByGroupChart() {
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <p className="text-sm text-muted-foreground">
             {t("totalExpenses")}{" "}
-            <span className="font-mono tabular-nums text-destructive">
+            <span className="tabular-nums text-destructive">
               {monetary.formatMonetaryValue(Math.abs(totalExpense))}
             </span>
           </p>

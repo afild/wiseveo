@@ -63,21 +63,21 @@ interface EditFormState {
 }
 
 function getTypeDotClass(type: TransactionType) {
-  if (type === "INCOME") return "bg-chart-2"
+  if (type === "INCOME") return "bg-positive"
   if (type === "EXPENSE") return "bg-destructive"
-  return "bg-chart-1"
+  return "bg-info"
 }
 
 function getTypeTextClass(type: TransactionType) {
-  if (type === "INCOME") return "text-chart-2"
+  if (type === "INCOME") return "text-positive"
   if (type === "EXPENSE") return "text-destructive"
-  return "text-chart-1"
+  return "text-info"
 }
 
 function getTypeAccentClass(type: TransactionType) {
-  if (type === "INCOME") return "text-chart-2 border-l-chart-2"
+  if (type === "INCOME") return "text-positive border-l-positive"
   if (type === "EXPENSE") return "text-destructive border-l-destructive"
-  return "text-chart-1 border-l-chart-1"
+  return "text-info border-l-info"
 }
 
 function getInitialEditForm(): EditFormState {
@@ -794,7 +794,7 @@ export function RecurringClient({
                 onChange={(event) =>
                   setEditForm((prev) => ({ ...prev, amount: event.target.value }))
                 }
-                className={`font-bold text-right font-mono border-l-4 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${getTypeAccentClass(
+                className={`font-bold text-right border-l-4 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${getTypeAccentClass(
                   editForm.type
                 )}`}
               />
@@ -807,7 +807,7 @@ export function RecurringClient({
                 {t("dialogs.editRecurring.historyLabel")}
               </Label>
               {showSuggestions && suggestions.length > 0 && (
-                <span className="text-[10px] text-chart-1 font-medium">
+                <span className="text-[10px] text-info font-medium">
                   {t("dialogs.editRecurring.suggestionsCount", { count: suggestions.length })}
                 </span>
               )}

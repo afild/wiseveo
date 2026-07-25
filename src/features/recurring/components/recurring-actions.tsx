@@ -29,7 +29,7 @@ export function RecurringActions({
       id: "launch-transaction",
       label: t("launchTransaction"),
       icon: Play,
-      iconClassName: "text-chart-2",
+      iconClassName: "text-positive",
       onClick: () => onLaunch?.(recurring),
     },
     {

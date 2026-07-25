@@ -18,10 +18,10 @@ interface StatusDotProps {
 }
 
 const statusConfig: Record<StatusType, { color: string; label: string }> = {
-  PAID: { color: "bg-chart-2", label: "Pago" },
-  PENDING: { color: "bg-chart-4", label: "Pendente" },
+  PAID: { color: "bg-positive", label: "Pago" },
+  PENDING: { color: "bg-warning", label: "Pendente" },
   OVERDUE: { color: "bg-destructive", label: "Vencido" },
-  SCHEDULED: { color: "bg-chart-1", label: "Agendado" },
+  SCHEDULED: { color: "bg-info", label: "Agendado" },
 }
 
 export function StatusDot({ status, label, className }: StatusDotProps) {

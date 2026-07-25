@@ -158,7 +158,7 @@ export function IntegrationsStep({
 
         {/* Telegram */}
         <IntegrationCard
-          icon={<Bot className="w-6 h-6 text-blue-400" />}
+          icon={<Bot className="w-6 h-6 text-info" />}
           title={t("telegram.title")}
           description={t("telegram.shortDesc")}
           enabled={integrations.telegram.enabled}
@@ -198,7 +198,7 @@ export function IntegrationsStep({
 
         {/* OpenAI */}
         <IntegrationCard
-          icon={<Brain className="w-6 h-6 text-emerald-500" />}
+          icon={<Brain className="w-6 h-6 text-positive" />}
           title="OpenAI (IA)"
           description={t("openai.shortDesc")}
           enabled={integrations.openai.enabled}

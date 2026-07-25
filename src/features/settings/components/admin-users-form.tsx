@@ -31,14 +31,14 @@ interface AdminUsersFormProps {
 function statusBadge(status: AdminUserSummary["status"], t: any) {
   if (status === "ACTIVE") {
     return (
-      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+      <Badge variant="secondary" className="bg-positive/10 text-positive">
         {t("active")}
       </Badge>
     )
   }
 
   return (
-    <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+    <Badge variant="secondary" className="bg-warning/10 text-warning">
       {t("pending")}
     </Badge>
   )

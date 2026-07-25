@@ -15,16 +15,16 @@ import { cn } from "@/lib/utils"
 import type { CalendarDayStatement } from "../types"
 
 const STATUS_COLORS: Record<string, string> = {
-  PAID: "bg-chart-2/15 text-chart-2 border-chart-2/30",
-  PENDING: "bg-chart-4/15 text-chart-4 border-chart-4/30",
+  PAID: "bg-positive/15 text-positive border-positive/30",
+  PENDING: "bg-warning/15 text-warning border-warning/30",
   OVERDUE: "bg-destructive/15 text-destructive border-destructive/30",
-  SCHEDULED: "bg-chart-1/15 text-chart-1 border-chart-1/30",
+  SCHEDULED: "bg-info/15 text-info border-info/30",
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  INCOME: "text-chart-2",
+  INCOME: "text-positive",
   EXPENSE: "text-destructive",
-  TRANSFER: "text-chart-1",
+  TRANSFER: "text-info",
 }
 
 interface DayStatementDialogProps {
@@ -79,7 +79,7 @@ export function DayStatementDialog({
             </span>
             <span
               className={cn(
-                "font-mono text-sm font-bold",
+                "text-sm font-bold",
                 day.openingBalance < 0 && "text-destructive",
               )}
             >
@@ -123,7 +123,7 @@ export function DayStatementDialog({
                   </div>
                   <span
                     className={cn(
-                      "font-mono text-sm font-medium whitespace-nowrap shrink-0",
+                      "text-sm font-medium whitespace-nowrap shrink-0",
                       TYPE_COLORS[tx.type],
                     )}
                   >
@@ -139,7 +139,7 @@ export function DayStatementDialog({
             <span className="text-sm font-semibold">{t("balance.closing")}</span>
             <span
               className={cn(
-                "font-mono text-sm font-bold",
+                "text-sm font-bold",
                 day.closingBalance < 0 && "text-destructive",
               )}
             >
@@ -152,13 +152,13 @@ export function DayStatementDialog({
             <div className="grid grid-cols-3 gap-2 pt-2 border-t text-center">
               <div>
                 <p className="text-xs text-muted-foreground">{t("summary.income")}</p>
-                <p className="font-mono text-sm text-chart-2">
+                <p className="text-sm text-positive">
                   {monetary.formatMonetaryValue(day.income)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{t("summary.expense")}</p>
-                <p className="font-mono text-sm text-destructive">
+                <p className="text-sm text-destructive">
                   {monetary.formatMonetaryValue(day.expense)}
                 </p>
               </div>
@@ -166,8 +166,8 @@ export function DayStatementDialog({
                 <p className="text-xs text-muted-foreground">{t("summary.net")}</p>
                 <p
                   className={cn(
-                    "font-mono text-sm",
-                    day.net < 0 ? "text-destructive" : "text-chart-2",
+                    "text-sm",
+                    day.net < 0 ? "text-destructive" : "text-positive",
                   )}
                 >
                   {monetary.formatMonetaryValue(day.net)}

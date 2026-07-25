@@ -40,8 +40,8 @@ import type {
 } from "../types"
 
 const PROGRESS_FILL: Record<Exclude<KpiZone, "neutral">, string> = {
-  good: "bg-chart-2",
-  warning: "bg-chart-4",
+  good: "bg-positive",
+  warning: "bg-warning",
   critical: "bg-destructive",
 }
 

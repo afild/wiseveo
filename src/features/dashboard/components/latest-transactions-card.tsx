@@ -38,7 +38,7 @@ function formatShortDate(isoDate: string, locale: string): string {
 
 function amountColorClass(value: number): string {
   if (value < 0) return "text-destructive"
-  if (value > 0) return "text-chart-2"
+  if (value > 0) return "text-positive"
   return "text-foreground"
 }
 
@@ -190,7 +190,7 @@ export function LatestTransactionsCard() {
                     <div
                       className={cn(
                         "flex size-7 md:size-8 shrink-0 items-center justify-center rounded-md",
-                        negative ? "bg-destructive/10 text-destructive" : "bg-chart-2/15 text-chart-2"
+                        negative ? "bg-destructive/10 text-destructive" : "bg-positive/15 text-positive"
                       )}
                     >
                       {negative ? <ArrowDownRight className="size-3.5 md:size-4" /> : <ArrowUpRight className="size-3.5 md:size-4" />}

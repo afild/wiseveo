@@ -542,10 +542,10 @@ export function StatusTooltip({
   placement = "top",
 }: StatusTooltipProps) {
   const statusConfig = {
-    online: { color: "bg-green-500", text: "Online" },
-    offline: { color: "bg-gray-400", text: "Offline" },
-    away: { color: "bg-yellow-500", text: "Away" },
-    busy: { color: "bg-red-500", text: "Busy" },
+    online: { color: "bg-positive", text: "Online" },
+    offline: { color: "bg-muted-foreground", text: "Offline" },
+    away: { color: "bg-warning", text: "Away" },
+    busy: { color: "bg-destructive", text: "Busy" },
   };
 
   const config = statusConfig[status];

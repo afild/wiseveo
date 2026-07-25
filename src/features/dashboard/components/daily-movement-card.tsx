@@ -161,17 +161,17 @@ export function DailyMovementCard() {
                   <TableCell className={cn(cellBase, textSize, "whitespace-nowrap")}>
                     {formatDate(row.date, isMobile)}
                   </TableCell>
-                  <TableCell className={cn(cellRight, textSize, "tabular-nums font-mono")}>
+                  <TableCell className={cn(cellRight, textSize, "tabular-nums")}>
                     {fmtVal(row.income)}
                   </TableCell>
-                  <TableCell className={cn(cellRight, textSize, "tabular-nums font-mono")}>
+                  <TableCell className={cn(cellRight, textSize, "tabular-nums")}>
                     {fmtVal(row.expense)}
                   </TableCell>
                   <TableCell
                     className={cn(
                       cellRight,
                       textSize,
-                      "tabular-nums font-mono",
+                      "tabular-nums",
                       row.net < 0 && "text-destructive"
                     )}
                   >
@@ -181,7 +181,7 @@ export function DailyMovementCard() {
                     className={cn(
                       cellRight,
                       textSize,
-                      "tabular-nums font-mono",
+                      "tabular-nums",
                       row.accumulated < 0 && "text-destructive"
                     )}
                   >
@@ -202,17 +202,17 @@ export function DailyMovementCard() {
               <TableCell className={cn(cellBase, textSize, "text-center")}>
                 {rows.length}
               </TableCell>
-              <TableCell className={cn(cellRight, textSize, "tabular-nums font-mono")}>
+              <TableCell className={cn(cellRight, textSize, "tabular-nums")}>
                 {fmtVal(totalIncome)}
               </TableCell>
-              <TableCell className={cn(cellRight, textSize, "tabular-nums font-mono")}>
+              <TableCell className={cn(cellRight, textSize, "tabular-nums")}>
                 {fmtVal(totalExpense)}
               </TableCell>
               <TableCell
                 className={cn(
                   cellRight,
                   textSize,
-                  "tabular-nums font-mono",
+                  "tabular-nums",
                   totalBalance < 0 && "text-destructive"
                 )}
               >
@@ -222,7 +222,7 @@ export function DailyMovementCard() {
                 className={cn(
                   cellRight,
                   textSize,
-                  "tabular-nums font-mono",
+                  "tabular-nums",
                   finalAccumulated < 0 && "text-destructive"
                 )}
               >

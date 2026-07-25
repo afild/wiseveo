@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils"
 import type { CalendarDayStatement } from "../types"
 
 const TYPE_COLORS: Record<string, string> = {
-  INCOME: "text-chart-2",
+  INCOME: "text-positive",
   EXPENSE: "text-destructive",
-  TRANSFER: "text-chart-1",
+  TRANSFER: "text-info",
 }
 
 interface FinancialCalendarListProps {
@@ -76,8 +76,8 @@ export function FinancialCalendarList({
                 </span>
                 <span
                   className={cn(
-                    "font-mono",
-                    day.net < 0 ? "text-destructive" : "text-chart-2",
+                    "tabular-nums",
+                    day.net < 0 ? "text-destructive" : "text-positive",
                   )}
                 >
                   {monetary.formatMonetaryValue(day.net)}
@@ -86,7 +86,7 @@ export function FinancialCalendarList({
             </CardHeader>
             <CardContent className="space-y-1.5">
               {/* Opening */}
-              <div className="flex justify-between text-xs font-semibold font-mono pb-1 border-b">
+              <div className="flex justify-between text-xs font-semibold tabular-nums pb-1 border-b">
                 <span>{t("balance.opening")}</span>
                 <span
                   className={cn(
@@ -113,7 +113,7 @@ export function FinancialCalendarList({
                   </div>
                   <span
                     className={cn(
-                      "font-mono text-sm whitespace-nowrap shrink-0",
+                      "tabular-nums text-sm whitespace-nowrap shrink-0",
                       TYPE_COLORS[tx.type],
                     )}
                   >
@@ -123,7 +123,7 @@ export function FinancialCalendarList({
               ))}
 
               {/* Closing */}
-              <div className="flex justify-between text-xs font-semibold font-mono pt-1 border-t">
+              <div className="flex justify-between text-xs font-semibold tabular-nums pt-1 border-t">
                 <span>{t("balance.closing")}</span>
                 <span
                   className={cn(

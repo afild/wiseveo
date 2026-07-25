@@ -38,7 +38,7 @@ export function TransactionCardMobile({
 }: TransactionCardMobileProps) {
   const t = useTranslations("transactions.card")
   const locale = useLocale()
-  const amountColor = transaction.amount < 0 ? "text-destructive" : "text-chart-2"
+  const amountColor = transaction.amount < 0 ? "text-destructive" : "text-positive"
 
   // Format date as dd/MM
   const dateStr = transaction.date

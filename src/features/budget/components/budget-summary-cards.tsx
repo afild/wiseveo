@@ -26,17 +26,17 @@ import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 function getZoneInfo(pct: number) {
   if (pct <= 50)
     return {
-      color: "text-chart-2",
-      bgColor: "bg-chart-2/15",
-      borderColor: "border-chart-2/30",
+      color: "text-positive",
+      bgColor: "bg-positive/15",
+      borderColor: "border-positive/30",
       Icon: Shield,
       labelKey: "safe" as const,
     }
   if (pct <= 80)
     return {
-      color: "text-chart-4",
-      bgColor: "bg-chart-4/15",
-      borderColor: "border-chart-4/30",
+      color: "text-warning",
+      bgColor: "bg-warning/15",
+      borderColor: "border-warning/30",
       Icon: AlertTriangle,
       labelKey: "warning" as const,
     }
@@ -70,7 +70,7 @@ export function BudgetSummaryCards({
   const monetary = useMonetaryFormattingSafe()
   const remaining = totalLimit - totalSpent
   const zone = getZoneInfo(overallPct)
-  const remainingColor = remaining >= 0 ? "text-chart-2" : "text-destructive"
+  const remainingColor = remaining >= 0 ? "text-positive" : "text-destructive"
   const remainingLabel =
     remaining >= 0
       ? t("summary.marginAvailableLower")
@@ -85,7 +85,7 @@ export function BudgetSummaryCards({
             <Target className="size-3.5" />
             {t("summary.budgetedTotal")}
           </CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-mono">
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-display">
             {monetary.formatMonetaryValue(totalLimit)}
           </CardTitle>
           <CardAction>
@@ -107,7 +107,7 @@ export function BudgetSummaryCards({
             <ArrowDownCircle className="size-3.5" />
             {t("summary.spentTotal")}
           </CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-mono text-destructive">
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-display text-destructive">
             {monetary.formatMonetaryValue(totalSpent)}
           </CardTitle>
           <CardAction>
@@ -135,7 +135,7 @@ export function BudgetSummaryCards({
             {remaining >= 0 ? t("status.remaining") : t("status.exceeded")}
           </CardDescription>
           <CardTitle
-            className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-mono ${remainingColor}`}
+            className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-display ${remainingColor}`}
           >
             {monetary.formatMonetaryValue(remaining)}
           </CardTitle>
@@ -161,7 +161,7 @@ export function BudgetSummaryCards({
             {t("summary.usage")}
           </CardDescription>
           <CardTitle
-            className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-mono ${zone.color}`}
+            className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-display ${zone.color}`}
           >
             {formatPercentValue(overallPct)}
           </CardTitle>

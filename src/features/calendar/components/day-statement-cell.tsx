@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils"
 import type { CalendarDayStatement } from "../types"
 
 function amountColor(amount: number, type: string): string {
-  if (type === "INCOME") return "text-chart-2"
-  if (type === "TRANSFER") return "text-chart-1"
+  if (type === "INCOME") return "text-positive"
+  if (type === "TRANSFER") return "text-info"
   return "text-destructive"
 }
 
@@ -68,7 +68,7 @@ export function DayStatementCell({
       {hasTx && (
         <div className="space-y-px">
           {/* Opening balance */}
-          <div className="flex justify-between font-mono text-[10px] font-semibold">
+          <div className="flex justify-between text-[10px] font-semibold">
             <span className="truncate">{t("balance.opening")}</span>
             <span
               className={cn(
@@ -84,7 +84,7 @@ export function DayStatementCell({
             <div
               key={tx.id}
               className={cn(
-                "flex justify-between font-mono text-[10px]",
+                "flex justify-between text-[10px]",
                 amountColor(tx.amount, tx.type),
               )}
             >
@@ -98,7 +98,7 @@ export function DayStatementCell({
           ))}
 
           {/* Closing balance */}
-          <div className="flex justify-between font-mono text-[10px] font-semibold">
+          <div className="flex justify-between text-[10px] font-semibold">
             <span className="truncate">{t("balance.closing")}</span>
             <span
               className={cn(
@@ -113,7 +113,7 @@ export function DayStatementCell({
 
       {/* Day without transactions but with balance */}
       {!hasTx && day && isCurrentMonth && (
-        <div className="font-mono text-[10px] text-muted-foreground mt-1">
+        <div className="text-[10px] text-muted-foreground mt-1">
           <span>{monetary.formatMonetaryValue(day.openingBalance)}</span>
         </div>
       )}

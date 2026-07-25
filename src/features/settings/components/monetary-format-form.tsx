@@ -251,13 +251,13 @@ function LoadedMonetaryFormatForm({
             <CardContent className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg border bg-muted/30 p-4">
                 <div className="text-sm text-muted-foreground">{t("posValue")}</div>
-                <div className="mt-2 font-mono text-2xl font-semibold text-chart-2">
+                <div className="mt-2 font-display text-2xl font-semibold text-positive">
                   {previewFormatter.formatMonetaryValue(previewValues.positive)}
                 </div>
               </div>
               <div className="rounded-lg border bg-muted/30 p-4">
                 <div className="text-sm text-muted-foreground">{t("negValue")}</div>
-                <div className="mt-2 font-mono text-2xl font-semibold text-destructive">
+                <div className="mt-2 font-display text-2xl font-semibold text-destructive">
                   {previewFormatter.formatMonetaryValue(previewValues.negative)}
                 </div>
               </div>

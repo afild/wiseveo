@@ -44,7 +44,7 @@ export function DeleteConfirmDialog({
               </span>
             )}
             {transaction && (
-              <span className="mt-0.5 block font-mono text-sm">
+              <span className="mt-0.5 block text-sm">
                 {monetary.formatMonetaryValue(transaction.amount)}
               </span>
             )}
@@ -98,7 +98,7 @@ export function QuickPayConfirmDialog({
               </span>
             )}
             {transaction && (
-              <span className="mt-0.5 block font-mono text-sm">
+              <span className="mt-0.5 block text-sm">
                 {monetary.formatMonetaryValue(transaction.amount)}
               </span>
             )}
@@ -145,7 +145,7 @@ export function MakeRecurringConfirmDialog({
               </span>
             )}
             {transaction && (
-              <span className="mt-0.5 block font-mono text-sm">
+              <span className="mt-0.5 block text-sm">
                 {monetary.formatMonetaryValue(transaction.amount)}
               </span>
             )}

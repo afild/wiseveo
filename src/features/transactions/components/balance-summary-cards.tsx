@@ -42,7 +42,7 @@ function AccountBalanceSection({ label, accounts }: AccountBalanceCardProps) {
               {acc.name}
             </span>
             <span
-              className={`text-sm font-mono tabular-nums ${
+              className={`text-sm tabular-nums ${
                 acc.currentBalance < 0
                   ? "text-destructive"
                   : "text-foreground"
@@ -56,7 +56,7 @@ function AccountBalanceSection({ label, accounts }: AccountBalanceCardProps) {
       <div className="flex items-center justify-between border-t pt-1">
         <span className="text-sm font-semibold">{t("total")}</span>
         <span
-          className={`text-sm font-semibold font-mono tabular-nums ${
+          className={`text-sm font-semibold tabular-nums ${
             total < 0 ? "text-destructive" : "text-foreground"
           }`}
         >
@@ -82,11 +82,11 @@ function SummaryCard({ label, value, variant }: SummaryCardProps) {
   const t = useTranslations("transactions.summary")
   const colorClass =
     variant === "income"
-      ? "text-chart-2"
+      ? "text-positive"
       : variant === "expense"
         ? "text-destructive"
         : value >= 0
-          ? "text-chart-2"
+          ? "text-positive"
           : "text-destructive"
 
   const trendIcon =
@@ -96,7 +96,7 @@ function SummaryCard({ label, value, variant }: SummaryCardProps) {
     <Card className="@container/card">
       <CardHeader>
         <CardDescription>{label}</CardDescription>
-        <CardTitle className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-mono ${colorClass}`}>
+        <CardTitle className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-display ${colorClass}`}>
           {monetary.formatMonetaryValue(value)}
         </CardTitle>
         <CardAction>

@@ -51,7 +51,7 @@ export function AccountCard({
             </div>
           </div>
         </CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-mono">
+        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-display">
           {monetary.formatMonetaryValue(currentBalance)}
         </CardTitle>
         <CardAction>

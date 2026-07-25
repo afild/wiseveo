@@ -43,8 +43,8 @@ interface CashflowPoint {
 
 const tooltipSeriesMap = {
   income: {
-    labelClassName: "text-chart-2",
-    dotClassName: "bg-chart-2",
+    labelClassName: "text-positive",
+    dotClassName: "bg-positive",
   },
   expense: {
     labelClassName: "text-destructive",
@@ -155,7 +155,7 @@ function TrialTooltipContent({ active, label, payload }: TrialTooltipContentProp
                 <span className={cn("size-2.5 shrink-0 rounded-full", series.dotClassName)} />
                 {t(row.key)}:
               </span>
-              <span className="text-foreground font-mono font-medium tabular-nums">
+              <span className="text-foreground font-medium tabular-nums">
                 {monetary.formatMonetaryValue(row.value)}
               </span>
             </div>
@@ -395,7 +395,7 @@ export function ChartAreaInteractive() {
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
           {t("currentBalance")}{" "}
-          <span className="font-mono tabular-nums text-foreground">
+          <span className="tabular-nums text-foreground">
             {monetary.formatMonetaryValue(currentBalance)}
           </span>
         </p>

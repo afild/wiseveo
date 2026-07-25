@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { formatPercentValue } from "@/lib/monetary"
 
-const G_GREEN = "#22c55e"
-const G_YELLOW = "#eab308"
-const G_RED = "#ef4444"
+const G_GREEN = "var(--positive)"
+const G_YELLOW = "var(--warning)"
+const G_RED = "var(--destructive)"
 
 interface GradientDoughnutProps {
   pct: number
@@ -108,7 +108,7 @@ export function GradientDoughnut({ pct, size = 160 }: GradientDoughnutProps) {
         }}
       >
         <span
-          className={pct <= 50 ? "text-chart-2" : pct <= 80 ? "text-chart-4" : "text-destructive"}
+          className={pct <= 50 ? "text-positive" : pct <= 80 ? "text-warning" : "text-destructive"}
           style={{
             fontSize: size * 0.22,
             fontWeight: 700,

@@ -51,9 +51,9 @@ export function ForecastingDataTable({ data, showAv, showAh, loading }: Forecast
     const isExpanded = !!expanded[idPrefix]
     
     const getColorClass = (amount: number, baseOpacity: string = "") => {
-      if (colorMode === "income") return `text-chart-2${baseOpacity}`
+      if (colorMode === "income") return `text-positive${baseOpacity}`
       if (colorMode === "expense") return `text-destructive${baseOpacity}`
-      return amount >= 0 ? `text-chart-2${baseOpacity}` : `text-destructive${baseOpacity}`
+      return amount >= 0 ? `text-positive${baseOpacity}` : `text-destructive${baseOpacity}`
     }
 
     return (
@@ -72,7 +72,7 @@ export function ForecastingDataTable({ data, showAv, showAh, loading }: Forecast
             <TableCell key={idx} className="text-right align-top py-3 min-w-[140px]">
               <div className="flex flex-col items-end">
                 <span className={cn(
-                  "font-mono font-semibold tabular-nums",
+                  "font-semibold tabular-nums",
                   getColorClass(cell.amount),
                   cell.isProjected && "opacity-80"
                 )}>
@@ -106,7 +106,7 @@ export function ForecastingDataTable({ data, showAv, showAh, loading }: Forecast
                   <TableCell key={idx} className="text-right align-top py-2 text-sm">
                     <div className="flex flex-col items-end">
                       <span className={cn(
-                        "font-mono tabular-nums font-medium",
+                        "tabular-nums font-medium",
                         getColorClass(cell.amount, "/90")
                       )}>
                         {monetary.formatMonetaryValue(cell.amount)}
@@ -129,7 +129,7 @@ export function ForecastingDataTable({ data, showAv, showAh, loading }: Forecast
                     <TableCell key={idx} className="text-right align-top py-2 text-sm text-muted-foreground">
                       <div className="flex flex-col items-end">
                         <span className={cn(
-                          "font-mono tabular-nums",
+                          "tabular-nums",
                           getColorClass(cell.amount, "/70")
                         )}>
                           {monetary.formatMonetaryValue(cell.amount)}
@@ -163,7 +163,7 @@ export function ForecastingDataTable({ data, showAv, showAh, loading }: Forecast
                     "text-[10px] uppercase px-1.5 py-0.5 rounded-sm",
                     col.isProjected
                       ? "text-muted-foreground bg-muted"
-                      : "text-chart-2/80 bg-chart-2/10"
+                      : "text-positive/80 bg-positive/10"
                   )}>
                     {col.isProjected ? t("projectedAbbrev") : t("actual")}
                   </span>
@@ -184,8 +184,8 @@ export function ForecastingDataTable({ data, showAv, showAh, loading }: Forecast
               <TableCell key={idx} className="text-right align-top py-4">
                 <div className="flex flex-col items-end">
                   <span className={cn(
-                    "font-mono font-bold tabular-nums text-lg",
-                    cell.amount < 0 ? "text-destructive" : "text-chart-2",
+                    "font-bold tabular-nums text-lg",
+                    cell.amount < 0 ? "text-destructive" : "text-positive",
                     cell.isProjected && "opacity-80"
                   )}>
                     {monetary.formatMonetaryValue(cell.amount)}
@@ -204,7 +204,7 @@ export function ForecastingDataTable({ data, showAv, showAh, loading }: Forecast
               <TableCell key={idx} className="text-right align-top py-4">
                 <div className="flex flex-col items-end">
                   <span className={cn(
-                    "font-mono font-bold tabular-nums text-lg",
+                    "font-bold tabular-nums text-lg",
                     cell.amount < 0 ? "text-destructive" : "text-primary",
                     cell.isProjected && "opacity-80"
                   )}>

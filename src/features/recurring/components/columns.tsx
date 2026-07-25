@@ -35,7 +35,7 @@ function buildTypeConfig(
   labels: RecurringColumnLabels
 ): Record<string, { label: string; className: string }> {
   return {
-    INCOME: { label: labels.typeIncome, className: "text-chart-2" },
+    INCOME: { label: labels.typeIncome, className: "text-positive" },
     EXPENSE: { label: labels.typeExpense, className: "text-destructive" },
     TRANSFER: { label: labels.typeTransfer, className: "text-muted-foreground" },
   }
@@ -304,12 +304,12 @@ export function getRecurringColumns(
         const type = row.original.type
         const colorClass =
           type === "INCOME"
-            ? "text-chart-2"
+            ? "text-positive"
             : type === "EXPENSE"
               ? "text-destructive"
               : "text-muted-foreground"
         return (
-          <div className={cn("font-mono text-sm font-medium text-right", colorClass)}>
+          <div className={cn("text-sm font-medium text-right", colorClass)}>
             {monetary.formatMonetaryValue(amount)}
           </div>
         )

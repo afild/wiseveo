@@ -44,10 +44,10 @@ function buildStatusConfig(
   labels: TransactionColumnLabels
 ): Record<string, { label: string; className: string }> {
   return {
-    PAID: { label: labels.statusPaid, className: "bg-chart-2/15 text-chart-2 border-chart-2/30" },
-    PENDING: { label: labels.statusPending, className: "bg-chart-4/15 text-chart-4 border-chart-4/30" },
+    PAID: { label: labels.statusPaid, className: "bg-positive/15 text-positive border-positive/30" },
+    PENDING: { label: labels.statusPending, className: "bg-warning/15 text-warning border-warning/30" },
     OVERDUE: { label: labels.statusOverdue, className: "bg-destructive/15 text-destructive border-destructive/30" },
-    SCHEDULED: { label: labels.statusScheduled, className: "bg-chart-1/15 text-chart-1 border-chart-1/30" },
+    SCHEDULED: { label: labels.statusScheduled, className: "bg-info/15 text-info border-info/30" },
   }
 }
 
@@ -55,7 +55,7 @@ function buildTypeConfig(
   labels: TransactionColumnLabels
 ): Record<string, { label: string; className: string }> {
   return {
-    INCOME: { label: labels.typeIncome, className: "text-chart-2" },
+    INCOME: { label: labels.typeIncome, className: "text-positive" },
     EXPENSE: { label: labels.typeExpense, className: "text-destructive" },
     TRANSFER: { label: labels.typeTransfer, className: "text-muted-foreground" },
   }
@@ -139,7 +139,7 @@ function matchesAmountSearch(
 
 function getAmountColorClass(amount: number): string {
   if (amount < 0) return "text-destructive"
-  if (amount > 0) return "text-chart-2"
+  if (amount > 0) return "text-positive"
   return "text-muted-foreground"
 }
 
@@ -370,7 +370,7 @@ export function getTransactionColumns(
       cell: ({ row }) => {
         const amount = row.getValue("amount") as number
         return (
-          <div className={cn("font-mono text-sm font-medium text-right", getAmountColorClass(amount))}>
+          <div className={cn("text-sm font-medium text-right", getAmountColorClass(amount))}>
             {monetary.formatMonetaryValue(amount)}
           </div>
         )

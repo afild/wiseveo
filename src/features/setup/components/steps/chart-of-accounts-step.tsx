@@ -120,9 +120,9 @@ const defaultAccounts = [
 ]
 
 const typeIcons: Record<string, React.ReactNode> = {
-  INCOME: <TrendingUp className="w-4 h-4 text-emerald-500" />,
-  EXPENSE: <TrendingDown className="w-4 h-4 text-red-500" />,
-  TRANSFER: <ArrowLeftRight className="w-4 h-4 text-blue-500" />,
+  INCOME: <TrendingUp className="w-4 h-4 text-positive" />,
+  EXPENSE: <TrendingDown className="w-4 h-4 text-destructive" />,
+  TRANSFER: <ArrowLeftRight className="w-4 h-4 text-info" />,
 }
 
 interface ChartOfAccountsStepProps {

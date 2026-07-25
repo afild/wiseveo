@@ -72,9 +72,9 @@ export function SidebarRadar() {
 
   const getRadarColor = (balance: number | null): string => {
     if (balance === null) return "var(--sidebar-accent-foreground)"
-    if (balance < 100) return "#ef4444" // Vermelho
-    if (balance < 300) return "#eab308" // Amarelo (Tailwind yellow-500)
-    return "#10b981" // Verde (Tailwind emerald-500)
+    if (balance < 100) return "var(--destructive)"
+    if (balance < 300) return "var(--warning)"
+    return "var(--positive)"
   }
 
   return (
@@ -89,7 +89,7 @@ export function SidebarRadar() {
           <span className="text-[10px] font-bold uppercase tracking-wider text-sidebar-foreground/60">
             {t("currentBalance")}
           </span>
-          <span className="font-mono-financial truncate text-2xl font-bold text-primary">
+          <span className="font-display truncate text-2xl font-bold text-primary">
             {todayBalance !== null ? monetary.formatNumberValue(todayBalance) : "---"}
           </span>
           <span className="truncate text-[11px] text-sidebar-foreground/60">

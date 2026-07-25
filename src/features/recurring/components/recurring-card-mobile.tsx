@@ -30,7 +30,7 @@ export function RecurringCardMobile({
 
   const amountColorClass =
     recurring.type === "INCOME"
-      ? "text-chart-2"
+      ? "text-positive"
       : recurring.type === "EXPENSE"
         ? "text-destructive"
         : "text-muted-foreground"
@@ -53,7 +53,7 @@ export function RecurringCardMobile({
       <div
         className={cn(
           "absolute inset-y-0 left-0 w-1",
-          recurring.type === "INCOME" ? "bg-chart-2" : "bg-destructive"
+          recurring.type === "INCOME" ? "bg-positive" : "bg-destructive"
         )}
       />
 
@@ -64,7 +64,7 @@ export function RecurringCardMobile({
             {recurring.description || t("noDescription")}
           </p>
           <div className="flex flex-col items-end gap-0.5 ml-auto">
-            <div className={cn("font-mono font-bold text-sm tabular-nums", amountColorClass)}>
+            <div className={cn("font-bold text-sm tabular-nums", amountColorClass)}>
               {monetary.formatMonetaryValue(recurring.amount)}
             </div>
             <span className="text-[11px] font-bold uppercase text-muted-foreground/50 max-w-[80px] truncate">

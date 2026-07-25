@@ -55,7 +55,7 @@ export function AnalysisSummaryCards({
         ? tCommon("loading")
         : t("groupsCount", { count: summary?.incomeGroupCount ?? 0 }),
       footerText: t("summary.incomeFooter"),
-      valueClassName: "text-chart-2",
+      valueClassName: "text-positive",
     },
     {
       label: t("summary.expense"),
@@ -78,7 +78,7 @@ export function AnalysisSummaryCards({
       actionLabel: loading ? tCommon("loading") : resultLabel,
       footerText: t("summary.finalBalanceFooter"),
       valueClassName:
-        (summary?.net ?? 0) < 0 ? "text-destructive" : "text-chart-2",
+        (summary?.net ?? 0) < 0 ? "text-destructive" : "text-positive",
     },
     {
       label: t("summary.margin"),
@@ -113,7 +113,7 @@ export function AnalysisSummaryCards({
               </CardDescription>
               <CardTitle
                 className={cn(
-                  "text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-mono",
+                  "text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-display",
                   card.valueClassName,
                 )}
               >
