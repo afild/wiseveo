@@ -58,7 +58,7 @@ import { TransactionBatchActions } from "./transaction-batch-actions"
 import { TransactionCardMobile } from "./transaction-card-mobile"
 import type { SerializedTransaction, TransactionFilterOptions } from "../types"
 import { useDeviceClass } from "@/hooks/use-device-class"
-import { createDateFormatter } from "@/i18n/format"
+import { createDateFormatter, formatAppDate } from "@/i18n/format"
 import { formatPeriod } from "@/lib/financial"
 import type { MonetaryFormatter } from "@/lib/monetary"
 import { mergeColumnOrder, type ExportFormat } from "@/lib/table-export"
@@ -376,6 +376,39 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
     [buildExport, t, tDataTable]
   )
 
+  const handlePrint = React.useCallback(async () => {
+    try {
+      const { columns: cols, rows } = buildExport()
+      const { generateTableReport } = await import("@/lib/pdf/generate-table-report")
+      // Mesmo formatador de data que o DayRangeNavigator usa para o intervalo.
+      const rangeFormatter = createDateFormatter(locale, {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "UTC",
+      })
+      const range =
+        dateRange.from.getTime() === dateRange.to.getTime()
+          ? rangeFormatter.format(dateRange.from)
+          : `${rangeFormatter.format(dateRange.from)} – ${rangeFormatter.format(dateRange.to)}`
+      await generateTableReport({
+        brand: "WISEVEO", // i18n-ignore — nome da marca, não é texto de UI traduzível
+        title: t("printTitle"),
+        periodLine: tDataTable("pdf.period", { range }),
+        generatedAtLine: tDataTable("pdf.generatedAt", {
+          date: formatAppDate(new Date(), "dd/MM/yyyy", locale),
+        }),
+        rowsCountLine: tDataTable("pdf.rows", { count: rows.length }),
+        pageOfTemplate: tDataTable.raw("pdf.pageOf") as string,
+        columns: cols,
+        rows,
+        numericColumnIds: ["amount", "num"],
+      })
+    } catch {
+      toast.error(tDataTable("pdf.error"))
+    }
+  }, [buildExport, t, tDataTable, locale, dateRange])
+
   return (
     <div className="flex flex-col gap-4">
       <DataTableToolbar table={table} filterOptions={filterOptions} />
@@ -396,6 +429,7 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
               table={table}
               columnLabels={columnLabels}
               onExport={handleExport}
+              onPrint={handlePrint}
             />
           </div>
 

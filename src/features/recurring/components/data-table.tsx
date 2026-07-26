@@ -54,7 +54,7 @@ import { DataTableToolbar } from "./data-table-toolbar"
 import type { RecurringFilterOptions, SerializedRecurringTransaction } from "../types"
 import { useDeviceClass } from "@/hooks/use-device-class"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
-import { createDateFormatter } from "@/i18n/format"
+import { createDateFormatter, formatAppDate } from "@/i18n/format"
 import { formatPeriod } from "@/lib/financial"
 import { mergeColumnOrder, type ExportFormat } from "@/lib/table-export"
 import { cn } from "@/lib/utils"
@@ -281,6 +281,29 @@ export function DataTable<TData, TValue>({
         [buildExport, t, tDataTable]
     )
 
+    const handlePrint = React.useCallback(async () => {
+        try {
+            const { columns: cols, rows } = buildExport()
+            const { generateTableReport } = await import("@/lib/pdf/generate-table-report")
+            await generateTableReport({
+                brand: "WISEVEO", // i18n-ignore — nome da marca, não é texto de UI traduzível
+                title: t("printTitle"),
+                // Recorrentes não têm recorte de período — a tabela é sempre integral.
+                periodLine: undefined,
+                generatedAtLine: tDataTable("pdf.generatedAt", {
+                    date: formatAppDate(new Date(), "dd/MM/yyyy", locale),
+                }),
+                rowsCountLine: tDataTable("pdf.rows", { count: rows.length }),
+                pageOfTemplate: tDataTable.raw("pdf.pageOf") as string,
+                columns: cols,
+                rows,
+                numericColumnIds: ["amount"],
+            })
+        } catch {
+            toast.error(tDataTable("pdf.error"))
+        }
+    }, [buildExport, t, tDataTable, locale])
+
     return (
         <div className="flex flex-col gap-4">
             <DataTableToolbar
@@ -288,6 +311,7 @@ export function DataTable<TData, TValue>({
                 filterOptions={filterOptions}
                 columnLabels={columnLabels}
                 onExport={handleExport}
+                onPrint={handlePrint}
                 onLaunchSelected={onLaunchSelectedRecurring as ((rows: TData[]) => Promise<boolean>) | undefined}
                 onEditSelectedDate={onEditSelectedRecurringDate as ((rows: TData[], date: string) => Promise<boolean>) | undefined}
                 onDeleteSelected={onDeleteSelectedRecurring as ((rows: TData[]) => Promise<boolean>) | undefined}
