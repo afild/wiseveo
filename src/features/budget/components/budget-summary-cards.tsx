@@ -20,32 +20,36 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { SectionCardsGrid } from "@/components/section-cards-grid"
+import { getZoneKey } from "@/features/budget/lib/zones"
 import { formatPercentValue } from "@/lib/monetary"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 
 function getZoneInfo(pct: number) {
-  if (pct <= 50)
-    return {
-      color: "text-positive",
-      bgColor: "bg-positive/15",
-      borderColor: "border-positive/30",
-      Icon: Shield,
-      labelKey: "safe" as const,
-    }
-  if (pct <= 80)
-    return {
-      color: "text-warning",
-      bgColor: "bg-warning/15",
-      borderColor: "border-warning/30",
-      Icon: AlertTriangle,
-      labelKey: "warning" as const,
-    }
-  return {
-    color: "text-destructive",
-    bgColor: "bg-destructive/15",
-    borderColor: "border-destructive/30",
-    Icon: Flame,
-    labelKey: "danger" as const,
+  switch (getZoneKey(pct)) {
+    case "safe":
+      return {
+        color: "text-positive",
+        bgColor: "bg-positive/15",
+        borderColor: "border-positive/30",
+        Icon: Shield,
+        labelKey: "safe" as const,
+      }
+    case "warning":
+      return {
+        color: "text-warning",
+        bgColor: "bg-warning/15",
+        borderColor: "border-warning/30",
+        Icon: AlertTriangle,
+        labelKey: "warning" as const,
+      }
+    default:
+      return {
+        color: "text-destructive",
+        bgColor: "bg-destructive/15",
+        borderColor: "border-destructive/30",
+        Icon: Flame,
+        labelKey: "danger" as const,
+      }
   }
 }
 

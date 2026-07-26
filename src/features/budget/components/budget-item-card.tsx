@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreVertical, Settings, Trash2, Edit2 } from "lucide-react"
+import { getZoneKey } from "@/features/budget/lib/zones"
 import { SplitProgressBar } from "./split-progress-bar"
 import { getFormulaDescription } from "../services/formula-engine"
 import { deleteBudgetCard } from "../services/save-budget-formula"
@@ -36,28 +37,31 @@ import { formatPercentValue } from "@/lib/monetary"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 
 function getZoneInfo(pct: number) {
-  if (pct <= 50)
-    return {
-      color: "text-positive",
-      bgColor: "bg-positive/15",
-      borderColor: "border-positive/30",
-      icon: <Shield className="h-3 w-3" />,
-      labelKey: "safe" as const,
-    }
-  if (pct <= 80)
-    return {
-      color: "text-warning",
-      bgColor: "bg-warning/15",
-      borderColor: "border-warning/30",
-      icon: <AlertTriangle className="h-3 w-3" />,
-      labelKey: "warning" as const,
-    }
-  return {
-    color: "text-destructive",
-    bgColor: "bg-destructive/15",
-    borderColor: "border-destructive/30",
-    icon: <Flame className="h-3 w-3" />,
-    labelKey: "danger" as const,
+  switch (getZoneKey(pct)) {
+    case "safe":
+      return {
+        color: "text-positive",
+        bgColor: "bg-positive/15",
+        borderColor: "border-positive/30",
+        icon: <Shield className="h-3 w-3" />,
+        labelKey: "safe" as const,
+      }
+    case "warning":
+      return {
+        color: "text-warning",
+        bgColor: "bg-warning/15",
+        borderColor: "border-warning/30",
+        icon: <AlertTriangle className="h-3 w-3" />,
+        labelKey: "warning" as const,
+      }
+    default:
+      return {
+        color: "text-destructive",
+        bgColor: "bg-destructive/15",
+        borderColor: "border-destructive/30",
+        icon: <Flame className="h-3 w-3" />,
+        labelKey: "danger" as const,
+      }
   }
 }
 

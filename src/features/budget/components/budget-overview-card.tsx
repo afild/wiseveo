@@ -14,31 +14,35 @@ import { Badge } from "@/components/ui/badge"
 import { GradientDoughnut } from "./gradient-doughnut"
 import { GradientProgressBar } from "./gradient-progress-bar"
 import type { BudgetPageData } from "../types"
+import { getZoneKey } from "@/features/budget/lib/zones"
 import { formatPercentValue } from "@/lib/monetary"
 
 function getZoneInfo(pct: number) {
-  if (pct <= 50)
-    return {
-      color: "text-positive",
-      bgColor: "bg-positive/15",
-      borderColor: "border-positive/30",
-      icon: <Shield className="h-3.5 w-3.5" />,
-      labelKey: "safe" as const,
-    }
-  if (pct <= 80)
-    return {
-      color: "text-warning",
-      bgColor: "bg-warning/15",
-      borderColor: "border-warning/30",
-      icon: <AlertTriangle className="h-3.5 w-3.5" />,
-      labelKey: "warning" as const,
-    }
-  return {
-    color: "text-destructive",
-    bgColor: "bg-destructive/15",
-    borderColor: "border-destructive/30",
-    icon: <Flame className="h-3.5 w-3.5" />,
-    labelKey: "danger" as const,
+  switch (getZoneKey(pct)) {
+    case "safe":
+      return {
+        color: "text-positive",
+        bgColor: "bg-positive/15",
+        borderColor: "border-positive/30",
+        icon: <Shield className="h-3.5 w-3.5" />,
+        labelKey: "safe" as const,
+      }
+    case "warning":
+      return {
+        color: "text-warning",
+        bgColor: "bg-warning/15",
+        borderColor: "border-warning/30",
+        icon: <AlertTriangle className="h-3.5 w-3.5" />,
+        labelKey: "warning" as const,
+      }
+    default:
+      return {
+        color: "text-destructive",
+        bgColor: "bg-destructive/15",
+        borderColor: "border-destructive/30",
+        icon: <Flame className="h-3.5 w-3.5" />,
+        labelKey: "danger" as const,
+      }
   }
 }
 
