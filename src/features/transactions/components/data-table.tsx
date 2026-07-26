@@ -3,6 +3,22 @@
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import {
+  DndContext,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import { restrictToHorizontalAxis } from "@dnd-kit/modifiers"
+import {
+  SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import {
   type ColumnDef,
   type ColumnFiltersState,
   type ColumnSizingState,
@@ -23,12 +39,12 @@ import { Plus } from "lucide-react"
 import { toast } from "sonner"
 
 import { DataTableToolsMenu } from "@/components/data-table/data-table-tools-menu"
+import { DraggableTableHead } from "@/components/data-table/draggable-table-head"
 import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
@@ -45,8 +61,11 @@ import { useDeviceClass } from "@/hooks/use-device-class"
 import { createDateFormatter } from "@/i18n/format"
 import { formatPeriod } from "@/lib/financial"
 import type { MonetaryFormatter } from "@/lib/monetary"
-import type { ExportFormat } from "@/lib/table-export"
+import { mergeColumnOrder, type ExportFormat } from "@/lib/table-export"
 import { cn } from "@/lib/utils"
+
+/** Colunas que não arrastam: a de seleção abre a linha, a de ações fecha. */
+const FIXED_COLUMNS = ["select", "actions"]
 
 const DEFAULT_SORTING: SortingState = [
   { id: "date", desc: false },
@@ -124,7 +143,16 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
     })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
+  const [columnOrder, setColumnOrder] = React.useState<string[]>([])
   const [sorting, setSorting] = React.useState<SortingState>(DEFAULT_SORTING)
+
+  const allColumnIds = React.useMemo(
+    () =>
+      columns.map(
+        (c) => c.id ?? (c as { accessorKey?: string }).accessorKey ?? ""
+      ),
+    [columns]
+  )
 
   const [globalFilter, setGlobalFilter] = React.useState("")
   const isLoadingStorage = React.useRef(true)
@@ -146,6 +174,11 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
 
       const savedSizing = localStorage.getItem("wiseveo-table-sizing")
       if (savedSizing) setColumnSizing(JSON.parse(savedSizing))
+
+      const savedOrder = localStorage.getItem("wiseveo-table-order")
+      if (savedOrder) {
+        setColumnOrder(mergeColumnOrder(JSON.parse(savedOrder), allColumnIds))
+      }
     } catch (e) {
       console.error("Failed to parse table settings from local storage", e)
     } finally {
@@ -202,6 +235,34 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
     }
   }, [columnSizing])
 
+  React.useEffect(() => {
+    if (isLoadingStorage.current) return
+    try {
+      localStorage.setItem("wiseveo-table-order", JSON.stringify(columnOrder))
+    } catch (e) {
+      console.error(e)
+    }
+  }, [columnOrder])
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
+    useSensor(KeyboardSensor)
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setColumnOrder((order) => {
+      const current = order.length ? order : allColumnIds
+      return arrayMove(
+        current,
+        current.indexOf(String(active.id)),
+        current.indexOf(String(over.id))
+      )
+    })
+  }
+
   const table = useReactTable({
     data,
     columns,
@@ -222,9 +283,11 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
       rowSelection,
       columnFilters,
       columnSizing,
+      columnOrder,
       globalFilter,
     },
     enableRowSelection: true,
+    onColumnOrderChange: setColumnOrder,
     onColumnSizingChange: setColumnSizing,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -390,6 +453,12 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
           )}
         </div>
       ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToHorizontalAxis]}
+          onDragEnd={handleDragEnd}
+        >
         <div className="overflow-x-auto rounded-lg border">
           <Table
             className="table-fixed"
@@ -398,41 +467,29 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
             <TableHeader className="bg-muted sticky top-0 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    const meta = header.column.columnDef.meta as any
-                    if (isMobile && meta?.responsive === "hide-mobile") return null
+                  <SortableContext
+                    items={headerGroup.headers
+                      .map((h) => h.column.id)
+                      .filter((id) => !FIXED_COLUMNS.includes(id))}
+                    strategy={horizontalListSortingStrategy}
+                  >
+                    {headerGroup.headers.map((header) => {
+                      const meta = header.column.columnDef.meta as any
+                      if (isMobile && meta?.responsive === "hide-mobile") return null
 
-                    return (
-                      <TableHead
-                        key={header.id}
-                        colSpan={header.colSpan}
-                        className="relative"
-                        style={{ width: header.getSize() }}
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getCanResize() && (
-                          <div
-                            role="separator"
-                            aria-label={tDataTable("header.resizeColumn")}
-                            onDoubleClick={() => header.column.resetSize()}
-                            onMouseDown={(e) => {
-                              // Sem o stopPropagation o gesto de resize dispara a ordenação.
-                              e.stopPropagation()
-                              header.getResizeHandler()(e)
-                            }}
-                            onTouchStart={header.getResizeHandler()}
-                            className={cn(
-                              "absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none select-none",
-                              "hover:bg-primary/40",
-                              header.column.getIsResizing() && "bg-primary"
-                            )}
-                          />
-                        )}
-                      </TableHead>
-                    )
-                  })}
+                      return (
+                        <DraggableTableHead
+                          key={header.id}
+                          header={header}
+                          fixed={FIXED_COLUMNS.includes(header.column.id)}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </DraggableTableHead>
+                      )
+                    })}
+                  </SortableContext>
                 </TableRow>
               ))}
             </TableHeader>
@@ -474,6 +531,7 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
             </TableBody>
           </Table>
         </div>
+        </DndContext>
       )}
       <DataTablePagination table={table} />
     </div>
