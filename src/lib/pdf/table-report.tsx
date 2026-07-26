@@ -15,10 +15,25 @@ const COLORS = {
   zebra: "#F8FAFC",
 }
 
+const PAGE_PADDING = 36
+const CELL_PADDING = 3
+/** A4 em pt. Retrato para poucas colunas; paisagem quando não cabem. */
+const A4_SHORT_SIDE = 595.28
+const A4_LONG_SIDE = 841.89
+/** Acima disto o retrato não comporta as colunas sem espremer os rótulos. */
+const LANDSCAPE_FROM_COLUMNS = 7
+/**
+ * Piso por coluna, em pt. É o que uma data ("26/07/2026" a 8,5pt) precisa somada
+ * ao respiro lateral. Sem piso, uma coluna de peso baixo como `num` fica com 9pt
+ * de área útil e o próprio cabeçalho ("NUM") não cabe.
+ */
+const MIN_COLUMN_WIDTH = 38
+
 /**
  * Peso relativo de largura por coluna. Sem isto todas as colunas dividem a página
  * igualmente e o número do lançamento ocupa tanto quanto a descrição — que então
- * quebra em 3-4 linhas enquanto sobra papel em branco à esquerda.
+ * quebra em 3-4 linhas enquanto sobra papel em branco à esquerda. O peso governa
+ * só a sobra depois que todas recebem o piso.
  */
 const COLUMN_WEIGHTS: Record<string, number> = {
   account: 12,
@@ -44,7 +59,7 @@ const styles = StyleSheet.create({
     fontSize: 8.5,
     color: COLORS.text,
     paddingTop: 40,
-    paddingHorizontal: 36,
+    paddingHorizontal: PAGE_PADDING,
     paddingBottom: 48,
   },
   brandRow: {
@@ -81,7 +96,7 @@ const styles = StyleSheet.create({
     fontWeight: 600,
     fontSize: 8,
     paddingVertical: 5,
-    paddingHorizontal: 4,
+    paddingHorizontal: CELL_PADDING,
     // Antes: 8pt + muted + caixa alta + letter-spacing largo — cada uma aceitável
     // sozinha, as quatro juntas não. Cor do texto e spacing menor.
     color: COLORS.text,
@@ -92,7 +107,7 @@ const styles = StyleSheet.create({
   // forte fica só sob o cabeçalho.
   row: { flexDirection: "row" },
   rowZebra: { backgroundColor: COLORS.zebra },
-  cell: { paddingVertical: 4.5, paddingHorizontal: 4 },
+  cell: { paddingVertical: 4.5, paddingHorizontal: CELL_PADDING },
   numeric: { textAlign: "right" },
   footer: {
     position: "absolute",
@@ -121,18 +136,33 @@ export interface TableReportProps {
 
 /** Componente puro: TODAS as strings chegam por props — quem traduz é o chamador. */
 export function TableReport(props: TableReportProps) {
+  const landscape = props.columns.length > LANDSCAPE_FROM_COLUMNS
+  const usableWidth =
+    (landscape ? A4_LONG_SIDE : A4_SHORT_SIDE) - PAGE_PADDING * 2
+
+  // Piso primeiro, peso só na sobra: garante que nenhuma coluna fique estreita
+  // demais para o próprio cabeçalho, sem devolver a divisão igual para todas.
   const totalWeight = props.columns.reduce(
     (sum, c) => sum + (COLUMN_WEIGHTS[c.id] ?? DEFAULT_COLUMN_WEIGHT),
     0
   )
-  const widthOf = (id: string) =>
-    `${(((COLUMN_WEIGHTS[id] ?? DEFAULT_COLUMN_WEIGHT) / totalWeight) * 100).toFixed(3)}%`
+  // Se nem o piso couber (tabela com colunas demais), o piso cede — senão a soma
+  // passaria de 100% e a última coluna sairia da página.
+  const floor = Math.min(MIN_COLUMN_WIDTH, usableWidth / props.columns.length)
+  const slack = Math.max(0, usableWidth - floor * props.columns.length)
+  const widthOf = (id: string) => {
+    const weight = COLUMN_WEIGHTS[id] ?? DEFAULT_COLUMN_WEIGHT
+    const width = floor + (weight / totalWeight) * slack
+    // Em % da página para o react-pdf resolver contra o container real.
+    return `${((width / usableWidth) * 100).toFixed(3)}%`
+  }
+
   const cellStyle = (id: string) =>
     props.numericColumnIds.includes(id) ? [styles.cell, styles.numeric] : [styles.cell]
 
   return (
     <Document title={props.title}>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" orientation={landscape ? "landscape" : "portrait"} style={styles.page}>
         <View style={styles.brandRow}>
           <Text style={styles.brand}>{props.brand}</Text>
           <Text style={styles.meta}>{props.generatedAtLine}</Text>
