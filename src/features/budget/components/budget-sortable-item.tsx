@@ -11,9 +11,18 @@ interface BudgetSortableItemProps {
   index: number
   formulaConfig: BudgetFormulaPreferences
   onEdit?: (item: BudgetItem) => void
+  onMoveUp?: () => void
+  onMoveDown?: () => void
 }
 
-export function BudgetSortableItem({ item, index, formulaConfig, onEdit }: BudgetSortableItemProps) {
+export function BudgetSortableItem({
+  item,
+  index,
+  formulaConfig,
+  onEdit,
+  onMoveUp,
+  onMoveDown,
+}: BudgetSortableItemProps) {
   const {
     attributes,
     listeners,
@@ -31,22 +40,24 @@ export function BudgetSortableItem({ item, index, formulaConfig, onEdit }: Budge
   }
 
   return (
-    <motion.div 
-      ref={setNodeRef} 
+    <motion.div
+      ref={setNodeRef}
       style={dndStyle}
       layout
-      transition={{ 
+      transition={{
         type: "spring",
         stiffness: 300,
         damping: 30,
       }}
     >
-      <BudgetItemCard 
-        item={item} 
-        index={index} 
+      <BudgetItemCard
+        item={item}
+        index={index}
         dragHandleProps={{ ...attributes, ...listeners }}
         formulaConfig={formulaConfig}
         onEdit={onEdit}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
       />
     </motion.div>
   )

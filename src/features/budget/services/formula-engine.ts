@@ -580,29 +580,26 @@ export function hasUsableHistory(
   return spentActive
 }
 
+/** Só o nome da fórmula (preset customizado ou built-in), sem os parâmetros. */
+export function getFormulaName(
+  t: FormulasTranslator,
+  formulaId: FormulaId,
+  customDefinitions?: CustomFormulaDefinition[]
+): string {
+  const customMatch = customDefinitions?.find((def) => def.id === formulaId)
+  if (customMatch) return customMatch.name
+
+  const def = FORMULA_DEFINITIONS.find((f) => f.id === formulaId)
+  return def ? t(FORMULA_NAME_KEYS[def.id]) : t("names.unknown")
+}
+
 export function getFormulaDescription(
   t: FormulasTranslator,
   formulaId: FormulaId,
   params: FormulaParams,
   customDefinitions?: CustomFormulaDefinition[]
 ): string {
-  let name = t("names.unknown")
-
-  if (customDefinitions) {
-    const customMatch = customDefinitions.find((def) => def.id === formulaId)
-    if (customMatch) {
-      name = customMatch.name
-    }
-  }
-
-  if (name === t("names.unknown")) {
-    const def = FORMULA_DEFINITIONS.find((f) => f.id === formulaId)
-    if (def) {
-      name = t(FORMULA_NAME_KEYS[def.id])
-    }
-  }
-
-  const parts: string[] = [name]
+  const parts: string[] = [getFormulaName(t, formulaId, customDefinitions)]
 
   if (params.months && formulaId !== "fixed_target") {
     parts.push(t("summary.months", { count: params.months }))
