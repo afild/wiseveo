@@ -1,6 +1,7 @@
 "use client"
 
 import type { ColumnDef, FilterFn, Row } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -38,6 +39,26 @@ export interface TransactionColumnLabels {
   typeIncome: string
   typeExpense: string
   typeTransfer: string
+}
+
+/** Rótulos legíveis por id de coluna — usados pelo menu Ferramentas e pela exportação. */
+export function useTransactionColumnLabels(): Record<string, string> {
+  const t = useTranslations("transactions.columns")
+  return {
+    account: t("account"),
+    amount: t("amount"),
+    category: t("category"),
+    date: t("date"),
+    description: t("description"),
+    group: t("group"),
+    note: t("note"),
+    num: t("num"),
+    payee: t("payee"),
+    period: t("period"),
+    reference: t("reference"),
+    status: t("status"),
+    type: t("type"),
+  }
 }
 
 function buildStatusConfig(

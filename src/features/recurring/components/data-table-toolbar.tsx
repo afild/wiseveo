@@ -36,12 +36,16 @@ import {
     SheetClose,
 } from "@/components/ui/sheet"
 import { DetailPanel } from "@/components/detail-panel"
-import { DataTableViewOptions } from "@/features/transactions/components/data-table-view-options"
+import { DataTableToolsMenu } from "@/components/data-table/data-table-tools-menu"
+import type { ExportFormat } from "@/lib/table-export"
 import type { RecurringFilterOptions } from "../types"
 
 interface DataTableToolbarProps<TData> {
     table: Table<TData>
     filterOptions: RecurringFilterOptions
+    columnLabels: Record<string, string>
+    onExport: (format: ExportFormat) => void | Promise<void>
+    onPrint?: () => void | Promise<void>
     onLaunchSelected?: (rows: TData[]) => Promise<boolean>
     onEditSelectedDate?: (rows: TData[], date: string) => Promise<boolean>
     onDeleteSelected?: (rows: TData[]) => Promise<boolean>
@@ -51,6 +55,9 @@ interface DataTableToolbarProps<TData> {
 export function DataTableToolbar<TData>({
     table,
     filterOptions,
+    columnLabels,
+    onExport,
+    onPrint,
     onLaunchSelected,
     onEditSelectedDate,
     onDeleteSelected,
@@ -223,9 +230,12 @@ export function DataTableToolbar<TData>({
                         )}
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2">
-                            <DataTableViewOptions table={table} />
-                        </div>
+                        <DataTableToolsMenu
+                            table={table}
+                            columnLabels={columnLabels}
+                            onExport={onExport}
+                            onPrint={onPrint}
+                        />
                     </div>
                 </div>
             )}

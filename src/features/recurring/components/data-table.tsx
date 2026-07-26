@@ -1,10 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
+import { toast } from "sonner"
 import {
     type ColumnDef,
     type ColumnFiltersState,
+    type Row,
     type SortingState,
     type VisibilityState,
     flexRender,
@@ -27,9 +29,14 @@ import {
 } from "@/components/ui/table"
 
 import { DataTablePagination } from "../../transactions/components/data-table-pagination"
+import { useRecurringColumnLabels } from "./columns"
 import { DataTableToolbar } from "./data-table-toolbar"
 import type { RecurringFilterOptions, SerializedRecurringTransaction } from "../types"
 import { useDeviceClass } from "@/hooks/use-device-class"
+import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
+import { createDateFormatter } from "@/i18n/format"
+import { formatPeriod } from "@/lib/financial"
+import type { ExportFormat } from "@/lib/table-export"
 import { RecurringCardMobile } from "./recurring-card-mobile"
 
 interface DataTableProps<TData, TValue> {
@@ -60,8 +67,13 @@ export function DataTable<TData, TValue>({
     batchLoading,
 }: DataTableProps<TData, TValue>) {
     const { isMobile } = useDeviceClass()
+    const locale = useLocale()
+    const monetary = useMonetaryFormattingSafe()
     const t = useTranslations("recurring.table")
     const tCommon = useTranslations("common")
+    const tDataTable = useTranslations("common.dataTable")
+    const tColumns = useTranslations("recurring.columns")
+    const columnLabels = useRecurringColumnLabels()
     const [rowSelection, setRowSelection] = React.useState({})
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -130,11 +142,75 @@ export function DataTable<TData, TValue>({
         getFacetedUniqueValues: getFacetedUniqueValues(),
     })
 
+    // Espelha a formatação das células de columns.tsx: o que o usuário vê é o que ele exporta.
+    const formatCellForExport = React.useCallback(
+        (columnId: string, row: Row<TData>): string => {
+            const typeLabels: Record<string, string> = {
+                INCOME: tColumns("typeIncome"),
+                EXPENSE: tColumns("typeExpense"),
+                TRANSFER: tColumns("typeTransfer"),
+            }
+
+            switch (columnId) {
+                case "amount":
+                    return monetary.formatMonetaryValue(row.getValue("amount") as number)
+                case "lastDate": {
+                    const dateStr = row.getValue("lastDate") as string | null
+                    if (!dateStr) return ""
+                    return createDateFormatter(locale, {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        timeZone: "UTC",
+                    }).format(new Date(dateStr))
+                }
+                case "period": {
+                    const period = (row.getValue("period") as string | null) ?? ""
+                    return period.length === 6 ? formatPeriod(period) : ""
+                }
+                case "type":
+                    return typeLabels[row.getValue("type") as string] ?? ""
+                default:
+                    return String(row.getValue(columnId) ?? "")
+            }
+        },
+        [locale, monetary, tColumns]
+    )
+
+    const buildExport = React.useCallback(() => {
+        const source = table.getFilteredSelectedRowModel().rows.length
+            ? table.getFilteredSelectedRowModel().rows
+            : table.getPrePaginationRowModel().rows // filtrado + ordenado, todas as páginas
+        const cols = table
+            .getVisibleLeafColumns()
+            .filter((c) => c.id !== "select" && c.id !== "actions")
+            .map((c) => ({ id: c.id, label: columnLabels[c.id] ?? c.id }))
+        const rows = source.map((row) =>
+            Object.fromEntries(cols.map((c) => [c.id, formatCellForExport(c.id, row)]))
+        )
+        return { columns: cols, rows }
+    }, [table, columnLabels, formatCellForExport])
+
+    const handleExport = React.useCallback(
+        async (format: ExportFormat) => {
+            try {
+                const { columns: cols, rows } = buildExport()
+                const { exportRows } = await import("@/lib/table-export")
+                await exportRows(format, { columns: cols, rows, fileBaseName: t("exportFileName") })
+            } catch {
+                toast.error(tDataTable("export.error"))
+            }
+        },
+        [buildExport, t, tDataTable]
+    )
+
     return (
         <div className="flex flex-col gap-4">
             <DataTableToolbar
                 table={table}
                 filterOptions={filterOptions}
+                columnLabels={columnLabels}
+                onExport={handleExport}
                 onLaunchSelected={onLaunchSelectedRecurring as ((rows: TData[]) => Promise<boolean>) | undefined}
                 onEditSelectedDate={onEditSelectedRecurringDate as ((rows: TData[], date: string) => Promise<boolean>) | undefined}
                 onDeleteSelected={onDeleteSelectedRecurring as ((rows: TData[]) => Promise<boolean>) | undefined}

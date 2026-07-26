@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   type ColumnDef,
   type ColumnFiltersState,
   type FilterFn,
+  type Row,
   type SortingState,
   type VisibilityState,
   flexRender,
@@ -18,7 +19,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { Plus } from "lucide-react"
+import { toast } from "sonner"
 
+import { DataTableToolsMenu } from "@/components/data-table/data-table-tools-menu"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -30,15 +33,18 @@ import {
 } from "@/components/ui/table"
 import type { DateRange } from "@/contexts/date-range-context"
 
+import { useTransactionColumnLabels } from "./columns"
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar } from "./data-table-toolbar"
-import { DataTableViewOptions } from "./data-table-view-options"
 import { DayRangeNavigator } from "./day-range-navigator"
 import { TransactionBatchActions } from "./transaction-batch-actions"
 import { TransactionCardMobile } from "./transaction-card-mobile"
 import type { SerializedTransaction, TransactionFilterOptions } from "../types"
 import { useDeviceClass } from "@/hooks/use-device-class"
+import { createDateFormatter } from "@/i18n/format"
+import { formatPeriod } from "@/lib/financial"
 import type { MonetaryFormatter } from "@/lib/monetary"
+import type { ExportFormat } from "@/lib/table-export"
 
 const DEFAULT_SORTING: SortingState = [
   { id: "date", desc: false },
@@ -102,8 +108,12 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
   onDateRangeChange,
 }: DataTableProps<TData, TValue>) {
   const { isMobile } = useDeviceClass()
+  const locale = useLocale()
   const t = useTranslations("transactions.table")
   const tCommon = useTranslations("common")
+  const tDataTable = useTranslations("common.dataTable")
+  const tColumns = useTranslations("transactions.columns")
+  const columnLabels = useTransactionColumnLabels()
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({
@@ -211,6 +221,76 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const selectedData = selectedRows.map((row) => row.original)
 
+  // Espelha a formatação das células de columns.tsx: o que o usuário vê é o que ele exporta.
+  const formatCellForExport = React.useCallback(
+    (columnId: string, row: Row<TData>): string => {
+      const statusLabels: Record<string, string> = {
+        PAID: tColumns("statusPaid"),
+        PENDING: tColumns("statusPending"),
+        OVERDUE: tColumns("statusOverdue"),
+        SCHEDULED: tColumns("statusScheduled"),
+      }
+      const typeLabels: Record<string, string> = {
+        INCOME: tColumns("typeIncome"),
+        EXPENSE: tColumns("typeExpense"),
+        TRANSFER: tColumns("typeTransfer"),
+      }
+
+      switch (columnId) {
+        case "amount":
+          return monetary.formatMonetaryValue(row.getValue("amount") as number)
+        case "date": {
+          const dateStr = row.getValue("date") as string | null
+          if (!dateStr) return ""
+          return createDateFormatter(locale, {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            timeZone: "UTC",
+          }).format(new Date(dateStr))
+        }
+        case "period": {
+          const period = (row.getValue("period") as string | null) ?? ""
+          return period.length === 6 ? formatPeriod(period) : ""
+        }
+        case "status":
+          return statusLabels[row.getValue("status") as string] ?? ""
+        case "type":
+          return typeLabels[row.getValue("type") as string] ?? ""
+        default:
+          return String(row.getValue(columnId) ?? "")
+      }
+    },
+    [locale, monetary, tColumns]
+  )
+
+  const buildExport = React.useCallback(() => {
+    const source = table.getFilteredSelectedRowModel().rows.length
+      ? table.getFilteredSelectedRowModel().rows
+      : table.getPrePaginationRowModel().rows // filtrado + ordenado, todas as páginas
+    const cols = table
+      .getVisibleLeafColumns()
+      .filter((c) => c.id !== "select" && c.id !== "actions")
+      .map((c) => ({ id: c.id, label: columnLabels[c.id] ?? c.id }))
+    const rows = source.map((row) =>
+      Object.fromEntries(cols.map((c) => [c.id, formatCellForExport(c.id, row)]))
+    )
+    return { columns: cols, rows }
+  }, [table, columnLabels, formatCellForExport])
+
+  const handleExport = React.useCallback(
+    async (format: ExportFormat) => {
+      try {
+        const { columns: cols, rows } = buildExport()
+        const { exportRows } = await import("@/lib/table-export")
+        await exportRows(format, { columns: cols, rows, fileBaseName: t("exportFileName") })
+      } catch {
+        toast.error(tDataTable("export.error"))
+      }
+    },
+    [buildExport, t, tDataTable]
+  )
+
   return (
     <div className="flex flex-col gap-4">
       <DataTableToolbar table={table} filterOptions={filterOptions} />
@@ -240,7 +320,11 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
         {/* Lado Direito: Opções e Novo */}
         <div className="flex w-full items-center justify-end gap-1.5">
           <div className="hidden sm:block">
-            <DataTableViewOptions table={table} />
+            <DataTableToolsMenu
+              table={table}
+              columnLabels={columnLabels}
+              onExport={handleExport}
+            />
           </div>
 
           <Button

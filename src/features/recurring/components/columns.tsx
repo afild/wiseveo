@@ -1,6 +1,7 @@
 "use client"
 
 import type { ColumnDef, Row } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { formatPeriod } from "@/lib/financial"
@@ -29,6 +30,23 @@ export interface RecurringColumnLabels {
   typeExpense: string
   typeIncome: string
   typeTransfer: string
+}
+
+/** Rótulos legíveis por id de coluna — usados pelo menu Ferramentas e pela exportação. */
+export function useRecurringColumnLabels(): Record<string, string> {
+  const t = useTranslations("recurring.columns")
+  return {
+    account: t("account"),
+    amount: t("amount"),
+    category: t("category"),
+    description: t("description"),
+    group: t("group"),
+    lastDate: t("lastLaunch"),
+    note: t("note"),
+    period: t("period"),
+    reference: t("reference"),
+    type: t("type"),
+  }
 }
 
 function buildTypeConfig(
