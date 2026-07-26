@@ -5,6 +5,7 @@ import { RefreshCcw, Filter } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useDeviceClass } from "@/hooks/use-device-class"
 
+import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -55,24 +56,15 @@ export function DataTableToolbar<TData>({
   const isFiltered =
     table.getState().columnFilters.length > 0 || !!table.getState().globalFilter
 
+  // Os filtros gravam SEMPRE arrays (contrato do multiSelectFilter). No mobile o
+  // Select continua de escolha única — grava um array de um item e lê o primeiro.
   const handleFilterChange = (columnId: string, value: string) => {
     const column = table.getColumn(columnId)
-    if (value === "all") {
-      column?.setFilterValue(undefined)
-    } else {
-      column?.setFilterValue(value)
-    }
+    column?.setFilterValue(value === "all" ? undefined : [value])
   }
 
-  const statusFilter = table.getColumn("status")?.getFilterValue() as
-    | string
-    | undefined
-  const typeFilter = table.getColumn("type")?.getFilterValue() as
-    | string
-    | undefined
-  const accountFilter = table.getColumn("account")?.getFilterValue() as
-    | string
-    | undefined
+  const readSingle = (columnId: string) =>
+    ((table.getColumn(columnId)?.getFilterValue() as string[] | undefined) ?? [])[0]
 
   if (isMobile) {
     return (
@@ -104,7 +96,7 @@ export function DataTableToolbar<TData>({
               <div className="space-y-2">
                 <span className="text-sm font-medium">{t("statusFieldLabel")}</span>
                 <Select
-                  value={statusFilter || "all"}
+                  value={readSingle("status") || "all"}
                   onValueChange={(v) => handleFilterChange("status", v)}
                 >
                   <SelectTrigger className="w-full">
@@ -124,7 +116,7 @@ export function DataTableToolbar<TData>({
               <div className="space-y-2">
                 <span className="text-sm font-medium">{t("typeFieldLabel")}</span>
                 <Select
-                  value={typeFilter || "all"}
+                  value={readSingle("type") || "all"}
                   onValueChange={(v) => handleFilterChange("type", v)}
                 >
                   <SelectTrigger className="w-full">
@@ -144,7 +136,7 @@ export function DataTableToolbar<TData>({
               <div className="space-y-2">
                 <span className="text-sm font-medium">{t("accountFieldLabel")}</span>
                 <Select
-                  value={accountFilter || "all"}
+                  value={readSingle("account") || "all"}
                   onValueChange={(v) => handleFilterChange("account", v)}
                 >
                   <SelectTrigger className="w-full">
@@ -184,92 +176,47 @@ export function DataTableToolbar<TData>({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <Select
-          value={statusFilter || "all"}
-          onValueChange={(v) => handleFilterChange("status", v)}
+    <div className="flex flex-wrap items-center gap-2">
+      <Input
+        placeholder={t("searchPlaceholderDesktop")}
+        value={table.getState().globalFilter ?? ""}
+        onChange={(event) => table.setGlobalFilter(event.target.value)}
+        className="h-9 w-[200px] lg:w-[280px] cursor-text"
+      />
+      <DataTableFacetedFilter
+        column={table.getColumn("status")}
+        title={t("statusFieldLabel")}
+        options={filterOptions.statuses.map((s) => ({
+          value: s,
+          label: statusLabels[s] || s,
+        }))}
+      />
+      <DataTableFacetedFilter
+        column={table.getColumn("type")}
+        title={t("typeFieldLabel")}
+        options={filterOptions.types.map((v) => ({
+          value: v,
+          label: typeLabels[v] || v,
+        }))}
+      />
+      <DataTableFacetedFilter
+        column={table.getColumn("account")}
+        title={t("accountFieldLabel")}
+        options={filterOptions.accounts.map((a) => ({ value: a.name, label: a.name }))}
+      />
+      {isFiltered && (
+        <Button
+          variant="ghost"
+          onClick={() => {
+            table.resetColumnFilters()
+            table.setGlobalFilter("")
+          }}
+          className="text-muted-foreground h-9 px-2 cursor-pointer"
         >
-          <SelectTrigger className="w-full cursor-pointer">
-            <SelectValue placeholder={t("statusFieldLabel")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="cursor-pointer">
-              {t("allStatuses")}
-            </SelectItem>
-            {filterOptions.statuses.map((status) => (
-              <SelectItem key={status} value={status} className="cursor-pointer">
-                {statusLabels[status] || status}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={typeFilter || "all"}
-          onValueChange={(v) => handleFilterChange("type", v)}
-        >
-          <SelectTrigger className="w-full cursor-pointer">
-            <SelectValue placeholder={t("typeFieldLabel")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="cursor-pointer">
-              {t("allTypes")}
-            </SelectItem>
-            {filterOptions.types.map((type) => (
-              <SelectItem key={type} value={type} className="cursor-pointer">
-                {typeLabels[type] || type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={accountFilter || "all"}
-          onValueChange={(v) => handleFilterChange("account", v)}
-        >
-          <SelectTrigger className="w-full cursor-pointer">
-            <SelectValue placeholder={t("accountFieldLabel")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="cursor-pointer">
-              {t("allAccounts")}
-            </SelectItem>
-            {filterOptions.accounts.map((account) => (
-              <SelectItem
-                key={account.id}
-                value={account.name}
-                className="cursor-pointer"
-              >
-                {account.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex items-center">
-        <div className="flex flex-1 items-center space-x-2">
-          <Input
-            placeholder={t("searchPlaceholderDesktop")}
-            value={table.getState().globalFilter ?? ""}
-            onChange={(event) => table.setGlobalFilter(event.target.value)}
-            className="w-[200px] lg:w-[300px] cursor-text"
-          />
-          <Button
-            variant="outline"
-            onClick={() => {
-              table.resetColumnFilters()
-              table.setGlobalFilter("")
-            }}
-            className="px-3 cursor-pointer"
-            disabled={!isFiltered}
-          >
-            <RefreshCcw className="h-4 w-4" />
-            <span className="hidden lg:block">{t("clearFiltersButton")}</span>
-          </Button>
-        </div>
-      </div>
+          <RefreshCcw className="size-4" />
+          <span className="hidden lg:inline">{t("clearFiltersButton")}</span>
+        </Button>
+      )}
     </div>
   )
 }

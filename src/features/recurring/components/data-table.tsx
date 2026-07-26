@@ -84,7 +84,10 @@ export function DataTable<TData, TValue>({
     // Load from local storage on mount
     React.useEffect(() => {
         try {
-            const savedFilters = localStorage.getItem('wiseveo-recurring-filters');
+            // v2: os filtros passaram de string única para array (multi-seleção). O formato
+            // antigo quebraria o multiSelectFilter, então a chave anterior é descartada.
+            localStorage.removeItem('wiseveo-recurring-filters');
+            const savedFilters = localStorage.getItem('wiseveo-recurring-filters-v2');
             if (savedFilters) setColumnFilters(JSON.parse(savedFilters));
 
             const savedSorting = localStorage.getItem('wiseveo-recurring-sorting');
@@ -102,7 +105,7 @@ export function DataTable<TData, TValue>({
     // Save to local storage when state changes
     React.useEffect(() => {
         if (isLoadingStorage.current) return;
-        localStorage.setItem('wiseveo-recurring-filters', JSON.stringify(columnFilters));
+        localStorage.setItem('wiseveo-recurring-filters-v2', JSON.stringify(columnFilters));
     }, [columnFilters]);
 
     React.useEffect(() => {

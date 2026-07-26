@@ -36,6 +36,7 @@ import {
     SheetClose,
 } from "@/components/ui/sheet"
 import { DetailPanel } from "@/components/detail-panel"
+import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter"
 import { DataTableToolsMenu } from "@/components/data-table/data-table-tools-menu"
 import type { ExportFormat } from "@/lib/table-export"
 import type { RecurringFilterOptions } from "../types"
@@ -85,16 +86,15 @@ export function DataTableToolbar<TData>({
         new Date().toISOString().split("T")[0]
     )
 
+    // Os filtros gravam SEMPRE arrays (contrato do multiSelectFilter). No mobile o
+    // Select continua de escolha única — grava um array de um item e lê o primeiro.
     const handleFilterChange = (columnId: string, value: string) => {
         const column = table.getColumn(columnId)
-        if (value === "all") {
-            column?.setFilterValue(undefined)
-        } else {
-            column?.setFilterValue(value)
-        }
+        column?.setFilterValue(value === "all" ? undefined : [value])
     }
 
-    const typeFilter = table.getColumn("type")?.getFilterValue() as string | undefined
+    const readSingle = (columnId: string) =>
+        ((table.getColumn(columnId)?.getFilterValue() as string[] | undefined) ?? [])[0]
 
     const handleLaunch = async () => {
         if (!onLaunchSelected || selectedData.length === 0) return
@@ -156,7 +156,7 @@ export function DataTableToolbar<TData>({
                                 <div className="space-y-2">
                                     <span className="text-sm font-medium">{t("typeFieldLabel")}</span>
                                     <Select
-                                        value={typeFilter || "all"}
+                                        value={readSingle("type") || "all"}
                                         onValueChange={(v) => handleFilterChange("type", v)}
                                     >
                                         <SelectTrigger className="w-full">
@@ -201,28 +201,20 @@ export function DataTableToolbar<TData>({
                             className="h-9 w-[200px] lg:w-[300px]"
                         />
 
-                        <Select
-                            value={typeFilter || "all"}
-                            onValueChange={(v) => handleFilterChange("type", v)}
-                        >
-                            <SelectTrigger className="h-9 w-[150px] cursor-pointer">
-                                <SelectValue placeholder={t("typeFieldLabel")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all" className="cursor-pointer">{t("allTypes")}</SelectItem>
-                                {filterOptions.types.map((type) => (
-                                    <SelectItem key={type} value={type} className="cursor-pointer">
-                                        {typeLabels[type] || type}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <DataTableFacetedFilter
+                            column={table.getColumn("type")}
+                            title={t("typeFieldLabel")}
+                            options={filterOptions.types.map((v) => ({
+                                value: v,
+                                label: typeLabels[v] || v,
+                            }))}
+                        />
 
                         {isFiltered && (
                             <Button
                                 variant="ghost"
                                 onClick={() => table.resetColumnFilters()}
-                                className="h-9 px-2 lg:px-3 text-muted-foreground"
+                                className="h-9 px-2 lg:px-3 text-muted-foreground cursor-pointer"
                             >
                                 <RotateCcw className="mr-2 h-4 w-4" />
                                 {t("clear")}

@@ -1,11 +1,12 @@
 "use client"
 
-import type { ColumnDef, Row } from "@tanstack/react-table"
+import type { ColumnDef, FilterFn, Row } from "@tanstack/react-table"
 import { useTranslations } from "next-intl"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { formatPeriod } from "@/lib/financial"
 import type { MonetaryFormatter } from "@/lib/monetary"
+import { multiSelectFilter } from "@/lib/table-export"
 import { cn } from "@/lib/utils"
 import { createDateFormatter } from "@/i18n/format"
 
@@ -354,6 +355,7 @@ export function getRecurringColumns(
         const config = typeConfig[type]
         return <div className={cn("text-sm", config.className)}>{config.label}</div>
       },
+      filterFn: multiSelectFilter as FilterFn<SerializedRecurringTransaction>,
     },
     {
       id: "actions",

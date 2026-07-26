@@ -129,7 +129,10 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
 
   React.useEffect(() => {
     try {
-      const savedFilters = localStorage.getItem("wiseveo-table-filters")
+      // v2: os filtros passaram de string única para array (multi-seleção). O formato
+      // antigo quebraria o multiSelectFilter, então a chave anterior é descartada.
+      localStorage.removeItem("wiseveo-table-filters")
+      const savedFilters = localStorage.getItem("wiseveo-table-filters-v2")
       if (savedFilters) setColumnFilters(JSON.parse(savedFilters))
 
       const savedVisibility = localStorage.getItem("wiseveo-table-visibility")
@@ -147,7 +150,7 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
   React.useEffect(() => {
     if (isLoadingStorage.current) return
     try {
-      localStorage.setItem("wiseveo-table-filters", JSON.stringify(columnFilters))
+      localStorage.setItem("wiseveo-table-filters-v2", JSON.stringify(columnFilters))
     } catch (e) {
       console.error(e)
     }

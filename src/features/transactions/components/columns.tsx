@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { formatPeriod } from "@/lib/financial"
 import type { MonetaryFormatter } from "@/lib/monetary"
+import { multiSelectFilter } from "@/lib/table-export"
 import { cn } from "@/lib/utils"
 import { createDateFormatter } from "@/i18n/format"
 
@@ -406,9 +407,7 @@ export function getTransactionColumns(
       cell: ({ row }) => (
         <div className="text-sm">{row.original.account.name}</div>
       ),
-      filterFn: (row, _id, value) => {
-        return value.includes(row.original.account.name)
-      },
+      filterFn: multiSelectFilter as FilterFn<SerializedTransaction>,
       meta: { responsive: "hide-mobile" },
     },
     {
@@ -433,9 +432,7 @@ export function getTransactionColumns(
           </div>
         )
       },
-      filterFn: (row, id, value) => {
-        return value.includes(row.getValue(id))
-      },
+      filterFn: multiSelectFilter as FilterFn<SerializedTransaction>,
       sortingFn: statusSortFn,
     },
     {
@@ -449,9 +446,7 @@ export function getTransactionColumns(
         const config = typeConfig[type]
         return <div className={cn("text-sm", config.className)}>{config.label}</div>
       },
-      filterFn: (row, _id, value) => {
-        return value.includes(row.original.type)
-      },
+      filterFn: multiSelectFilter as FilterFn<SerializedTransaction>,
     },
     {
       id: "actions",
