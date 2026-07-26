@@ -319,6 +319,11 @@
     }
   },
   "budget": {
+    "attention": {
+      "empty": "All budgets are within limit",
+      "subtitle": "{count, plural, one {# budget} other {# budgets}} above 80%",
+      "title": "Needs Attention"
+    },
     "client": {
       "savingOrder": "Saving order...",
       "updatingBudget": "Updating budget..."
@@ -455,6 +460,17 @@
         "trimPct": "Trim"
       }
     },
+    "hero": {
+      "aboveBudget": "Over budget",
+      "available": "Available",
+      "decomposition": "Paid: {paid} · Scheduled: {scheduled} · Projected: {projected}",
+      "limitMarker": "Limit",
+      "monthStripLabel": "Monthly calendar",
+      "pacingFast": "Spending too fast",
+      "pacingOnTrack": "On track",
+      "pacingWillRunOut": "Runs out on day {day}",
+      "periodBarLabel": "Budget period bar"
+    },
     "itemCard": {
       "budgeted": "Budgeted",
       "category": "Category",
@@ -471,7 +487,15 @@
       "paid": "Paid",
       "projected": "Projected",
       "scheduled": "Scheduled",
-      "used": "used"
+      "used": "used",
+      "aboveLimit": "Over limit",
+      "available": "Available",
+      "formulaDetails": "Formula details",
+      "historyWindow": "{months, plural, one {# month} other {# months}} of history",
+      "moveDown": "Move down",
+      "moveUp": "Move up",
+      "noLimit": "No limit",
+      "viaFormula": "via {formula}"
     },
     "newBudget": "New Budget",
     "newCard": {

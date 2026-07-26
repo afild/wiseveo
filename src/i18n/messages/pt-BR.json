@@ -319,6 +319,11 @@
     }
   },
   "budget": {
+    "attention": {
+      "empty": "Todos os orçamentos dentro do limite",
+      "subtitle": "{count, plural, one {# orçamento} other {# orçamentos}} acima de 80%",
+      "title": "Atenção Necessária"
+    },
     "client": {
       "savingOrder": "Salvando ordem...",
       "updatingBudget": "Atualizando orçamento..."
@@ -455,6 +460,17 @@
         "trimPct": "Corte"
       }
     },
+    "hero": {
+      "aboveBudget": "Acima do orçamento",
+      "available": "Disponível",
+      "decomposition": "Pago: {paid} · Agendado: {scheduled} · Projetado: {projected}",
+      "limitMarker": "Limite",
+      "monthStripLabel": "Calendário do mês",
+      "pacingFast": "Ritmo acelerado",
+      "pacingOnTrack": "No ritmo certo",
+      "pacingWillRunOut": "Esgota no dia {day}",
+      "periodBarLabel": "Barra de período orçamentário"
+    },
     "itemCard": {
       "budgeted": "Orçado",
       "category": "Categoria",
@@ -471,7 +487,15 @@
       "paid": "Pago",
       "projected": "Projetado",
       "scheduled": "Agendado",
-      "used": "utilizado"
+      "used": "utilizado",
+      "aboveLimit": "Acima do limite",
+      "available": "Disponível",
+      "formulaDetails": "Detalhes do cálculo",
+      "historyWindow": "{months, plural, one {# mês} other {# meses}} de histórico",
+      "moveDown": "Mover para baixo",
+      "moveUp": "Mover para cima",
+      "noLimit": "Sem limite",
+      "viaFormula": "via {formula}"
     },
     "newBudget": "Novo Orçamento",
     "newCard": {
