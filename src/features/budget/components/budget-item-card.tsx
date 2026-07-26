@@ -179,6 +179,11 @@ export function BudgetItemCard({
                     {formulaDesc}
                     {item.isCustomFormula && ` ${t("itemCard.customSuffix")}`}
                   </p>
+                  {item.limitBreakdown && (
+                    <span className="block opacity-70 text-xs">
+                      {item.limitBreakdown.historyUsed.map((v) => monetary.formatMonetaryValue(v)).join(" · ")}
+                    </span>
+                  )}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -196,6 +201,11 @@ export function BudgetItemCard({
           {item.isCustomFormula && (
             <Badge variant="outline" className="bg-info/10 text-info border-info/30 text-[10px]">
               {t("itemCard.customBadge")}
+            </Badge>
+          )}
+          {item.limitSource === "fallback" && (
+            <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px]">
+              {t("itemCard.manualLimit")}
             </Badge>
           )}
           <Badge

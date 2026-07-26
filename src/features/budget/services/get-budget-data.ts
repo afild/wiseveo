@@ -224,12 +224,14 @@ export async function getBudgetData(
     // Calculate limit via formula or use saved amount as fallback
     let limit = budgetSetup?.amount || 0
     let hasHistory = false
+    let limitSource: "formula" | "fallback" | "none" = budgetSetup?.amount ? "fallback" : "none"
+    let limitBreakdown: BudgetItem["limitBreakdown"]
 
     if (activeFormula.id !== "fixed_target") {
       // Referência = início do range; getBudgetHistory exclui o próprio mês da
       // referência, então o slot 0 é o mês fechado imediatamente anterior ao range.
       const historyReferenceDate = filterFrom
-      
+
       const history = await getBudgetHistory(userId, historyReferenceDate, maxMonths, {
         type: "group",
         code: group.code,
@@ -245,6 +247,12 @@ export async function getBudgetData(
         )
         if (formulaLimit > 0) {
           limit = formulaLimit * monthsInRange
+          limitSource = "formula"
+          limitBreakdown = {
+            monthlyLimit: formulaLimit,
+            monthsInRange,
+            historyUsed: history.monthlySpent.slice(0, activeFormula.params.months ?? 6),
+          }
         }
       }
     } else {
@@ -258,6 +266,8 @@ export async function getBudgetData(
       )
       if (formulaLimit > 0) {
         limit = formulaLimit * monthsInRange
+        limitSource = "formula"
+        limitBreakdown = { monthlyLimit: formulaLimit, monthsInRange, historyUsed: [] }
       }
     }
 
@@ -288,6 +298,8 @@ export async function getBudgetData(
       groupId: group.id,
       categoryId: undefined,
       includeInTotals: true,
+      limitSource,
+      limitBreakdown,
     })
 
     // Category-level budgets (only if individually configured)
@@ -302,6 +314,8 @@ export async function getBudgetData(
 
         let catLimit = catSetup.amount || 0
         let catHasHistory = false
+        let catLimitSource: "formula" | "fallback" | "none" = catSetup.amount ? "fallback" : "none"
+        let catLimitBreakdown: BudgetItem["limitBreakdown"]
 
         if (activeCatFormula.id !== "fixed_target") {
           // Referência = início do range; getBudgetHistory exclui o próprio mês da
@@ -324,6 +338,12 @@ export async function getBudgetData(
             )
             if (catFormulaLimit > 0) {
               catLimit = catFormulaLimit * monthsInRange
+              catLimitSource = "formula"
+              catLimitBreakdown = {
+                monthlyLimit: catFormulaLimit,
+                monthsInRange,
+                historyUsed: catHistory.monthlySpent.slice(0, activeCatFormula.params.months ?? 6),
+              }
             }
           }
         } else {
@@ -336,6 +356,8 @@ export async function getBudgetData(
           )
           if (catFormulaLimit > 0) {
             catLimit = catFormulaLimit * monthsInRange
+            catLimitSource = "formula"
+            catLimitBreakdown = { monthlyLimit: catFormulaLimit, monthsInRange, historyUsed: [] }
           }
         }
 
@@ -367,6 +389,8 @@ export async function getBudgetData(
           groupId: group.id,
           categoryId: cat.id,
           includeInTotals: false,
+          limitSource: catLimitSource,
+          limitBreakdown: catLimitBreakdown,
         })
       }
     }
@@ -423,6 +447,8 @@ export async function getBudgetData(
 
     let limit = cCard.amount || 0
     let hasHistory = hasUsableHistory(activeFormula.id, activeFormula.params, aggregatedHistory)
+    let cCardLimitSource: "formula" | "fallback" | "none" = cCard.amount ? "fallback" : "none"
+    let cCardLimitBreakdown: BudgetItem["limitBreakdown"]
 
     if (activeFormula.id !== "fixed_target") {
       if (hasHistory) {
@@ -432,7 +458,15 @@ export async function getBudgetData(
           aggregatedHistory,
           formulaConfig.customPresets
         )
-        if (formulaLimit > 0) limit = formulaLimit * monthsInRange
+        if (formulaLimit > 0) {
+          limit = formulaLimit * monthsInRange
+          cCardLimitSource = "formula"
+          cCardLimitBreakdown = {
+            monthlyLimit: formulaLimit,
+            monthsInRange,
+            historyUsed: aggregatedHistory.monthlySpent.slice(0, activeFormula.params.months ?? 6),
+          }
+        }
       }
     } else {
       hasHistory = true
@@ -442,7 +476,11 @@ export async function getBudgetData(
         { monthlySpent: [], monthlyIncome: [] },
         formulaConfig.customPresets
       )
-      if (formulaLimit > 0) limit = formulaLimit * monthsInRange
+      if (formulaLimit > 0) {
+        limit = formulaLimit * monthsInRange
+        cCardLimitSource = "formula"
+        cCardLimitBreakdown = { monthlyLimit: formulaLimit, monthsInRange, historyUsed: [] }
+      }
     }
 
     let paidForCard = 0
@@ -482,6 +520,8 @@ export async function getBudgetData(
       groupIds: cCard.groupIds,
       categoryIds: cCard.categoryIds,
       includeInTotals: false,
+      limitSource: cCardLimitSource,
+      limitBreakdown: cCardLimitBreakdown,
     })
   }
 

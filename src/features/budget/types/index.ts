@@ -76,6 +76,12 @@ export interface BudgetItem {
   categoryIds?: string[]
   groupId?: string
   categoryId?: string
+  limitSource?: "formula" | "fallback" | "none" // formula = calculado; fallback = amount salvo (sem histórico ou fórmula ≤ 0); none = sem limite
+  limitBreakdown?: {
+    monthlyLimit: number
+    monthsInRange: number
+    historyUsed: number[] // janela efetivamente usada (mais recente primeiro)
+  }
 }
 
 export interface GroupWithCategories {
