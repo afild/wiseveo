@@ -341,6 +341,9 @@ export function DataTable<TData, TValue>({
                 </div>
             ) : (
                 <DndContext
+                    // id fixo: sem ele o dnd-kit gera os ids de acessibilidade por contador,
+                    // que diverge entre servidor e cliente e quebra a hidratação.
+                    id="recurring-columns-dnd"
                     sensors={sensors}
                     collisionDetection={closestCenter}
                     modifiers={[restrictToHorizontalAxis]}

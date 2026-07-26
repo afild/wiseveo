@@ -488,6 +488,9 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
         </div>
       ) : (
         <DndContext
+          // id fixo: sem ele o dnd-kit gera os ids de acessibilidade por contador,
+          // que diverge entre servidor e cliente e quebra a hidratação.
+          id="transactions-columns-dnd"
           sensors={sensors}
           collisionDetection={closestCenter}
           modifiers={[restrictToHorizontalAxis]}
