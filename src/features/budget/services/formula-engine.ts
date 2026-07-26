@@ -19,6 +19,7 @@ export type BuiltinFormulaId =
   | "active_avg"
   | "banded_avg"
   | "declining_target"
+  | "seasonal_yoy"
 
 export type FormulaVariableLabelKey =
   | "amount"
@@ -28,9 +29,12 @@ export type FormulaVariableLabelKey =
   | "margin"
   | "months"
   | "monthsIncome"
+  | "monthsToTarget"
   | "percentage"
   | "percentile"
   | "reduction"
+  | "rolloverMonths"
+  | "seasonalWeight"
   | "trimPct"
 
 export interface FormulaVariable {
@@ -62,6 +66,7 @@ export const FORMULA_NAME_KEYS = {
   median: "names.median",
   moving_avg: "names.moving_avg",
   percentile_n: "names.percentile_n",
+  seasonal_yoy: "names.seasonal_yoy",
   simple_avg: "names.simple_avg",
   trimmed_mean: "names.trimmed_mean",
 } as const
@@ -76,6 +81,7 @@ export const FORMULA_DESCRIPTION_KEYS = {
   median: "descriptions.median",
   moving_avg: "descriptions.moving_avg",
   percentile_n: "descriptions.percentile_n",
+  seasonal_yoy: "descriptions.seasonal_yoy",
   simple_avg: "descriptions.simple_avg",
   trimmed_mean: "descriptions.trimmed_mean",
 } as const
@@ -174,6 +180,15 @@ export const FORMULA_DEFINITIONS: FormulaDefinition[] = [
       { key: "months", labelKey: "months", type: "number", min: 1, max: 24, step: 1, defaultValue: 3 },
       { key: "reduction", labelKey: "reduction", type: "percent", min: 1, max: 30, step: 1, defaultValue: 5 },
       { key: "floorAmount", labelKey: "floorAmount", type: "currency", min: 0, max: 999999, step: 50, defaultValue: 0 },
+      { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
+    ],
+  },
+  {
+    id: "seasonal_yoy",
+    icon: "🗓️",
+    variables: [
+      { key: "seasonalWeight", labelKey: "seasonalWeight", type: "percent", min: 0, max: 100, step: 10, defaultValue: 50 },
+      { key: "margin", labelKey: "margin", type: "percent", min: 0, max: 100, step: 5, defaultValue: 10 },
       { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
     ],
   },
@@ -326,6 +341,26 @@ function calcDecliningTarget(history: HistoryData, params: FormulaParams): numbe
   return applyContainment(target, params.containment ?? 0)
 }
 
+function sameMonthLastYearLabel(targetMonth: string): string {
+  const [y, m] = targetMonth.split("-").map(Number)
+  return `${y - 1}-${String(m).padStart(2, "0")}`
+}
+
+function calcSeasonalYoy(history: HistoryData, params: FormulaParams): number {
+  const w = Math.min(100, Math.max(0, params.seasonalWeight ?? 50)) / 100
+  const margin = params.margin ?? 0
+  const recent = trimInactiveTail(history.monthlySpent.slice(0, 3))
+  const recentAvg = recent.length ? recent.reduce((s, v) => s + v, 0) / recent.length : 0
+  const labels = history.monthLabels
+  const target = history.targetMonth
+  if (!labels || !target) return applyContainment(recentAvg, params.containment ?? 0)
+  const yoyIdx = labels.indexOf(sameMonthLastYearLabel(target))
+  const yoy = yoyIdx >= 0 ? history.monthlySpent[yoyIdx] : 0
+  if (yoy === 0) return applyContainment(recentAvg, params.containment ?? 0)
+  const value = w * yoy * (1 + margin / 100) + (1 - w) * recentAvg
+  return applyContainment(value, params.containment ?? 0)
+}
+
 const CALCULATORS: Record<FormulaId, (h: HistoryData, p: FormulaParams) => number> = {
   active_avg: calcActiveAvg,
   banded_avg: calcBandedAvg,
@@ -336,6 +371,7 @@ const CALCULATORS: Record<FormulaId, (h: HistoryData, p: FormulaParams) => numbe
   median: calcMedian,
   moving_avg: calcMovingAvg,
   percentile_n: calcPercentile,
+  seasonal_yoy: calcSeasonalYoy,
   simple_avg: calcSimpleAvg,
   trimmed_mean: calcTrimmedMean,
 }

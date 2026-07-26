@@ -17,6 +17,7 @@ export interface CustomFormulaDefinition {
 export interface FormulaParams {
   months?: number
   containment?: number
+  monthsToTarget?: number
   percentage?: number
   amount?: number
   ceilingAmount?: number
@@ -24,6 +25,8 @@ export interface FormulaParams {
   margin?: number
   percentile?: number
   reduction?: number
+  rolloverMonths?: number
+  seasonalWeight?: number
   trimPct?: number
 }
 

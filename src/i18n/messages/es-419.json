@@ -408,6 +408,7 @@
         "median": "El valor de tu mes típico — inmune a meses fuera de lo normal",
         "moving_avg": "Promedio ponderado con más peso en los meses recientes",
         "percentile_n": "Un límite que cubriría la mayoría de tus últimos meses",
+        "seasonal_yoy": "Combina el mismo mes del año pasado con tu promedio reciente — para gastos estacionales",
         "simple_avg": "Promedio de gastos de los últimos N meses",
         "trimmed_mean": "Promedio ignorando los meses más extremos del período"
       },
@@ -421,6 +422,7 @@
         "median": "Mediana",
         "moving_avg": "Promedio Móvil",
         "percentile_n": "Percentil del Historial",
+        "seasonal_yoy": "Estacional (Año Anterior)",
         "simple_avg": "Promedio Simple",
         "trimmed_mean": "Media Recortada",
         "unknown": "Fórmula desconocida"
@@ -440,9 +442,12 @@
         "margin": "Margen",
         "months": "Meses",
         "monthsIncome": "Meses de ingreso",
+        "monthsToTarget": "Meses hasta el objetivo",
         "percentage": "Porcentaje",
         "percentile": "Percentil",
         "reduction": "Reducción mensual",
+        "rolloverMonths": "Meses de sobrante",
+        "seasonalWeight": "Peso estacional",
         "trimPct": "Recorte"
       }
     },
