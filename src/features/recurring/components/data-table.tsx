@@ -178,11 +178,12 @@ export function DataTable<TData, TValue>({
         if (!over || active.id === over.id) return
         setColumnOrder((order) => {
             const current = order.length ? order : allColumnIds
-            return arrayMove(
-                current,
-                current.indexOf(String(active.id)),
-                current.indexOf(String(over.id))
-            )
+            const from = current.indexOf(String(active.id))
+            const to = current.indexOf(String(over.id))
+            // arrayMove com -1 remove silenciosamente o ÚLTIMO item (splice(-1, 1)),
+            // movendo a coluna errada sem erro. Melhor não mexer.
+            if (from === -1 || to === -1) return current
+            return arrayMove(current, from, to)
         })
     }
 

@@ -48,7 +48,13 @@ export function DataTableToolsMenu<TData>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-9 gap-2 cursor-pointer">
+        {/* O rótulo some abaixo de lg; sem o aria-label o botão fica sem nome acessível. */}
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label={t("tools.button")}
+          className="h-9 gap-2 cursor-pointer"
+        >
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Settings2 className="size-4" />}
           <span className="hidden lg:inline">{t("tools.button")}</span>
         </Button>

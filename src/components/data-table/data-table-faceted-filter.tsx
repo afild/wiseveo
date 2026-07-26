@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import type { Column } from "@tanstack/react-table"
-import { Check, PlusCircle } from "lucide-react"
+import { Check, ChevronDown, ListFilter } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
@@ -45,16 +45,24 @@ export function DataTableFacetedFilter<TData, TValue>({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-9 border-dashed cursor-pointer">
-          <PlusCircle className="size-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "h-9 cursor-pointer",
+            // Tracejado é ESTADO, não decoração: vazio tracejado, ativo sólido e destacado.
+            selected.size > 0 ? "border-primary/40 bg-primary/5" : "border-dashed"
+          )}
+        >
+          <ListFilter className="size-4" />
           {title}
           {selected.size > 0 && (
             <>
               <Separator orientation="vertical" className="mx-1 h-4" />
-              <Badge variant="secondary" className="rounded-sm px-1 font-normal lg:hidden">
+              <Badge variant="secondary" className="rounded-sm px-1 font-normal xl:hidden">
                 {selected.size}
               </Badge>
-              <div className="hidden gap-1 lg:flex">
+              <div className="hidden gap-1 xl:flex">
                 {selected.size > 2 ? (
                   <Badge variant="secondary" className="rounded-sm px-1 font-normal">
                     {t("selected", { count: selected.size })}
@@ -63,7 +71,11 @@ export function DataTableFacetedFilter<TData, TValue>({
                   options
                     .filter((o) => selected.has(o.value))
                     .map((o) => (
-                      <Badge key={o.value} variant="secondary" className="rounded-sm px-1 font-normal">
+                      <Badge
+                        key={o.value}
+                        variant="secondary"
+                        className="max-w-[7rem] truncate rounded-sm px-1 font-normal"
+                      >
                         {o.label}
                       </Badge>
                     ))
@@ -71,11 +83,14 @@ export function DataTableFacetedFilter<TData, TValue>({
               </div>
             </>
           )}
+          <ChevronDown className="text-muted-foreground size-3.5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0" align="start">
+      <PopoverContent className="w-auto min-w-[200px] max-w-[280px] p-0" align="start">
         <Command>
-          <CommandInput placeholder={t("search")} />
+          {/* Busca só quando a lista justifica: acima de 3-4 opções ela é só mais
+              uma parada de foco e mais altura no popover. */}
+          {options.length >= 8 && <CommandInput placeholder={t("search")} />}
           <CommandList>
             <CommandEmpty>{t("noResults")}</CommandEmpty>
             <CommandGroup>

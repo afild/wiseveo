@@ -233,7 +233,11 @@ export function DataTableToolbar<TData>({
             )}
 
             {selectedRows.length > 0 && (
-                <div className="bg-primary/5 border-primary/20 flex items-center justify-between rounded-lg border px-3 py-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div
+                    role="status"
+                    aria-live="polite"
+                    className="bg-primary/5 border-primary/20 flex items-center justify-between rounded-lg border px-3 py-2 animate-in fade-in slide-in-from-top-1 duration-200"
+                >
                     <div className="flex items-center gap-4">
                         <span className="text-primary text-sm font-semibold">
                             {tBatch("selectedCount", { count: selectedRows.length })}

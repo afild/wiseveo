@@ -7,11 +7,36 @@ import type { ExportColumn, ExportRow } from "@/lib/table-export"
 const COLORS = {
   accent: "#0F766E",
   border: "#E2E8F0",
-  headerBg: "#F8FAFC",
+  // headerBg tem de ser MAIS escuro que a zebra, senão o cabeçalho se dissolve
+  // na primeira linha zebrada.
+  headerBg: "#E8EDF3",
   muted: "#64748B",
   text: "#0F172A",
   zebra: "#F8FAFC",
 }
+
+/**
+ * Peso relativo de largura por coluna. Sem isto todas as colunas dividem a página
+ * igualmente e o número do lançamento ocupa tanto quanto a descrição — que então
+ * quebra em 3-4 linhas enquanto sobra papel em branco à esquerda.
+ */
+const COLUMN_WEIGHTS: Record<string, number> = {
+  account: 12,
+  amount: 10,
+  category: 12,
+  date: 8,
+  description: 22,
+  group: 10,
+  lastDate: 9,
+  note: 18,
+  num: 4,
+  payee: 12,
+  period: 7,
+  reference: 10,
+  status: 8,
+  type: 7,
+}
+const DEFAULT_COLUMN_WEIGHT = 12
 
 const styles = StyleSheet.create({
   page: {
@@ -57,11 +82,15 @@ const styles = StyleSheet.create({
     fontSize: 8,
     paddingVertical: 5,
     paddingHorizontal: 4,
-    color: COLORS.muted,
+    // Antes: 8pt + muted + caixa alta + letter-spacing largo — cada uma aceitável
+    // sozinha, as quatro juntas não. Cor do texto e spacing menor.
+    color: COLORS.text,
     textTransform: "uppercase",
-    letterSpacing: 0.4,
+    letterSpacing: 0.2,
   },
-  row: { flexDirection: "row", borderBottomWidth: 0.5, borderBottomColor: COLORS.border },
+  // Sem filete por linha: zebra E borda juntas viram textura a 8,5pt. A régua
+  // forte fica só sob o cabeçalho.
+  row: { flexDirection: "row" },
   rowZebra: { backgroundColor: COLORS.zebra },
   cell: { paddingVertical: 4.5, paddingHorizontal: 4 },
   numeric: { textAlign: "right" },
@@ -92,7 +121,12 @@ export interface TableReportProps {
 
 /** Componente puro: TODAS as strings chegam por props — quem traduz é o chamador. */
 export function TableReport(props: TableReportProps) {
-  const colWidth = `${100 / props.columns.length}%`
+  const totalWeight = props.columns.reduce(
+    (sum, c) => sum + (COLUMN_WEIGHTS[c.id] ?? DEFAULT_COLUMN_WEIGHT),
+    0
+  )
+  const widthOf = (id: string) =>
+    `${(((COLUMN_WEIGHTS[id] ?? DEFAULT_COLUMN_WEIGHT) / totalWeight) * 100).toFixed(3)}%`
   const cellStyle = (id: string) =>
     props.numericColumnIds.includes(id) ? [styles.cell, styles.numeric] : [styles.cell]
 
@@ -114,7 +148,7 @@ export function TableReport(props: TableReportProps) {
               key={c.id}
               style={[
                 styles.headerCell,
-                { width: colWidth },
+                { width: widthOf(c.id) },
                 ...(props.numericColumnIds.includes(c.id) ? [styles.numeric] : []),
               ]}
             >
@@ -125,7 +159,7 @@ export function TableReport(props: TableReportProps) {
         {props.rows.map((row, i) => (
           <View key={i} style={i % 2 ? [styles.row, styles.rowZebra] : styles.row} wrap={false}>
             {props.columns.map((c) => (
-              <Text key={c.id} style={[...cellStyle(c.id), { width: colWidth }]}>
+              <Text key={c.id} style={[...cellStyle(c.id), { width: widthOf(c.id) }]}>
                 {row[c.id] ?? ""}
               </Text>
             ))}

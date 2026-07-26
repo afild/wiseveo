@@ -58,4 +58,12 @@ describe("mergeColumnOrder", () => {
       "select", "date", "amount", "note", "payee", "actions",
     ])
   })
+
+  it("nunca perde uma coluna atual quando a ordem salva tem ids duplicados", () => {
+    const saved = ["date", "date", "amount"]
+    const current = ["select", "date", "amount", "note"]
+    const merged = mergeColumnOrder(saved, current)
+    expect([...merged].sort()).toEqual([...current].sort())
+    expect(new Set(merged).size).toBe(current.length)
+  })
 })

@@ -255,11 +255,12 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
     if (!over || active.id === over.id) return
     setColumnOrder((order) => {
       const current = order.length ? order : allColumnIds
-      return arrayMove(
-        current,
-        current.indexOf(String(active.id)),
-        current.indexOf(String(over.id))
-      )
+      const from = current.indexOf(String(active.id))
+      const to = current.indexOf(String(over.id))
+      // arrayMove com -1 remove silenciosamente o ÚLTIMO item (splice(-1, 1)),
+      // movendo a coluna errada sem erro. Melhor não mexer.
+      if (from === -1 || to === -1) return current
+      return arrayMove(current, from, to)
     })
   }
 
@@ -433,8 +434,10 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
             />
           </div>
 
+          {/* O rótulo some abaixo de sm; sem o aria-label o botão fica sem nome acessível. */}
           <Button
             className="h-10 w-10 sm:h-9 sm:w-auto"
+            aria-label={t("addButton")}
             onClick={onAddTransaction}
           >
             <Plus className="size-4" />

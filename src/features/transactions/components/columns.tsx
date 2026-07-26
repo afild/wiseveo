@@ -280,6 +280,9 @@ export function getTransactionColumns(
       enableSorting: false,
       enableHiding: false,
       enableResizing: false,
+      // minSize próprio: o minSize 64 do defaultColumn sobrescreveria o size na
+      // leitura e a coluna da checkbox sairia com 64px em vez de 36.
+      minSize: 36,
       size: 36,
     },
     {
@@ -474,6 +477,7 @@ export function getTransactionColumns(
       enableSorting: false,
       enableHiding: false,
       enableResizing: false,
+      minSize: 56,
       size: 56,
     },
     {

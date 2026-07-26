@@ -90,7 +90,10 @@ export const multiSelectFilter: FilterFn<unknown> = (row, columnId, filterValue)
  * que ocupam hoje e os salvos preenchem os slots restantes na ordem gravada.
  */
 export function mergeColumnOrder(saved: string[], current: string[]): string[] {
-  const valid = saved.filter((id) => current.includes(id))
+  // Deduplica: uma ordem salva corrompida (id repetido) faria um id sumir do
+  // resultado, e um columnOrder sem todos os ids leva o arrayMove do dnd-kit a
+  // receber -1 e mover a coluna errada em silêncio.
+  const valid = [...new Set(saved)].filter((id) => current.includes(id))
   const merged: string[] = []
   let savedIdx = 0
   for (const id of current) {

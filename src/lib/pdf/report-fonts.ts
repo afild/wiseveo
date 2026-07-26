@@ -20,4 +20,8 @@ export function registerReportFonts() {
     family: "Manrope",
     fonts: [{ src: "/fonts/pdf/manrope-latin-700-normal.woff", fontWeight: 700 }],
   })
+  // O react-pdf hifeniza por padrão com um algoritmo que não conhece português —
+  // sem isto o relatório sai com "descri-ção" e coisas piores. Devolver a palavra
+  // inteira desliga a hifenização.
+  Font.registerHyphenationCallback((word) => [word])
 }

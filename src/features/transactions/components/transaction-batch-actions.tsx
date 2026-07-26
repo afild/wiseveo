@@ -4,12 +4,12 @@ import * as React from "react"
 import { useTranslations } from "next-intl"
 import {
   CalendarClock,
+  CalendarDays,
   CheckCircle,
   Copy,
   MessageSquare,
   MoreHorizontal,
-  Pencil,
-  RotateCcw,
+  Repeat,
   Trash2,
 } from "lucide-react"
 
@@ -186,8 +186,9 @@ export function TransactionBatchActions<TData>({
       onSelect: () => setShowQuickPayConfirm(true),
     },
     {
+      // CalendarDays, não Pencil: lápis lê-se "editar o registro", não "editar a data".
       key: "editDate",
-      icon: Pencil,
+      icon: CalendarDays,
       iconClassName: undefined,
       label: t("editDate"),
       tooltip: t("editDate"),
@@ -202,8 +203,10 @@ export function TransactionBatchActions<TData>({
       onSelect: () => setShowEditPeriodDialog(true),
     },
     {
+      // Repeat, não RotateCcw: RotateCcw é o glifo universal de DESFAZER — sugerir
+      // "desfazer" com lançamentos financeiros selecionados é perigoso.
       key: "makeRecurring",
-      icon: RotateCcw,
+      icon: Repeat,
       iconClassName: "text-info",
       label: t("makeRecurring"),
       tooltip: t("makeRecurring"),
@@ -240,7 +243,13 @@ export function TransactionBatchActions<TData>({
 
   return (
     <>
-      <div className="bg-primary/5 border-primary/20 animate-in fade-in slide-in-from-top-1 flex items-center justify-between gap-2 rounded-lg border px-3 py-2 duration-200">
+      {/* role/aria-live: sem isto, quem usa leitor de tela não fica sabendo que
+          sete ações apareceram ao marcar uma linha. */}
+      <div
+        role="status"
+        aria-live="polite"
+        className="bg-primary/5 border-primary/20 animate-in fade-in slide-in-from-top-1 flex items-center justify-between gap-2 rounded-lg border px-3 py-2 duration-200"
+      >
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="text-primary shrink-0 text-sm font-semibold">
             {selectedCount}
@@ -274,21 +283,28 @@ export function TransactionBatchActions<TData>({
             </>
           ) : (
             actions.map((action) => (
-              <Tooltip key={action.key}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hover:bg-muted h-8 w-8 cursor-pointer"
-                    disabled={batchLoading}
-                    onClick={action.onSelect}
-                  >
-                    <action.icon className={cn("h-4 w-4", action.iconClassName)} />
-                    <span className="sr-only">{action.label}</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{action.tooltip}</TooltipContent>
-              </Tooltip>
+              <React.Fragment key={action.key}>
+                {/* Excluir é destrutivo e encostava em "Observações" numa fileira de
+                    botões iguais — o separador dá a pausa antes do alvo perigoso. */}
+                {action.key === "delete" && (
+                  <span className="bg-border mx-1 h-5 w-px shrink-0" aria-hidden="true" />
+                )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hover:bg-muted h-8 w-8 cursor-pointer"
+                      disabled={batchLoading}
+                      onClick={action.onSelect}
+                    >
+                      <action.icon className={cn("h-4 w-4", action.iconClassName)} />
+                      <span className="sr-only">{action.label}</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{action.tooltip}</TooltipContent>
+                </Tooltip>
+              </React.Fragment>
             ))
           )}
         </div>
@@ -314,19 +330,28 @@ export function TransactionBatchActions<TData>({
           </DrawerHeader>
           <div className="flex-1 overflow-y-auto overscroll-contain p-2">
             {actions.map((action) => (
-              <button
-                key={action.key}
-                type="button"
-                className="hover:bg-muted flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm"
-                disabled={batchLoading}
-                onClick={() => {
-                  setDrawerOpen(false)
-                  action.onSelect()
-                }}
-              >
-                <action.icon className={cn("size-5", action.iconClassName)} />
-                {action.label}
-              </button>
+              <React.Fragment key={action.key}>
+                {action.key === "delete" && (
+                  <div className="bg-border my-1 h-px w-full" aria-hidden="true" />
+                )}
+                <button
+                  type="button"
+                  className={cn(
+                    "hover:bg-muted flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm",
+                    // Cor sozinha não sinaliza destrutivo (WCAG 1.4.1): o rótulo
+                    // inteiro vai em destructive, não só o ícone.
+                    action.key === "delete" && "text-destructive"
+                  )}
+                  disabled={batchLoading}
+                  onClick={() => {
+                    setDrawerOpen(false)
+                    action.onSelect()
+                  }}
+                >
+                  <action.icon className={cn("size-5", action.iconClassName)} />
+                  {action.label}
+                </button>
+              </React.Fragment>
             ))}
           </div>
         </DrawerContent>
