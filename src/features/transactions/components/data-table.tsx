@@ -298,23 +298,10 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
     <div className="flex flex-col gap-4">
       <DataTableToolbar table={table} filterOptions={filterOptions} />
       <div className="flex flex-col items-center gap-3 md:grid md:grid-cols-3 md:items-center">
-        {/* Lado Esquerdo: Ações em Lote (alinhado com as checkboxes) */}
-        <div className="flex w-full justify-center md:justify-start">
-          <TransactionBatchActions
-            selectedData={selectedData}
-            selectedCount={selectedRows.length}
-            batchLoading={batchLoading}
-            onQuickPaySelectedTransactions={onQuickPaySelectedTransactions}
-            onEditSelectedTransactionDate={onEditSelectedTransactionDate}
-            onEditSelectedTransactionPeriod={onEditSelectedTransactionPeriod}
-            onCopySelectedTransactions={onCopySelectedTransactions}
-            onMakeRecurringSelectedTransactions={onMakeRecurringSelectedTransactions}
-            onNotesSelectedTransactions={onNotesSelectedTransactions}
-            onDeleteSelectedTransactions={onDeleteSelectedTransactions}
-            onClearSelection={() => table.resetRowSelection()}
-          />
-        </div>
-        
+        {/* Lado Esquerdo: vazio — a faixa de lote agora é um bloco próprio, logo
+            abaixo deste grid. O placeholder preserva a centralização do navegador. */}
+        <div className="hidden md:block" />
+
         {/* Centro: Navegador de Datas */}
         <div className="flex justify-center">
           <DayRangeNavigator dateRange={dateRange} onDateRangeChange={onDateRangeChange} />
@@ -339,6 +326,21 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
           </Button>
         </div>
       </div>
+      {selectedRows.length > 0 && (
+        <TransactionBatchActions
+          selectedData={selectedData}
+          selectedCount={selectedRows.length}
+          batchLoading={batchLoading}
+          onQuickPaySelectedTransactions={onQuickPaySelectedTransactions}
+          onEditSelectedTransactionDate={onEditSelectedTransactionDate}
+          onEditSelectedTransactionPeriod={onEditSelectedTransactionPeriod}
+          onCopySelectedTransactions={onCopySelectedTransactions}
+          onMakeRecurringSelectedTransactions={onMakeRecurringSelectedTransactions}
+          onNotesSelectedTransactions={onNotesSelectedTransactions}
+          onDeleteSelectedTransactions={onDeleteSelectedTransactions}
+          onClearSelection={() => table.resetRowSelection()}
+        />
+      )}
       {isMobile ? (
         <div className="flex flex-col border-t">
           {loading ? (

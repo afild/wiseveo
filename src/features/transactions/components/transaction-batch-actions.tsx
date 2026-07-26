@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Copy,
   MessageSquare,
+  MoreHorizontal,
   Pencil,
   RotateCcw,
   Trash2,
@@ -14,6 +15,12 @@ import {
 
 import { DetailPanel } from "@/components/detail-panel"
 import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -31,6 +38,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useDeviceClass } from "@/hooks/use-device-class"
+import { cn } from "@/lib/utils"
 
 interface TransactionBatchActionsProps<TData> {
   selectedData: TData[]
@@ -61,6 +70,8 @@ export function TransactionBatchActions<TData>({
 }: TransactionBatchActionsProps<TData>) {
   const t = useTranslations("transactions.batch")
   const tCommon = useTranslations("common")
+  const { isMobile } = useDeviceClass()
+  const [drawerOpen, setDrawerOpen] = React.useState(false)
   const [showQuickPayConfirm, setShowQuickPayConfirm] = React.useState(false)
   const [showMakeRecurringConfirm, setShowMakeRecurringConfirm] = React.useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false)
@@ -163,135 +174,163 @@ export function TransactionBatchActions<TData>({
 
   if (selectedCount === 0) return null
 
+  // As 7 ações viram dados: a faixa desktop, os atalhos do mobile e o drawer
+  // renderizam todas a partir desta lista — sem duplicar JSX.
+  const actions = [
+    {
+      key: "pay",
+      icon: CheckCircle,
+      iconClassName: "text-positive",
+      label: t("pay"),
+      tooltip: t("payTooltip"),
+      onSelect: () => setShowQuickPayConfirm(true),
+    },
+    {
+      key: "editDate",
+      icon: Pencil,
+      iconClassName: undefined,
+      label: t("editDate"),
+      tooltip: t("editDate"),
+      onSelect: () => setShowEditDateDialog(true),
+    },
+    {
+      key: "editPeriod",
+      icon: CalendarClock,
+      iconClassName: undefined,
+      label: t("editPeriod"),
+      tooltip: t("editPeriod"),
+      onSelect: () => setShowEditPeriodDialog(true),
+    },
+    {
+      key: "makeRecurring",
+      icon: RotateCcw,
+      iconClassName: "text-info",
+      label: t("makeRecurring"),
+      tooltip: t("makeRecurring"),
+      onSelect: () => setShowMakeRecurringConfirm(true),
+    },
+    {
+      key: "copy",
+      icon: Copy,
+      iconClassName: "text-info",
+      label: t("copy"),
+      tooltip: t("copyTooltip"),
+      onSelect: () => setShowCopyDateDialog(true),
+    },
+    {
+      key: "notes",
+      icon: MessageSquare,
+      iconClassName: "text-primary",
+      label: t("notes"),
+      tooltip: t("notesTooltip"),
+      onSelect: () => void handleNotesSelected(),
+    },
+    {
+      key: "delete",
+      icon: Trash2,
+      iconClassName: "text-destructive",
+      label: t("delete"),
+      tooltip: t("deleteTooltip"),
+      onSelect: () => setShowDeleteConfirm(true),
+    },
+  ] as const
+
+  // No mobile a faixa só comporta os dois atalhos mais usados; o resto vai pro drawer.
+  const mobileShortcuts = actions.filter((a) => a.key === "pay" || a.key === "delete")
+
   return (
     <>
-      <div className="flex items-center gap-1.5 min-w-0">
-        <span className="text-primary text-sm font-semibold mr-1 shrink-0">
-          {selectedCount}
-        </span>
-        <div className="bg-primary/5 border-primary/20 flex items-center gap-0.5 rounded-md border p-0.5 min-w-0">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 cursor-pointer hover:bg-muted"
-                disabled={batchLoading}
-                onClick={() => setShowQuickPayConfirm(true)}
-              >
-                <CheckCircle className="h-4 w-4 text-positive" />
-                <span className="sr-only">{t("pay")}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("payTooltip")}</TooltipContent>
-          </Tooltip>
+      <div className="bg-primary/5 border-primary/20 animate-in fade-in slide-in-from-top-1 flex items-center justify-between gap-2 rounded-lg border px-3 py-2 duration-200">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="text-primary shrink-0 text-sm font-semibold">
+            {selectedCount}
+          </span>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
+          {isMobile ? (
+            <>
+              {mobileShortcuts.map((action) => (
+                <Button
+                  key={action.key}
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-muted h-8 w-8 cursor-pointer"
+                  disabled={batchLoading}
+                  onClick={action.onSelect}
+                >
+                  <action.icon className={cn("h-4 w-4", action.iconClassName)} />
+                  <span className="sr-only">{action.label}</span>
+                </Button>
+              ))}
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 cursor-pointer hover:bg-muted"
+                className="hover:bg-muted h-8 w-8 cursor-pointer"
                 disabled={batchLoading}
-                onClick={() => setShowEditDateDialog(true)}
+                onClick={() => setDrawerOpen(true)}
               >
-                <Pencil className="h-4 w-4" />
-                <span className="sr-only">{t("editDate")}</span>
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">{t("moreActions")}</span>
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("editDate")}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 cursor-pointer hover:bg-muted"
-                disabled={batchLoading}
-                onClick={() => setShowEditPeriodDialog(true)}
-              >
-                <CalendarClock className="h-4 w-4" />
-                <span className="sr-only">{t("editPeriod")}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("editPeriod")}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 cursor-pointer hover:bg-muted"
-                disabled={batchLoading}
-                onClick={() => setShowMakeRecurringConfirm(true)}
-              >
-                <RotateCcw className="h-4 w-4 text-info" />
-                <span className="sr-only">{t("makeRecurring")}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("makeRecurring")}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 cursor-pointer hover:bg-muted"
-                disabled={batchLoading}
-                onClick={() => setShowCopyDateDialog(true)}
-              >
-                <Copy className="h-4 w-4 text-info" />
-                <span className="sr-only">{t("copy")}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("copyTooltip")}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 cursor-pointer hover:bg-muted"
-                disabled={batchLoading}
-                onClick={() => void handleNotesSelected()}
-              >
-                <MessageSquare className="h-4 w-4 text-primary" />
-                <span className="sr-only">{t("notes")}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("notesTooltip")}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 cursor-pointer hover:bg-muted"
-                disabled={batchLoading}
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-                <span className="sr-only">{t("delete")}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("deleteTooltip")}</TooltipContent>
-          </Tooltip>
+            </>
+          ) : (
+            actions.map((action) => (
+              <Tooltip key={action.key}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hover:bg-muted h-8 w-8 cursor-pointer"
+                    disabled={batchLoading}
+                    onClick={action.onSelect}
+                  >
+                    <action.icon className={cn("h-4 w-4", action.iconClassName)} />
+                    <span className="sr-only">{action.label}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{action.tooltip}</TooltipContent>
+              </Tooltip>
+            ))
+          )}
         </div>
+
         <Button
           variant="ghost"
           size="sm"
-          className="text-muted-foreground cursor-pointer h-8 px-2 text-[11px] sm:text-sm shrink-0"
+          className="text-muted-foreground h-8 shrink-0 cursor-pointer px-2 text-[11px] sm:text-sm"
           onClick={onClearSelection}
         >
           <span className="hidden sm:inline">{t("cancel")}</span>
           <span className="sm:hidden">{t("clear")}</span>
         </Button>
       </div>
+
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="bottom">
+        <DrawerContent className="pb-safe flex max-h-[92dvh] flex-col">
+          <DrawerHeader className="border-b px-5 pt-2 pb-3 text-left">
+            <DrawerTitle className="flex items-center gap-2 text-base leading-tight font-semibold">
+              {t("drawerTitle")}
+              <span className="text-primary text-sm font-semibold">{selectedCount}</span>
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="flex-1 overflow-y-auto overscroll-contain p-2">
+            {actions.map((action) => (
+              <button
+                key={action.key}
+                type="button"
+                className="hover:bg-muted flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm"
+                disabled={batchLoading}
+                onClick={() => {
+                  setDrawerOpen(false)
+                  action.onSelect()
+                }}
+              >
+                <action.icon className={cn("size-5", action.iconClassName)} />
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       <AlertDialog open={showQuickPayConfirm} onOpenChange={setShowQuickPayConfirm}>
         <AlertDialogContent>
