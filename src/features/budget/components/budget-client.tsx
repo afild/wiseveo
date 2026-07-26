@@ -22,15 +22,17 @@ import {
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers"
 import { useDateRange } from "@/contexts/date-range-context"
 
-import { BudgetOverviewCard } from "./budget-overview-card"
+import { BudgetHeroFold } from "./budget-hero-fold"
 import { BudgetItemCard } from "./budget-item-card"
 import { BudgetSortableItem } from "./budget-sortable-item"
 import { BudgetSummaryCards } from "./budget-summary-cards"
+import { BudgetAttentionModule } from "./budget-attention-module"
 import { FormulaManagerCard } from "./formula-manager-card"
 import { NewBudgetCard } from "./new-budget-card"
 import { CreateBudgetDialog } from "./create-budget-dialog"
 import { updateBudgetOrder } from "../services/update-budget-order"
 import { SectionCardsGrid } from "@/components/section-cards-grid"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { BudgetPageData, BudgetItem } from "../types"
 
 interface BudgetClientProps {
@@ -54,6 +56,20 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
     setIsEditOpen(true)
   }
 
+  const commitOrder = (newItems: BudgetItem[]) => {
+    setItems(newItems)
+    startTransition(async () => {
+      await updateBudgetOrder(newItems.map((it) => it.id))
+    })
+  }
+
+  const handleMove = (itemId: string, delta: -1 | 1) => {
+    const idx = items.findIndex((it) => it.id === itemId)
+    const target = idx + delta
+    if (idx < 0 || target < 0 || target >= items.length) return
+    commitOrder(arrayMove(items, idx, target))
+  }
+
   // Fetch data when dateRange changes
   useEffect(() => {
     const fetchBudgetData = async () => {
@@ -67,9 +83,9 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
         const res = await fetch(`/api/budget?${params}`, { cache: "no-store" })
         if (!res.ok) throw new Error("Failed to fetch budget data") // i18n-ignore: mensagem interna de Error, só logada (console.error), nunca exibida ao usuário
         const newData = await res.json()
-        
+
         if (requestId !== latestRequestRef.current) return
-        
+
         setData(newData)
         setItems(newData.items)
       } catch (error) {
@@ -111,13 +127,7 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
     if (over && active.id !== over.id) {
       const oldIndex = items.findIndex((it) => it.id === active.id)
       const newIndex = items.findIndex((it) => it.id === over.id)
-      const newItems = arrayMove(items, oldIndex, newIndex)
-
-      setItems(newItems)
-
-      startTransition(async () => {
-        await updateBudgetOrder(newItems.map((it) => it.id))
-      })
+      commitOrder(arrayMove(items, oldIndex, newIndex))
     }
   }
 
@@ -126,7 +136,7 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
   return (
     <>
       {/* Summary Cards */}
-      <div className={`px-4 lg:px-6 transition-opacity duration-200 ${loading ? "opacity-50" : ""}`}>
+      <div className="px-4 lg:px-6" aria-busy={loading}>
         <BudgetSummaryCards
           totalLimit={data.totalLimit}
           totalSpent={data.totalSpent}
@@ -137,11 +147,28 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
         />
       </div>
 
-      {/* Visualization Row (12-col: Overview 8 + Fórmula 4) */}
-      <div className={`px-4 lg:px-6 transition-opacity duration-200 ${loading ? "opacity-50" : ""}`}>
+      {/* Visualization Row (12-col: Hero 8 + Fórmula 4) */}
+      <div className="px-4 lg:px-6" aria-busy={loading}>
         <div className="grid grid-cols-12 items-stretch gap-4">
-          <div className="col-span-12 lg:col-span-8 *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs">
-            <BudgetOverviewCard data={{ ...data, items }} />
+          <div className="col-span-12 lg:col-span-8">
+            {loading ? (
+              <div className="h-full space-y-3 rounded-xl border p-6">
+                <Skeleton className="h-9 w-44" />
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-1 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            ) : (
+              <BudgetHeroFold
+                totalLimit={data.totalLimit}
+                totalSpent={data.totalSpent}
+                totalPaid={data.totalPaid}
+                totalScheduled={data.totalScheduled}
+                totalProjected={data.totalProjected}
+                overallPct={data.overallPct}
+              />
+            )}
           </div>
           <div className="col-span-12 lg:col-span-4 *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs">
             <FormulaManagerCard
@@ -152,8 +179,11 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
         </div>
       </div>
 
+      {/* Needs Attention */}
+      {!loading && <BudgetAttentionModule items={items} />}
+
       {/* Sortable Budget Cards */}
-      <div className={`px-4 lg:px-6 transition-opacity duration-200 ${loading ? "opacity-50" : ""}`}>
+      <div className="px-4 lg:px-6" aria-busy={loading}>
         {isPending && (
           <p className="text-xs text-muted-foreground animate-pulse mb-2">
             {t("client.savingOrder")}
@@ -181,6 +211,8 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
                   index={index}
                   formulaConfig={data.formulaConfig}
                   onEdit={handleEdit}
+                  onMoveUp={index > 0 ? () => handleMove(item.id, -1) : undefined}
+                  onMoveDown={index < items.length - 1 ? () => handleMove(item.id, 1) : undefined}
                 />
               ))}
               <NewBudgetCard groups={data.groups} />
@@ -213,4 +245,3 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
     </>
   )
 }
-
