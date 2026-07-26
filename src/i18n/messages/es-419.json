@@ -401,6 +401,7 @@
       "descriptions": {
         "active_avg": "Promedio solo de los meses con gasto — ideal para gastos esporádicos",
         "banded_avg": "Promedio de los últimos meses, limitado por un piso y un techo que defines",
+        "envelope_rollover": "Lo que no gastas un mes aumenta tu límite del siguiente",
         "declining_target": "Reduce el límite gradualmente cada mes para ayudar a recortar un gasto",
         "fixed_target": "Valor fijo definido manualmente",
         "historical_max": "Máximo histórico con margen de seguridad",
@@ -410,12 +411,14 @@
         "percentile_n": "Un límite que cubriría la mayoría de tus últimos meses",
         "seasonal_yoy": "Combina el mismo mes del año pasado con tu promedio reciente — para gastos estacionales",
         "simple_avg": "Promedio de gastos de los últimos N meses",
+        "sinking_fund": "Divide un gasto anual previsto en cuotas mensuales iguales",
         "trimmed_mean": "Promedio ignorando los meses más extremos del período"
       },
       "names": {
         "active_avg": "Promedio de Meses Activos",
         "banded_avg": "Promedio con Piso y Techo",
         "declining_target": "Meta Decreciente",
+        "envelope_rollover": "Sobre con Sobrante",
         "fixed_target": "Meta Fija",
         "historical_max": "Límite Histórico",
         "income_pct": "% del Ingreso",
@@ -424,6 +427,7 @@
         "percentile_n": "Percentil del Historial",
         "seasonal_yoy": "Estacional (Año Anterior)",
         "simple_avg": "Promedio Simple",
+        "sinking_fund": "Reserva Anual",
         "trimmed_mean": "Media Recortada",
         "unknown": "Fórmula desconocida"
       },

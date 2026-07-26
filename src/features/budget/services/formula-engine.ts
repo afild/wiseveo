@@ -20,6 +20,8 @@ export type BuiltinFormulaId =
   | "banded_avg"
   | "declining_target"
   | "seasonal_yoy"
+  | "envelope_rollover"
+  | "sinking_fund"
 
 export type FormulaVariableLabelKey =
   | "amount"
@@ -66,7 +68,9 @@ export const FORMULA_NAME_KEYS = {
   median: "names.median",
   moving_avg: "names.moving_avg",
   percentile_n: "names.percentile_n",
+  envelope_rollover: "names.envelope_rollover",
   seasonal_yoy: "names.seasonal_yoy",
+  sinking_fund: "names.sinking_fund",
   simple_avg: "names.simple_avg",
   trimmed_mean: "names.trimmed_mean",
 } as const
@@ -81,7 +85,9 @@ export const FORMULA_DESCRIPTION_KEYS = {
   median: "descriptions.median",
   moving_avg: "descriptions.moving_avg",
   percentile_n: "descriptions.percentile_n",
+  envelope_rollover: "descriptions.envelope_rollover",
   seasonal_yoy: "descriptions.seasonal_yoy",
+  sinking_fund: "descriptions.sinking_fund",
   simple_avg: "descriptions.simple_avg",
   trimmed_mean: "descriptions.trimmed_mean",
 } as const
@@ -189,6 +195,24 @@ export const FORMULA_DEFINITIONS: FormulaDefinition[] = [
     variables: [
       { key: "seasonalWeight", labelKey: "seasonalWeight", type: "percent", min: 0, max: 100, step: 10, defaultValue: 50 },
       { key: "margin", labelKey: "margin", type: "percent", min: 0, max: 100, step: 5, defaultValue: 10 },
+      { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
+    ],
+  },
+  {
+    id: "envelope_rollover",
+    icon: "✉️",
+    variables: [
+      { key: "months", labelKey: "months", type: "number", min: 1, max: 12, step: 1, defaultValue: 3 },
+      { key: "rolloverMonths", labelKey: "rolloverMonths", type: "number", min: 1, max: 12, step: 1, defaultValue: 3 },
+      { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
+    ],
+  },
+  {
+    id: "sinking_fund",
+    icon: "🏺",
+    variables: [
+      { key: "amount", labelKey: "amount", type: "currency", min: 0, max: 999999, step: 100, defaultValue: 0 },
+      { key: "monthsToTarget", labelKey: "monthsToTarget", type: "number", min: 1, max: 24, step: 1, defaultValue: 12 },
       { key: "containment", labelKey: "containment", type: "percent", min: 0, max: 100, step: 1, defaultValue: 0 },
     ],
   },
@@ -361,10 +385,34 @@ function calcSeasonalYoy(history: HistoryData, params: FormulaParams): number {
   return applyContainment(value, params.containment ?? 0)
 }
 
+function calcEnvelopeRollover(history: HistoryData, params: FormulaParams): number {
+  const months = params.months ?? 3
+  const lookback = Math.min(12, Math.max(1, params.rolloverMonths ?? 3))
+  const spentAll = history.monthlySpent
+  let carry = 0
+  for (let j = lookback - 1; j >= 0; j--) {
+    const histBefore: HistoryData = {
+      monthlySpent: spentAll.slice(j + 1, j + 1 + months),
+      monthlyIncome: [],
+    }
+    const limitJ = calcSimpleAvg(histBefore, { months, containment: params.containment ?? 0 })
+    carry = Math.max(0, carry + limitJ - (spentAll[j] ?? 0))
+  }
+  const base = calcSimpleAvg(history, params)
+  return base + carry
+}
+
+function calcSinkingFund(_history: HistoryData, params: FormulaParams): number {
+  const target = params.amount ?? 0
+  const horizon = Math.min(24, Math.max(1, params.monthsToTarget ?? 12))
+  return applyContainment(target / horizon, params.containment ?? 0)
+}
+
 const CALCULATORS: Record<FormulaId, (h: HistoryData, p: FormulaParams) => number> = {
   active_avg: calcActiveAvg,
   banded_avg: calcBandedAvg,
   declining_target: calcDecliningTarget,
+  envelope_rollover: calcEnvelopeRollover,
   fixed_target: calcFixedTarget,
   historical_max: calcHistoricalMax,
   income_pct: calcIncomePct,
@@ -373,6 +421,7 @@ const CALCULATORS: Record<FormulaId, (h: HistoryData, p: FormulaParams) => numbe
   percentile_n: calcPercentile,
   seasonal_yoy: calcSeasonalYoy,
   simple_avg: calcSimpleAvg,
+  sinking_fund: calcSinkingFund,
   trimmed_mean: calcTrimmedMean,
 }
 
@@ -517,7 +566,7 @@ export function hasUsableHistory(
   params: FormulaParams,
   history: HistoryData
 ): boolean {
-  if (formulaId === "fixed_target") return true
+  if (formulaId === "fixed_target" || formulaId === "sinking_fund") return true
   const months = params.months ?? 3
   const spentActive = history.monthlySpent.slice(0, months).some((v) => v > 0)
   if (formulaId === "income_pct") {

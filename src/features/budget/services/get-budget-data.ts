@@ -197,14 +197,13 @@ export async function getBudgetData(
   }
 
   // 5. Determine max months needed for history queries
-  const globalMonths = formulaConfig.global.params.months ?? 3
-  const allMonths = [
-    globalMonths,
-    ...Object.values(formulaConfig.perCard).map(
-      (c: FormulaConfig) => c.params.months ?? 3
-    ),
-  ]
-  const maxMonths = Math.max(...allMonths, 3)
+  const windowFor = (c: FormulaConfig): number => {
+    if (c.id === "seasonal_yoy") return 13
+    const base = c.params.months ?? 6
+    if (c.id === "envelope_rollover") return base + (c.params.rolloverMonths ?? 3)
+    return base
+  }
+  const maxMonths = Math.max(windowFor(formulaConfig.global), ...Object.values(formulaConfig.perCard).map(windowFor), 6)
 
   // 6. Build budget items with formula-based limits
   const items: BudgetItem[] = []
@@ -227,7 +226,7 @@ export async function getBudgetData(
     let limitSource: "formula" | "fallback" | "none" = budgetSetup?.amount ? "fallback" : "none"
     let limitBreakdown: BudgetItem["limitBreakdown"]
 
-    if (activeFormula.id !== "fixed_target") {
+    if (!["fixed_target", "sinking_fund"].includes(activeFormula.id)) {
       // Referência = início do range; getBudgetHistory exclui o próprio mês da
       // referência, então o slot 0 é o mês fechado imediatamente anterior ao range.
       const historyReferenceDate = filterFrom
@@ -317,7 +316,7 @@ export async function getBudgetData(
         let catLimitSource: "formula" | "fallback" | "none" = catSetup.amount ? "fallback" : "none"
         let catLimitBreakdown: BudgetItem["limitBreakdown"]
 
-        if (activeCatFormula.id !== "fixed_target") {
+        if (!["fixed_target", "sinking_fund"].includes(activeCatFormula.id)) {
           // Referência = início do range; getBudgetHistory exclui o próprio mês da
           // referência, então o slot 0 é o mês fechado imediatamente anterior ao range.
           const historyReferenceDate = filterFrom
@@ -452,7 +451,7 @@ export async function getBudgetData(
     let cCardLimitSource: "formula" | "fallback" | "none" = cCard.amount ? "fallback" : "none"
     let cCardLimitBreakdown: BudgetItem["limitBreakdown"]
 
-    if (activeFormula.id !== "fixed_target") {
+    if (!["fixed_target", "sinking_fund"].includes(activeFormula.id)) {
       if (hasHistory) {
         const formulaLimit = calculateFormulaLimit(
           activeFormula.id,

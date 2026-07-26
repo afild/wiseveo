@@ -401,6 +401,7 @@
       "descriptions": {
         "active_avg": "Average of months with spending only — ideal for irregular expenses",
         "banded_avg": "Average of recent months, bounded by a floor and ceiling you define",
+        "envelope_rollover": "What you don't spend one month raises your limit the next",
         "declining_target": "Gradually reduces the limit each month to help cut a recurring expense",
         "fixed_target": "Fixed amount set manually",
         "historical_max": "Historical maximum with a safety margin",
@@ -410,12 +411,14 @@
         "percentile_n": "A limit that would cover most of your recent months",
         "seasonal_yoy": "Combines the same month from last year with your recent average — for seasonal expenses",
         "simple_avg": "Average spending over the last N months",
+        "sinking_fund": "Spreads a planned annual expense into equal monthly installments",
         "trimmed_mean": "Average excluding the most extreme months in the period"
       },
       "names": {
         "active_avg": "Active Months Average",
         "banded_avg": "Banded Average",
         "declining_target": "Declining Target",
+        "envelope_rollover": "Envelope with Rollover",
         "fixed_target": "Fixed Target",
         "historical_max": "Historical Limit",
         "income_pct": "% of Income",
@@ -424,6 +427,7 @@
         "percentile_n": "Historical Percentile",
         "seasonal_yoy": "Seasonal (Prior Year)",
         "simple_avg": "Simple Average",
+        "sinking_fund": "Annual Reserve",
         "trimmed_mean": "Trimmed Mean",
         "unknown": "Unknown formula"
       },
