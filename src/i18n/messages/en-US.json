@@ -682,6 +682,38 @@
     "close": "Close",
     "commandSearchTitle": "Command Search",
     "confirm": "Confirm",
+    "dataTable": {
+      "export": {
+        "csv": "Export CSV",
+        "error": "Could not export. Please try again.",
+        "excel": "Export Excel",
+        "json": "Export JSON",
+        "label": "Export"
+      },
+      "facetedFilter": {
+        "clear": "Clear filter",
+        "noResults": "No options found",
+        "search": "Search...",
+        "selected": "{count, plural, one {# selected} other {# selected}}"
+      },
+      "header": {
+        "dragColumn": "Drag column",
+        "resizeColumn": "Resize column"
+      },
+      "pdf": {
+        "error": "Could not generate the PDF. Please try again.",
+        "generatedAt": "Generated on {date}",
+        "pageOf": "Page {page} of {total}",
+        "period": "Period: {range}",
+        "rows": "{count, plural, one {# record} other {# records}}"
+      },
+      "print": "Print PDF",
+      "tools": {
+        "button": "Tools",
+        "columns": "Columns",
+        "columnsLabel": "Show columns"
+      }
+    },
     "datePicker": {
       "dayCountBadge": "{count}d",
       "fullMonth": "Full month",
@@ -1178,7 +1210,9 @@
       "typeFieldLabel": "Type"
     },
     "table": {
-      "noResults": "No recurrences found."
+      "exportFileName": "recurring",
+      "noResults": "No recurrences found.",
+      "printTitle": "Recurring transactions"
     },
     "toasts": {
       "batchDeleteError": "Failed to delete the selected recurrences",
@@ -2059,6 +2093,7 @@
       "deleteTitle": "Batch Delete Transactions",
       "deleteTooltip": "Delete Transaction",
       "deleting": "Deleting...",
+      "drawerTitle": "Batch actions",
       "editDate": "Edit Date",
       "editDateDescription": "Set the date for {count, plural, one {# selected transaction} other {# selected transactions}}.",
       "editDateTitle": "Batch Edit Date",
@@ -2068,6 +2103,7 @@
       "makeRecurring": "Make recurring",
       "makeRecurringDescription": "Confirm creating a recurring transaction for {count, plural, one {# transaction} other {# transactions}}?",
       "makeRecurringTitle": "Batch Make Recurring",
+      "moreActions": "More actions",
       "newDateLabel": "New Date",
       "notes": "Notes",
       "notesTooltip": "Notes/Messages",
@@ -2304,6 +2340,8 @@
     "table": {
       "addButton": "New Transaction",
       "description": "{count, plural, one {# transaction found} other {# transactions found}} in the period",
+      "exportFileName": "transactions",
+      "printTitle": "Transactions",
       "title": "Transaction Log",
       "viewOptions": {
         "columnsButton": "Columns",

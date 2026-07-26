@@ -682,6 +682,38 @@
     "close": "Fechar",
     "commandSearchTitle": "Busca de Comandos",
     "confirm": "Confirmar",
+    "dataTable": {
+      "export": {
+        "csv": "Exportar CSV",
+        "error": "Não foi possível exportar. Tente novamente.",
+        "excel": "Exportar Excel",
+        "json": "Exportar JSON",
+        "label": "Exportar"
+      },
+      "facetedFilter": {
+        "clear": "Limpar filtro",
+        "noResults": "Nenhuma opção encontrada",
+        "search": "Buscar...",
+        "selected": "{count, plural, one {# selecionada} other {# selecionadas}}"
+      },
+      "header": {
+        "dragColumn": "Arrastar coluna",
+        "resizeColumn": "Redimensionar coluna"
+      },
+      "pdf": {
+        "error": "Não foi possível gerar o PDF. Tente novamente.",
+        "generatedAt": "Gerado em {date}",
+        "pageOf": "Página {page} de {total}",
+        "period": "Período: {range}",
+        "rows": "{count, plural, one {# registro} other {# registros}}"
+      },
+      "print": "Imprimir PDF",
+      "tools": {
+        "button": "Ferramentas",
+        "columns": "Colunas",
+        "columnsLabel": "Exibir colunas"
+      }
+    },
     "datePicker": {
       "dayCountBadge": "{count}d",
       "fullMonth": "Mês completo",
@@ -1178,7 +1210,9 @@
       "typeFieldLabel": "Tipo"
     },
     "table": {
-      "noResults": "Nenhuma recorrência encontrada."
+      "exportFileName": "recorrentes",
+      "noResults": "Nenhuma recorrência encontrada.",
+      "printTitle": "Transações recorrentes"
     },
     "toasts": {
       "batchDeleteError": "Falha ao excluir recorrências selecionadas",
@@ -2059,6 +2093,7 @@
       "deleteTitle": "Excluir Lançamentos em lote",
       "deleteTooltip": "Excluir Lançamento",
       "deleting": "Excluindo...",
+      "drawerTitle": "Ações em lote",
       "editDate": "Editar Data",
       "editDateDescription": "Defina a data para {count, plural, one {# lançamento selecionado} other {# lançamentos selecionados}}.",
       "editDateTitle": "Editar Data em lote",
@@ -2068,6 +2103,7 @@
       "makeRecurring": "Tornar recorrente",
       "makeRecurringDescription": "Confirmar criação de recorrência para {count, plural, one {# lançamento} other {# lançamentos}}?",
       "makeRecurringTitle": "Tornar Recorrente em lote",
+      "moreActions": "Mais ações",
       "newDateLabel": "Nova Data",
       "notes": "Observações",
       "notesTooltip": "Observações/Mensagens",
@@ -2304,6 +2340,8 @@
     "table": {
       "addButton": "Nova Transação",
       "description": "{count, plural, one {# transação encontrada} other {# transações encontradas}} no período",
+      "exportFileName": "transacoes",
+      "printTitle": "Transações",
       "title": "Registro de Transações",
       "viewOptions": {
         "columnsButton": "Colunas",

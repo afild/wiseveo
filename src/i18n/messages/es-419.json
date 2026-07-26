@@ -682,6 +682,38 @@
     "close": "Cerrar",
     "commandSearchTitle": "Búsqueda de Comandos",
     "confirm": "Confirmar",
+    "dataTable": {
+      "export": {
+        "csv": "Exportar CSV",
+        "error": "No se pudo exportar. Inténtalo de nuevo.",
+        "excel": "Exportar Excel",
+        "json": "Exportar JSON",
+        "label": "Exportar"
+      },
+      "facetedFilter": {
+        "clear": "Limpiar filtro",
+        "noResults": "No se encontraron opciones",
+        "search": "Buscar...",
+        "selected": "{count, plural, one {# seleccionada} other {# seleccionadas}}"
+      },
+      "header": {
+        "dragColumn": "Arrastrar columna",
+        "resizeColumn": "Redimensionar columna"
+      },
+      "pdf": {
+        "error": "No se pudo generar el PDF. Inténtalo de nuevo.",
+        "generatedAt": "Generado el {date}",
+        "pageOf": "Página {page} de {total}",
+        "period": "Período: {range}",
+        "rows": "{count, plural, one {# registro} other {# registros}}"
+      },
+      "print": "Imprimir PDF",
+      "tools": {
+        "button": "Herramientas",
+        "columns": "Columnas",
+        "columnsLabel": "Mostrar columnas"
+      }
+    },
     "datePicker": {
       "dayCountBadge": "{count}d",
       "fullMonth": "Mes completo",
@@ -1178,7 +1210,9 @@
       "typeFieldLabel": "Tipo"
     },
     "table": {
-      "noResults": "No se encontraron recurrencias."
+      "exportFileName": "recurrentes",
+      "noResults": "No se encontraron recurrencias.",
+      "printTitle": "Transacciones recurrentes"
     },
     "toasts": {
       "batchDeleteError": "Error al eliminar las recurrencias seleccionadas",
@@ -2059,6 +2093,7 @@
       "deleteTitle": "Eliminar Movimientos en lote",
       "deleteTooltip": "Eliminar Movimiento",
       "deleting": "Eliminando...",
+      "drawerTitle": "Acciones en lote",
       "editDate": "Editar Fecha",
       "editDateDescription": "Defina la fecha para {count, plural, one {# movimiento seleccionado} other {# movimientos seleccionados}}.",
       "editDateTitle": "Editar Fecha en lote",
@@ -2068,6 +2103,7 @@
       "makeRecurring": "Volver recurrente",
       "makeRecurringDescription": "¿Confirmar la creación de recurrencia para {count, plural, one {# movimiento} other {# movimientos}}?",
       "makeRecurringTitle": "Volver Recurrente en lote",
+      "moreActions": "Más acciones",
       "newDateLabel": "Nueva Fecha",
       "notes": "Notas",
       "notesTooltip": "Notas/Mensajes",
@@ -2304,6 +2340,8 @@
     "table": {
       "addButton": "Nuevo Movimiento",
       "description": "{count, plural, one {# movimiento encontrado} other {# movimientos encontrados}} en el período",
+      "exportFileName": "transacciones",
+      "printTitle": "Transacciones",
       "title": "Registro de Movimientos",
       "viewOptions": {
         "columnsButton": "Columnas",
