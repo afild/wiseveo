@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { PeriodBar } from "./period-bar"
 import { MonthStrip } from "./month-strip"
 import { getZoneKey, type ZoneKey } from "@/features/budget/lib/zones"
-import { computeClientPacing } from "@/features/budget/lib/period-bar-calc"
+import { computeClientPacing, getMonthPosition } from "@/features/budget/lib/period-bar-calc"
 import { formatPercentValue } from "@/lib/monetary"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 
@@ -48,9 +48,7 @@ export function BudgetHeroFold({
   const t = useTranslations("budget")
   const monetary = useMonetaryFormattingSafe()
 
-  const today = new Date()
-  const dayOfMonth = today.getDate()
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
+  const { dayOfMonth, daysInMonth } = getMonthPosition()
 
   const remaining = totalLimit - totalSpent
   const isOver = remaining < 0

@@ -1,3 +1,5 @@
+import { LIMIT_RATIO } from "@/features/budget/lib/period-bar-calc"
+
 interface MonthStripProps {
   dayOfMonth: number
   daysInMonth: number
@@ -5,7 +7,11 @@ interface MonthStripProps {
   ariaLabel?: string
 }
 
-/** Faixa de células diárias alinhada sob a Period Bar: passado tonal, hoje marcado, futuro vazio. */
+/**
+ * Faixa de células diárias: passado tonal, hoje marcado, futuro vazio.
+ * Ocupa só a zona de limite da Period Bar (LIMIT_RATIO) para que a posição do dia
+ * caia sobre a marca de ritmo da barra — é o alinhamento que torna o ritmo legível.
+ */
 export function MonthStrip({
   dayOfMonth,
   daysInMonth,
@@ -20,7 +26,12 @@ export function MonthStrip({
         : "bg-positive/60"
 
   return (
-    <div role="img" aria-label={ariaLabel} className="flex gap-px w-full">
+    <div
+      role="img"
+      aria-label={ariaLabel}
+      className="flex gap-px"
+      style={{ width: `${LIMIT_RATIO}%` }}
+    >
       {Array.from({ length: daysInMonth }, (_, i) => {
         const day = i + 1
         const cellColor =

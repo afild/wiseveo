@@ -34,6 +34,23 @@ export function calcSegments(
   return { paidPct, scheduledPct, projectedPct, overflowPct }
 }
 
+/**
+ * Posição no mês em UTC. UTC (e não hora local) porque o mesmo componente
+ * renderiza no servidor e no cliente: fusos diferentes dariam dias diferentes e
+ * quebrariam a hidratação. Também é o que `computeBudgetPacing` já usa.
+ */
+export function getMonthPosition(now = new Date()): {
+  dayOfMonth: number
+  daysInMonth: number
+} {
+  return {
+    dayOfMonth: now.getUTCDate(),
+    daysInMonth: new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0),
+    ).getUTCDate(),
+  }
+}
+
 export interface ClientPacingResult {
   monthPct: number
   pacing: number

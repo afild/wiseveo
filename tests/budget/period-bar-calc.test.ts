@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import {
   calcSegments,
   computeClientPacing,
+  getMonthPosition,
   LIMIT_RATIO,
 } from "@/features/budget/lib/period-bar-calc"
 
@@ -74,5 +75,24 @@ describe("computeClientPacing", () => {
     const r = computeClientPacing(0, 0, 31, 0, 1000)
     expect(r.pacing).toBe(0)
     expect(r.zone).toBe("good")
+  })
+})
+
+describe("getMonthPosition", () => {
+  it("usa UTC para o dia e o total de dias do mês", () => {
+    expect(getMonthPosition(new Date("2026-07-26T12:00:00Z"))).toEqual({
+      dayOfMonth: 26,
+      daysInMonth: 31,
+    })
+    expect(getMonthPosition(new Date("2026-02-05T00:00:00Z"))).toEqual({
+      dayOfMonth: 5,
+      daysInMonth: 28,
+    })
+  })
+
+  it("não muda de dia conforme o fuso do cliente — SSR e cliente concordam", () => {
+    // Mesmo instante; em UTC-3 a hora local seria dia 25, mas UTC mantém 26.
+    const late = new Date("2026-07-26T02:00:00Z")
+    expect(getMonthPosition(late).dayOfMonth).toBe(26)
   })
 })

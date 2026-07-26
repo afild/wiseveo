@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { getZoneKey, type ZoneKey } from "@/features/budget/lib/zones"
+import { getMonthPosition } from "@/features/budget/lib/period-bar-calc"
 import { PeriodBar } from "./period-bar"
 import { ProvenancePopover } from "./provenance-popover"
 import { getFormulaDescription, getFormulaName } from "../services/formula-engine"
@@ -111,9 +112,7 @@ export function BudgetItemCard({
     ? t("itemCard.multiple")
     : item.originalName
 
-  const today = new Date()
-  const dayOfMonth = today.getDate()
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
+  const { dayOfMonth, daysInMonth } = getMonthPosition()
 
   const handleDelete = () => {
     const isCustom = item.id.startsWith("custom_")
@@ -284,7 +283,7 @@ export function BudgetItemCard({
         </div>
       </CardContent>
 
-      <CardFooter className="flex items-center justify-between gap-2 border-t pt-3">
+      <CardFooter className="border-t pt-3">
         {formulaName && formulaDesc ? (
           <ProvenancePopover
             formulaName={formulaName}
@@ -297,10 +296,6 @@ export function BudgetItemCard({
             {item.limitSource === "none" ? t("itemCard.noLimit") : t("itemCard.manualLimit")}
           </span>
         )}
-
-        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-          {monetary.formatMonetaryValue(item.limit)}
-        </span>
       </CardFooter>
 
       {formulaConfig && (

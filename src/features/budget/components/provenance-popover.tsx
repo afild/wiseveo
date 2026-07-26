@@ -7,7 +7,7 @@ import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 interface ProvenancePopoverProps {
   formulaName: string
   formulaDesc: string
-  /** Janela de histórico efetivamente usada (mais recente primeiro). */
+  /** Janela de histórico efetivamente usada — mais recente primeiro. */
   historyUsed: number[]
   limit: number
 }
@@ -25,7 +25,10 @@ export function ProvenancePopover({
   const t = useTranslations("budget.itemCard")
   const monetary = useMonetaryFormattingSafe()
 
-  const max = historyUsed.length > 0 ? Math.max(...historyUsed, 1) : 1
+  // historyUsed chega do mais recente para o mais antigo; a sparkline lê da
+  // esquerda para a direita no sentido do tempo.
+  const chronological = [...historyUsed].reverse()
+  const max = Math.max(...chronological, 1)
 
   return (
     <Popover>
@@ -47,7 +50,7 @@ export function ProvenancePopover({
               {t("historyWindow", { months: historyUsed.length })}
             </p>
             <div className="flex items-end gap-0.5 h-8">
-              {historyUsed.map((v, i) => (
+              {chronological.map((v, i) => (
                 <div
                   key={i}
                   className="flex-1 bg-primary/60 rounded-t-sm min-h-[2px]"
@@ -57,8 +60,8 @@ export function ProvenancePopover({
               ))}
             </div>
             <div className="flex justify-between font-mono text-xs text-muted-foreground">
-              <span>{monetary.formatMonetaryValue(historyUsed[historyUsed.length - 1] ?? 0)}</span>
-              <span>{monetary.formatMonetaryValue(historyUsed[0] ?? 0)}</span>
+              <span>{monetary.formatMonetaryValue(chronological[0] ?? 0)}</span>
+              <span>{monetary.formatMonetaryValue(chronological[chronological.length - 1] ?? 0)}</span>
             </div>
           </div>
         )}
