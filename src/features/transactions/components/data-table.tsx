@@ -244,12 +244,11 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
           </div>
 
           <Button
-            className="shrink-0 bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90 font-semibold h-10 w-10 sm:h-9 sm:w-auto p-0 sm:px-4"
-            size="sm"
+            className="h-10 w-10 sm:h-9 sm:w-auto"
             onClick={onAddTransaction}
           >
-            <Plus className="h-5 w-5 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline ml-2">{t("addButton")}</span>
+            <Plus className="size-4" />
+            <span className="hidden sm:inline">{t("addButton")}</span>
           </Button>
         </div>
       </div>

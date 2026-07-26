@@ -124,44 +124,50 @@ function GroupBarRow({ row, maxAmount, index, mounted }: GroupBarRowProps) {
           </div>
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top" align="start" className="min-w-[200px]">
-        <div className="grid gap-1.5 text-xs">
-          <div className="mb-1 flex items-center justify-between gap-2 border-b border-border/50 pb-1">
-            <p className="font-semibold">{row.groupName}</p>
-            <span className="font-medium text-muted-foreground">
-              {row.percentage.toFixed(1)}%
-            </span>
-          </div>
+      <TooltipContent
+        side="top"
+        align="start"
+        sideOffset={8}
+        showArrow={false}
+        className="border-border/50 bg-background/75 text-card-foreground grid min-w-[220px] items-start gap-1.5 rounded-xl border px-3 py-2 text-xs shadow-xl backdrop-blur-md"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-foreground font-medium">{row.groupName}</p>
+          <span className="text-muted-foreground font-medium tabular-nums">
+            {row.percentage.toFixed(1)}%
+          </span>
+        </div>
 
-          <div className="flex items-center justify-between gap-4">
-            <span className="flex items-center gap-2 text-muted-foreground">
+        <div className="mt-1.5 grid gap-1.5">
+          <div className="flex w-full items-center justify-between gap-2 leading-none">
+            <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <span
-                className="size-2 shrink-0 rounded-full"
+                className="size-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: row.color }}
               />
               {t("paid")}
             </span>
-            <span className="font-medium tabular-nums">
+            <span className="text-foreground font-medium tabular-nums">
               {monetary.formatMonetaryValue(row.paid)}
             </span>
           </div>
 
-          <div className="flex items-center justify-between gap-4">
-            <span className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex w-full items-center justify-between gap-2 leading-none">
+            <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <span
-                className="size-2 shrink-0 rounded-full opacity-35"
+                className="size-2.5 shrink-0 rounded-full opacity-35"
                 style={{ backgroundColor: row.color }}
               />
               {t("toPay")}
             </span>
-            <span className="font-medium tabular-nums">
+            <span className="text-foreground font-medium tabular-nums">
               {monetary.formatMonetaryValue(row.scheduled)}
             </span>
           </div>
 
-          <div className="mt-0.5 flex items-center justify-between gap-4 border-t border-border/50 pt-1">
-            <span className="font-medium">{t("total")}</span>
-            <span className="font-bold tabular-nums">
+          <div className="mt-1 flex w-full items-center justify-between gap-2 border-t border-border/60 pt-2 leading-none">
+            <span className="text-xs font-medium">{t("total")}</span>
+            <span className="text-foreground font-medium tabular-nums">
               {monetary.formatMonetaryValue(row.amount)}
             </span>
           </div>
