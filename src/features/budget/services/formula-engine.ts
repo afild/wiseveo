@@ -566,7 +566,7 @@ export function hasUsableHistory(
   params: FormulaParams,
   history: HistoryData
 ): boolean {
-  if (formulaId === "fixed_target" || formulaId === "sinking_fund") return true
+  if (formulaId === "fixed_target" || formulaId === "sinking_fund" || formulaId === "seasonal_yoy") return true
   const months = params.months ?? 3
   const spentActive = history.monthlySpent.slice(0, months).some((v) => v > 0)
   if (formulaId === "income_pct") {

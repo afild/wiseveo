@@ -12,11 +12,12 @@ describe("getBudgetHistoryBatch", () => {
 
   it("monta mapas por grupo e categoria com despesas no slot correto", async () => {
     // referência = 01/07/2026, months=3 → slots: jun/26, mai/26, abr/26
+    // Fixtures realistas: COD_GRU e COD_CAT são NOT NULL no schema
     queryRaw
       .mockResolvedValueOnce([
-        { m: 6, y: 2026, g: 10, c: null, total: 1500 },
-        { m: 6, y: 2026, g: null, c: "ALI", total: 800 },
-        { m: 5, y: 2026, g: 10, c: null, total: 1200 },
+        { m: 6, y: 2026, g: 10, c: "ALI", total: 1500 },
+        { m: 6, y: 2026, g: 10, c: "MER", total: 500 },
+        { m: 5, y: 2026, g: 10, c: "ALI", total: 1200 },
       ]) // expenses
       .mockResolvedValueOnce([
         { m: 6, y: 2026, total: 3000 },
@@ -28,13 +29,17 @@ describe("getBudgetHistoryBatch", () => {
     expect(result.targetMonth).toBe("2026-07")
     expect(result.income).toEqual([3000, 0, 0])
 
+    // Grupo acumula todas as categorias: 1500+500=2000 no slot 0
     const grp = result.byGroup.get(10)!
-    expect(grp.monthlySpent).toEqual([1500, 1200, 0])
+    expect(grp.monthlySpent).toEqual([2000, 1200, 0])
     expect(grp.monthlyIncome).toEqual([3000, 0, 0])
 
-    const cat = result.byCategory.get("ALI")!
-    expect(cat.monthlySpent).toEqual([800, 0, 0])
-    expect(cat.monthlyIncome).toEqual([3000, 0, 0])
+    // Cada categoria individualmente
+    const catALI = result.byCategory.get("ALI")!
+    expect(catALI.monthlySpent).toEqual([1500, 1200, 0])
+
+    const catMER = result.byCategory.get("MER")!
+    expect(catMER.monthlySpent).toEqual([500, 0, 0])
   })
 
   it("retorna mapas vazios e income zeros quando não há transações", async () => {

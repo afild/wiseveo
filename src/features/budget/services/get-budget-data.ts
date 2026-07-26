@@ -200,8 +200,13 @@ export async function getBudgetData(
   // 5. Determine max months needed for history queries
   const windowFor = (c: FormulaConfig): number => {
     if (c.id === "seasonal_yoy") return 13
-    const base = c.params.months ?? 6
-    if (c.id === "envelope_rollover") return base + (c.params.rolloverMonths ?? 3)
+    const raw = c.params.months
+    const base = Number.isFinite(raw) ? Math.min(24, Math.max(1, Math.round(raw!))) : 6
+    if (c.id === "envelope_rollover") {
+      const rawRo = c.params.rolloverMonths
+      const ro = Number.isFinite(rawRo) ? Math.min(12, Math.max(1, Math.round(rawRo!))) : 3
+      return base + ro
+    }
     return base
   }
   const maxMonths = Math.max(windowFor(formulaConfig.global), ...Object.values(formulaConfig.perCard).map(windowFor), 6)

@@ -23,30 +23,31 @@ export async function getBudgetHistoryBatch(
   const startDate = startOfMonth(subMonths(referenceDate, months))
   const endDate = endOfMonth(subMonths(referenceDate, 1))
 
-  const expenseRows = await prisma.$queryRawUnsafe<
-    { m: number; y: number; g: number | null; c: string | null; total: number }[]
-  >(
-    // i18n-ignore: SQL bruto
-    `SELECT EXTRACT(MONTH FROM "DATA")::int AS m,
-            EXTRACT(YEAR FROM "DATA")::int AS y,
-            "COD_GRU" AS g, "COD_CAT" AS c,
-            COALESCE(SUM(ABS("VALOR")), 0)::float AS total
-     FROM transactions
-     WHERE user_id = $1 AND "TIPO" = 'EXPENSE' AND "DATA" >= $2 AND "DATA" <= $3
-     GROUP BY y, m, g, c ORDER BY y DESC, m DESC`,
-    userId, startDate, endDate
-  )
-
-  const incomeRows = await prisma.$queryRawUnsafe<{ m: number; y: number; total: number }[]>(
-    // i18n-ignore: SQL bruto
-    `SELECT EXTRACT(MONTH FROM "DATA")::int AS m,
-            EXTRACT(YEAR FROM "DATA")::int AS y,
-            COALESCE(SUM(ABS("VALOR")), 0)::float AS total
-     FROM transactions
-     WHERE user_id = $1 AND "TIPO" = 'INCOME' AND "DATA" >= $2 AND "DATA" <= $3
-     GROUP BY y, m ORDER BY y DESC, m DESC`,
-    userId, startDate, endDate
-  )
+  const [expenseRows, incomeRows] = await Promise.all([
+    prisma.$queryRawUnsafe<
+      { m: number; y: number; g: number; c: string; total: number }[]
+    >(
+      // i18n-ignore: SQL bruto
+      `SELECT EXTRACT(MONTH FROM "DATA")::int AS m,
+              EXTRACT(YEAR FROM "DATA")::int AS y,
+              "COD_GRU" AS g, "COD_CAT" AS c,
+              COALESCE(SUM(ABS("VALOR")), 0)::float AS total
+       FROM transactions
+       WHERE user_id = $1 AND "TIPO" = 'EXPENSE' AND "DATA" >= $2 AND "DATA" <= $3
+       GROUP BY y, m, g, c ORDER BY y DESC, m DESC`,
+      userId, startDate, endDate
+    ),
+    prisma.$queryRawUnsafe<{ m: number; y: number; total: number }[]>(
+      // i18n-ignore: SQL bruto
+      `SELECT EXTRACT(MONTH FROM "DATA")::int AS m,
+              EXTRACT(YEAR FROM "DATA")::int AS y,
+              COALESCE(SUM(ABS("VALOR")), 0)::float AS total
+       FROM transactions
+       WHERE user_id = $1 AND "TIPO" = 'INCOME' AND "DATA" >= $2 AND "DATA" <= $3
+       GROUP BY y, m ORDER BY y DESC, m DESC`,
+      userId, startDate, endDate
+    ),
+  ])
 
   const monthLabels: string[] = []
   const slots: { m: number; y: number }[] = []
