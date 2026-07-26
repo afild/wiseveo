@@ -70,7 +70,12 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
     commitOrder(arrayMove(items, idx, target))
   }
 
-  // Fetch data when dateRange changes
+  // Refetch quando o dateRange muda OU quando initialData troca de referência —
+  // esta segunda é a assinatura de um router.refresh() disparado por mutação
+  // (aplicar fórmula, excluir card/preset). Sem ela o estado do cliente ficava
+  // preso ao snapshot do mount e só um F5 mostrava os novos limites. Buscar via
+  // API (e não sincronizar initialData direto) preserva o range selecionado:
+  // o server component sempre calcula o mês corrente.
   useEffect(() => {
     const fetchBudgetData = async () => {
       const requestId = ++latestRequestRef.current
@@ -98,7 +103,7 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
     }
 
     fetchBudgetData()
-  }, [dateRange])
+  }, [dateRange, initialData])
 
   // Sync items when data.items changes (e.g. after fetch)
   useEffect(() => {
