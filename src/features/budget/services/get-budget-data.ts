@@ -6,8 +6,9 @@ import type {
   BudgetFormulaPreferences,
   GroupWithCategories,
   FormulaConfig,
+  HistoryData,
 } from "../types"
-import { getBudgetHistory } from "./get-budget-history"
+import { getBudgetHistoryBatch } from "./get-budget-history-batch"
 import {
   calculateFormulaLimit,
   hasUsableHistory,
@@ -205,6 +206,15 @@ export async function getBudgetData(
   }
   const maxMonths = Math.max(windowFor(formulaConfig.global), ...Object.values(formulaConfig.perCard).map(windowFor), 6)
 
+  // 5.5. Fetch all history in a single batch (2 queries for the whole page)
+  const batch = await getBudgetHistoryBatch(userId, filterFrom, maxMonths)
+  const emptyHistory = (): HistoryData => ({
+    monthlySpent: Array(maxMonths).fill(0),
+    monthlyIncome: [...batch.income],
+    monthLabels: batch.monthLabels,
+    targetMonth: batch.targetMonth,
+  })
+
   // 6. Build budget items with formula-based limits
   const items: BudgetItem[] = []
 
@@ -227,14 +237,7 @@ export async function getBudgetData(
     let limitBreakdown: BudgetItem["limitBreakdown"]
 
     if (!["fixed_target", "sinking_fund"].includes(activeFormula.id)) {
-      // Referência = início do range; getBudgetHistory exclui o próprio mês da
-      // referência, então o slot 0 é o mês fechado imediatamente anterior ao range.
-      const historyReferenceDate = filterFrom
-
-      const history = await getBudgetHistory(userId, historyReferenceDate, maxMonths, {
-        type: "group",
-        code: group.code,
-      })
+      const history = batch.byGroup.get(group.code) ?? emptyHistory()
       hasHistory = hasUsableHistory(activeFormula.id, activeFormula.params, history)
 
       if (hasHistory) {
@@ -317,15 +320,7 @@ export async function getBudgetData(
         let catLimitBreakdown: BudgetItem["limitBreakdown"]
 
         if (!["fixed_target", "sinking_fund"].includes(activeCatFormula.id)) {
-          // Referência = início do range; getBudgetHistory exclui o próprio mês da
-          // referência, então o slot 0 é o mês fechado imediatamente anterior ao range.
-          const historyReferenceDate = filterFrom
-          const catHistory = await getBudgetHistory(
-            userId,
-            historyReferenceDate,
-            maxMonths,
-            { type: "category", code: cat.code }
-          )
+          const catHistory = batch.byCategory.get(cat.code) ?? emptyHistory()
           catHasHistory = hasUsableHistory(activeCatFormula.id, activeCatFormula.params, catHistory)
 
           if (catHasHistory) {
@@ -401,44 +396,27 @@ export async function getBudgetData(
     const members = dedupCustomCardMembers(cCard, groups)
     let spent = 0
 
-    // Referência = início do range; getBudgetHistory exclui o próprio mês da
-    // referência, então o slot 0 é o mês fechado imediatamente anterior ao range.
-    const historyReferenceDate = filterFrom
-    const historyPromises: Promise<any>[] = []
+    const memberHistories: HistoryData[] = []
 
     for (const catId of members.categoryIds) {
       const cat = groups.flatMap((g) => g.categories).find((c) => c.id === catId)
       if (cat) {
         spent += spentCatMap.get(cat.code) || 0
-        historyPromises.push(
-          getBudgetHistory(userId, historyReferenceDate, maxMonths, { type: "category", code: cat.code })
-        )
+        memberHistories.push(batch.byCategory.get(cat.code) ?? emptyHistory())
       }
     }
     for (const groupId of members.groupIds) {
       const grp = groups.find((g) => g.id === groupId)
       if (grp) {
         spent += spentGroupMap.get(grp.code) || 0
-        historyPromises.push(
-          getBudgetHistory(userId, historyReferenceDate, maxMonths, { type: "group", code: grp.code })
-        )
+        memberHistories.push(batch.byGroup.get(grp.code) ?? emptyHistory())
       }
     }
 
-    const histories = await Promise.all(historyPromises)
-    const aggregatedHistory = {
-      monthlySpent: Array(maxMonths).fill(0),
-      monthlyIncome: Array(maxMonths).fill(0), // Income doesn't aggregate from expense histories usually, we can just use the first one's income
-      monthLabels: histories[0]?.monthLabels,
-      targetMonth: histories[0]?.targetMonth,
-    }
-
-    if (histories.length > 0) {
-      aggregatedHistory.monthlyIncome = [...histories[0].monthlyIncome]
-      for (const h of histories) {
-        for (let i = 0; i < maxMonths; i++) {
-          if (h.monthlySpent[i]) aggregatedHistory.monthlySpent[i] += h.monthlySpent[i]
-        }
+    const aggregatedHistory = emptyHistory()
+    for (const h of memberHistories) {
+      for (let i = 0; i < maxMonths; i++) {
+        if (h.monthlySpent[i]) aggregatedHistory.monthlySpent[i] += h.monthlySpent[i]
       }
     }
 
