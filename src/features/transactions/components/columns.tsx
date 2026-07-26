@@ -279,6 +279,8 @@ export function getTransactionColumns(
       ),
       enableSorting: false,
       enableHiding: false,
+      enableResizing: false,
+      size: 36,
     },
     {
       accessorKey: "num",
@@ -471,6 +473,8 @@ export function getTransactionColumns(
       },
       enableSorting: false,
       enableHiding: false,
+      enableResizing: false,
+      size: 56,
     },
     {
       id: "payee",

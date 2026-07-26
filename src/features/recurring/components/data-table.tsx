@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import {
     type ColumnDef,
     type ColumnFiltersState,
+    type ColumnSizingState,
     type Row,
     type SortingState,
     type VisibilityState,
@@ -37,6 +38,7 @@ import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { createDateFormatter } from "@/i18n/format"
 import { formatPeriod } from "@/lib/financial"
 import type { ExportFormat } from "@/lib/table-export"
+import { cn } from "@/lib/utils"
 import { RecurringCardMobile } from "./recurring-card-mobile"
 
 interface DataTableProps<TData, TValue> {
@@ -77,6 +79,7 @@ export function DataTable<TData, TValue>({
     const [rowSelection, setRowSelection] = React.useState({})
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+    const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
     const [sorting, setSorting] = React.useState<SortingState>([])
 
     const isLoadingStorage = React.useRef(true)
@@ -95,6 +98,9 @@ export function DataTable<TData, TValue>({
 
             const savedVisibility = localStorage.getItem('wiseveo-recurring-visibility');
             if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
+
+            const savedSizing = localStorage.getItem('wiseveo-recurring-sizing');
+            if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
         } catch (e) {
             console.error('Failed to parse recurring table settings', e);
         } finally {
@@ -118,9 +124,16 @@ export function DataTable<TData, TValue>({
         localStorage.setItem('wiseveo-recurring-visibility', JSON.stringify(columnVisibility));
     }, [columnVisibility]);
 
+    React.useEffect(() => {
+        if (isLoadingStorage.current) return;
+        localStorage.setItem('wiseveo-recurring-sizing', JSON.stringify(columnSizing));
+    }, [columnSizing]);
+
     const table = useReactTable({
         data,
         columns,
+        defaultColumn: { minSize: 64, size: 150, maxSize: 480 },
+        columnResizeMode: "onChange",
         meta: {
             onLaunchRecurring,
             onEditRecurring,
@@ -131,8 +144,10 @@ export function DataTable<TData, TValue>({
             columnVisibility,
             rowSelection,
             columnFilters,
+            columnSizing,
         },
         enableRowSelection: true,
+        onColumnSizingChange: setColumnSizing,
         onRowSelectionChange: setRowSelection,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -242,20 +257,46 @@ export function DataTable<TData, TValue>({
                     )}
                 </div>
             ) : (
-                <div className="overflow-hidden rounded-lg border">
-                    <Table>
+                <div className="overflow-x-auto rounded-lg border">
+                    <Table
+                        className="table-fixed"
+                        style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}
+                    >
                         <TableHeader className="bg-muted sticky top-0 z-10">
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => {
                                         return (
-                                            <TableHead key={header.id} colSpan={header.colSpan}>
+                                            <TableHead
+                                                key={header.id}
+                                                colSpan={header.colSpan}
+                                                className="relative"
+                                                style={{ width: header.getSize() }}
+                                            >
                                                 {header.isPlaceholder
                                                     ? null
                                                     : flexRender(
                                                         header.column.columnDef.header,
                                                         header.getContext()
                                                     )}
+                                                {header.column.getCanResize() && (
+                                                    <div
+                                                        role="separator"
+                                                        aria-label={tDataTable("header.resizeColumn")}
+                                                        onDoubleClick={() => header.column.resetSize()}
+                                                        onMouseDown={(e) => {
+                                                            // Sem o stopPropagation o gesto de resize dispara a ordenação.
+                                                            e.stopPropagation()
+                                                            header.getResizeHandler()(e)
+                                                        }}
+                                                        onTouchStart={header.getResizeHandler()}
+                                                        className={cn(
+                                                            "absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none select-none",
+                                                            "hover:bg-primary/40",
+                                                            header.column.getIsResizing() && "bg-primary"
+                                                        )}
+                                                    />
+                                                )}
                                             </TableHead>
                                         )
                                     })}
@@ -279,7 +320,7 @@ export function DataTable<TData, TValue>({
                                         data-state={row.getIsSelected() && "selected"}
                                     >
                                         {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
+                                            <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext()

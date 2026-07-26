@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl"
 import {
   type ColumnDef,
   type ColumnFiltersState,
+  type ColumnSizingState,
   type FilterFn,
   type Row,
   type SortingState,
@@ -45,6 +46,7 @@ import { createDateFormatter } from "@/i18n/format"
 import { formatPeriod } from "@/lib/financial"
 import type { MonetaryFormatter } from "@/lib/monetary"
 import type { ExportFormat } from "@/lib/table-export"
+import { cn } from "@/lib/utils"
 
 const DEFAULT_SORTING: SortingState = [
   { id: "date", desc: false },
@@ -121,6 +123,7 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
       payee: false,
     })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
   const [sorting, setSorting] = React.useState<SortingState>(DEFAULT_SORTING)
 
   const [globalFilter, setGlobalFilter] = React.useState("")
@@ -140,6 +143,9 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
 
       const savedGlobalFilter = localStorage.getItem("wiseveo-table-global-filter")
       if (savedGlobalFilter) setGlobalFilter(savedGlobalFilter)
+
+      const savedSizing = localStorage.getItem("wiseveo-table-sizing")
+      if (savedSizing) setColumnSizing(JSON.parse(savedSizing))
     } catch (e) {
       console.error("Failed to parse table settings from local storage", e)
     } finally {
@@ -187,9 +193,20 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
     }
   }, [globalFilter])
 
+  React.useEffect(() => {
+    if (isLoadingStorage.current) return
+    try {
+      localStorage.setItem("wiseveo-table-sizing", JSON.stringify(columnSizing))
+    } catch (e) {
+      console.error(e)
+    }
+  }, [columnSizing])
+
   const table = useReactTable({
     data,
     columns,
+    defaultColumn: { minSize: 64, size: 150, maxSize: 480 },
+    columnResizeMode: "onChange",
     meta: {
       onEditTransaction,
       onCopyTransaction,
@@ -204,9 +221,11 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
       columnVisibility,
       rowSelection,
       columnFilters,
+      columnSizing,
       globalFilter,
     },
     enableRowSelection: true,
+    onColumnSizingChange: setColumnSizing,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -371,8 +390,11 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border">
-          <Table>
+        <div className="overflow-x-auto rounded-lg border">
+          <Table
+            className="table-fixed"
+            style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}
+          >
             <TableHeader className="bg-muted sticky top-0 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -381,10 +403,33 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
                     if (isMobile && meta?.responsive === "hide-mobile") return null
 
                     return (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
+                      <TableHead
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        className="relative"
+                        style={{ width: header.getSize() }}
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getCanResize() && (
+                          <div
+                            role="separator"
+                            aria-label={tDataTable("header.resizeColumn")}
+                            onDoubleClick={() => header.column.resetSize()}
+                            onMouseDown={(e) => {
+                              // Sem o stopPropagation o gesto de resize dispara a ordenação.
+                              e.stopPropagation()
+                              header.getResizeHandler()(e)
+                            }}
+                            onTouchStart={header.getResizeHandler()}
+                            className={cn(
+                              "absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none select-none",
+                              "hover:bg-primary/40",
+                              header.column.getIsResizing() && "bg-primary"
+                            )}
+                          />
+                        )}
                       </TableHead>
                     )
                   })}
@@ -409,7 +454,7 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
                       if (isMobile && meta?.responsive === "hide-mobile") return null
 
                       return (
-                        <TableCell key={cell.id}>
+                        <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       )

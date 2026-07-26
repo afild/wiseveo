@@ -233,6 +233,8 @@ export function getRecurringColumns(
       ),
       enableSorting: false,
       enableHiding: false,
+      enableResizing: false,
+      size: 36,
     },
     {
       accessorKey: "lastDate",
@@ -375,6 +377,8 @@ export function getRecurringColumns(
       },
       enableSorting: false,
       enableHiding: false,
+      enableResizing: false,
+      size: 56,
     },
   ]
 }
