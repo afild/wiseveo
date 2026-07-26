@@ -430,8 +430,10 @@ export async function getBudgetData(
     const aggregatedHistory = {
       monthlySpent: Array(maxMonths).fill(0),
       monthlyIncome: Array(maxMonths).fill(0), // Income doesn't aggregate from expense histories usually, we can just use the first one's income
+      monthLabels: histories[0]?.monthLabels,
+      targetMonth: histories[0]?.targetMonth,
     }
-    
+
     if (histories.length > 0) {
       aggregatedHistory.monthlyIncome = [...histories[0].monthlyIncome]
       for (const h of histories) {

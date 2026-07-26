@@ -22,5 +22,7 @@ describe("getBudgetHistory", () => {
     const h = await getBudgetHistory("user-1", new Date(2026, 6, 1), 3, { type: "group", code: 10 })
     expect(h.monthlySpent).toEqual([1500, 1200, 1000]) // jun, mai, abr — junho INCLUÍDO
     expect(h.monthlyIncome).toEqual([0, 0, 0])
+    expect(h.monthLabels).toEqual(["2026-06", "2026-05", "2026-04"])
+    expect(h.targetMonth).toBe("2026-07")
   })
 })

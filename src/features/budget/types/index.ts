@@ -50,6 +50,8 @@ export interface CustomBudgetCard {
 export interface HistoryData {
   monthlySpent: number[]
   monthlyIncome: number[]
+  monthLabels?: string[] // "YYYY-MM", mesma ordem dos arrays (mais recente primeiro)
+  targetMonth?: string   // "YYYY-MM" do mês sendo orçado (início do range)
 }
 
 // ── Budget Item Types ──

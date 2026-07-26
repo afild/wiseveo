@@ -74,6 +74,7 @@ export async function getBudgetHistory(
   // Build ordered month slots (most recent first)
   const monthlySpent: number[] = []
   const monthlyIncome: number[] = []
+  const monthLabels: string[] = []
 
   for (let i = 1; i <= months; i++) {
     const target = subMonths(referenceDate, i)
@@ -85,7 +86,11 @@ export async function getBudgetHistory(
 
     const incRow = incomeRows.find((r) => r.m === tm && r.y === ty)
     monthlyIncome.push(incRow?.total ?? 0)
+
+    monthLabels.push(`${ty}-${String(tm).padStart(2, "0")}`)
   }
 
-  return { monthlySpent, monthlyIncome }
+  const targetMonth = `${referenceDate.getFullYear()}-${String(referenceDate.getMonth() + 1).padStart(2, "0")}`
+
+  return { monthlySpent, monthlyIncome, monthLabels, targetMonth }
 }
