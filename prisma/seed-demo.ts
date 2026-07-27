@@ -1,16 +1,44 @@
+/**
+ * seed-demo.ts — cria/atualiza o usuário demo PERMANENTE (demo@wiseveo.com) e
+ * regenera o dataset determinístico dele.
+ *
+ * Diferente dos phantoms (/api/demo/provision), este usuário é fixo e tem senha.
+ * O plano de contas dele é PREFIXADO (prefixo fixo `de305eed`), igual ao de um
+ * phantom: assim ele fica isolado e o script NUNCA precisa do caminho sem-prefixo
+ * de initializeUserData — que faria upsert dos códigos GLOBAIS compartilhados
+ * (CategoryGroup 100–900, Category "100.001"…, Account 1–3) e, pior, roubaria a
+ * posse dos TransactionStatusLookup 1–4, hoje ancorados em dev@wiseveo.local para
+ * o cron de limpeza continuar funcionando.
+ *
+ * O miolo (apagar → materializar → inserir) mora em src/lib/demo-data/regen.ts,
+ * compartilhado com scripts/regen-demo-user.ts.
+ *
+ * Uso:
+ *   SEED_DEMO_PASSWORD=... npm run db:seed:demo
+ */
 import { PrismaClient } from "../src/generated/prisma_new/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
 import bcrypt from "bcryptjs"
 import { initializeUserData } from "../src/lib/user-init"
-import { generateMockData } from "./data/mock-data"
+import { getDemoDataset } from "../src/lib/demo-data/generate-demo-dataset"
+import { regenerateUserDemoData } from "../src/lib/demo-data/regen"
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+/** Prefixo fixo do usuário demo permanente — nunca muda (o dataset é regenerado sobre ele). */
+const DEMO_USER_PREFIX = "de305eed"
+
+const url = process.env.DATABASE_URL ?? ""
+if (!url.includes("DEMO_DB_REF_PLACEHOLDER")) {
+  console.error("ABORT: DATABASE_URL não é a base DEMO.")
+  process.exit(1)
+}
+
+const pool = new Pool({ connectionString: url })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  console.log("Start seeding demo database...");
+  console.log("Start seeding demo database...")
 
   const email = process.env.SEED_DEMO_EMAIL?.trim().toLowerCase() || "demo@wiseveo.com"
   const password = process.env.SEED_DEMO_PASSWORD
@@ -21,7 +49,7 @@ async function main() {
   }
   const hashedPassword = await bcrypt.hash(password, 10)
 
-  // 1. Create/Update demo user
+  // 1. Criar/atualizar o usuário demo
   const demoUser = await prisma.user.upsert({
     where: { email },
     update: {
@@ -30,112 +58,48 @@ async function main() {
       status: "ACTIVE",
     },
     create: {
-      name: "Demo WISEVEO",
+      name: "WISEVEO Demo",
       email,
       passwordHash: hashedPassword,
       role: "USER",
       status: "ACTIVE",
     },
-  });
+  })
+  console.log(`Usuário demo criado/atualizado: ${demoUser.email} (${demoUser.id})`)
 
-  console.log(`Demo user created/updated: ${demoUser.email}`);
-
-  // 2. Initialize default chart of accounts
-  await initializeUserData(prisma, demoUser.id);
-
-  // 3. Clear existing user transactions, budgets, payees, and recurring transactions to prevent duplicate keys
-  console.log("Cleaning up old demo data...");
-  await prisma.transaction.deleteMany({ where: { userId: demoUser.id } });
-  await prisma.recurringTransaction.deleteMany({ where: { userId: demoUser.id } });
-  await prisma.budget.deleteMany({ where: { userId: demoUser.id } });
-  await prisma.payee.deleteMany({ where: { userId: demoUser.id } });
-
-  // 4. Generate mock data
-  const { payees, transactions, budgets, recurring } = generateMockData(demoUser.id);
-
-  // 5. Insert Payees
-  console.log("Inserting demo payees...");
-  for (const payee of payees) {
-    await prisma.payee.create({
-      data: {
-        id: payee.id,
-        name: payee.name,
-        userId: demoUser.id,
-      },
-    });
+  // 2. Plano de contas — só na PRIMEIRA execução, e SEMPRE com prefixo.
+  const existingGroups = await prisma.categoryGroup.count({ where: { userId: demoUser.id } })
+  if (existingGroups === 0) {
+    console.log(`Sem plano de contas — inicializando com prefixo ${DEMO_USER_PREFIX}...`)
+    await initializeUserData(prisma, demoUser.id, DEMO_USER_PREFIX)
+  } else {
+    console.log(`Plano de contas já existe (${existingGroups} grupos) — inicialização pulada.`)
   }
 
-  // 6. Insert Transactions
-  console.log("Inserting demo transactions...");
-  for (const tx of transactions) {
-    await prisma.transaction.create({
-      data: {
-        id: tx.id,
-        num: tx.num,
-        period: tx.period,
-        date: tx.date,
-        reference: tx.reference,
-        note: tx.note,
-        description: tx.description,
-        amount: tx.amount,
-        type: tx.type,
-        userId: tx.userId,
-        accountId: tx.accountId,
-        destAccountId: tx.destAccountId,
-        groupCode: tx.groupCode,
-        categoryCode: tx.categoryCode,
-        statusCode: tx.statusCode,
-        payeeId: tx.payeeId,
-      },
-    });
-  }
+  // 3. Dataset determinístico (wipe-and-replace transacional, só por userId)
+  const result = await regenerateUserDemoData(prisma, demoUser.id)
 
-  // 7. Insert Budgets
-  console.log("Inserting demo budgets...");
-  for (const bgt of budgets) {
-    await prisma.budget.create({
-      data: {
-        id: bgt.id,
-        amount: bgt.amount,
-        month: bgt.month,
-        year: bgt.year,
-        groupId: bgt.groupId,
-        spent: bgt.spent,
-        userId: bgt.userId,
-      },
-    });
-  }
-
-  // 8. Insert Recurring Transactions
-  console.log("Inserting demo recurring transactions...");
-  for (const rec of recurring) {
-    await prisma.recurringTransaction.create({
-      data: {
-        id: rec.id,
-        period: rec.period,
-        note: rec.note,
-        description: rec.description,
-        amount: rec.amount,
-        type: rec.type,
-        userId: rec.userId,
-        accountId: rec.accountId,
-        groupCode: rec.groupCode,
-        categoryCode: rec.categoryCode,
-        statusCode: rec.statusCode,
-        reference: rec.reference,
-      },
-    });
-  }
-
-  console.log("Demo database seeding completed successfully!");
+  console.log(`Prefixo do plano de contas: ${result.prefix}`)
+  console.log(
+    `Apagado — transactions: ${result.deleted.transactions}, recurring: ${result.deleted.recurring}, ` +
+      `budgets: ${result.deleted.budgets}, payees: ${result.deleted.payees}`
+  )
+  console.log(
+    `Inserido — payees: ${result.inserted.payees}, transactions: ${result.inserted.transactions}, ` +
+      `recurring: ${result.inserted.recurring}, budgets: ${result.inserted.budgets}`
+  )
+  console.log(`Saldos de conta: ${JSON.stringify(result.accountBalances)}`)
+  console.log(
+    `Demo database seeding completed — ${getDemoDataset().transactions.length} transações no dataset.`
+  )
 }
 
 main()
   .catch((e) => {
-    console.error("Error during demo database seeding:", e);
-    process.exit(1);
+    console.error("Error during demo database seeding:", e)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-    await pool.end();
-  });
+    await prisma.$disconnect()
+    await pool.end()
+  })
