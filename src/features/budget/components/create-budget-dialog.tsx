@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select"
 import { createBudgetItem } from "../services/create-budget-item"
 import { saveCustomBudgetCard } from "../services/save-budget-formula"
+import { resolveCategoryLabel, resolveGroupLabel } from "@/i18n/chart-labels"
 import type { GroupWithCategories, BudgetItem } from "../types"
 import { useRouter } from "next/navigation"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -64,6 +65,8 @@ export function CreateBudgetDialog({
   const t = useTranslations("budget.createDialog")
   const tBudget = useTranslations("budget")
   const tCommon = useTranslations("common")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   
@@ -214,7 +217,7 @@ export function CreateBudgetDialog({
                         <span>
                           {GROUP_EMOJI_MAP[g.name.toLowerCase()] || "📁"}
                         </span>
-                        <span>{g.name}</span>
+                        <span>{resolveGroupLabel(tRoot, g)}</span>
                       </span>
                     </SelectItem>
                   ))}
@@ -240,7 +243,7 @@ export function CreateBudgetDialog({
                   </SelectItem>
                   {selectedGroup?.categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      📌 {c.name}
+                      📌 {resolveCategoryLabel(tRoot, c)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -267,7 +270,7 @@ export function CreateBudgetDialog({
                           }}
                         />
                         <Label htmlFor={`grp-${g.id}`} className="font-semibold text-sm">
-                          {GROUP_EMOJI_MAP[g.name.toLowerCase()] || "📁"} {g.name}
+                          {GROUP_EMOJI_MAP[g.name.toLowerCase()] || "📁"} {resolveGroupLabel(tRoot, g)}
                         </Label>
                       </div>
                       <div className="flex flex-col gap-2 pl-6">
@@ -282,7 +285,7 @@ export function CreateBudgetDialog({
                               }}
                             />
                             <Label htmlFor={`cat-${c.id}`} className="text-sm font-normal text-muted-foreground cursor-pointer">
-                              📌 {c.name}
+                              📌 {resolveCategoryLabel(tRoot, c)}
                             </Label>
                           </div>
                         ))}

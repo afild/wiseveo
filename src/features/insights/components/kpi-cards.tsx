@@ -18,6 +18,7 @@ import { useLocale, useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ui/badge"
 import { formatAppDate } from "@/i18n/format"
+import { resolveAccountLabel } from "@/i18n/chart-labels"
 import { formatPercentValue } from "@/lib/monetary"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { cn } from "@/lib/utils"
@@ -576,6 +577,8 @@ export function PersonalRunwayCard({ kpi }: { kpi: PersonalRunwayKpi }) {
 
 export function CashProjectionCard({ kpi }: { kpi: CashProjectionKpi }) {
   const t = useTranslations("insights")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const locale = useLocale()
 
   if (kpi.state === "insufficient") {
@@ -623,7 +626,7 @@ export function CashProjectionCard({ kpi }: { kpi: CashProjectionKpi }) {
       zone={kpi.zone}
       zoneLabel={kpi.zone === "neutral" ? undefined : t(`zones.${kpi.zone}`)}
       footerTitle={t("kpis.cashProjection.event", {
-        account: kpi.accountName ?? "",
+        account: kpi.accountName ? resolveAccountLabel(tRoot, { name: kpi.accountName }) : "",
         date: kpi.projectedDate
           ? formatAppDate(new Date(kpi.projectedDate), "PP", locale)
           : "",

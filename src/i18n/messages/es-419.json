@@ -620,6 +620,51 @@
       "month": "Mes"
     }
   },
+  "chartOfAccounts": {
+    "accounts": {
+      "CHECKING": "Cuenta Corriente",
+      "SAVINGS": "Reserva Financiera",
+      "WALLET": "Billetera"
+    },
+    "categories": {
+      "100_001": "Salario",
+      "100_002": "Freelance / Servicios",
+      "100_003": "Rendimientos de Inversiones",
+      "200_001": "Alquiler / Hipoteca",
+      "200_002": "Gastos Comunes / Condominio",
+      "200_003": "Servicios (Luz/Agua/Gas)",
+      "200_004": "Internet / TV",
+      "300_001": "Supermercado",
+      "300_002": "Restaurantes / Delivery",
+      "400_001": "Combustible",
+      "400_002": "Transporte Público / Apps de Viaje",
+      "400_003": "Mantenimiento del Vehículo",
+      "500_001": "Plan de Salud / Farmacia",
+      "600_001": "Cine / Espectáculos / Viajes",
+      "600_002": "Suscripciones (Streaming, etc.)",
+      "700_001": "Cursos / Universidad / Libros",
+      "800_001": "Gastos Varios",
+      "800_002": "Impuestos / Tarifas",
+      "900_001": "Transferencia entre Cuentas"
+    },
+    "groups": {
+      "100": "Ingresos y Rentas",
+      "200": "Vivienda",
+      "300": "Alimentación",
+      "400": "Transporte",
+      "500": "Salud",
+      "600": "Ocio y Estilo de Vida",
+      "700": "Educación",
+      "800": "Otros",
+      "900": "Transferencias"
+    },
+    "statuses": {
+      "1": "Pagado",
+      "2": "Pendiente",
+      "3": "Vencido",
+      "4": "Programado"
+    }
+  },
   "chat": {
     "conversationList": {
       "chatSettings": "Configuración del chat",
@@ -851,7 +896,7 @@
       "description": "Distribución de gastos en el período seleccionado",
       "loading": "Cargando...",
       "noExpenses": "Sin gastos en el período",
-      "othersGroup": "OTROS",
+      "othersGroup": "Otros",
       "paid": "Pagado:",
       "title": "Gastos por Grupo",
       "toPay": "Por Pagar:",

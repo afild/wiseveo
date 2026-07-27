@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server"
 import { prisma } from "@/lib/prisma"
 import { periodFromDate } from "@/lib/financial"
 import type { AppLocale } from "@/i18n/config"
+import { resolveCategoryLabel, resolveGroupLabel } from "@/i18n/chart-labels"
 import type { DreData, DreLineItem } from "../types"
 
 interface AggregateBucket {
@@ -72,6 +73,8 @@ export async function getDreData(
   const t = locale
     ? await getTranslations({ locale, namespace: "analysis.fallback" })
     : await getTranslations("analysis.fallback")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = locale ? await getTranslations({ locale }) : await getTranslations()
 
   const transactions = await prisma.transaction.findMany({
     where: {
@@ -118,14 +121,13 @@ export async function getDreData(
       const groupCode = String(transaction.group?.code ?? transaction.groupCode ?? 0)
       const categoryCode = transaction.category?.code ?? transaction.categoryCode ?? "TRANSFER"
       const bucketCode = `${groupCode}:${categoryCode}`
-      const groupName = normalizeGroupName(
-        transaction.group?.name,
-        t("transferGroup"),
-      )
-      const categoryName = normalizeCategoryName(
-        transaction.category?.name,
-        t("transferCategory"),
-      )
+      const groupName = resolveGroupLabel(tRoot, {
+        name: normalizeGroupName(transaction.group?.name, t("transferGroup")),
+      })
+      const categoryName = resolveCategoryLabel(tRoot, {
+        code: transaction.category?.code,
+        name: normalizeCategoryName(transaction.category?.name, t("transferCategory")),
+      })
       const bucketName = buildTransferBucketName(groupName, categoryName)
       const absoluteAmount = Math.abs(amount)
       const existing = targetBuckets.get(bucketCode)
@@ -148,10 +150,12 @@ export async function getDreData(
     const isIncome = transaction.type === "INCOME"
     const targetBuckets = isIncome ? incomeBuckets : expenseBuckets
     const groupCode = String(transaction.group?.code ?? transaction.groupCode ?? 0)
-    const groupName = normalizeGroupName(
-      transaction.group?.name,
-      isIncome ? t("incomeGroup") : t("expenseGroup"),
-    )
+    const groupName = resolveGroupLabel(tRoot, {
+      name: normalizeGroupName(
+        transaction.group?.name,
+        isIncome ? t("incomeGroup") : t("expenseGroup"),
+      ),
+    })
     const existing = targetBuckets.get(groupCode)
     const absoluteAmount = Math.abs(amount)
 

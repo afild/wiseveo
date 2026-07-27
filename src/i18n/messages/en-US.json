@@ -620,6 +620,51 @@
       "month": "Month"
     }
   },
+  "chartOfAccounts": {
+    "accounts": {
+      "CHECKING": "Checking Account",
+      "SAVINGS": "Savings Reserve",
+      "WALLET": "Wallet"
+    },
+    "categories": {
+      "100_001": "Salary",
+      "100_002": "Freelance / Services",
+      "100_003": "Investment Income",
+      "200_001": "Rent / Mortgage",
+      "200_002": "HOA / Condo Fees",
+      "200_003": "Utilities (Power/Water/Gas)",
+      "200_004": "Internet / TV",
+      "300_001": "Groceries",
+      "300_002": "Restaurants / Delivery",
+      "400_001": "Fuel",
+      "400_002": "Public Transit / Rides",
+      "400_003": "Vehicle Maintenance",
+      "500_001": "Health Plan / Pharmacy",
+      "600_001": "Movies / Shows / Travel",
+      "600_002": "Subscriptions (Streaming etc.)",
+      "700_001": "Courses / College / Books",
+      "800_001": "Miscellaneous",
+      "800_002": "Taxes / Fees",
+      "900_001": "Transfer Between Accounts"
+    },
+    "groups": {
+      "100": "Income & Earnings",
+      "200": "Housing",
+      "300": "Food & Dining",
+      "400": "Transportation",
+      "500": "Health",
+      "600": "Leisure & Lifestyle",
+      "700": "Education",
+      "800": "Others",
+      "900": "Transfers"
+    },
+    "statuses": {
+      "1": "Paid",
+      "2": "Pending",
+      "3": "Overdue",
+      "4": "Scheduled"
+    }
+  },
   "chat": {
     "conversationList": {
       "chatSettings": "Chat Settings",
@@ -851,7 +896,7 @@
       "description": "Expense distribution in the selected period",
       "loading": "Loading...",
       "noExpenses": "No expenses in period",
-      "othersGroup": "OTHERS",
+      "othersGroup": "Others",
       "paid": "Paid:",
       "title": "Expenses by Group",
       "toPay": "To Pay:",

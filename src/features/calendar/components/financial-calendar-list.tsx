@@ -11,6 +11,7 @@ import {
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { createDateFormatter } from "@/i18n/format"
 import { cn } from "@/lib/utils"
+import { resolveCategoryLabel } from "@/i18n/chart-labels"
 import type { CalendarDayStatement } from "../types"
 
 const TYPE_COLORS: Record<string, string> = {
@@ -29,6 +30,8 @@ export function FinancialCalendarList({
   onSelectDate,
 }: FinancialCalendarListProps) {
   const t = useTranslations("calendar")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const locale = useLocale()
   const monetary = useMonetaryFormattingSafe()
   const dateFmt = createDateFormatter(locale, {
@@ -105,7 +108,7 @@ export function FinancialCalendarList({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm truncate">
-                      {tx.note || tx.description || tx.category.name}
+                      {tx.note || tx.description || resolveCategoryLabel(tRoot, tx.category)}
                     </span>
                     <span className="text-xs text-muted-foreground shrink-0">
                       {STATUS_LABELS[tx.status] ?? tx.status}

@@ -4,6 +4,7 @@ import { type Table } from "@tanstack/react-table"
 import { RefreshCcw, Filter } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useDeviceClass } from "@/hooks/use-device-class"
+import { resolveAccountLabel } from "@/i18n/chart-labels"
 
 import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter"
 import { Button } from "@/components/ui/button"
@@ -39,6 +40,8 @@ export function DataTableToolbar<TData>({
   const { isMobile } = useDeviceClass()
   const t = useTranslations("transactions.filters")
   const tColumns = useTranslations("transactions.columns")
+  // Raiz do next-intl: os helpers de rótulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
 
   const statusLabels: Record<string, string> = {
     PAID: tColumns("statusPaid"),
@@ -145,8 +148,10 @@ export function DataTableToolbar<TData>({
                   <SelectContent>
                     <SelectItem value="all">{t("allAccounts")}</SelectItem>
                     {filterOptions.accounts.map((account) => (
+                      // O value continua sendo o nome do banco (contrato do
+                      // filtro da coluna); só o rótulo é traduzido.
                       <SelectItem key={account.id} value={account.name}>
-                        {account.name}
+                        {resolveAccountLabel(tRoot, account)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -202,7 +207,10 @@ export function DataTableToolbar<TData>({
       <DataTableFacetedFilter
         column={table.getColumn("account")}
         title={t("accountFieldLabel")}
-        options={filterOptions.accounts.map((a) => ({ value: a.name, label: a.name }))}
+        options={filterOptions.accounts.map((a) => ({
+          value: a.name,
+          label: resolveAccountLabel(tRoot, a),
+        }))}
       />
       {isFiltered && (
         <Button

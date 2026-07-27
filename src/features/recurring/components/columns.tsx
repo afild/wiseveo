@@ -9,6 +9,13 @@ import type { MonetaryFormatter } from "@/lib/monetary"
 import { multiSelectFilter } from "@/lib/table-export"
 import { cn } from "@/lib/utils"
 import { createDateFormatter } from "@/i18n/format"
+import {
+  resolveAccountLabel,
+  resolveCategoryLabel,
+  resolveGroupLabel,
+  resolveStatusLabel,
+  type Translate,
+} from "@/i18n/chart-labels"
 
 import type { SerializedRecurringTransaction, RecurringTableMeta } from "../types"
 import { DataTableColumnHeader } from "../../transactions/components/data-table-column-header"
@@ -136,10 +143,11 @@ function matchesAmountSearch(
   return searchDigits.length > 0 && amountDigits.includes(searchDigits)
 }
 
-export function createRecurringFilter(
+function createRecurringFilter(
   monetary: RecurringColumnFormatter,
   labels: RecurringColumnLabels,
   locale: string,
+  t: Translate,
 ) {
   const typeConfig = buildTypeConfig(labels)
   const dateFormatter = createDateFormatter(locale, {
@@ -165,10 +173,18 @@ export function createRecurringFilter(
       row.original.period.length === 6
         ? formatPeriod(row.original.period).toLowerCase()
         : ""
-    const group = (row.original.category.group.name || "").toLowerCase()
-    const category = (row.original.category.name || "").toLowerCase()
-    const account = (row.original.account.name || "").toLowerCase()
-    const status = (row.original.status.name || "").toLowerCase()
+    // Busca pelo rotulo EXIBIDO (mesma regra do translatedType logo abaixo):
+    // o usuario procura pelo que esta na tela, nao pelo nome do banco.
+    const group = resolveGroupLabel(t, row.original.category.group).toLowerCase()
+    const category = resolveCategoryLabel(t, {
+      code: row.original.categoryCode,
+      name: row.original.category.name,
+    }).toLowerCase()
+    const account = resolveAccountLabel(t, row.original.account).toLowerCase()
+    const status = resolveStatusLabel(t, {
+      code: row.original.statusCode,
+      name: row.original.status.name,
+    }).toLowerCase()
     const translatedType = typeConfig[row.original.type]?.label.toLowerCase() || ""
 
     const lastDate = row.getValue("lastDate") as string | null
@@ -199,8 +215,9 @@ export function getRecurringColumns(
   monetary: RecurringColumnFormatter,
   labels: RecurringColumnLabels,
   locale: string,
+  t: Translate,
 ): ColumnDef<SerializedRecurringTransaction>[] {
-  const recurringFilter = createRecurringFilter(monetary, labels, locale)
+  const recurringFilter = createRecurringFilter(monetary, labels, locale, t)
   const typeConfig = buildTypeConfig(labels)
   const dateFormatter = createDateFormatter(locale, {
     day: "2-digit",
@@ -305,7 +322,9 @@ export function getRecurringColumns(
         <DataTableColumnHeader column={column} title={labels.group} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[160px] truncate text-sm">{row.original.category.group.name}</div>
+        <div className="max-w-[160px] truncate text-sm">
+          {resolveGroupLabel(t, row.original.category.group)}
+        </div>
       ),
     },
     {
@@ -315,7 +334,12 @@ export function getRecurringColumns(
         <DataTableColumnHeader column={column} title={labels.category} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[180px] truncate text-sm">{row.original.category.name}</div>
+        <div className="max-w-[180px] truncate text-sm">
+          {resolveCategoryLabel(t, {
+            code: row.original.categoryCode,
+            name: row.original.category.name,
+          })}
+        </div>
       ),
     },
     {
@@ -346,7 +370,7 @@ export function getRecurringColumns(
         <DataTableColumnHeader column={column} title={labels.account} />
       ),
       cell: ({ row }) => (
-        <div className="text-sm">{row.original.account.name}</div>
+        <div className="text-sm">{resolveAccountLabel(t, row.original.account)}</div>
       ),
     },
     {

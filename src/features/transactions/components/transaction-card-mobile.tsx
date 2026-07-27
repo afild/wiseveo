@@ -4,6 +4,11 @@ import { useLocale, useTranslations } from "next-intl"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { createDateFormatter } from "@/i18n/format"
+import {
+  resolveAccountLabel,
+  resolveCategoryLabel,
+  resolveGroupLabel,
+} from "@/i18n/chart-labels"
 import type { SerializedTransaction } from "../types"
 import { TransactionActions } from "./transaction-actions"
 import { StatusDot } from "../../shared/components/status-dot"
@@ -37,6 +42,7 @@ export function TransactionCardMobile({
   onNotes,
 }: TransactionCardMobileProps) {
   const t = useTranslations("transactions.card")
+  const tRoot = useTranslations()
   const locale = useLocale()
   const amountColor = transaction.amount < 0 ? "text-destructive" : "text-positive"
 
@@ -82,7 +88,7 @@ export function TransactionCardMobile({
               </span>
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] font-bold uppercase text-muted-foreground/50 max-w-[80px] truncate">
-                  {transaction.account.name}
+                  {resolveAccountLabel(tRoot, transaction.account)}
                 </span>
                 <StatusDot status={transaction.status as any} />
               </div>
@@ -98,9 +104,9 @@ export function TransactionCardMobile({
 
           {/* Row 3: Group > Category */}
           <div className="mt-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
-            <span>{transaction.category.group.name}</span>
+            <span>{resolveGroupLabel(tRoot, transaction.category.group)}</span>
             <span className="opacity-50">{">"}</span>
-            <span className="text-muted-foreground/70 font-medium normal-case tracking-normal text-[11px]">{transaction.category.name}</span>
+            <span className="text-muted-foreground/70 font-medium normal-case tracking-normal text-[11px]">{resolveCategoryLabel(tRoot, transaction.category)}</span>
           </div>
 
           {/* Row 4: Period & REF */}

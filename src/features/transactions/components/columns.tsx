@@ -10,6 +10,12 @@ import type { MonetaryFormatter } from "@/lib/monetary"
 import { multiSelectFilter } from "@/lib/table-export"
 import { cn } from "@/lib/utils"
 import { createDateFormatter } from "@/i18n/format"
+import {
+  resolveAccountLabel,
+  resolveCategoryLabel,
+  resolveGroupLabel,
+  type Translate,
+} from "@/i18n/chart-labels"
 
 import type { SerializedTransaction, TransactionTableMeta } from "../types"
 import { DataTableColumnHeader } from "./data-table-column-header"
@@ -169,6 +175,7 @@ export function createTransactionGlobalFilter(
   monetary: TransactionColumnFormatter,
   labels: TransactionColumnLabels,
   locale: string,
+  t: Translate,
 ): FilterFn<SerializedTransaction> {
   const statusConfig = buildStatusConfig(labels)
   const typeConfig = buildTypeConfig(labels)
@@ -180,9 +187,17 @@ export function createTransactionGlobalFilter(
     const note = (row.getValue("note") as string)?.toLowerCase() || ""
     const reference = (row.getValue("reference") as string)?.toLowerCase() || ""
     const payee = (row.getValue("payee") as string)?.toLowerCase() || ""
-    const category = (row.original.category?.name as string)?.toLowerCase() || ""
-    const group = (row.original.category?.group?.name as string)?.toLowerCase() || ""
-    const account = (row.original.account?.name as string)?.toLowerCase() || ""
+    // Busca pelo rótulo EXIBIDO (mesma regra de statusConfig/typeConfig logo
+    // abaixo): o usuário procura pelo que está na tela, não pelo nome do banco.
+    const category = row.original.category
+      ? resolveCategoryLabel(t, row.original.category).toLowerCase()
+      : ""
+    const group = row.original.category?.group
+      ? resolveGroupLabel(t, row.original.category.group).toLowerCase()
+      : ""
+    const account = row.original.account
+      ? resolveAccountLabel(t, row.original.account).toLowerCase()
+      : ""
     const period = (row.getValue("period") as string)?.toLowerCase() || ""
     const formattedPeriod =
       period.length === 6 ? formatPeriod(period).toLowerCase() : ""
@@ -251,6 +266,7 @@ export function getTransactionColumns(
   isMobile: boolean = false,
   labels: TransactionColumnLabels,
   locale: string,
+  t: Translate,
 ): ColumnDef<SerializedTransaction>[] {
   const statusConfig = buildStatusConfig(labels)
   const typeConfig = buildTypeConfig(labels)
@@ -371,7 +387,9 @@ export function getTransactionColumns(
         <DataTableColumnHeader column={column} title={labels.group} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[160px] truncate text-sm">{row.original.category.group.name}</div>
+        <div className="max-w-[160px] truncate text-sm">
+          {resolveGroupLabel(t, row.original.category.group)}
+        </div>
       ),
       meta: { responsive: "hide-mobile" },
     },
@@ -382,7 +400,9 @@ export function getTransactionColumns(
         <DataTableColumnHeader column={column} title={labels.category} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[180px] truncate text-sm">{row.original.category.name}</div>
+        <div className="max-w-[180px] truncate text-sm">
+          {resolveCategoryLabel(t, row.original.category)}
+        </div>
       ),
       filterFn: (row, _id, value) => {
         return value.includes(row.original.category.name)
@@ -410,7 +430,7 @@ export function getTransactionColumns(
         <DataTableColumnHeader column={column} title={labels.account} />
       ),
       cell: ({ row }) => (
-        <div className="text-sm">{row.original.account.name}</div>
+        <div className="text-sm">{resolveAccountLabel(t, row.original.account)}</div>
       ),
       filterFn: multiSelectFilter as FilterFn<SerializedTransaction>,
       meta: { responsive: "hide-mobile" },

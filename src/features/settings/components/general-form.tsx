@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { useTranslations } from "next-intl"
+import { resolveAccountLabel } from "@/i18n/chart-labels"
 import type {
   QuickPaymentOptions,
   QuickPaymentSettings,
@@ -92,6 +93,8 @@ export function GeneralForm({
   quickPaymentOptions,
 }: GeneralFormProps) {
   const t = useTranslations("settings.general")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
 
   const generalSettingsSchema = z.object({
     defaultAccountId: z.string().min(1, t("defaultAccountReq")),
@@ -228,7 +231,7 @@ export function GeneralForm({
                             key={account.id}
                             value={String(account.id)}
                           >
-                            {account.name}
+                            {resolveAccountLabel(tRoot, account)}
                           </SelectItem>
                         ))}
                       </SelectContent>

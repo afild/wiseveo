@@ -620,6 +620,51 @@
       "month": "Mês"
     }
   },
+  "chartOfAccounts": {
+    "accounts": {
+      "CHECKING": "Conta Corrente",
+      "SAVINGS": "Reserva Financeira",
+      "WALLET": "Carteira"
+    },
+    "categories": {
+      "100_001": "Salário",
+      "100_002": "Freelance / Serviços",
+      "100_003": "Rendimentos",
+      "200_001": "Aluguel / Prestação",
+      "200_002": "Condomínio",
+      "200_003": "Contas de Consumo (Luz/Água/Gás)",
+      "200_004": "Internet / TV",
+      "300_001": "Supermercado",
+      "300_002": "Restaurantes / Delivery",
+      "400_001": "Combustível",
+      "400_002": "Transporte Público / Aplicativos",
+      "400_003": "Manutenção Veículo",
+      "500_001": "Plano de Saúde / Farmácia",
+      "600_001": "Cinema / Shows / Viagens",
+      "600_002": "Assinaturas (Streaming etc.)",
+      "700_001": "Cursos / Faculdade / Livros",
+      "800_001": "Despesas Diversas",
+      "800_002": "Impostos / Tarifas",
+      "900_001": "Transferência entre Contas"
+    },
+    "groups": {
+      "100": "Receitas e Rendimentos",
+      "200": "Moradia",
+      "300": "Alimentação",
+      "400": "Transporte",
+      "500": "Saúde",
+      "600": "Lazer e Estilo de Vida",
+      "700": "Educação",
+      "800": "Outros",
+      "900": "Transferências"
+    },
+    "statuses": {
+      "1": "Pago",
+      "2": "Pendente",
+      "3": "Vencido",
+      "4": "Agendado"
+    }
+  },
   "chat": {
     "conversationList": {
       "chatSettings": "Configurações do chat",
@@ -851,7 +896,7 @@
       "description": "Distribuição de gastos no período selecionado",
       "loading": "Carregando...",
       "noExpenses": "Sem despesas no período",
-      "othersGroup": "OUTROS",
+      "othersGroup": "Outros",
       "paid": "Pago:",
       "title": "Despesas por Grupo",
       "toPay": "A Pagar:",

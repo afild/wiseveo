@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card"
 import { SectionCardsGrid } from "@/components/section-cards-grid"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
+import { resolveAccountLabel } from "@/i18n/chart-labels"
 import type { AccountWithBalance } from "@/features/accounts/types"
 import type { FinancialSummary } from "@/features/shared/services/get-financial-summary"
 
@@ -30,6 +31,7 @@ interface AccountBalanceCardProps {
 function AccountBalanceSection({ label, accounts }: AccountBalanceCardProps) {
   const monetary = useMonetaryFormattingSafe()
   const t = useTranslations("transactions.summary")
+  const tRoot = useTranslations()
   const total = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
 
   return (
@@ -39,7 +41,7 @@ function AccountBalanceSection({ label, accounts }: AccountBalanceCardProps) {
         {accounts.map((acc) => (
           <div key={acc.id} className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground truncate max-w-[140px]">
-              {acc.name}
+              {resolveAccountLabel(tRoot, acc)}
             </span>
             <span
               className={`text-sm tabular-nums ${

@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server"
 
 import { prisma } from "@/lib/prisma"
 import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import { resolveGroupLabel } from "@/i18n/chart-labels"
 
 export interface ExpenseGroupItem {
   groupCode: string
@@ -52,6 +53,8 @@ function parseDateBoundary(value: string, endOfDay: boolean): Date | null {
 export async function GET(request: NextRequest) {
   const t = await getTranslations("api.errors")
   const tChart = await getTranslations("dashboard.ExpensesChart")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = await getTranslations()
   // Rótulo do bucket sintético (transferências, sem grupo, agregado do top-5).
   // Não é dado do plano de contas — é UI gerada pela rota, por isso traduz aqui.
   const othersLabel = tChart("othersGroup")
@@ -115,12 +118,14 @@ export async function GET(request: NextRequest) {
   for (const tx of transactions) {
     const isTransfer = tx.type === "TRANSFER"
     const code = isTransfer ? -1 : (tx.groupCode ?? tx.category?.group?.code ?? 0)
-    let name = isTransfer ? othersLabel : (tx.category?.group?.name ?? othersLabel)
+    // Nome gravado no banco — base das comparações abaixo, nunca exibido cru.
+    const storedName = isTransfer ? null : (tx.category?.group?.name ?? null)
+    let name = storedName === null ? othersLabel : resolveGroupLabel(tRoot, { name: storedName })
 
     // Grupo do plano de contas literalmente chamado "Others" (seed atual) ou
     // "Outros" (seed pt-BR legado) é exibido com o mesmo rótulo traduzido do
     // bucket sintético.
-    const groupName = name.toLowerCase()
+    const groupName = (storedName ?? "").toLowerCase()
     if (groupName === "outros" || groupName === "others") {
       name = othersLabel
     }

@@ -29,6 +29,12 @@ import {
   DetailPanelSection,
 } from "@/components/detail-panel"
 import { createDateFormatter } from "@/i18n/format"
+import {
+  resolveAccountLabel,
+  resolveCategoryLabel,
+  resolveGroupLabel,
+  resolveStatusLabel,
+} from "@/i18n/chart-labels"
 
 import type {
   FormCategory,
@@ -153,6 +159,8 @@ export function NewTransactionDialog({
 }: NewTransactionDialogProps) {
   const t = useTranslations("transactions.dialogs.newTransaction")
   const tSections = useTranslations("common.formSections")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const locale = useLocale()
   const numInstallments = Number(installments || 1)
   const valueAccentClass = getTypeAccentClass(effectiveType)
@@ -329,7 +337,7 @@ export function NewTransactionDialog({
                         value={g.code.toString()}
                         className="cursor-pointer"
                       >
-                        {g.name}
+                        {resolveGroupLabel(tRoot, g)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -356,7 +364,7 @@ export function NewTransactionDialog({
                         value={c.code}
                         className="cursor-pointer"
                       >
-                        {c.name}
+                        {resolveCategoryLabel(tRoot, c)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -382,7 +390,7 @@ export function NewTransactionDialog({
                         value={a.id.toString()}
                         className="cursor-pointer"
                       >
-                        {a.name}
+                        {resolveAccountLabel(tRoot, a)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -406,7 +414,7 @@ export function NewTransactionDialog({
                         value={s.code.toString()}
                         className="cursor-pointer"
                       >
-                        {s.name}
+                        {resolveStatusLabel(tRoot, s)}
                       </SelectItem>
                     ))}
                   </SelectContent>

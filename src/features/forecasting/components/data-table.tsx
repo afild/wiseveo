@@ -12,6 +12,7 @@ import {
 import { formatPercentValue } from "@/lib/monetary"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { cn } from "@/lib/utils"
+import { resolveCategoryLabel, resolveGroupLabel } from "@/i18n/chart-labels"
 import type {
   ForecastingData,
   ForecastingCell,
@@ -27,6 +28,8 @@ interface ForecastingDataTableProps {
 
 export function ForecastingDataTable({ data, showAv, showAh, loading }: ForecastingDataTableProps) {
   const t = useTranslations("forecasting.table")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const monetary = useMonetaryFormattingSafe()
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({
     "section-income": true,
@@ -99,7 +102,7 @@ export function ForecastingDataTable({ data, showAv, showAh, loading }: Forecast
                 <TableCell className="font-medium py-2 sticky left-0 bg-background/95 backdrop-blur z-20 w-[250px] pl-8 shadow-[1px_0_0_0_var(--border)]">
                   <div className="flex items-center gap-2">
                     {isGroupExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                    {group.name}
+                    {resolveGroupLabel(tRoot, group)}
                   </div>
                 </TableCell>
                 {group.cells.map((cell, idx) => (
@@ -122,7 +125,9 @@ export function ForecastingDataTable({ data, showAv, showAh, loading }: Forecast
                   <TableCell className="text-sm py-2 sticky left-0 bg-background/95 backdrop-blur z-20 w-[250px] pl-14 text-muted-foreground shadow-[1px_0_0_0_var(--border)]">
                     <div className="flex items-center gap-2">
                       <div className="h-1 w-1 rounded-full bg-border" />
-                      <span className="truncate max-w-[150px]" title={cat.name}>{cat.name}</span>
+                      <span className="truncate max-w-[150px]" title={resolveCategoryLabel(tRoot, cat)}>
+                        {resolveCategoryLabel(tRoot, cat)}
+                      </span>
                     </div>
                   </TableCell>
                   {cat.cells.map((cell, idx) => (

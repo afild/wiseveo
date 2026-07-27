@@ -39,6 +39,12 @@ import type {
   FormPayee,
   TransactionFormOptions,
 } from "@/features/transactions/types"
+import {
+  resolveAccountLabel,
+  resolveCategoryLabel,
+  resolveGroupLabel,
+  resolveStatusLabel,
+} from "@/i18n/chart-labels"
 import type {
   SerializedRecurringTransaction,
   RecurringFilterOptions,
@@ -108,6 +114,8 @@ export function RecurringClient({
   const monetary = useMonetaryFormattingSafe()
   const t = useTranslations("recurring")
   const tCommon = useTranslations("common")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const locale = useLocale()
   const columnLabels: RecurringColumnLabels = useMemo(() => ({
     account: t("columns.account"),
@@ -128,8 +136,8 @@ export function RecurringClient({
     typeTransfer: t("columns.typeTransfer"),
   }), [t])
   const columns = useMemo(
-    () => getRecurringColumns(monetary, columnLabels, locale),
-    [monetary, columnLabels, locale],
+    () => getRecurringColumns(monetary, columnLabels, locale, tRoot),
+    [monetary, columnLabels, locale, tRoot],
   )
   const [recurringData, setRecurringData] = useState(initialRecurring)
   const [launchTarget, setLaunchTarget] =
@@ -879,7 +887,7 @@ export function RecurringClient({
                         value={String(group.code)}
                         className="cursor-pointer"
                       >
-                        {group.name}
+                        {resolveGroupLabel(tRoot, group)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -907,7 +915,7 @@ export function RecurringClient({
                         value={category.code}
                         className="cursor-pointer"
                       >
-                        {category.name}
+                        {resolveCategoryLabel(tRoot, category)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -936,7 +944,7 @@ export function RecurringClient({
                         value={String(account.id)}
                         className="cursor-pointer"
                       >
-                        {account.name}
+                        {resolveAccountLabel(tRoot, account)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -963,7 +971,7 @@ export function RecurringClient({
                         value={String(status.code)}
                         className="cursor-pointer"
                       >
-                        {status.name}
+                        {resolveStatusLabel(tRoot, status)}
                       </SelectItem>
                     ))}
                   </SelectContent>

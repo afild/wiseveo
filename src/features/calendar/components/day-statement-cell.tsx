@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { cn } from "@/lib/utils"
+import { resolveCategoryLabel } from "@/i18n/chart-labels"
 import type { CalendarDayStatement } from "../types"
 
 function amountColor(amount: number, type: string): string {
@@ -31,6 +32,8 @@ export function DayStatementCell({
   onClick,
 }: DayStatementCellProps) {
   const t = useTranslations("calendar")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const monetary = useMonetaryFormattingSafe()
   const hasTx = day && day.transactions.length > 0
   const overflow = hasTx ? day.transactions.length - MAX_VISIBLE : 0
@@ -89,7 +92,7 @@ export function DayStatementCell({
               )}
             >
               <span className="truncate mr-1">
-                {tx.note || tx.description || tx.category.name}
+                {tx.note || tx.description || resolveCategoryLabel(tRoot, tx.category)}
               </span>
               <span className="whitespace-nowrap shrink-0">
                 {monetary.formatMonetaryValue(tx.amount)}

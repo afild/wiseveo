@@ -61,6 +61,8 @@ export function TransactionsClient({
 }: TransactionsClientProps) {
   const monetary = useMonetaryFormattingSafe()
   const t = useTranslations("transactions")
+  // Raiz do next-intl: os helpers de rótulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const locale = useLocale()
   const { dateRange, setDateRange } = useDateRange()
   const pathname = usePathname()
@@ -552,12 +554,12 @@ export function TransactionsClient({
     typeTransfer: t("columns.typeTransfer"),
   }), [t])
   const columns = useMemo(
-    () => getTransactionColumns(monetary, isMobile, columnLabels, locale),
-    [monetary, isMobile, columnLabels, locale],
+    () => getTransactionColumns(monetary, isMobile, columnLabels, locale, tRoot),
+    [monetary, isMobile, columnLabels, locale, tRoot],
   )
   const globalFilterFn = useMemo(
-    () => createTransactionGlobalFilter(monetary, columnLabels, locale),
-    [monetary, columnLabels, locale],
+    () => createTransactionGlobalFilter(monetary, columnLabels, locale, tRoot),
+    [monetary, columnLabels, locale, tRoot],
   )
 
   return (

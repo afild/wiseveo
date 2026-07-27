@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { ZONE_THRESHOLDS, getZoneKey } from "@/features/budget/lib/zones"
 import { formatPercentValue } from "@/lib/monetary"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
+import { resolveCategoryLabel, resolveGroupLabel } from "@/i18n/chart-labels"
 import type { BudgetItem } from "../types"
 
 interface BudgetAttentionModuleProps {
@@ -15,7 +16,17 @@ interface BudgetAttentionModuleProps {
 /** Orçamentos acima do corte de alerta, do pior para o melhor. Some quando não há nenhum. */
 export function BudgetAttentionModule({ items }: BudgetAttentionModuleProps) {
   const t = useTranslations("budget")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const monetary = useMonetaryFormattingSafe()
+
+  // Nome renomeado pelo usuario (customName) vence; sem renome, traduz o padrao.
+  const displayName = (item: BudgetItem) =>
+    item.name !== item.originalName
+      ? item.name
+      : item.isGroup
+        ? resolveGroupLabel(tRoot, item)
+        : resolveCategoryLabel(tRoot, item)
 
   const alertItems = items
     .filter((it) => it.limit > 0 && (it.spent / it.limit) * 100 > ZONE_THRESHOLDS.warning)
@@ -40,7 +51,7 @@ export function BudgetAttentionModule({ items }: BudgetAttentionModuleProps) {
             return (
               <div key={item.id} className="flex items-center gap-2 text-xs">
                 <span className="shrink-0">{item.icon}</span>
-                <span className="flex-1 truncate text-muted-foreground">{item.name}</span>
+                <span className="flex-1 truncate text-muted-foreground">{displayName(item)}</span>
                 <span
                   className={`shrink-0 font-medium tabular-nums ${
                     getZoneKey(pct) === "danger" ? "text-destructive" : "text-warning"

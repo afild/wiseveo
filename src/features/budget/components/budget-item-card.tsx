@@ -36,6 +36,7 @@ import { ProvenancePopover } from "./provenance-popover"
 import { getFormulaDescription, getFormulaName } from "../services/formula-engine"
 import { deleteBudgetCard } from "../services/save-budget-formula"
 import { ConfigCardFormulaDialog } from "./config-card-formula-dialog"
+import { resolveCategoryLabel, resolveGroupLabel } from "@/i18n/chart-labels"
 import type { BudgetItem, BudgetFormulaPreferences } from "../types"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -77,6 +78,8 @@ export function BudgetItemCard({
   const t = useTranslations("budget")
   const tCommon = useTranslations("common")
   const tFormulas = useTranslations("budget.formulas")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const monetary = useMonetaryFormattingSafe()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -108,9 +111,15 @@ export function BudgetItemCard({
 
   // Cartões agregados guardam a sentinela "Múltiplos" em originalName; a UI
   // resolve o rótulo traduzido pelo prefixo estável do id.
+  const resolveDefaultLabel = (name: string) =>
+    item.isGroup
+      ? resolveGroupLabel(tRoot, { name })
+      : resolveCategoryLabel(tRoot, { name })
   const originalLabel = item.id.startsWith("custom_")
     ? t("itemCard.multiple")
-    : item.originalName
+    : resolveDefaultLabel(item.originalName)
+  // Nome renomeado pelo usuário (customName) vence; sem renome, mostra o padrão traduzido.
+  const displayName = item.name !== item.originalName ? item.name : originalLabel
 
   const { dayOfMonth, daysInMonth } = getMonthPosition()
 
@@ -191,7 +200,7 @@ export function BudgetItemCard({
             <span className="text-xs opacity-60">({originalLabel})</span>
           )}
         </CardDescription>
-        <CardTitle className="text-lg font-semibold @[250px]/card:text-xl">{item.name}</CardTitle>
+        <CardTitle className="text-lg font-semibold @[250px]/card:text-xl">{displayName}</CardTitle>
 
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           {!item.hasHistory && (
@@ -303,7 +312,7 @@ export function BudgetItemCard({
           open={isFormulaConfigOpen}
           onOpenChange={setIsFormulaConfigOpen}
           cardId={item.id}
-          cardName={item.name}
+          cardName={displayName}
           formulaConfig={formulaConfig}
         />
       )}

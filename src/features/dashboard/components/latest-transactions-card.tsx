@@ -44,6 +44,7 @@ function amountColorClass(value: number): string {
 
 import { useLocale, useTranslations } from "next-intl"
 import { createDateFormatter } from "@/i18n/format"
+import { resolveCategoryLabel, resolveGroupLabel } from "@/i18n/chart-labels"
 
 export function LatestTransactionsCard() {
   const monetary = useMonetaryFormattingSafe()
@@ -56,6 +57,8 @@ export function LatestTransactionsCard() {
   const measureRowRef = React.useRef<HTMLDivElement | null>(null)
 
   const t = useTranslations("dashboard.LatestTransactions")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const locale = useLocale()
 
   const recalcVisibleRows = React.useCallback(() => {
@@ -198,12 +201,12 @@ export function LatestTransactionsCard() {
 
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium uppercase">{item.title}</p>
-                      <p className="truncate text-[9px] leading-tight tracking-tight uppercase text-muted-foreground">{item.categoryName}</p>
+                      <p className="truncate text-[9px] leading-tight tracking-tight uppercase text-muted-foreground">{resolveCategoryLabel(tRoot, { name: item.categoryName })}</p>
                     </div>
 
                     {/* groupName: visible only on md+ */}
                     <div className="hidden md:flex min-w-0 items-center justify-start text-left">
-                      <p className="w-full truncate text-left text-[9px] leading-tight tracking-tight uppercase text-muted-foreground">{item.groupName}</p>
+                      <p className="w-full truncate text-left text-[9px] leading-tight tracking-tight uppercase text-muted-foreground">{resolveGroupLabel(tRoot, { name: item.groupName })}</p>
                     </div>
 
                     <div className="text-right">

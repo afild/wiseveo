@@ -8,6 +8,11 @@ import { cn } from "@/lib/utils"
 import { formatPeriod } from "@/lib/financial"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { createDateFormatter } from "@/i18n/format"
+import {
+  resolveAccountLabel,
+  resolveCategoryLabel,
+  resolveGroupLabel,
+} from "@/i18n/chart-labels"
 import type { SerializedRecurringTransaction } from "../types"
 import { RecurringActions } from "./recurring-actions"
 
@@ -26,6 +31,8 @@ export function RecurringCardMobile({
 }: RecurringCardMobileProps) {
   const monetary = useMonetaryFormattingSafe()
   const t = useTranslations("recurring.card")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const locale = useLocale()
 
   const amountColorClass =
@@ -68,7 +75,7 @@ export function RecurringCardMobile({
               {monetary.formatMonetaryValue(recurring.amount)}
             </div>
             <span className="text-[11px] font-bold uppercase text-muted-foreground/50 max-w-[80px] truncate">
-              {recurring.account.name}
+              {resolveAccountLabel(tRoot, recurring.account)}
             </span>
           </div>
         </div>
@@ -82,9 +89,14 @@ export function RecurringCardMobile({
 
         {/* Row 3: Group & Category */}
         <div className="mt-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
-          <span>{recurring.category.group.name}</span>
+          <span>{resolveGroupLabel(tRoot, recurring.category.group)}</span>
           <span className="opacity-50">{">"}</span>
-          <span className="text-muted-foreground/70 font-medium normal-case tracking-normal text-[11px]">{recurring.category.name}</span>
+          <span className="text-muted-foreground/70 font-medium normal-case tracking-normal text-[11px]">
+            {resolveCategoryLabel(tRoot, {
+              code: recurring.categoryCode,
+              name: recurring.category.name,
+            })}
+          </span>
         </div>
 
         {/* Details Row: Last Date & Period */}

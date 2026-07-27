@@ -5,6 +5,7 @@ import { DetailPanel } from "@/components/detail-panel"
 import { Badge } from "@/components/ui/badge"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { createDateFormatter } from "@/i18n/format"
+import { resolveAccountLabel, resolveCategoryLabel } from "@/i18n/chart-labels"
 import { cn } from "@/lib/utils"
 import type { CalendarDayStatement } from "../types"
 
@@ -35,6 +36,8 @@ export function DayStatementDialog({
   onOpenChange,
 }: DayStatementDialogProps) {
   const t = useTranslations("calendar")
+  // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
+  const tRoot = useTranslations()
   const locale = useLocale()
   const monetary = useMonetaryFormattingSafe()
   const dateFmt = createDateFormatter(locale, {
@@ -100,10 +103,10 @@ export function DayStatementDialog({
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs text-muted-foreground truncate">
-                      {tx.category.name}
+                      {resolveCategoryLabel(tRoot, tx.category)}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {tx.account.name}
+                      {resolveAccountLabel(tRoot, tx.account)}
                     </span>
                     <Badge
                       variant="outline"
