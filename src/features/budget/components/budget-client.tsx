@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect, useRef } from "react"
 import { useTranslations } from "next-intl"
+import { format } from "date-fns"
 import {
   DndContext,
   closestCenter,
@@ -81,9 +82,12 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
       const requestId = ++latestRequestRef.current
       setLoading(true)
       try {
+        // Data de calendário, não instante: um ISO com hora é lido pelo servidor
+        // no fuso DELE e, na virada do mês, arrastava o mês seguinte inteiro
+        // para dentro do range (ver features/budget/lib/period-range.ts).
         const params = new URLSearchParams({
-          from: dateRange.from.toISOString(),
-          to: dateRange.to.toISOString(),
+          from: format(dateRange.from, "yyyy-MM-dd"),
+          to: format(dateRange.to, "yyyy-MM-dd"),
         })
         const res = await fetch(`/api/budget?${params}`, { cache: "no-store" })
         if (!res.ok) throw new Error("Failed to fetch budget data") // i18n-ignore: mensagem interna de Error, só logada (console.error), nunca exibida ao usuário

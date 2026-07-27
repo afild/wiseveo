@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getTranslations } from "next-intl/server"
 import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
 import { getBudgetData } from "@/features/budget/services/get-budget-data"
-import { startOfMonth, endOfMonth } from "date-fns"
+import { resolveBudgetRange } from "@/features/budget/lib/period-range"
 
 export async function GET(req: NextRequest) {
   const t = await getTranslations("api.errors")
@@ -17,24 +17,15 @@ export async function GET(req: NextRequest) {
     const toStr = searchParams.get("to")
     const dateStr = searchParams.get("date")
     
-    // Fallback logic for from/to/date
-    const fromRaw = fromStr
-      ? new Date(fromStr)
-      : (dateStr ? startOfMonth(new Date(dateStr)) : startOfMonth(new Date()))
+    // Datas chegam como data de calendário ("YYYY-MM-DD") e o range é sempre
+    // fechado em meses inteiros — ver period-range.ts para o porquê.
+    const range = resolveBudgetRange(fromStr ?? dateStr, toStr ?? dateStr, new Date())
 
-    const toRaw = toStr
-      ? new Date(toStr)
-      : (dateStr ? endOfMonth(new Date(dateStr)) : endOfMonth(fromRaw))
-
-    if (isNaN(fromRaw.getTime()) || isNaN(toRaw.getTime())) {
+    if (!range) {
       return NextResponse.json({ error: t("invalidDateFormat") }, { status: 400 })
     }
 
-    // Enforce full months regardless of what the client sends
-    const from = startOfMonth(fromRaw)
-    const to = endOfMonth(toRaw)
-
-    const data = await getBudgetData(userId, from, to)
+    const data = await getBudgetData(userId, range.from, range.to)
 
     return NextResponse.json(data)
   } catch (error) {
