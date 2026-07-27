@@ -13,10 +13,10 @@ type TxType = "INCOME" | "EXPENSE" | "TRANSFER"
 
 function mapLegacyStatus(status: string | null): TxStatus {
   const key = (status ?? "").toUpperCase().trim()
-  if (key === "PAGO") return "PAID"
-  if (key === "VENCIDO") return "OVERDUE"
-  if (key === "ABERTO") return "SCHEDULED"
-  if (key === "PENDENTE") return "PENDING"
+  if (key === "PAGO" || key === "PAID") return "PAID"
+  if (key === "VENCIDO" || key === "OVERDUE") return "OVERDUE"
+  if (key === "ABERTO" || key === "SCHEDULED") return "SCHEDULED"
+  if (key === "PENDENTE" || key === "PENDING") return "PENDING"
   return "PENDING"
 }
 

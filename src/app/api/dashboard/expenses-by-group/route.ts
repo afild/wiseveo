@@ -117,14 +117,17 @@ export async function GET(request: NextRequest) {
     const code = isTransfer ? -1 : (tx.groupCode ?? tx.category?.group?.code ?? 0)
     let name = isTransfer ? othersLabel : (tx.category?.group?.name ?? othersLabel)
 
-    // Grupo do plano de contas literalmente chamado "Outros" (seed pt-BR) é
-    // exibido com o mesmo rótulo traduzido do bucket sintético.
-    if (name.toLowerCase() === "outros") {
+    // Grupo do plano de contas literalmente chamado "Others" (seed atual) ou
+    // "Outros" (seed pt-BR legado) é exibido com o mesmo rótulo traduzido do
+    // bucket sintético.
+    const groupName = name.toLowerCase()
+    if (groupName === "outros" || groupName === "others") {
       name = othersLabel
     }
 
     const absAmount = Math.abs(Number(tx.amount ?? 0))
-    const isPaid = tx.statusLookup?.name?.toLowerCase() === "pago"
+    const statusName = tx.statusLookup?.name?.toLowerCase()
+    const isPaid = statusName === "pago" || statusName === "paid"
 
     const existing = groupMap.get(code)
     if (existing) {

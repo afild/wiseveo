@@ -61,7 +61,7 @@ export async function getRecurring(userId: string) {
             }
             : null,
         status: {
-            name: r.statusLookup?.name ?? "Pendente"
+            name: r.statusLookup?.name ?? "Pending" // i18n-ignore: nome de status gravado no banco (dado), não é texto de UI
         }
     }))
 

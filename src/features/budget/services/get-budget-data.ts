@@ -120,7 +120,7 @@ export async function getBudgetData(
   }
 
   // 3. Aggregate real spent from transactions for the selected range
-  // Two parallel queries: all expenses, and paid-only (status "Pago")
+  // Two parallel queries: all expenses, and paid-only (status "Paid"/"Pago")
   const [spentAggregation, paidAggregation] = await Promise.all([
     prisma.transaction.groupBy({
       by: ["groupCode", "categoryCode"],
@@ -138,7 +138,12 @@ export async function getBudgetData(
         userId,
         type: "EXPENSE",
         date: { gte: filterFrom, lte: filterTo },
-        statusLookup: { name: { equals: "Pago", mode: "insensitive" } },
+        OR: [
+          // i18n-ignore: nome de status gravado no banco (dado), não é texto de UI
+          { statusLookup: { name: { equals: "Pago", mode: "insensitive" } } },
+          // i18n-ignore: nome de status gravado no banco (dado), não é texto de UI
+          { statusLookup: { name: { equals: "Paid", mode: "insensitive" } } },
+        ],
       },
     }),
   ])

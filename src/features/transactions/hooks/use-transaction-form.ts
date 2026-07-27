@@ -58,10 +58,10 @@ function getInitialFormData(): FormData {
 function getLegacyStatusCandidates(
   status: SerializedTransaction["status"]
 ): string[] {
-  if (status === "PAID") return ["PAGO", "REALIZADO"]
-  if (status === "PENDING") return ["PENDENTE"]
-  if (status === "OVERDUE") return ["VENCIDO"]
-  return ["ABERTO", "AGENDADO"]
+  if (status === "PAID") return ["PAGO", "REALIZADO", "PAID"]
+  if (status === "PENDING") return ["PENDENTE", "PENDING"]
+  if (status === "OVERDUE") return ["VENCIDO", "OVERDUE"]
+  return ["ABERTO", "AGENDADO", "SCHEDULED"]
 }
 
 // ── Attachment validation ────────────────────────────────────────────────────
