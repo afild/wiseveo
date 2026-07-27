@@ -22,6 +22,14 @@ export async function getDefaultUserId(): Promise<string | null> {
     // Fora do escopo de uma requisição (sem cookies disponíveis) — cai no fallback.
   }
 
+  // Em produção NÃO há fallback: `src/middleware.ts` exclui `/api` do matcher de
+  // autenticação, então uma requisição anônima a uma rota de API chegaria aqui e
+  // receberia os dados do primeiro usuário cadastrado. Sem sessão, sem usuário —
+  // os chamadores já tratam `null` devolvendo 401.
+  if (process.env.NODE_ENV === "production") {
+    return null
+  }
+
   try {
     const user = await prisma.user.findFirst({
       select: { id: true },

@@ -2,6 +2,11 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = 'force-dynamic'
+// Cada phantom agora arrasta ~2.650 linhas em cascata (eram ~350 antes do dataset
+// realista). Sem um teto de duração explícito, uma execução longa é cortada no meio
+// e — como cada delete é try/catch — o corte passa despercebido: o cron "sucede"
+// tendo apagado menos usuários do que o dia criou, e a base cresce sem parar.
+export const maxDuration = 60
 
 export async function GET(request: Request) {
   // Guard: only run in demo environment — no-op in the real app project
@@ -36,7 +41,10 @@ export async function GET(request: Request) {
         }
       },
       select: { id: true },
-      take: 200
+      // ~2.650 linhas em cascata por usuário: 40 é o que cabe com folga em 60s.
+      // O cron roda diariamente; se a fila crescer além disso, é sinal de que a
+      // limpeza precisa de mais de uma execução por dia, não de um lote maior.
+      take: 40
     })
 
     let deletedCount = 0

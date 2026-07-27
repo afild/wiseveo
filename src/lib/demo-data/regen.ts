@@ -86,6 +86,16 @@ export async function regenerateUserDemoData(
   const accountIds: Record<string, number> = {}
   for (const a of accounts) accountIds[a.type] = a.id
 
+  // O materializador usa CHECKING (dona de todos os lançamentos) e SAVINGS (saldo
+  // inicial). Faltando qualquer uma, a chave computada viraria "undefined" e o
+  // `Number(accountId)` do chamador, NaN — falha opaca no meio da transação.
+  for (const type of ["CHECKING", "SAVINGS"]) {
+    if (!accountIds[type]) {
+      // i18n-ignore: mensagem interna de script/erro, nunca exibida ao usuário
+      throw new Error(`regenerateUserDemoData: usuario ${userId} sem conta ${type}; abortando.`)
+    }
+  }
+
   // groupCodeOffset: phantomGroupCode = 1_000_000 + slotOffset + originalCode, com
   // slotOffset arbitrário (derivado do prefixo, não persistido). NÃO usar `code % 1000`
   // — isso só devolve o originalCode quando slotOffset é múltiplo de 1000; no caso
@@ -107,16 +117,20 @@ export async function regenerateUserDemoData(
 
   return await prisma.$transaction(
     async (tx: PrismaLike): Promise<RegenResult> => {
+      // Payee.id é Int global sem autoincrement — o lock precisa estar DENTRO da
+      // transação para o MAX+1 ser seguro contra execuções concorrentes.
+      // Ele vem ANTES de qualquer DML em `payees`: apagar primeiro pegaria
+      // ROW EXCLUSIVE e o LOCK viraria um UPGRADE, que trava em deadlock contra
+      // um provisionamento concorrente esperando o mesmo EXCLUSIVE.
+      // i18n-ignore: string SQL bruta, não é texto de UI
+      await tx.$executeRaw`LOCK TABLE payees IN EXCLUSIVE MODE`
+
       // Ordem respeita FKs: transactions (referencia payeeId) antes de payees.
       const delTx = await tx.transaction.deleteMany({ where: { userId } })
       const delRec = await tx.recurringTransaction.deleteMany({ where: { userId } })
       const delBudget = await tx.budget.deleteMany({ where: { userId } })
       const delPayee = await tx.payee.deleteMany({ where: { userId } })
 
-      // Payee.id é Int global sem autoincrement — o lock precisa estar DENTRO da
-      // transação para o MAX+1 ser seguro contra execuções concorrentes.
-      // i18n-ignore: string SQL bruta, não é texto de UI
-      await tx.$executeRaw`LOCK TABLE payees IN EXCLUSIVE MODE`
       const maxPayee = await tx.payee.aggregate({ _max: { id: true } })
       const payeeIdBase = (maxPayee._max.id ?? 0) + 1
 
