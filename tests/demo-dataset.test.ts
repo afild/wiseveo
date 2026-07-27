@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { getDemoDataset, GROUPS_EXPENSE_RANGES, FIXED_CUTOFF } from "../src/lib/demo-data/generate-demo-dataset"
+import { materializeDataset } from "../src/lib/demo-data/materialize"
 
 const ds = getDemoDataset() // memoizado, semente fixa
 
@@ -160,6 +161,64 @@ describe("Recorrentes e budgets", () => {
       const [, hi] = GROUPS_EXPENSE_RANGES[b.group]
       expect(b.amount).toBeGreaterThan(0)
       expect(b.amount).toBeLessThanOrEqual(((hi + 1) / 100) * 15500)
+    }
+  })
+})
+
+describe("P13 — materialização isolada", () => {
+  // Desvio documentado (A): CUTOFF_MODE é "dynamic" e o materializador usa
+  // cutoff = now − 24h. Para o corte cair EXATAMENTE em FIXED_CUTOFF (27/07/2026 12:00),
+  // o teste pina now em 28/07/2026 12:00 — é o "os testes pinam 27/07/2026" da decisão D1.
+  const rows = materializeDataset(getDemoDataset(), {
+    userId: "demo_test", prefix: "ab12cd34",
+    accountIds: { CHECKING: 1_500_100, SAVINGS: 1_500_101, WALLET: 1_500_102 },
+    groupUuidByCode: { 100: "u100", 200: "u200", 300: "u300", 400: "u400", 500: "u500", 600: "u600", 700: "u700", 800: "u800", 900: "u900" },
+    groupCodeOffset: 1_500_100 - 100, // phantomCode = offset + originalCode
+    payeeIdBase: 5_000_000,
+    now: new Date(Date.UTC(2026, 6, 28, 12, 0, 0)),
+  })
+  it("todos os codes prefixados/deslocados — nunca os globais", () => {
+    for (const t of rows.transactions) {
+      expect(t.categoryCode.startsWith("ab12cd34.")).toBe(true)
+      expect(t.groupCode).toBeGreaterThan(1_000_000)
+      expect([1_500_100, 1_500_101, 1_500_102]).toContain(t.accountId)
+      expect(t.userId).toBe("demo_test")
+    }
+  })
+  it("statusCode: 1 até o corte, 2 depois, ≤2 vencidos(3) pequenos", () => {
+    const overdue = rows.transactions.filter((t) => t.statusCode === 3)
+    expect(overdue.length).toBeLessThanOrEqual(2)
+    for (const o of overdue) expect(Math.abs(o.amount)).toBeLessThanOrEqual(300)
+    for (const t of rows.transactions) {
+      if (t.statusCode !== 3) expect(t.statusCode).toBe(t.date <= FIXED_CUTOFF ? 1 : 2)
+    }
+  })
+  it("num sequencial cronológico a partir de 1; period = YYYYMM da data", () => {
+    rows.transactions.forEach((t, i) => {
+      expect(t.num).toBe(i + 1)
+      const p = `${t.date.getUTCFullYear()}${String(t.date.getUTCMonth() + 1).padStart(2, "0")}`
+      expect(t.period).toBe(p)
+    })
+  })
+  it("payee ids no bloco reservado, um id por nome", () => {
+    const ids = rows.payees.map((p) => p.id)
+    expect(Math.min(...ids)).toBe(5_000_000)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+  it("P14 — todas as colunas preenchidas em TODOS os lançamentos", () => {
+    for (const t of rows.transactions) {
+      expect(t.num, "NUM").toBeGreaterThan(0)
+      expect(t.period, "PERÍODO").toMatch(/^\d{6}$/)
+      expect(t.date instanceof Date && !isNaN(t.date.getTime()), "DATA").toBe(true)
+      expect(t.reference && t.reference.length > 0, "REF").toBe(true)
+      expect(t.note && t.note.length > 0, "HISTÓRICO").toBe(true)
+      expect(t.description && t.description.length > 0, "DESCRIÇÃO").toBe(true)
+      expect(t.groupCode, "GRUPO").toBeGreaterThan(0)
+      expect(t.categoryCode.length, "CATEGORIA").toBeGreaterThan(0)
+      expect(Math.abs(t.amount), "VALOR").toBeGreaterThan(0)
+      expect(t.accountId, "BANCO").toBeGreaterThan(0)
+      expect([1, 2, 3]).toContain(t.statusCode) // STATUS
+      expect(t.payeeId, "FAVORECIDO").toBeGreaterThan(0)
     }
   })
 })
