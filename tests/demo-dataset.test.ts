@@ -116,6 +116,14 @@ describe("P12 — cadência diária", () => {
   })
 })
 
+describe("amostra aprovada", () => {
+  it("bate com a amostra aprovada (semente 20260726, contexto EUA)", () => {
+    expect(ds.transactions.length).toBe(2541)
+    const avg = ds.months.reduce((a, b) => a + b.delta, 0) / 36
+    expect(avg).toBeCloseTo(109.34, 1)
+  })
+})
+
 describe("P9/P10 — corte e catálogo fechado", () => {
   it("pago até o corte, aberto depois (statuses abstratos)", () => {
     for (const t of ds.transactions) {
