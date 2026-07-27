@@ -136,3 +136,30 @@ describe("P9/P10 — corte e catálogo fechado", () => {
     for (const t of ds.transactions) expect(names.has(t.payee), t.payee).toBe(true)
   })
 })
+
+describe("Recorrentes e budgets", () => {
+  // Nota: o plano descrevia "16 templates a partir de FIXED_BILLS" + salário = 17,
+  // mas FIXED_BILLS tem 14 entradas e SEASONAL_UTILITY_BILLS tem 3 — 14+3+1 = 18.
+  // Decisão registrada no relatório da Tarefa 4: incluir todas as 17 contas recorrentes
+  // reais (14 fixas + 3 utilities) + 1 salário = 18, para não faltar nenhuma conta real
+  // na tela de Recorrentes da demo. O "17" do plano era uma contagem equivocada do catálogo.
+  it("um template recorrente por conta fixa + utility sazonal + salário (18), statusCode certo", () => {
+    expect(ds.recurringTemplates.length).toBe(18)
+    const salary = ds.recurringTemplates.find((r) => r.kind === "salary")!
+    expect(salary.amount).toBeGreaterThan(0)
+    expect(salary.statusCode).toBe(1)
+    for (const r of ds.recurringTemplates.filter((r) => r.kind !== "salary")) {
+      expect(r.amount).toBeLessThan(0)
+      expect(r.statusCode).toBe(2)
+      expect(r.period).toBe("202607")
+    }
+  })
+  it("um budget por grupo de despesa, teto ≈ topo da faixa", () => {
+    expect(ds.budgets.length).toBe(7)
+    for (const b of ds.budgets) {
+      const [, hi] = GROUPS_EXPENSE_RANGES[b.group]
+      expect(b.amount).toBeGreaterThan(0)
+      expect(b.amount).toBeLessThanOrEqual(((hi + 1) / 100) * 15500)
+    }
+  })
+})

@@ -627,11 +627,74 @@ function generate(): DemoDataset {
 
   allTx.sort((a, b) => a.date.getTime() - b.date.getTime())
 
+  // 10) Recorrentes abstratos (Tarefa 4) — derivados do dataset já gerado, ZERO sorteios.
+  // 14 FIXED_BILLS + 3 SEASONAL_UTILITY_BILLS + 1 salário = 18 templates.
+  // (O plano mencionava "16 + salário = 17", mas o catálogo tem 14+3=17 contas reais;
+  // incluir todas evita que a tela de Recorrentes fique incompleta na demo — desvio
+  // documentado no relatório da Tarefa 4.)
+  const recurringTemplates: AbstractRecurring[] = []
+
+  for (const b of FIXED_BILLS) {
+    recurringTemplates.push({
+      description: b.description,
+      payee: b.payee,
+      group: b.group,
+      cat: b.cat,
+      amount: -b.values[2026],
+      type: "EXPENSE",
+      statusCode: 2,
+      period: "202607",
+      lastDate: new Date(Date.UTC(2026, 6, b.day, 12, 0, 0)),
+    })
+  }
+
+  for (const u of SEASONAL_UTILITY_BILLS) {
+    const julyTx = allTx.find(
+      (t) => t.payee === u.payee && t.description === u.description && t.date.getUTCFullYear() === 2026 && t.date.getUTCMonth() === 6
+    )
+    const amount = julyTx ? -Math.abs(julyTx.amount) : -u.values[2026]
+    recurringTemplates.push({
+      description: u.description,
+      payee: u.payee,
+      group: u.group,
+      cat: u.cat,
+      amount,
+      type: "EXPENSE",
+      statusCode: 2,
+      period: "202607",
+      lastDate: new Date(Date.UTC(2026, 6, u.day, 12, 0, 0)),
+    })
+  }
+
+  recurringTemplates.push({
+    description: INCOME_EXTRA.salary.description,
+    payee: INCOME_EXTRA.salary.payee,
+    group: 100,
+    cat: INCOME_EXTRA.salary.cat,
+    amount: salaryFor(2026),
+    type: "INCOME",
+    statusCode: 1,
+    period: "202607",
+    lastDate: new Date(Date.UTC(2026, 6, 5, 12, 0, 0)),
+    kind: "salary",
+  })
+
+  // 11) Budgets abstratos (Tarefa 4) — um por grupo de despesa, teto = média mensal
+  // 2026 do grupo × 1.15, arredondado ao múltiplo de 50 mais próximo. ZERO sorteios.
+  const months2026 = months.filter((mo) => mo.y === 2026)
+  const budgets: AbstractBudget[] = Object.keys(GROUPS_EXPENSE_RANGES).map((gStr) => {
+    const g = Number(gStr)
+    const total = months2026.reduce((acc, mo) => acc + (mo.byGroup[g] || 0), 0)
+    const avg = total / months2026.length
+    const amount = Math.round((avg * 1.15) / 50) * 50
+    return { group: g, amount }
+  })
+
   return {
     transactions: allTx,
     months,
-    recurringTemplates: [], // Tarefa 4
-    budgets: [], // Tarefa 4
+    recurringTemplates,
+    budgets,
     catalog: {
       fixedBills: FIXED_BILLS,
       seasonalUtilities: SEASONAL_UTILITY_BILLS,
