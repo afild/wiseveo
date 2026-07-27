@@ -10,6 +10,7 @@ interface BudgetSortableItemProps {
   item: BudgetItem
   index: number
   formulaConfig: BudgetFormulaPreferences
+  incomeWindow?: number[]
   onEdit?: (item: BudgetItem) => void
   onMoveUp?: () => void
   onMoveDown?: () => void
@@ -19,6 +20,7 @@ export function BudgetSortableItem({
   item,
   index,
   formulaConfig,
+  incomeWindow,
   onEdit,
   onMoveUp,
   onMoveDown,
@@ -55,6 +57,7 @@ export function BudgetSortableItem({
         index={index}
         dragHandleProps={{ ...attributes, ...listeners }}
         formulaConfig={formulaConfig}
+        incomeWindow={incomeWindow}
         onEdit={onEdit}
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}

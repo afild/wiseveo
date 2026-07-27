@@ -1,6 +1,12 @@
 import type { useTranslations } from "next-intl"
 
-import type { FormulaId, FormulaParams, HistoryData, CustomFormulaDefinition } from "../types"
+import type {
+  FormulaConfig,
+  FormulaId,
+  FormulaParams,
+  HistoryData,
+  CustomFormulaDefinition,
+} from "../types"
 import { formatMonetaryValue, formatPercentValue } from "@/lib/monetary"
 
 // ── Formula Definitions (metadata for UI) ──
@@ -91,6 +97,70 @@ export const FORMULA_DESCRIPTION_KEYS = {
   simple_avg: "descriptions.simple_avg",
   trimmed_mean: "descriptions.trimmed_mean",
 } as const
+
+/** Em que situação a abordagem é a escolha certa (guia do seletor). */
+export const FORMULA_WHEN_TO_USE_KEYS = {
+  active_avg: "whenToUse.active_avg",
+  banded_avg: "whenToUse.banded_avg",
+  declining_target: "whenToUse.declining_target",
+  envelope_rollover: "whenToUse.envelope_rollover",
+  fixed_target: "whenToUse.fixed_target",
+  historical_max: "whenToUse.historical_max",
+  income_pct: "whenToUse.income_pct",
+  median: "whenToUse.median",
+  moving_avg: "whenToUse.moving_avg",
+  percentile_n: "whenToUse.percentile_n",
+  seasonal_yoy: "whenToUse.seasonal_yoy",
+  simple_avg: "whenToUse.simple_avg",
+  sinking_fund: "whenToUse.sinking_fund",
+  trimmed_mean: "whenToUse.trimmed_mean",
+} as const
+
+/** Caso concreto que ilustra a abordagem (guia do seletor). */
+export const FORMULA_EXAMPLE_KEYS = {
+  active_avg: "examples.active_avg",
+  banded_avg: "examples.banded_avg",
+  declining_target: "examples.declining_target",
+  envelope_rollover: "examples.envelope_rollover",
+  fixed_target: "examples.fixed_target",
+  historical_max: "examples.historical_max",
+  income_pct: "examples.income_pct",
+  median: "examples.median",
+  moving_avg: "examples.moving_avg",
+  percentile_n: "examples.percentile_n",
+  seasonal_yoy: "examples.seasonal_yoy",
+  simple_avg: "examples.simple_avg",
+  sinking_fund: "examples.sinking_fund",
+  trimmed_mean: "examples.trimmed_mean",
+} as const
+
+/** Teto de meses que uma janela de histórico pode pedir. */
+export const MAX_HISTORY_MONTHS = 24
+
+/**
+ * Quantos meses de histórico esta configuração precisa ler. Sazonal olha 13
+ * meses (o mesmo mês do ano anterior) e envelope precisa dos meses de sobra
+ * ALÉM da janela de cálculo. Usado tanto para dimensionar a consulta quanto
+ * para a prévia no cliente — se divergirem, a prévia mente.
+ */
+export function historyWindowFor(config: FormulaConfig): number {
+  if (config.id === "seasonal_yoy") return 13
+
+  const raw = config.params.months
+  const base = Number.isFinite(raw)
+    ? Math.min(MAX_HISTORY_MONTHS, Math.max(1, Math.round(raw!)))
+    : 6
+
+  if (config.id === "envelope_rollover") {
+    const rawRollover = config.params.rolloverMonths
+    const rollover = Number.isFinite(rawRollover)
+      ? Math.min(12, Math.max(1, Math.round(rawRollover!)))
+      : 3
+    return base + rollover
+  }
+
+  return base
+}
 
 export const FORMULA_DEFINITIONS: FormulaDefinition[] = [
   {

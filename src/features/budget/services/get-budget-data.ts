@@ -5,15 +5,16 @@ import type {
   BudgetPageData,
   BudgetFormulaPreferences,
   GroupWithCategories,
-  FormulaConfig,
   HistoryData,
 } from "../types"
 import { getBudgetHistoryBatch } from "./get-budget-history-batch"
 import {
   calculateFormulaLimit,
   hasUsableHistory,
+  historyWindowFor,
   DEFAULT_FORMULA_CONFIG,
 } from "./formula-engine"
+import { PREVIEW_MONTHS } from "../lib/formula-preview"
 import { computeTotals } from "../lib/totals"
 import { dedupCustomCardMembers } from "../lib/custom-card-members"
 import { periodFromDate } from "@/lib/financial"
@@ -203,18 +204,14 @@ export async function getBudgetData(
   }
 
   // 5. Determine max months needed for history queries
-  const windowFor = (c: FormulaConfig): number => {
-    if (c.id === "seasonal_yoy") return 13
-    const raw = c.params.months
-    const base = Number.isFinite(raw) ? Math.min(24, Math.max(1, Math.round(raw!))) : 6
-    if (c.id === "envelope_rollover") {
-      const rawRo = c.params.rolloverMonths
-      const ro = Number.isFinite(rawRo) ? Math.min(12, Math.max(1, Math.round(rawRo!))) : 3
-      return base + ro
-    }
-    return base
-  }
-  const maxMonths = Math.max(windowFor(formulaConfig.global), ...Object.values(formulaConfig.perCard).map(windowFor), 6)
+  // O piso é PREVIEW_MONTHS (e não a janela da fórmula ativa) porque a página
+  // manda a série completa para o cliente: é o que permite simular qualquer
+  // outra abordagem — inclusive uma janela maior — sem nova consulta.
+  const maxMonths = Math.max(
+    historyWindowFor(formulaConfig.global),
+    ...Object.values(formulaConfig.perCard).map(historyWindowFor),
+    PREVIEW_MONTHS
+  )
 
   // 5.5. Fetch all history in a single batch (2 queries for the whole page)
   const batch = await getBudgetHistoryBatch(userId, filterFrom, maxMonths)
@@ -246,8 +243,9 @@ export async function getBudgetData(
     let limitSource: "formula" | "fallback" | "none" = budgetSetup?.amount ? "fallback" : "none"
     let limitBreakdown: BudgetItem["limitBreakdown"]
 
+    const history = batch.byGroup.get(group.code) ?? emptyHistory()
+
     if (!["fixed_target", "sinking_fund"].includes(activeFormula.id)) {
-      const history = batch.byGroup.get(group.code) ?? emptyHistory()
       hasHistory = hasUsableHistory(activeFormula.id, activeFormula.params, history)
 
       if (hasHistory) {
@@ -312,6 +310,7 @@ export async function getBudgetData(
       includeInTotals: true,
       limitSource,
       limitBreakdown,
+      historyWindow: history.monthlySpent.slice(0, PREVIEW_MONTHS),
     })
 
     // Category-level budgets (only if individually configured)
@@ -329,8 +328,9 @@ export async function getBudgetData(
         let catLimitSource: "formula" | "fallback" | "none" = catSetup.amount ? "fallback" : "none"
         let catLimitBreakdown: BudgetItem["limitBreakdown"]
 
+        const catHistory = batch.byCategory.get(cat.code) ?? emptyHistory()
+
         if (!["fixed_target", "sinking_fund"].includes(activeCatFormula.id)) {
-          const catHistory = batch.byCategory.get(cat.code) ?? emptyHistory()
           catHasHistory = hasUsableHistory(activeCatFormula.id, activeCatFormula.params, catHistory)
 
           if (catHasHistory) {
@@ -395,6 +395,7 @@ export async function getBudgetData(
           includeInTotals: false,
           limitSource: catLimitSource,
           limitBreakdown: catLimitBreakdown,
+          historyWindow: catHistory.monthlySpent.slice(0, PREVIEW_MONTHS),
         })
       }
     }
@@ -511,6 +512,7 @@ export async function getBudgetData(
       includeInTotals: false,
       limitSource: cCardLimitSource,
       limitBreakdown: cCardLimitBreakdown,
+      historyWindow: aggregatedHistory.monthlySpent.slice(0, PREVIEW_MONTHS),
     })
   }
 
@@ -548,5 +550,6 @@ export async function getBudgetData(
     ...totals,
     formulaConfig,
     groups: groupsData,
+    incomeWindow: batch.income.slice(0, PREVIEW_MONTHS),
   }
 }

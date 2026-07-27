@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useEffect } from "react"
+import { useMemo, useState, useTransition, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { Check, Loader2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,9 @@ import {
   getFormulaDefinition,
   type FormulaVariable,
 } from "../services/formula-engine"
+import { FormulaGuidePopover } from "./formula-guide-popover"
+import { FormulaPreviewLine } from "./formula-preview-line"
+import { previewCardLimit } from "../lib/formula-preview"
 import { saveCardFormula } from "../services/save-budget-formula"
 import type { BudgetFormulaPreferences, FormulaId, FormulaParams } from "../types"
 import { useRouter } from "next/navigation"
@@ -32,6 +35,9 @@ interface ConfigCardFormulaDialogProps {
   cardId: string
   cardName: string
   formulaConfig: BudgetFormulaPreferences
+  /** Janela de histórico do cartão e receita do usuário — alimentam a prévia. */
+  historyWindow?: number[]
+  incomeWindow?: number[]
 }
 
 export function ConfigCardFormulaDialog({
@@ -40,6 +46,8 @@ export function ConfigCardFormulaDialog({
   cardId,
   cardName,
   formulaConfig,
+  historyWindow,
+  incomeWindow,
 }: ConfigCardFormulaDialogProps) {
   const t = useTranslations("budget")
   const tCommon = useTranslations("common")
@@ -71,6 +79,17 @@ export function ConfigCardFormulaDialog({
 
   const definition = getFormulaDefinition(selectedId)
   const isCustomDef = formulaConfig.customPresets?.find((p) => p.id === selectedId)
+
+  const preview = useMemo(
+    () =>
+      previewCardLimit(
+        { historyWindow },
+        { id: selectedId, params },
+        formulaConfig.customPresets,
+        incomeWindow
+      ),
+    [historyWindow, selectedId, params, formulaConfig.customPresets, incomeWindow]
+  )
 
   const handleFormulaChange = (id: string) => {
     const newId = id as FormulaId
@@ -186,8 +205,9 @@ export function ConfigCardFormulaDialog({
           </Select>
         </div>
         {definition && (
-          <p className="text-xs text-muted-foreground">
-            {tFormulas(FORMULA_DESCRIPTION_KEYS[definition.id])}
+          <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+            <FormulaGuidePopover formulaId={definition.id} />
+            <span>{tFormulas(FORMULA_DESCRIPTION_KEYS[definition.id])}</span>
           </p>
         )}
       </div>
@@ -236,6 +256,9 @@ export function ConfigCardFormulaDialog({
           </div>
         </div>
       )}
+
+      {/* Prévia: o limite que sai desta escolha, antes de confirmar */}
+      <FormulaPreviewLine preview={preview} scope="card" />
     </DetailPanel>
   )
 }

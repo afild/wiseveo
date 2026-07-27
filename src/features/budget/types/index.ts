@@ -87,6 +87,13 @@ export interface BudgetItem {
     monthsInRange: number
     historyUsed: number[] // janela efetivamente usada (mais recente primeiro)
   }
+  /**
+   * Janela CHEIA de histórico do cartão (mais recente primeiro, PREVIEW_MONTHS
+   * posições). Diferente de limitBreakdown.historyUsed, que é recortada pela
+   * fórmula ativa: esta alimenta a prévia "e se eu trocasse de abordagem?" no
+   * cliente, sem uma ida ao servidor por tecla digitada.
+   */
+  historyWindow?: number[]
 }
 
 export interface GroupWithCategories {
@@ -106,6 +113,8 @@ export interface BudgetPageData {
   overallPct: number
   formulaConfig: BudgetFormulaPreferences
   groups: GroupWithCategories[]
+  /** Receita mensal do usuário na mesma janela de `BudgetItem.historyWindow`. */
+  incomeWindow: number[]
 }
 
 export type ZoneType = "safe" | "warning" | "danger"

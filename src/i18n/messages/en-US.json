@@ -387,6 +387,19 @@
         "containment": "Containment (%)",
         "margin": "Extra Margin (%)",
         "months": "Months (History)"
+      },
+      "guide": {
+        "example": "Example",
+        "howItWorks": "How it works",
+        "openLabel": "Understand this approach",
+        "whenToUse": "When to use it"
+      },
+      "preview": {
+        "allCards": "across {count, plural, one {# card} other {# cards}}",
+        "label": "With your history",
+        "noHistory": "Not enough history for this approach.",
+        "perMonth": "{value}/month",
+        "thisCard": "on this card"
       }
     },
     "formulaManager": {
@@ -418,6 +431,22 @@
         "simple_avg": "Average spending over the last N months",
         "sinking_fund": "Spreads a planned annual expense into equal monthly installments",
         "trimmed_mean": "Average excluding the most extreme months in the period"
+      },
+      "examples": {
+        "active_avg": "Gifts: 400 in three of the last twelve months. A plain average would say 100; this one says 400 — what it actually costs when it happens.",
+        "banded_avg": "Electricity: follows the average, with a floor of 200 (the bill never comes in lower) and a ceiling of 500 (above that you want to be warned).",
+        "declining_target": "Takeout: starts from your average and asks for 5% less each month, down to the floor you set.",
+        "envelope_rollover": "Clothing: two months without buying anything raise the limit for the month you finally do.",
+        "fixed_target": "Subscriptions: you decided it never goes above 150 a month, whatever you spent before.",
+        "historical_max": "Health: if the worst month was 900, the limit lands at 990 with a 10% margin — a rough month no longer trips a false alarm.",
+        "income_pct": "Leisure at 10% of what comes in: in a leaner month, the limit drops on its own.",
+        "median": "Maintenance: eleven months near 200 and one at 3,000. The average would say 430; the median says 200.",
+        "moving_avg": "Rent raised two months ago: recent months weigh more and the limit follows, without waiting for the increase to soak into the average.",
+        "percentile_n": "Fuel at the 75th percentile: three out of four months fit the limit; the fourth is an exception you accept.",
+        "seasonal_yoy": "School supplies: instead of the quiet months that just passed, it looks at the same month a year earlier.",
+        "simple_avg": "Groceries: 1,800, 2,200 and 1,600 over the last three months become a limit of 1,867.",
+        "sinking_fund": "An annual 2,400 insurance bill due in 12 months: the monthly limit becomes 200 starting now.",
+        "trimmed_mean": "Food with one travel month (very high) and one month away on holiday (very low): both drop out of the calculation."
       },
       "names": {
         "active_avg": "Active Months Average",
@@ -458,6 +487,22 @@
         "rolloverMonths": "Rollover months",
         "seasonalWeight": "Seasonal weight",
         "trimPct": "Trim"
+      },
+      "whenToUse": {
+        "active_avg": "For expenses that don't show up every month. A plain average divides by the empty months and produces a ceiling far too low for the month the expense actually lands.",
+        "banded_avg": "When you accept following the average, but within bounds: never below the minimum the bill demands, never above what you're willing to spend.",
+        "declining_target": "When the goal is to cut an expense step by step rather than track it. Each month asks for a little less than the last.",
+        "envelope_rollover": "When what's left over should stay yours: the unspent amount becomes slack in the following months instead of evaporating at month's end.",
+        "fixed_target": "When the amount is your decision, not a consequence of history: contracts, fixed transfers, negotiated caps.",
+        "historical_max": "When overshooting is worse than having money left over. The limit covers even the worst month in the period, plus a margin — good for expenses you can't postpone.",
+        "income_pct": "When the ceiling should depend on what comes in, not on what went out. Useful for variable income and for setting aside a fixed share.",
+        "median": "When one or two off-pattern months distort the average. The median describes the typical month and ignores the exceptional one.",
+        "moving_avg": "When your pattern changed recently and a plain average still carries months that no longer apply.",
+        "percentile_n": "When you want to choose how much slack you get: a limit that would have covered most months, not every one.",
+        "seasonal_yoy": "For expenses with a season, where the same month a year earlier predicts better than the recent months do.",
+        "simple_avg": "For expenses that vary little from month to month, when you want a limit that tracks your real pace.",
+        "sinking_fund": "When a large, expected expense arrives all at once and you'd rather set money aside monthly than absorb the hit.",
+        "trimmed_mean": "When you want the average without the extremes on either side: neither the nearly idle month nor the exceptional one."
       }
     },
     "hero": {

@@ -183,6 +183,8 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
             <FormulaManagerCard
               formulaConfig={data.formulaConfig}
               hasAnyHistory={hasAnyHistory}
+              items={items}
+              incomeWindow={data.incomeWindow ?? []}
             />
           </div>
         </div>
@@ -219,6 +221,7 @@ export function BudgetClient({ data: initialData }: BudgetClientProps) {
                   item={item}
                   index={index}
                   formulaConfig={data.formulaConfig}
+                  incomeWindow={data.incomeWindow ?? []}
                   onEdit={handleEdit}
                   onMoveUp={index > 0 ? () => handleMove(item.id, -1) : undefined}
                   onMoveDown={index < items.length - 1 ? () => handleMove(item.id, 1) : undefined}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useMemo, useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
 import { FlaskConical, Check, Edit2, Trash2 } from "lucide-react"
 import {
@@ -31,9 +31,13 @@ import {
   type FormulaVariable,
 } from "../services/formula-engine"
 import { CreateCustomFormulaDialog } from "./create-custom-formula-dialog"
+import { FormulaGuidePopover } from "./formula-guide-popover"
+import { FormulaPreviewLine } from "./formula-preview-line"
+import { previewTotalLimit } from "../lib/formula-preview"
 import { saveBudgetFormula } from "../services/save-budget-formula"
 import type {
   BudgetFormulaPreferences,
+  BudgetItem,
   FormulaId,
   FormulaParams,
 } from "../types"
@@ -42,11 +46,15 @@ import { useRouter } from "next/navigation"
 interface FormulaManagerCardProps {
   formulaConfig: BudgetFormulaPreferences
   hasAnyHistory: boolean
+  items: BudgetItem[]
+  incomeWindow: number[]
 }
 
 export function FormulaManagerCard({
   formulaConfig,
   hasAnyHistory,
+  items,
+  incomeWindow,
 }: FormulaManagerCardProps) {
   const t = useTranslations("budget")
   const tFormulas = useTranslations("budget.formulas")
@@ -63,6 +71,12 @@ export function FormulaManagerCard({
 
   const definition = getFormulaDefinition(selectedId)
   const isCustomDef = formulaConfig.customPresets?.find((p) => p.id === selectedId)
+
+  // O que "Aplicar a todos" produziria no Orçado Total deste mês.
+  const preview = useMemo(
+    () => previewTotalLimit(items, { id: selectedId, params }, formulaConfig, incomeWindow),
+    [items, selectedId, params, formulaConfig, incomeWindow]
+  )
 
   const [editPreset, setEditPreset] = useState<any>(null)
 
@@ -220,8 +234,9 @@ export function FormulaManagerCard({
               </div>
             </div>
             {definition && (
-              <p className="text-xs text-muted-foreground">
-                {tFormulas(FORMULA_DESCRIPTION_KEYS[definition.id])}
+              <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <FormulaGuidePopover formulaId={definition.id} />
+                <span>{tFormulas(FORMULA_DESCRIPTION_KEYS[definition.id])}</span>
               </p>
             )}
             {isCustomDef && (
@@ -275,6 +290,9 @@ export function FormulaManagerCard({
               </div>
             </div>
           )}
+
+          {/* Prévia: o que este mecanismo daria antes de aplicar */}
+          {hasAnyHistory && <FormulaPreviewLine preview={preview} scope="all" />}
 
           {/* No history warning */}
           {!hasAnyHistory && (

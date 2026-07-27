@@ -387,6 +387,19 @@
         "containment": "Contención (%)",
         "margin": "Margen Extra (%)",
         "months": "Meses (Historial)"
+      },
+      "guide": {
+        "example": "Ejemplo",
+        "howItWorks": "Cómo funciona",
+        "openLabel": "Entiende este enfoque",
+        "whenToUse": "Cuándo usarlo"
+      },
+      "preview": {
+        "allCards": "sumando {count, plural, one {# tarjeta} other {# tarjetas}}",
+        "label": "Con tu historial",
+        "noHistory": "No hay historial suficiente para este enfoque.",
+        "perMonth": "{value}/mes",
+        "thisCard": "en esta tarjeta"
       }
     },
     "formulaManager": {
@@ -418,6 +431,22 @@
         "simple_avg": "Promedio de gastos de los últimos N meses",
         "sinking_fund": "Divide un gasto anual previsto en cuotas mensuales iguales",
         "trimmed_mean": "Promedio ignorando los meses más extremos del período"
+      },
+      "examples": {
+        "active_avg": "Regalos: 400 en tres de los últimos doce meses. El promedio común daría 100; este devuelve 400 — lo que sale cuando sale.",
+        "banded_avg": "Electricidad: sigue el promedio, con piso de 200 (la cuenta nunca llega por menos) y techo de 500 (por encima quieres que te avisen).",
+        "declining_target": "Delivery: parte del promedio y pide 5% menos cada mes, hasta el piso que definiste.",
+        "envelope_rollover": "Vestuario: dos meses sin comprar nada aumentan el límite del mes en que finalmente compras.",
+        "fixed_target": "Suscripciones: decidiste que no pasa de 150 al mes, hayas gastado lo que hayas gastado antes.",
+        "historical_max": "Salud: si el peor mes fue 900, el límite queda en 990 con 10% de margen — el mes malo deja de ser una falsa alarma.",
+        "income_pct": "Ocio al 10% de lo que entra: en un mes de menos ingresos, el límite baja solo.",
+        "median": "Mantenimiento: once meses cerca de 200 y uno de 3.000. El promedio diría 430; la mediana dice 200.",
+        "moving_avg": "Alquiler reajustado hace dos meses: los meses recientes pesan más y el límite sube con ellos, sin esperar a que el aumento se diluya en el promedio.",
+        "percentile_n": "Combustible en el percentil 75: tres de cada cuatro meses caben en el límite; el cuarto es una excepción asumida.",
+        "seasonal_yoy": "Útiles escolares: en vez de mirar los meses tranquilos que acaban de pasar, mira el mismo mes del año anterior.",
+        "simple_avg": "Supermercado: 1.800, 2.200 y 1.600 en los últimos tres meses se vuelven un límite de 1.867.",
+        "sinking_fund": "Seguro anual de 2.400 dentro de 12 meses: el límite mensual pasa a ser 200 desde ya.",
+        "trimmed_mean": "Alimentación con un mes de viaje (muy alto) y uno de vacaciones fuera de casa (muy bajo): los dos salen de la cuenta."
       },
       "names": {
         "active_avg": "Promedio de Meses Activos",
@@ -458,6 +487,22 @@
         "rolloverMonths": "Meses de sobrante",
         "seasonalWeight": "Peso estacional",
         "trimPct": "Recorte"
+      },
+      "whenToUse": {
+        "active_avg": "Para gastos que no ocurren todos los meses. El promedio común divide entre los meses vacíos y produce un techo demasiado bajo para el mes en que el gasto aparece.",
+        "banded_avg": "Cuando aceptas seguir el promedio, pero dentro de fronteras: nunca por debajo del mínimo que exige la cuenta, nunca por encima de lo que estás dispuesto a gastar.",
+        "declining_target": "Cuando el objetivo es recortar un gasto de a poco, y no acompañarlo. Cada mes pide un poco menos que el anterior.",
+        "envelope_rollover": "Cuando lo que sobra debe seguir siendo tuyo: lo no gastado se vuelve holgura en los meses siguientes, en lugar de evaporarse al cerrar el mes.",
+        "fixed_target": "Cuando el valor es una decisión tuya, no una consecuencia del historial: contratos, transferencias fijas, topes negociados.",
+        "historical_max": "Cuando pasarse es peor que que sobre. El límite cubre incluso el peor mes del período, con un margen — bueno para gastos que no se pueden postergar.",
+        "income_pct": "Cuando el techo debe depender de lo que entra, y no de lo que salió. Útil para ingresos variables y para reservar una parte fija.",
+        "median": "Cuando uno o dos meses fuera de lo normal distorsionan el promedio. La mediana describe el mes típico e ignora el excepcional.",
+        "moving_avg": "Cuando tu patrón cambió hace poco y el promedio simple todavía carga meses que ya no valen.",
+        "percentile_n": "Cuando quieres elegir el tamaño de la holgura: un límite que habría cubierto la mayoría de los meses, y no todos.",
+        "seasonal_yoy": "Para gastos con época definida, en los que el mismo mes del año anterior predice mejor que los meses recientes.",
+        "simple_avg": "Para gastos que varían poco de un mes a otro, cuando quieres un límite pegado a tu ritmo real.",
+        "sinking_fund": "Cuando un gasto grande y previsto llega de una sola vez y prefieres reservar todos los meses en lugar de absorber el golpe.",
+        "trimmed_mean": "Cuando quieres el promedio sin los extremos de ambos lados: ni el mes casi detenido, ni el mes excepcional."
       }
     },
     "hero": {

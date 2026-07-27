@@ -61,6 +61,8 @@ interface BudgetItemCardProps {
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
   isDragging?: boolean
   formulaConfig?: BudgetFormulaPreferences
+  /** Receita mensal do usuário — a prévia de "% da Receita" depende dela. */
+  incomeWindow?: number[]
   onEdit?: (item: BudgetItem) => void
   onMoveUp?: () => void
   onMoveDown?: () => void
@@ -71,6 +73,7 @@ export function BudgetItemCard({
   dragHandleProps,
   isDragging,
   formulaConfig,
+  incomeWindow,
   onEdit,
   onMoveUp,
   onMoveDown,
@@ -314,6 +317,8 @@ export function BudgetItemCard({
           cardId={item.id}
           cardName={displayName}
           formulaConfig={formulaConfig}
+          historyWindow={item.historyWindow}
+          incomeWindow={incomeWindow}
         />
       )}
     </Card>
