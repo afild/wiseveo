@@ -18,12 +18,9 @@ import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
 import { getDemoDataset } from "../src/lib/demo-data/generate-demo-dataset"
 import { regenerateUserDemoData } from "../src/lib/demo-data/regen"
+import { resolveDemoDatabaseUrl } from "./demo-db-guard"
 
-const url = process.env.DATABASE_URL ?? ""
-if (!url.includes("DEMO_DB_REF_PLACEHOLDER")) {
-  console.error("ABORT: DATABASE_URL não é a base DEMO.")
-  process.exit(1)
-}
+const url = resolveDemoDatabaseUrl()
 const email = process.argv[2]
 if (!email) {
   console.error("uso: npx tsx --env-file=.env.local scripts/regen-demo-user.ts <email>")

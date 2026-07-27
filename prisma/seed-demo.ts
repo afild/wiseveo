@@ -23,15 +23,12 @@ import bcrypt from "bcryptjs"
 import { initializeUserData } from "../src/lib/user-init"
 import { getDemoDataset } from "../src/lib/demo-data/generate-demo-dataset"
 import { regenerateUserDemoData } from "../src/lib/demo-data/regen"
+import { resolveDemoDatabaseUrl } from "../scripts/demo-db-guard"
 
 /** Prefixo fixo do usuário demo permanente — nunca muda (o dataset é regenerado sobre ele). */
 const DEMO_USER_PREFIX = "de305eed"
 
-const url = process.env.DATABASE_URL ?? ""
-if (!url.includes("DEMO_DB_REF_PLACEHOLDER")) {
-  console.error("ABORT: DATABASE_URL não é a base DEMO.")
-  process.exit(1)
-}
+const url = resolveDemoDatabaseUrl()
 
 const pool = new Pool({ connectionString: url })
 const adapter = new PrismaPg(pool)

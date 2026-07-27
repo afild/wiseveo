@@ -20,12 +20,9 @@ import {
   defaultCategories,
   defaultAccounts,
 } from "../prisma/data/default-chart-of-accounts"
+import { resolveDemoDatabaseUrl } from "./demo-db-guard"
 
-const url = process.env.DATABASE_URL ?? ""
-if (!url.includes("DEMO_DB_REF_PLACEHOLDER")) {
-  console.error("ABORT: DATABASE_URL não é a base DEMO.")
-  process.exit(1)
-}
+const url = resolveDemoDatabaseUrl()
 const prisma = new PrismaClient({ adapter: new PrismaPg(new Pool({ connectionString: url })) })
 
 async function main() {
