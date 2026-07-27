@@ -23,7 +23,10 @@ export async function GET(request: Request) {
     // Safety double-guard: email MUST start with "demo_" — never touches real users.
     const twentyFiveHoursAgo = new Date(Date.now() - 25 * 60 * 60 * 1000)
 
-    const result = await prisma.user.deleteMany({
+    // Individual delete + try/catch per user (not a single deleteMany): one user
+    // whose delete fails (e.g. FK Restrict on a shared lookup row) must never
+    // abort the whole batch — that bug is why the cron never deleted anything.
+    const stale = await prisma.user.findMany({
       where: {
         email: {
           startsWith: 'demo_'
@@ -31,12 +34,32 @@ export async function GET(request: Request) {
         createdAt: {
           lt: twentyFiveHoursAgo
         }
-      }
+      },
+      select: { id: true },
+      take: 200
     })
+
+    let deletedCount = 0
+    let failedCount = 0
+    const errors: string[] = []
+
+    for (const u of stale) {
+      try {
+        await prisma.user.delete({ where: { id: u.id } })
+        deletedCount++
+      } catch (error) {
+        failedCount++
+        if (errors.length < 5) {
+          errors.push((error as Error).message)
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      deletedCount: result.count
+      deletedCount,
+      failedCount,
+      errors
     })
   } catch (error) {
     console.error("Cron Cleanup Error:", error)
