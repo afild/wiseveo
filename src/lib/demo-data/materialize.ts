@@ -10,7 +10,7 @@
 import crypto from "crypto"
 import { FIXED_CUTOFF, type DemoDataset } from "./generate-demo-dataset"
 import { CUTOFF_MODE, CHECKING_INITIAL_BALANCE, SAVINGS_INITIAL_BALANCE, OVERDUE_SHOWCASE } from "./catalog"
-import { periodFromDate } from "../financial"
+import { endOfUTCDay, periodFromDate } from "../financial"
 
 export type MaterializeCtx = {
   userId: string
@@ -23,8 +23,12 @@ export type MaterializeCtx = {
 }
 
 export function materializeDataset(ds: DemoDataset, ctx: MaterializeCtx) {
+  // D1 — corte dinâmico: realizado ATÉ O FIM DE ONTEM. Precisa ser o fim do dia,
+  // não `agora − 24h`: as datas do dataset são meio-dia UTC, então um corte na hora
+  // exata deixaria os lançamentos de ontem à tarde em aberto e com data no passado —
+  // e os Insights os contariam como VENCIDOS, estourando os 2 da vitrine (D3).
   const cutoff = CUTOFF_MODE === "dynamic" && ctx.now
-    ? new Date(ctx.now.getTime() - 86400000)  // "até ontem"
+    ? endOfUTCDay(new Date(ctx.now.getTime() - 86400000))
     : FIXED_CUTOFF
   const checking = ctx.accountIds.CHECKING
 

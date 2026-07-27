@@ -167,16 +167,28 @@ export async function GET(request: NextRequest) {
     const othersPaid = others.reduce((sum, g) => sum + g.paid, 0)
     const othersScheduled = others.reduce((sum, g) => sum + g.scheduled, 0)
     
-    top5.push({
-      groupCode: "others",
-      groupName: othersLabel,
-      amount: othersTotal,
-      paid: othersPaid,
-      scheduled: othersScheduled,
-      percentage: totalExpense > 0 ? (othersTotal / totalExpense) * 100 : 0,
-    })
-    
-    sortedGroups = top5
+    // O grupo do plano de contas chamado "Others"/"Outros" já é exibido com o
+    // rótulo traduzido `othersLabel`. Se ele estiver entre os 5 primeiros, a
+    // cauda é somada NELE — senão o anel mostraria duas fatias "Outros".
+    const existingOthers = top5.find((g) => g.groupName === othersLabel)
+    if (existingOthers) {
+      existingOthers.amount += othersTotal
+      existingOthers.paid += othersPaid
+      existingOthers.scheduled += othersScheduled
+      existingOthers.percentage =
+        totalExpense > 0 ? (existingOthers.amount / totalExpense) * 100 : 0
+    } else {
+      top5.push({
+        groupCode: "others",
+        groupName: othersLabel,
+        amount: othersTotal,
+        paid: othersPaid,
+        scheduled: othersScheduled,
+        percentage: totalExpense > 0 ? (othersTotal / totalExpense) * 100 : 0,
+      })
+    }
+
+    sortedGroups = top5.sort((a, b) => b.amount - a.amount)
   }
 
   return NextResponse.json({ groups: sortedGroups, totalExpense })

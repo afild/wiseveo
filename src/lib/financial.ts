@@ -80,17 +80,22 @@ export function periodFromDate(date?: Date | string | null): string {
     }
   }
 
-  const d = date ? new Date(date) : new Date()
-  if (Number.isNaN(d.getTime())) {
+  const fromNow = () => {
+    // Sem data explícita, "período atual" é o mês do calendário do usuário — local.
     const now = new Date()
-    const year = now.getFullYear()
-    const month = now.getMonth() + 1
-    return `${year}${String(month).padStart(2, "0")}`
+    return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`
   }
 
-  const year = d.getFullYear()
-  const month = d.getMonth() + 1
-  return `${year}${String(month).padStart(2, "0")}`
+  if (!date) return fromNow()
+
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return fromNow()
+
+  // Data explícita: componentes UTC. Todas as datas do sistema são gravadas ao
+  // meio-dia UTC (`normalizeDate`) e as fronteiras de intervalo vêm de
+  // `startOfUTCDay`/`endOfUTCDay` — ler em horário LOCAL jogava 01/07 00:00 UTC
+  // para 30/06 em UTC-3, e filtros por período pegavam um mês a mais.
+  return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}`
 }
 
 /**
