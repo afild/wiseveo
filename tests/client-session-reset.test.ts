@@ -41,7 +41,11 @@ describe("shouldPurgeKey", () => {
     expect(shouldPurgeKey("wiseveo-recurring-filters-v2")).toBe(true)
   })
 
-  it("preserva layout, tema, moeda e chaves parecidas", () => {
+  it("apaga o cache local da moeda (o servidor é a fonte; demo novo nasce em USD)", () => {
+    expect(shouldPurgeKey("wiseveo-monetary-preferences")).toBe(true)
+  })
+
+  it("preserva layout, tema e chaves parecidas", () => {
     for (const key of [
       "wiseveo-table-visibility",
       "wiseveo-table-sizing",
@@ -49,7 +53,7 @@ describe("shouldPurgeKey", () => {
       "wiseveo-recurring-sorting",
       "wiseveo-recurring-visibility",
       "wiseveo-theme-preferences",
-      "wiseveo-monetary-preferences",
+      "wiseveo-theme",
       "wiseveo-date-filters-other", // prefixo parecido, sem os dois-pontos
     ]) {
       expect(shouldPurgeKey(key)).toBe(false)
@@ -66,6 +70,7 @@ describe("purgePersistedFilters", () => {
       "wiseveo-table-global-filter": "03/2026",
       "wiseveo-table-filters-v2": "[]",
       "wiseveo-recurring-filters-v2": "[]",
+      "wiseveo-monetary-preferences": "{\"currency\":\"EUR\"}",
       "wiseveo-table-visibility": "{}",
       "wiseveo-theme-preferences": "{}",
     })
@@ -76,6 +81,7 @@ describe("purgePersistedFilters", () => {
       "wiseveo-date-filters",
       "wiseveo-date-filters:%2Fdashboard",
       "wiseveo-date-filters:%2Ftransactions",
+      "wiseveo-monetary-preferences",
       "wiseveo-recurring-filters-v2",
       "wiseveo-table-filters-v2",
       "wiseveo-table-global-filter",

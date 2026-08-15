@@ -16,12 +16,14 @@ const PURGED_KEY_PREFIXES = [
   "wiseveo-date-filters", // períodos por rota (+ chave legada sem sufixo)
 ] as const
 
-// Filtros que ESCONDEM linhas. Layout (visibilidade/largura/ordem de colunas), tema e
-// moeda ficam — não enganam o usuário novo, só o acomodam.
+// Filtros que ESCONDEM linhas e o cache da moeda (dado por usuário, vindo do servidor —
+// o demo novo nasce em USD e não deve piscar a moeda do visitante anterior). Layout
+// (visibilidade/largura/ordem de colunas) e tema ficam — só acomodam o usuário novo.
 const PURGED_KEYS = [
   "wiseveo-table-global-filter", // busca livre da tabela de transações (casa com datas formatadas)
   "wiseveo-table-filters-v2", // filtros de status/tipo/conta da tabela de transações
   "wiseveo-recurring-filters-v2", // busca por descrição + tipo/status/conta da tabela de recorrentes
+  "wiseveo-monetary-preferences", // cache local das preferências monetárias (o servidor é a fonte)
 ] as const
 
 /** Storage mínimo para permitir teste em node sem jsdom. */

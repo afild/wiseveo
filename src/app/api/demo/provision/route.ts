@@ -7,6 +7,7 @@ import { createSessionToken, COOKIE_NAME } from "@/lib/auth"
 import { getDemoDataset } from "@/lib/demo-data/generate-demo-dataset"
 import { materializeDataset } from "@/lib/demo-data/materialize"
 import { DEMO_DEFAULT_LOCALE, LOCALE_COOKIE_NAME } from "@/i18n/config"
+import { demoMonetarySettings } from "@/lib/monetary"
 import { FRESH_SESSION_COOKIE } from "@/lib/client-session-reset"
 
 export const dynamic = 'force-dynamic'
@@ -37,8 +38,9 @@ export async function GET(request: Request) {
           email: `${userId}@wiseveo.demo`,
           status: "ACTIVE",
           role: "USER",
-          // Demo nasce em inglês (mesmo valor gravado no cookie abaixo, para getUserLocale concordar)
-          preferencesJson: { locale: DEMO_DEFAULT_LOCALE },
+          // Demo nasce em inglês (mesmo valor gravado no cookie abaixo, para getUserLocale
+          // concordar) e em dólar (Configurações → Moeda; a UI lê de /api/user/monetary-preferences).
+          preferencesJson: { locale: DEMO_DEFAULT_LOCALE, monetary: { ...demoMonetarySettings } },
         },
       })
 

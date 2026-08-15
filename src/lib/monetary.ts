@@ -14,6 +14,15 @@ export const defaultMonetarySettings: MonetarySettings = {
   negativeFormat: "parentheses",
 }
 
+/** Moeda com que todo usuário DEMO recém-provisionado nasce (acompanha o idioma en-US da demo). */
+export const DEMO_DEFAULT_CURRENCY: MonetaryCurrency = "USD"
+
+/** Preferências monetárias iniciais do usuário DEMO: só a moeda muda em relação ao padrão. */
+export const demoMonetarySettings: MonetarySettings = {
+  ...defaultMonetarySettings,
+  currency: DEMO_DEFAULT_CURRENCY,
+}
+
 const localeByCurrency: Record<MonetaryCurrency, string> = {
   BRL: "pt-BR",
   USD: "en-US",
