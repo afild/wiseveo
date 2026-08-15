@@ -6,6 +6,8 @@ import { initializeUserData } from "@/lib/user-init"
 import { createSessionToken, COOKIE_NAME } from "@/lib/auth"
 import { getDemoDataset } from "@/lib/demo-data/generate-demo-dataset"
 import { materializeDataset } from "@/lib/demo-data/materialize"
+import { DEMO_DEFAULT_LOCALE, LOCALE_COOKIE_NAME } from "@/i18n/config"
+import { FRESH_SESSION_COOKIE } from "@/lib/client-session-reset"
 
 export const dynamic = 'force-dynamic'
 // Increase max duration for provisioning (Vercel Hobby allows up to 60s on API routes)
@@ -35,6 +37,8 @@ export async function GET(request: Request) {
           email: `${userId}@wiseveo.demo`,
           status: "ACTIVE",
           role: "USER",
+          // Demo nasce em inglês (mesmo valor gravado no cookie abaixo, para getUserLocale concordar)
+          preferencesJson: { locale: DEMO_DEFAULT_LOCALE },
         },
       })
 
@@ -116,6 +120,28 @@ export async function GET(request: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24, // 24 hours (aligned with daily cron cleanup)
+      path: "/",
+    })
+
+    // 10. Todo demo novo nasce em inglês — sobrescreve qualquer cookie de idioma que o
+    //     navegador já tivesse. NÃO httpOnly: o LocaleMenu regrava este cookie via
+    //     document.cookie (mesmos atributos de applyUserLocale); httpOnly criaria um
+    //     cookie duplicado e o seletor de idioma pareceria quebrado.
+    response.cookies.set(LOCALE_COOKIE_NAME, DEMO_DEFAULT_LOCALE, {
+      httpOnly: false,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+      path: "/",
+    })
+
+    // 11. Marcador de "sessão nova" (legível por JS): o cliente o consome no primeiro
+    //     mount e limpa períodos/filtros herdados do visitante anterior no mesmo
+    //     navegador (ver src/lib/client-session-reset.ts). Mesma vida da sessão para
+    //     não expirar antes de ser consumido (aba suspensa antes de hidratar etc.).
+    response.cookies.set(FRESH_SESSION_COOKIE, "1", {
+      httpOnly: false,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
       path: "/",
     })
 

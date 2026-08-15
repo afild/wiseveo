@@ -4,7 +4,7 @@ import { useLocale } from "next-intl"
 import { useRouter } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Globe } from "lucide-react"
-import { LOCALES, LOCALE_META } from "@/i18n/config"
+import { LOCALES, LOCALE_COOKIE_NAME, LOCALE_META } from "@/i18n/config"
 
 /**
  * Aplica um idioma: grava o cookie de locale e persiste no perfil do usuário
@@ -12,7 +12,7 @@ import { LOCALES, LOCALE_META } from "@/i18n/config"
  * O chamador dispara o router.refresh().
  */
 export function applyUserLocale(newLocale: string) {
-  document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
+  document.cookie = `${LOCALE_COOKIE_NAME}=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
   fetch("/api/user/preferences", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

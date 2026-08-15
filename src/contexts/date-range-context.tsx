@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useContext } from 'react';
-import { startOfMonth, endOfMonth } from 'date-fns';
 import { usePathname } from 'next/navigation';
+import { getDefaultDateRange, getHydrationSafeDateRange } from '@/lib/date-range-defaults';
+import { consumeFreshSessionMarker, purgePersistedFilters } from '@/lib/client-session-reset';
 
 export interface DateRange {
   from: Date;
@@ -16,16 +17,11 @@ interface DateRangeContextType {
 
 const DateRangeContext = createContext<DateRangeContextType | null>(null);
 
+// Prefixo das chaves por rota e chave legada (sem sufixo). Se mudar, atualize também
+// src/lib/client-session-reset.ts, que apaga essas chaves numa sessão nova.
 const STORAGE_KEY_PREFIX = 'wiseveo-date-filters';
 const LEGACY_STORAGE_KEY = 'wiseveo-date-filters';
 const FALLBACK_SCOPE = 'global';
-
-function getDefaultDateRange(): DateRange {
-  return {
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date()),
-  };
-}
 
 function buildStorageKey(scopeKey: string): string {
   return `${STORAGE_KEY_PREFIX}:${encodeURIComponent(scopeKey)}`;
@@ -73,13 +69,22 @@ export function DateRangeProvider({ children, scopeKey }: DateRangeProviderProps
   );
   const storageKey = React.useMemo(() => buildStorageKey(resolvedScope), [resolvedScope]);
 
-  const [dateRange, setDateRange] = React.useState<DateRange>(getDefaultDateRange);
+  // Estado inicial idêntico no servidor e no cliente (evita erro de hidratação); o
+  // effect abaixo SEMPRE o substitui — pelo período salvo ou pelo default local.
+  const [dateRange, setDateRange] = React.useState<DateRange>(() => getHydrationSafeDateRange(resolvedScope));
   const isHydratingScope = React.useRef(true);
 
   // Load from local storage on mount and whenever page scope changes
   React.useEffect(() => {
     isHydratingScope.current = true;
     try {
+      // Sessão nova (ex.: usuário DEMO recém-provisionado neste navegador): descarta os
+      // períodos/filtros do visitante anterior ANTES de ler o storage. O marcador é
+      // consumido na primeira passagem; nas trocas de rota seguintes isto é no-op.
+      if (consumeFreshSessionMarker()) {
+        purgePersistedFilters(localStorage);
+      }
+
       const persisted = parseStoredDateRange(localStorage.getItem(storageKey));
       if (persisted) {
         setDateRange(persisted);
@@ -96,14 +101,14 @@ export function DateRangeProvider({ children, scopeKey }: DateRangeProviderProps
         return;
       }
 
-      setDateRange(getDefaultDateRange());
+      setDateRange(getDefaultDateRange(resolvedScope));
     } catch (e) {
       console.error('Failed to parse date range from local storage', e);
-      setDateRange(getDefaultDateRange());
+      setDateRange(getDefaultDateRange(resolvedScope));
     } finally {
       isHydratingScope.current = false;
     }
-  }, [storageKey]);
+  }, [storageKey, resolvedScope]);
 
   // Save to local storage when state changes
   React.useEffect(() => {

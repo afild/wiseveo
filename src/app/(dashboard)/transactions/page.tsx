@@ -1,6 +1,7 @@
-import { startOfMonth, endOfMonth } from "date-fns"
+import { endOfMonth } from "date-fns"
 import { getTranslations } from "next-intl/server"
 
+import { startOfUTCDay, endOfUTCDay } from "@/lib/financial"
 import { getTransactions } from "@/features/transactions/services/get-transactions"
 import { getFormOptions } from "@/features/transactions/services/get-form-options"
 import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
@@ -22,9 +23,13 @@ export default async function TransactionsPage() {
     )
   }
 
+  // Primeiro paint alinhado ao período inicial do cliente para /transactions ("hoje",
+  // ver src/lib/date-range-defaults.ts) e ao contrato da API (/api/transactions:
+  // início/fim do dia em UTC; saldo de fim de mês calculado a partir de `to`).
   const now = new Date()
-  const from = startOfMonth(now)
-  const to = endOfMonth(now)
+  const from = startOfUTCDay(now)
+  const to = endOfUTCDay(now)
+  const eom = endOfMonth(to)
 
   const [
     { transactions, filterOptions },
@@ -36,7 +41,7 @@ export default async function TransactionsPage() {
     getTransactions({ userId, from, to }),
     getFormOptions(userId),
     getAccountsWithBalance(userId, to),
-    getAccountsWithBalance(userId, to),
+    getAccountsWithBalance(userId, eom),
     getFinancialSummary(userId, from, to),
   ])
 

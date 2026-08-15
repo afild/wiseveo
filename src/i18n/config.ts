@@ -1,6 +1,10 @@
 export const LOCALES = ["pt-BR", "en-US", "es-419"] as const
 export type AppLocale = (typeof LOCALES)[number]
 export const DEFAULT_LOCALE: AppLocale = "pt-BR"
+/** Idioma com que todo usuário DEMO recém-provisionado nasce (prioridade ao inglês). */
+export const DEMO_DEFAULT_LOCALE: AppLocale = "en-US"
+/** Nome do cookie lido por src/i18n/request.ts e gravado pelos seletores de idioma. */
+export const LOCALE_COOKIE_NAME = "NEXT_LOCALE"
 
 interface LocaleMeta {
   /** Tag BCP-47 usada em <html lang> e Intl.*; ponto único de indireção caso um ID interno volte a divergir da tag de formatação. */

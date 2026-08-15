@@ -5,7 +5,7 @@ import { Logo } from "@/components/logo"
 import { Globe } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
-import { LOCALES, LOCALE_META } from "@/i18n/config"
+import { LOCALES, LOCALE_COOKIE_NAME, LOCALE_META } from "@/i18n/config"
 
 interface WelcomeStepProps {
   locale: string
@@ -48,7 +48,7 @@ export function WelcomeStep({ locale, onLocaleChange, onNext }: WelcomeStepProps
               key={l.code}
               onClick={() => {
                 onLocaleChange(l.code)
-                document.cookie = `NEXT_LOCALE=${l.code}; path=/; max-age=31536000; SameSite=Lax`
+                document.cookie = `${LOCALE_COOKIE_NAME}=${l.code}; path=/; max-age=31536000; SameSite=Lax`
                 router.refresh()
               }}
               className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
