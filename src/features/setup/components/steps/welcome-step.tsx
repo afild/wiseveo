@@ -5,11 +5,11 @@ import { Logo } from "@/components/logo"
 import { Globe } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
-import { LOCALES, LOCALE_COOKIE_NAME, LOCALE_META } from "@/i18n/config"
+import { LOCALES, LOCALE_COOKIE_NAME, LOCALE_META, type AppLocale } from "@/i18n/config"
 
 interface WelcomeStepProps {
-  locale: string
-  onLocaleChange: (locale: string) => void
+  locale: AppLocale
+  onLocaleChange: (locale: AppLocale) => void
   onNext: () => void
 }
 

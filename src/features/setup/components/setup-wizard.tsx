@@ -11,17 +11,21 @@ import { ChartOfAccountsStep } from "./steps/chart-of-accounts-step"
 import { SummaryStep } from "./steps/summary-step"
 import { Globe, Database, UserPlus, Puzzle, LayoutList, CheckCircle2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
+import { resolveAppLocale, type AppLocale } from "@/i18n/config"
 
 export function SetupWizard() {
   const router = useRouter()
   const t = useTranslations("setup")
+  // Idioma em que a página foi renderizada (cookie → env da instalação → en-US):
+  // o card destacado no passo de boas-vindas deve coincidir com ele.
+  const renderedLocale = resolveAppLocale(useLocale())
   const [currentStep, setCurrentStep] = useState(0)
   const [isConfiguring, setIsConfiguring] = useState(false)
   const [isRestarting, setIsRestarting] = useState(false)
 
   // Global State
-  const [locale, setLocale] = useState("pt-BR")
+  const [locale, setLocale] = useState<AppLocale>(renderedLocale)
   const [connectionString, setConnectionString] = useState("")
   const [useExistingData, setUseExistingData] = useState(false)
   const [existingChartOfAccounts, setExistingChartOfAccounts] = useState<{ groups: any[], accounts: any[] } | null>(null)

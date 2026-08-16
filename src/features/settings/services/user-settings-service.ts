@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server"
 import { Prisma } from "@/generated/prisma_new/client"
-import { isAppLocale, resolveAppLocale, type AppLocale } from "@/i18n/config"
+import { isAppLocale, type AppLocale } from "@/i18n/config"
+import { resolveLocaleOrInstallDefault } from "@/i18n/install-locale"
 import { prisma } from "@/lib/prisma"
 import {
   resolveMonetarySettings,
@@ -195,12 +196,12 @@ export async function getUserQuickPaymentSettings(userId: string) {
 
 /**
  * Locale de UI persistido do usuário (User.preferencesJson.locale).
- * Fonte de verdade para canais sem cookie (Telegram, jobs); cai no
- * DEFAULT_LOCALE quando ausente ou inválido.
+ * Fonte de verdade para canais sem cookie (Telegram, jobs); cai no idioma
+ * da instalação (env WISEVEO_DEFAULT_LOCALE → en-US) quando ausente ou inválido.
  */
 export async function getUserLocale(userId: string): Promise<AppLocale> {
   const prefs = await getUserPreferences(userId)
-  return resolveAppLocale(prefs.locale)
+  return resolveLocaleOrInstallDefault(prefs.locale)
 }
 
 /**

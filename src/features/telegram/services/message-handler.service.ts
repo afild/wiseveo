@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server"
 import { prisma } from "@/lib/prisma"
-import { DEFAULT_LOCALE, type AppLocale } from "@/i18n/config"
+import type { AppLocale } from "@/i18n/config"
+import { getInstallDefaultLocale } from "@/i18n/install-locale"
 import { createMonetaryFormatter } from "@/lib/monetary"
 import {
   getUserLocale,
@@ -23,16 +24,16 @@ import type { TelegramChatId, TelegramToolContext, TelegramWebhookUpdate } from 
 
 // Resolve o locale persistido do usuário para mensagens de erro fora do fluxo
 // normal (o caminho feliz resolve via ctx). Nunca lança: qualquer falha aqui
-// cai no locale padrão.
+// cai no idioma da instalação.
 async function resolveTelegramLocale(chatId: TelegramChatId): Promise<AppLocale> {
   try {
     const connection = await prisma.telegramConnection.findUnique({
       where: { telegramChatId: BigInt(chatId) },
       select: { userId: true },
     })
-    return connection ? await getUserLocale(connection.userId) : DEFAULT_LOCALE
+    return connection ? await getUserLocale(connection.userId) : getInstallDefaultLocale()
   } catch {
-    return DEFAULT_LOCALE
+    return getInstallDefaultLocale()
   }
 }
 
@@ -53,8 +54,8 @@ async function handleStartConnection(input: {
   // The pending token already resolves to a userId even when it is expired
   // or already used, so we can greet the user in their own persisted
   // locale; only when no pending token exists at all do we have no user to
-  // resolve, so we fall back to the default locale.
-  const locale = pending ? await getUserLocale(pending.userId) : DEFAULT_LOCALE
+  // resolve, so we fall back to the installation locale.
+  const locale = pending ? await getUserLocale(pending.userId) : getInstallDefaultLocale()
   const t = await getTranslations({ locale, namespace: "telegram" })
 
   if (!pending || pending.used || pending.expiresAt <= new Date()) {
@@ -92,7 +93,7 @@ async function handleFinancialQuestion(chatId: TelegramChatId, text: string) {
 
   if (!connection || !connection.isActive) {
     // No linked user yet, so there is no persisted locale to resolve from.
-    const t = await getTranslations({ locale: DEFAULT_LOCALE, namespace: "telegram" })
+    const t = await getTranslations({ locale: getInstallDefaultLocale(), namespace: "telegram" })
     await sendTelegramMessage(chatId, t("bot.notConnected"))
     return
   }

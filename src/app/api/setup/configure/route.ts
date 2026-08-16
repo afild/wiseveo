@@ -9,6 +9,8 @@ import { PrismaClient } from "@/generated/prisma_new/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
 import { initializeUserData } from "@/lib/user-init"
+import { resolveAppLocale } from "@/i18n/config"
+import { INSTALL_LOCALE_ENV } from "@/i18n/install-locale"
 
 export async function POST(req: Request) {
   const t = await getTranslations("api.setup")
@@ -20,6 +22,10 @@ export async function POST(req: Request) {
     if (!databaseUrl || !admin?.email || !admin?.password) {
       return NextResponse.json({ success: false, message: t("missingFields") }, { status: 400 })
     }
+
+    // Idioma escolhido no wizard vira o padrão da instalação (env) e a
+    // preferência inicial do admin. Payload não é confiável → valida.
+    const chosenLocale = resolveAppLocale(locale)
 
     // 1. Run migrations via CLI
     try {
@@ -52,6 +58,7 @@ export async function POST(req: Request) {
           passwordHash: hashedPassword,
           role: "SUPERADMIN",
           status: "ACTIVE",
+          preferencesJson: { locale: chosenLocale },
         },
       })
 
@@ -77,6 +84,7 @@ export async function POST(req: Request) {
     
     let envContent = `\n# --- Gerado automaticamente pelo Setup Wizard ---\n`
     envContent += `WISEVEO_SETUP_COMPLETE="true"\n`
+    envContent += `${INSTALL_LOCALE_ENV}="${chosenLocale}"\n`
     envContent += `DATABASE_URL="${databaseUrl}"\n`
     envContent += `AUTH_SECRET="${authSecret}"\n`
     
