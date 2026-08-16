@@ -264,11 +264,18 @@ export function getRecurringColumns(
       cell: ({ row }) => {
         const dateStr = row.getValue("lastDate") as string | null
         return (
-          <div className="w-[110px] text-sm">
+          <div className="truncate text-sm">
             {dateStr ? dateFormatter.format(new Date(dateStr)) : "—"}
           </div>
         )
       },
+      // `size` = peso no layout "cabe no contêiner": colunas curtas pesam menos, texto
+      // pesa mais. As reticências acompanham a largura da coluna (truncate sem teto fixo).
+      // minSize acima do padrão (64): valores curtos e fixos (data, período, valor) e seus
+      // rótulos nunca devem cortar; quem encolhe primeiro são as colunas de texto.
+      // Peso alto: o rótulo "ÚLT. LANÇAMENTO" é o mais longo da tabela.
+      size: 180,
+      minSize: 100,
     },
     {
       accessorKey: "period",
@@ -278,8 +285,10 @@ export function getRecurringColumns(
       cell: ({ row }) => {
         const period = (row.getValue("period") as string | null) ?? ""
         const formatted = period.length === 6 ? formatPeriod(period) : "—"
-        return <div className="w-[80px] text-sm tabular-nums">{formatted}</div>
+        return <div className="truncate text-sm tabular-nums">{formatted}</div>
       },
+      size: 100,
+      minSize: 100,
     },
     {
       accessorKey: "reference",
@@ -287,10 +296,11 @@ export function getRecurringColumns(
         <DataTableColumnHeader column={column} title={labels.reference} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[140px] truncate text-sm">
+        <div className="truncate text-sm">
           {row.getValue("reference") || "—"}
         </div>
       ),
+      size: 120,
     },
     {
       accessorKey: "note",
@@ -298,10 +308,12 @@ export function getRecurringColumns(
         <DataTableColumnHeader column={column} title={labels.note} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[220px] truncate text-sm">
+        <div className="truncate text-sm">
           {row.getValue("note") || "—"}
         </div>
       ),
+      size: 200,
+      minSize: 80,
     },
     {
       accessorKey: "description",
@@ -309,11 +321,13 @@ export function getRecurringColumns(
         <DataTableColumnHeader column={column} title={labels.description} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[260px] truncate text-sm">
+        <div className="truncate text-sm">
           {row.getValue("description") || "—"}
         </div>
       ),
       filterFn: recurringFilter,
+      size: 200,
+      minSize: 80,
     },
     {
       id: "group",
@@ -322,10 +336,12 @@ export function getRecurringColumns(
         <DataTableColumnHeader column={column} title={labels.group} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[160px] truncate text-sm">
+        <div className="truncate text-sm">
           {resolveGroupLabel(t, row.original.category.group)}
         </div>
       ),
+      size: 150,
+      minSize: 80,
     },
     {
       id: "category",
@@ -334,13 +350,15 @@ export function getRecurringColumns(
         <DataTableColumnHeader column={column} title={labels.category} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[180px] truncate text-sm">
+        <div className="truncate text-sm">
           {resolveCategoryLabel(t, {
             code: row.original.categoryCode,
             name: row.original.category.name,
           })}
         </div>
       ),
+      size: 180,
+      minSize: 80,
     },
     {
       accessorKey: "amount",
@@ -357,11 +375,13 @@ export function getRecurringColumns(
               ? "text-destructive"
               : "text-muted-foreground"
         return (
-          <div className={cn("text-sm font-medium text-right", colorClass)}>
+          <div className={cn("truncate text-sm font-medium text-right", colorClass)}>
             {monetary.formatMonetaryValue(amount)}
           </div>
         )
       },
+      size: 110,
+      minSize: 100,
     },
     {
       id: "account",
@@ -370,8 +390,10 @@ export function getRecurringColumns(
         <DataTableColumnHeader column={column} title={labels.account} />
       ),
       cell: ({ row }) => (
-        <div className="text-sm">{resolveAccountLabel(t, row.original.account)}</div>
+        <div className="truncate text-sm">{resolveAccountLabel(t, row.original.account)}</div>
       ),
+      size: 150,
+      minSize: 80,
     },
     {
       id: "type",
@@ -382,9 +404,10 @@ export function getRecurringColumns(
       cell: ({ row }) => {
         const type = row.original.type
         const config = typeConfig[type]
-        return <div className={cn("text-sm", config.className)}>{config.label}</div>
+        return <div className={cn("truncate text-sm", config.className)}>{config.label}</div>
       },
       filterFn: multiSelectFilter as FilterFn<SerializedRecurringTransaction>,
+      size: 100,
     },
     {
       id: "actions",

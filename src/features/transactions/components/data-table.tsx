@@ -40,6 +40,11 @@ import { toast } from "sonner"
 
 import { DataTableToolsMenu } from "@/components/data-table/data-table-tools-menu"
 import { DraggableTableHead } from "@/components/data-table/draggable-table-head"
+import {
+  applyFittedResize,
+  getFittedColumnLayout,
+  useContainerWidth,
+} from "@/components/data-table/use-fitted-column-sizing"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -264,10 +269,15 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
     })
   }
 
+  // Layout "cabe no contêiner": as larguras salvas são pesos; a tabela mede o contêiner
+  // e distribui os px (ver use-fitted-column-sizing.ts). Sem maxSize: com poucas colunas
+  // visíveis, o teto impediria preencher a largura.
+  const [containerRef, containerWidth] = useContainerWidth()
+
   const table = useReactTable({
     data,
     columns,
-    defaultColumn: { minSize: 64, size: 150, maxSize: 480 },
+    defaultColumn: { minSize: 64, size: 150 },
     columnResizeMode: "onChange",
     meta: {
       onEditTransaction,
@@ -289,7 +299,16 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
     },
     enableRowSelection: true,
     onColumnOrderChange: setColumnOrder,
-    onColumnSizingChange: setColumnSizing,
+    // `table` é lido só quando o gesto acontece (bem depois deste render terminar).
+    onColumnSizingChange: (updater) =>
+      setColumnSizing((prev) =>
+        applyFittedResize(
+          table,
+          prev,
+          typeof updater === "function" ? updater(prev) : updater,
+          containerWidth,
+        ),
+      ),
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -303,6 +322,11 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
+
+  const layout = getFittedColumnLayout(table, containerWidth)
+  // Estado derivado durante o render (padrão do React): fora de um arraste, mantém as
+  // larguras salvas iguais aos px na tela — é o que faz o arraste acompanhar o mouse 1:1.
+  if (layout.normalizedSizing) setColumnSizing(layout.normalizedSizing)
 
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const selectedData = selectedRows.map((row) => row.original)
@@ -499,10 +523,13 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
           modifiers={[restrictToHorizontalAxis]}
           onDragEnd={handleDragEnd}
         >
-        <div className="overflow-x-auto rounded-lg border">
+        {/* O scroller é o wrapper do próprio <Table> (overflow-x-auto no shadcn); este div
+            só mede a largura disponível. A tabela ocupa 100% e só rola abaixo da soma dos
+            mínimos das colunas visíveis. */}
+        <div ref={containerRef} className="rounded-lg border">
           <Table
             className="table-fixed"
-            style={{ width: table.getCenterTotalSize(), minWidth: "100%" }}
+            style={{ minWidth: layout.tableMinWidth }}
           >
             <TableHeader className="bg-muted sticky top-0 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -522,6 +549,8 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
                           key={header.id}
                           header={header}
                           fixed={FIXED_COLUMNS.includes(header.column.id)}
+                          width={layout.widthFor(header.column.id)}
+                          resizable={layout.canResize(header.column.id)}
                         >
                           {header.isPlaceholder
                             ? null
@@ -533,7 +562,9 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
                 </TableRow>
               ))}
             </TableHeader>
-            <TableBody className="**:data-[slot=table-cell]:first:w-8">
+            {/* Em table-layout: fixed só a primeira linha (o cabeçalho) define as larguras;
+                as células do corpo não recebem width — só cortam o que não cabe. */}
+            <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell
@@ -551,7 +582,7 @@ export function DataTable<TData extends SerializedTransaction, TValue>({
                       if (isMobile && meta?.responsive === "hide-mobile") return null
 
                       return (
-                        <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
+                        <TableCell key={cell.id} className="overflow-hidden">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       )

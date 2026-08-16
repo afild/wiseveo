@@ -308,8 +308,12 @@ export function getTransactionColumns(
       ),
       cell: ({ row }) => {
         const num = row.getValue("num") as number | null
-        return <div className="w-[70px] text-sm">{num ?? "—"}</div>
+        return <div className="truncate text-sm">{num ?? "—"}</div>
       },
+      // `size` = peso no layout "cabe no contêiner": colunas curtas pesam menos, texto
+      // pesa mais. As reticências acompanham a largura da coluna (truncate sem teto fixo).
+      size: 72,
+      minSize: 72,
       meta: { responsive: "hide-mobile" },
     },
     {
@@ -320,8 +324,12 @@ export function getTransactionColumns(
       cell: ({ row }) => {
         const period = (row.getValue("period") as string | null) ?? ""
         const formatted = period.length === 6 ? formatPeriod(period) : "—"
-        return <div className="w-[80px] text-sm tabular-nums">{formatted}</div>
+        return <div className="truncate text-sm tabular-nums">{formatted}</div>
       },
+      // minSize acima do padrão (64): valores curtos e fixos (data, período, valor, status)
+      // e seus rótulos nunca devem cortar; quem encolhe primeiro são as colunas de texto.
+      size: 100,
+      minSize: 100,
       meta: { responsive: "hide-mobile" },
     },
     {
@@ -339,11 +347,13 @@ export function getTransactionColumns(
         }).format(new Date(dateStr))
 
         return (
-          <div className="w-[60px] md:w-[90px] text-sm">
+          <div className="truncate text-sm">
             {formattedDate}
           </div>
         )
       },
+      size: 104,
+      minSize: 96,
     },
     {
       accessorKey: "reference",
@@ -351,10 +361,11 @@ export function getTransactionColumns(
         <DataTableColumnHeader column={column} title={labels.reference} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[140px] truncate text-sm">
+        <div className="truncate text-sm">
           {row.getValue("reference") || "—"}
         </div>
       ),
+      size: 120,
       meta: { responsive: "hide-mobile" },
     },
     {
@@ -363,10 +374,12 @@ export function getTransactionColumns(
         <DataTableColumnHeader column={column} title={labels.note} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[220px] truncate text-sm">
+        <div className="truncate text-sm">
           {row.getValue("note") || "—"}
         </div>
       ),
+      size: 200,
+      minSize: 80,
       meta: { responsive: "hide-mobile" },
     },
     {
@@ -375,10 +388,12 @@ export function getTransactionColumns(
         <DataTableColumnHeader column={column} title={labels.description} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[260px] truncate text-sm">
+        <div className="truncate text-sm">
           {row.getValue("description") || "—"}
         </div>
       ),
+      size: 200,
+      minSize: 80,
     },
     {
       id: "group",
@@ -387,10 +402,12 @@ export function getTransactionColumns(
         <DataTableColumnHeader column={column} title={labels.group} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[160px] truncate text-sm">
+        <div className="truncate text-sm">
           {resolveGroupLabel(t, row.original.category.group)}
         </div>
       ),
+      size: 150,
+      minSize: 80,
       meta: { responsive: "hide-mobile" },
     },
     {
@@ -400,13 +417,15 @@ export function getTransactionColumns(
         <DataTableColumnHeader column={column} title={labels.category} />
       ),
       cell: ({ row }) => (
-        <div className="max-w-[180px] truncate text-sm">
+        <div className="truncate text-sm">
           {resolveCategoryLabel(t, row.original.category)}
         </div>
       ),
       filterFn: (row, _id, value) => {
         return value.includes(row.original.category.name)
       },
+      size: 190,
+      minSize: 80,
       meta: { responsive: "hide-mobile" },
     },
     {
@@ -417,11 +436,13 @@ export function getTransactionColumns(
       cell: ({ row }) => {
         const amount = row.getValue("amount") as number
         return (
-          <div className={cn("text-sm font-medium text-right", getAmountColorClass(amount))}>
+          <div className={cn("truncate text-sm font-medium text-right", getAmountColorClass(amount))}>
             {monetary.formatMonetaryValue(amount)}
           </div>
         )
       },
+      size: 110,
+      minSize: 100,
     },
     {
       id: "account",
@@ -430,9 +451,11 @@ export function getTransactionColumns(
         <DataTableColumnHeader column={column} title={labels.account} />
       ),
       cell: ({ row }) => (
-        <div className="text-sm">{resolveAccountLabel(t, row.original.account)}</div>
+        <div className="truncate text-sm">{resolveAccountLabel(t, row.original.account)}</div>
       ),
       filterFn: multiSelectFilter as FilterFn<SerializedTransaction>,
+      size: 150,
+      minSize: 80,
       meta: { responsive: "hide-mobile" },
     },
     {
@@ -459,6 +482,9 @@ export function getTransactionColumns(
       },
       filterFn: multiSelectFilter as FilterFn<SerializedTransaction>,
       sortingFn: statusSortFn,
+      // Ordenada por padrão (DEFAULT_SORTING): o ícone de ordenação custa 20px no rótulo.
+      size: 108,
+      minSize: 108,
     },
     {
       id: "type",
@@ -469,9 +495,10 @@ export function getTransactionColumns(
       cell: ({ row }) => {
         const type = row.original.type
         const config = typeConfig[type]
-        return <div className={cn("text-sm", config.className)}>{config.label}</div>
+        return <div className={cn("truncate text-sm", config.className)}>{config.label}</div>
       },
       filterFn: multiSelectFilter as FilterFn<SerializedTransaction>,
+      size: 100,
     },
     {
       id: "actions",
@@ -505,10 +532,11 @@ export function getTransactionColumns(
       accessorFn: (row) => row.payee?.name ?? "",
       header: ({ column }) => <DataTableColumnHeader column={column} title={labels.payee} />,
       cell: ({ row }) => (
-        <div className="text-sm text-muted-foreground">
+        <div className="truncate text-sm text-muted-foreground">
           {row.original.payee?.name || "—"}
         </div>
       ),
+      size: 150,
     },
   ]
 }
