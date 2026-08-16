@@ -524,8 +524,10 @@ export function getTransactionColumns(
       enableSorting: false,
       enableHiding: false,
       enableResizing: false,
-      minSize: 56,
-      size: 56,
+      // Coluna fixa: precisa caber o rótulo mais longo dos 3 idiomas ("ACCIONES") com folga
+      // à direita; o menu "⋮" alinha à direita dentro dela.
+      minSize: 104,
+      size: 104,
     },
     {
       id: "payee",
