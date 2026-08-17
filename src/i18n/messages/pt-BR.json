@@ -195,6 +195,7 @@
       "passwordTooShort": "Senha deve ter pelo menos 8 caracteres",
       "pendingApprovalExisting": "Seu cadastro já está aguardando aprovação.",
       "pendingApprovalLogin": "Seu cadastro ainda está aguardando aprovação.",
+      "signupDisabled": "Esta instalação não aceita cadastros novos. Peça um convite a quem administra.",
       "signupReceived": "Cadastro recebido. Aguarde a aprovação de um administrador.",
       "signupSuccess": "Conta criada com sucesso"
     },
@@ -303,7 +304,8 @@
         "failed": "Falha ao conectar com Google. Tente novamente.",
         "invalidState": "Erro de segurança. Tente novamente.",
         "noCode": "Erro na autenticação com Google. Tente novamente.",
-        "notConfigured": "Autenticação via Google não está configurada neste servidor."
+        "notConfigured": "Autenticação via Google não está configurada neste servidor.",
+        "signupDisabled": "Esta instalação não aceita cadastros novos. Peça um convite a quem administra."
       },
       "loginFailed": "Erro ao fazer login. Tente novamente.",
       "signupFailed": "Erro ao criar conta. Tente novamente."
@@ -319,6 +321,11 @@
       "validation": {
         "passwordRequired": "Senha é obrigatória"
       }
+    },
+    "notConfigured": {
+      "cta": "Configurar agora",
+      "desc": "Antes de entrar, conecte o banco de dados e crie o administrador. Leva poucos minutos.",
+      "title": "Este WISEVEO ainda não foi configurado"
     },
     "orContinueWith": "Ou continue com",
     "password": "Senha",
@@ -1857,8 +1864,10 @@
       "title": "Bem-vindo ao"
     },
     "wizard": {
+      "backToDashboard": "Voltar ao painel",
       "error": "Erro ao configurar o sistema.",
       "fatalError": "Erro fatal ao tentar configurar o sistema.",
+      "reconfiguring": "Você está reconfigurando uma instalação que já funciona. Nada muda até você concluir o último passo.",
       "success": "Setup concluído!"
     }
   },

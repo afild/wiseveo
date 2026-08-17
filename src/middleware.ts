@@ -16,25 +16,25 @@ export async function middleware(request: NextRequest) {
   // ─── Setup Wizard Gate ─────────────────────────────────────────────
   const setupComplete = isSetupComplete()
 
-  // Setup NOT complete → redirect everything to /setup (except setup routes and API)
-  if (!setupComplete && !pathname.startsWith("/setup")) {
-    return NextResponse.redirect(new URL("/setup", request.url))
-  }
-
-  // Setup IS complete → block access to /setup wizard
-  if (setupComplete && pathname.startsWith("/setup")) {
+  // Instalação NÃO configurada: a porta de entrada é sempre o /login (que mostra
+  // "Configurar agora"); o wizard fica acessível em /setup; o resto volta ao login.
+  if (!setupComplete) {
+    if (pathname.startsWith("/setup") || pathname === "/login") return NextResponse.next()
     return NextResponse.redirect(new URL("/login", request.url))
   }
 
-  // If we're on /setup and setup is not complete, let it through
-  if (!setupComplete && pathname.startsWith("/setup")) {
-    return NextResponse.next()
-  }
-
-  // ─── Normal Auth Flow (only runs after setup is complete) ──────────
   const token = request.cookies.get(COOKIE_NAME)?.value
   const session = token ? await verifySessionToken(token) : null
   const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+
+  // Instalação configurada: /setup só para quem está logado (a página confere se
+  // é SUPERADMIN — "Reconfigurar"); anônimo vai para o login.
+  if (pathname.startsWith("/setup")) {
+    if (isDemoMode) return NextResponse.redirect(new URL("/dashboard", request.url))
+    return session ? NextResponse.next() : NextResponse.redirect(new URL("/login", request.url))
+  }
+
+  // ─── Normal Auth Flow (only runs after setup is complete) ──────────
 
   // Convite: quem já está logado é levado ao dashboard; quem não está vê a página.
   if (publicPrefixes.some((prefix) => pathname.startsWith(prefix))) {

@@ -11,6 +11,7 @@ import {
   PENDING_APPROVAL_PATH,
 } from "@/lib/user-approval"
 import { acceptInvitationForUser, peekInvitation } from "@/features/settings/services/invitations-service"
+import { isPublicSignupEnabled } from "@/lib/public-signup"
 
 export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
@@ -102,6 +103,12 @@ export async function GET(request: NextRequest) {
       })
       await acceptInvitationForUser({ token: inviteToken, userId: user.id })
     } else {
+      // Instância privada (WISEVEO_PUBLIC_SIGNUP=false): Google não cria conta nova
+      // sem convite — só entra quem já existe.
+      if (!isPublicSignupEnabled()) {
+        return NextResponse.redirect(`${appUrl}/login?error=signup_disabled`)
+      }
+
       const initialAccess = getInitialUserAccess(normalizedEmail)
       const userCount = await prisma.user.count()
       const isFirstUser = userCount === 0

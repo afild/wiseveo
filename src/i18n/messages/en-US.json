@@ -195,6 +195,7 @@
       "passwordTooShort": "Password must be at least 8 characters",
       "pendingApprovalExisting": "Your registration is already awaiting approval.",
       "pendingApprovalLogin": "Your registration is still awaiting approval.",
+      "signupDisabled": "This installation does not accept new sign-ups. Ask an administrator for an invitation.",
       "signupReceived": "Registration received. Please wait for an administrator's approval.",
       "signupSuccess": "Account created successfully"
     },
@@ -303,7 +304,8 @@
         "failed": "Failed to connect with Google. Please try again.",
         "invalidState": "Security error. Please try again.",
         "noCode": "Error authenticating with Google. Please try again.",
-        "notConfigured": "Google authentication is not configured on this server."
+        "notConfigured": "Google authentication is not configured on this server.",
+        "signupDisabled": "This installation does not accept new sign-ups. Ask an administrator for an invitation."
       },
       "loginFailed": "Error logging in. Please try again.",
       "signupFailed": "Error creating account. Please try again."
@@ -319,6 +321,11 @@
       "validation": {
         "passwordRequired": "Password is required"
       }
+    },
+    "notConfigured": {
+      "cta": "Set up now",
+      "desc": "Before signing in, connect the database and create the administrator. It takes a few minutes.",
+      "title": "This WISEVEO is not set up yet"
     },
     "orContinueWith": "Or continue with",
     "password": "Password",
@@ -1857,8 +1864,10 @@
       "title": "Welcome to"
     },
     "wizard": {
+      "backToDashboard": "Back to dashboard",
       "error": "Error configuring the system.",
       "fatalError": "Fatal error configuring the system.",
+      "reconfiguring": "You are reconfiguring an installation that already works. Nothing changes until you finish the last step.",
       "success": "Setup complete!"
     }
   },

@@ -10,9 +10,15 @@ import {
   normalizeEmail,
   PENDING_APPROVAL_PATH,
 } from "@/lib/user-approval"
+import { isPublicSignupEnabled } from "@/lib/public-signup"
 
 export async function POST(request: Request) {
   const t = await getTranslations("api.auth")
+
+  // Instância privada: só o convite cria usuários.
+  if (!isPublicSignupEnabled()) {
+    return NextResponse.json({ success: false, message: t("signupDisabled") }, { status: 403 })
+  }
 
   try {
     const { name, email, password } = await request.json()

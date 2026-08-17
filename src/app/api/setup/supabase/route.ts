@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getTranslations } from "next-intl/server"
-import { isSetupComplete } from "@/lib/setup-check"
+import { canAccessSetup } from "@/lib/setup-access"
 import {
   createSupabaseManagementClient,
   SupabaseManagementError,
@@ -26,7 +26,7 @@ const GENERATED_PASSWORD = /^[A-Za-z0-9_-]{16,64}$/
 type Action = "inspect" | "create-project" | "project-status" | "reset-password" | "pooler"
 
 export async function POST(req: Request) {
-  if (isSetupComplete()) return new NextResponse(null, { status: 404 })
+  if (!(await canAccessSetup())) return new NextResponse(null, { status: 404 })
 
   const t = await getTranslations("api.setup")
   const fail = (code: SetupErrorCode, status = 400) =>

@@ -15,7 +15,12 @@ import { toast } from "sonner"
 import { useLocale, useTranslations } from "next-intl"
 import { resolveAppLocale, type AppLocale } from "@/i18n/config"
 
-export function SetupWizard() {
+interface SetupWizardProps {
+  /** Instalação já configurada: SUPERADMIN refazendo o setup (testes de conexão/interface). */
+  reconfiguring?: boolean
+}
+
+export function SetupWizard({ reconfiguring = false }: SetupWizardProps) {
   const router = useRouter()
   const t = useTranslations("setup")
   // Idioma em que a página foi renderizada (cookie → env da instalação → en-US):
@@ -139,6 +144,14 @@ export function SetupWizard() {
 
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
+      {reconfiguring && (
+        <div className="rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2">
+          <span>{t("wizard.reconfiguring")}</span>
+          <a href="/dashboard" className="text-primary hover:underline font-medium">
+            {t("wizard.backToDashboard")}
+          </a>
+        </div>
+      )}
       <WizardStepper steps={steps} currentStep={currentStep} />
       
       <div className="bg-background/80 backdrop-blur-md border shadow-xl rounded-3xl p-6 sm:p-8 min-h-[400px] flex flex-col justify-center">

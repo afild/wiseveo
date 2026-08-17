@@ -195,6 +195,7 @@
       "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
       "pendingApprovalExisting": "Tu registro ya está esperando aprobación.",
       "pendingApprovalLogin": "Tu registro todavía está esperando aprobación.",
+      "signupDisabled": "Esta instalación no acepta registros nuevos. Pide una invitación a quien administra.",
       "signupReceived": "Registro recibido. Espera la aprobación de un administrador.",
       "signupSuccess": "Cuenta creada con éxito"
     },
@@ -303,7 +304,8 @@
         "failed": "No se pudo conectar con Google. Inténtalo de nuevo.",
         "invalidState": "Error de seguridad. Inténtalo de nuevo.",
         "noCode": "Error al autenticar con Google. Inténtalo de nuevo.",
-        "notConfigured": "La autenticación con Google no está configurada en este servidor."
+        "notConfigured": "La autenticación con Google no está configurada en este servidor.",
+        "signupDisabled": "Esta instalación no acepta registros nuevos. Pide una invitación a quien administra."
       },
       "loginFailed": "Error al iniciar sesión. Inténtalo de nuevo.",
       "signupFailed": "Error al crear la cuenta. Inténtalo de nuevo."
@@ -319,6 +321,11 @@
       "validation": {
         "passwordRequired": "La contraseña es obligatoria"
       }
+    },
+    "notConfigured": {
+      "cta": "Configurar ahora",
+      "desc": "Antes de entrar, conecta la base de datos y crea el administrador. Toma unos minutos.",
+      "title": "Este WISEVEO todavía no está configurado"
     },
     "orContinueWith": "O continuar con",
     "password": "Contraseña",
@@ -1857,8 +1864,10 @@
       "title": "Bienvenido a"
     },
     "wizard": {
+      "backToDashboard": "Volver al panel",
       "error": "Error al configurar el sistema.",
       "fatalError": "Error fatal al intentar configurar el sistema.",
+      "reconfiguring": "Estás reconfigurando una instalación que ya funciona. Nada cambia hasta que termines el último paso.",
       "success": "¡Configuración completada!"
     }
   },

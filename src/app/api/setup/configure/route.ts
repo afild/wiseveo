@@ -10,7 +10,7 @@ import { Client, Pool } from "pg"
 import { initializeUserData } from "@/lib/user-init"
 import { resolveAppLocale } from "@/i18n/config"
 import { INSTALL_LOCALE_ENV } from "@/i18n/install-locale"
-import { isSetupComplete } from "@/lib/setup-check"
+import { canAccessSetup } from "@/lib/setup-access"
 import { redactConnectionUrl } from "@/features/setup/lib/connection-url"
 import { applyPrismaMigrations, loadMigrationFiles } from "@/features/setup/services/prisma-migrations.service"
 import { detectHostingProvider, detectSetupPersistence } from "@/features/setup/services/setup-environment"
@@ -22,9 +22,9 @@ const redact = (value: unknown) => redactConnectionUrl(String(value ?? ""))
 export const maxDuration = 300
 
 export async function POST(req: Request) {
-  // Instalação concluída → o wizard (e esta rota) não existem mais. Sem isso,
-  // qualquer pessoa poderia recriar um SUPERADMIN e reescrever o .env.local.
-  if (isSetupComplete()) return new NextResponse(null, { status: 404 })
+  // Instalação concluída → só o SUPERADMIN logado (Reconfigurar) chega aqui. Sem
+  // isso, qualquer pessoa poderia recriar um SUPERADMIN e reescrever o .env.local.
+  if (!(await canAccessSetup())) return new NextResponse(null, { status: 404 })
 
   const t = await getTranslations("api.setup")
 

@@ -278,6 +278,7 @@ function GoogleErrorMessage({ error }: { error: string | null }) {
     no_code: t("errors.google.noCode"),
     google_failed: t("errors.google.failed"),
     google_not_configured: t("errors.google.notConfigured"),
+    signup_disabled: t("errors.google.signupDisabled"),
   }
 
   return (
@@ -289,11 +290,35 @@ function GoogleErrorMessage({ error }: { error: string | null }) {
 
 interface AuthPageProps extends React.ComponentProps<"div"> {
   showGoogle?: boolean
+  /** Instalação já configurada (tem banco). Sem isso, não há como autenticar: mostra "Configurar agora". */
+  setupComplete?: boolean
+  /** Cadastro público visível. Numa instância privada (WISEVEO_PUBLIC_SIGNUP=false) só o convite entra. */
+  publicSignup?: boolean
+}
+
+function NotConfiguredCard() {
+  const t = useTranslations("auth.notConfigured")
+  return (
+    <Card>
+      <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
+        <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+          <Logo size={28} className="text-primary" />
+        </div>
+        <h1 className="text-lg font-semibold">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("desc")}</p>
+        <Button asChild className="w-full mt-2 cursor-pointer">
+          <a href="/setup">{t("cta")}</a>
+        </Button>
+      </CardContent>
+    </Card>
+  )
 }
 
 export function AuthPage({
   className,
   showGoogle = false,
+  setupComplete = true,
+  publicSignup = true,
   ...props
 }: AuthPageProps) {
   const t = useTranslations("auth")
@@ -321,26 +346,37 @@ export function AuthPage({
 
         <GoogleErrorMessage error={googleError} />
 
-        <Card>
-          <CardContent className="pt-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">{t("login.tab")}</TabsTrigger>
-                <TabsTrigger value="signup">{t("signup.tab")}</TabsTrigger>
-              </TabsList>
+        {!setupComplete ? (
+          <NotConfiguredCard />
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              {publicSignup ? (
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="login">{t("login.tab")}</TabsTrigger>
+                    <TabsTrigger value="signup">{t("signup.tab")}</TabsTrigger>
+                  </TabsList>
 
-              <TabsContent value="login">
-                <LoginTabContent showGoogle={showGoogle} />
-              </TabsContent>
+                  <TabsContent value="login">
+                    <LoginTabContent showGoogle={showGoogle} />
+                  </TabsContent>
 
-              <TabsContent value="signup">
-                <SignupTabContent showGoogle={showGoogle} />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                  <TabsContent value="signup">
+                    <SignupTabContent showGoogle={showGoogle} />
+                  </TabsContent>
+                </Tabs>
+              ) : (
+                <>
+                  <h1 className="text-lg font-semibold text-center">{t("login.tab")}</h1>
+                  <LoginTabContent showGoogle={showGoogle} />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-        {showGoogle && (
+        {setupComplete && showGoogle && (
           <p className="mt-4 text-center text-xs text-muted-foreground">
             {t("googleSyncNote")}
           </p>
