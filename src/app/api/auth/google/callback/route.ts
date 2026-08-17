@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createSessionToken, COOKIE_NAME } from "@/lib/auth"
-import { exchangeCodeForTokens, decodeIdToken, isGoogleConfigured } from "@/lib/google-auth"
+import { exchangeCodeForTokens, decodeIdToken, GOOGLE_INVITE_COOKIE, isGoogleConfigured } from "@/lib/google-auth"
 import {
   getInitialUserAccess,
   isActiveUser,
@@ -10,6 +10,7 @@ import {
   normalizeEmail,
   PENDING_APPROVAL_PATH,
 } from "@/lib/user-approval"
+import { acceptInvitationForUser, peekInvitation } from "@/features/settings/services/invitations-service"
 
 export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
@@ -44,6 +45,11 @@ export async function GET(request: NextRequest) {
     const userInfo = decodeIdToken(tokens.id_token)
     const normalizedEmail = normalizeEmail(userInfo.email)
 
+    // Convite (aceite via Google): só vale para usuário NOVO; quem já tem conta
+    // entra normalmente e o convite fica de fora (sem mesclar contas).
+    const inviteToken = request.cookies.get(GOOGLE_INVITE_COOKIE)?.value ?? null
+    const invitation = inviteToken ? await peekInvitation(inviteToken) : null
+
     // Find or create user
     let user = await prisma.user.findFirst({
       where: {
@@ -77,6 +83,24 @@ export async function GET(request: NextRequest) {
           ),
         },
       })
+    } else if (invitation && inviteToken) {
+      // Membro convidado: já ativo, dentro da conta de quem convidou, sem plano
+      // de contas próprio (usa o do dono).
+      user = await prisma.user.create({
+        data: {
+          name: userInfo.name,
+          email: normalizedEmail,
+          googleId: userInfo.sub,
+          photo: userInfo.picture || null,
+          role: invitation.role,
+          status: "ACTIVE",
+          dataOwnerId: invitation.dataOwnerId,
+          googleAccessToken: tokens.access_token,
+          googleRefreshToken: tokens.refresh_token ?? null,
+          googleTokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
+        },
+      })
+      await acceptInvitationForUser({ token: inviteToken, userId: user.id })
     } else {
       const initialAccess = getInitialUserAccess(normalizedEmail)
       const userCount = await prisma.user.count()
@@ -111,6 +135,7 @@ export async function GET(request: NextRequest) {
         maxAge: 0,
         path: "/",
       })
+      response.cookies.set(GOOGLE_INVITE_COOKIE, "", { httpOnly: true, maxAge: 0, path: "/" })
 
       return response
     }
@@ -134,6 +159,7 @@ export async function GET(request: NextRequest) {
       maxAge: 0,
       path: "/",
     })
+    response.cookies.set(GOOGLE_INVITE_COOKIE, "", { httpOnly: true, maxAge: 0, path: "/" })
 
     return response
   } catch (err) {

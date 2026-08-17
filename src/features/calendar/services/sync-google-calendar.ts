@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { safeBalance, startOfUTCDay, endOfUTCDay } from "@/lib/financial"
 import { createMonetaryFormatter } from "@/lib/monetary"
 import { getUserMonetarySettings } from "@/features/settings/services/user-settings-service"
+import { resolveDataOwnerId } from "@/lib/data-owner"
 import { CALENDAR_SYNC_PHASE, CALENDAR_CLEAR_PHASE } from "../types"
 
 // Google Calendar colorId: 10 = green, 11 = red, 9 = blue
@@ -137,6 +138,10 @@ export async function syncGoogleCalendar(
 ): Promise<SyncResult> {
   const t = await getTranslations("calendar")
 
+  // Conta compartilhada: o token do Google e a moeda são do usuário REAL;
+  // contas e transações sincronizadas são do DONO dos dados.
+  const dataOwnerId = await resolveDataOwnerId(userId)
+
   const [accessToken, monetarySettings] = await Promise.all([
     getValidAccessToken(userId),
     getUserMonetarySettings(userId),
@@ -170,12 +175,12 @@ export async function syncGoogleCalendar(
 
   const [accounts, txBeforeAgg] = await Promise.all([
     prisma.account.findMany({
-      where: { userId, active: true },
+      where: { userId: dataOwnerId, active: true },
       select: { balance: true },
     }),
     prisma.transaction.aggregate({
       _sum: { amount: true },
-      where: { userId, date: { lt: fromDate } },
+      where: { userId: dataOwnerId, date: { lt: fromDate } },
     }),
   ])
 
@@ -188,7 +193,7 @@ export async function syncGoogleCalendar(
   // 3. Fetch transactions in range
   const transactions = await prisma.transaction.findMany({
     where: {
-      userId,
+      userId: dataOwnerId,
       date: { gte: fromDate, lte: toDate },
     },
     include: {

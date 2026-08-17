@@ -19,6 +19,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model Invitation
+ * Convite para entrar na conta (dados) de quem convidou. Link: /convite/<token>.
+ */
+export type Invitation = $Result.DefaultSelection<Prisma.$InvitationPayload>
+/**
  * Model Account
  * 
  */
@@ -290,6 +295,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.invitation`: Exposes CRUD operations for the **Invitation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Invitations
+    * const invitations = await prisma.invitation.findMany()
+    * ```
+    */
+  get invitation(): Prisma.InvitationDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.account`: Exposes CRUD operations for the **Account** model.
@@ -865,6 +880,7 @@ export namespace Prisma {
 
   export const ModelName: {
     User: 'User',
+    Invitation: 'Invitation',
     Account: 'Account',
     CategoryGroup: 'CategoryGroup',
     Category: 'Category',
@@ -894,7 +910,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "account" | "categoryGroup" | "category" | "payee" | "transactionStatusLookup" | "transaction" | "transactionAttachment" | "transactionMessage" | "excludedTransaction" | "recurringTransaction" | "budget" | "telegramConnection" | "telegramConversationMemory" | "telegramPendingToken"
+      modelProps: "user" | "invitation" | "account" | "categoryGroup" | "category" | "payee" | "transactionStatusLookup" | "transaction" | "transactionAttachment" | "transactionMessage" | "excludedTransaction" | "recurringTransaction" | "budget" | "telegramConnection" | "telegramConversationMemory" | "telegramPendingToken"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -969,6 +985,80 @@ export namespace Prisma {
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
             result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      Invitation: {
+        payload: Prisma.$InvitationPayload<ExtArgs>
+        fields: Prisma.InvitationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.InvitationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.InvitationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload>
+          }
+          findFirst: {
+            args: Prisma.InvitationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.InvitationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload>
+          }
+          findMany: {
+            args: Prisma.InvitationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload>[]
+          }
+          create: {
+            args: Prisma.InvitationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload>
+          }
+          createMany: {
+            args: Prisma.InvitationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.InvitationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload>[]
+          }
+          delete: {
+            args: Prisma.InvitationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload>
+          }
+          update: {
+            args: Prisma.InvitationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload>
+          }
+          deleteMany: {
+            args: Prisma.InvitationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.InvitationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.InvitationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload>[]
+          }
+          upsert: {
+            args: Prisma.InvitationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InvitationPayload>
+          }
+          aggregate: {
+            args: Prisma.InvitationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateInvitation>
+          }
+          groupBy: {
+            args: Prisma.InvitationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<InvitationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.InvitationCountArgs<ExtArgs>
+            result: $Utils.Optional<InvitationCountAggregateOutputType> | number
           }
         }
       }
@@ -2117,6 +2207,7 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     user?: UserOmit
+    invitation?: InvitationOmit
     account?: AccountOmit
     categoryGroup?: CategoryGroupOmit
     category?: CategoryOmit
@@ -2211,6 +2302,9 @@ export namespace Prisma {
    */
 
   export type UserCountOutputType = {
+    members: number
+    invitationsSent: number
+    invitationsAccepted: number
     accounts: number
     budgets: number
     categories: number
@@ -2226,6 +2320,9 @@ export namespace Prisma {
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    members?: boolean | UserCountOutputTypeCountMembersArgs
+    invitationsSent?: boolean | UserCountOutputTypeCountInvitationsSentArgs
+    invitationsAccepted?: boolean | UserCountOutputTypeCountInvitationsAcceptedArgs
     accounts?: boolean | UserCountOutputTypeCountAccountsArgs
     budgets?: boolean | UserCountOutputTypeCountBudgetsArgs
     categories?: boolean | UserCountOutputTypeCountCategoriesArgs
@@ -2249,6 +2346,27 @@ export namespace Prisma {
      * Select specific fields to fetch from the UserCountOutputType
      */
     select?: UserCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountMembersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountInvitationsSentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InvitationWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountInvitationsAcceptedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InvitationWhereInput
   }
 
   /**
@@ -2641,6 +2759,7 @@ export namespace Prisma {
     googleAccessToken: string | null
     googleRefreshToken: string | null
     googleTokenExpiresAt: Date | null
+    dataOwnerId: string | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -2658,6 +2777,7 @@ export namespace Prisma {
     googleAccessToken: string | null
     googleRefreshToken: string | null
     googleTokenExpiresAt: Date | null
+    dataOwnerId: string | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -2677,6 +2797,7 @@ export namespace Prisma {
     googleAccessToken: number
     googleRefreshToken: number
     googleTokenExpiresAt: number
+    dataOwnerId: number
     _all: number
   }
 
@@ -2696,6 +2817,7 @@ export namespace Prisma {
     googleAccessToken?: true
     googleRefreshToken?: true
     googleTokenExpiresAt?: true
+    dataOwnerId?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -2713,6 +2835,7 @@ export namespace Prisma {
     googleAccessToken?: true
     googleRefreshToken?: true
     googleTokenExpiresAt?: true
+    dataOwnerId?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -2732,6 +2855,7 @@ export namespace Prisma {
     googleAccessToken?: true
     googleRefreshToken?: true
     googleTokenExpiresAt?: true
+    dataOwnerId?: true
     _all?: true
   }
 
@@ -2824,6 +2948,7 @@ export namespace Prisma {
     googleAccessToken: string | null
     googleRefreshToken: string | null
     googleTokenExpiresAt: Date | null
+    dataOwnerId: string | null
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -2860,6 +2985,11 @@ export namespace Prisma {
     googleAccessToken?: boolean
     googleRefreshToken?: boolean
     googleTokenExpiresAt?: boolean
+    dataOwnerId?: boolean
+    dataOwner?: boolean | User$dataOwnerArgs<ExtArgs>
+    members?: boolean | User$membersArgs<ExtArgs>
+    invitationsSent?: boolean | User$invitationsSentArgs<ExtArgs>
+    invitationsAccepted?: boolean | User$invitationsAcceptedArgs<ExtArgs>
     accounts?: boolean | User$accountsArgs<ExtArgs>
     budgets?: boolean | User$budgetsArgs<ExtArgs>
     categories?: boolean | User$categoriesArgs<ExtArgs>
@@ -2893,6 +3023,8 @@ export namespace Prisma {
     googleAccessToken?: boolean
     googleRefreshToken?: boolean
     googleTokenExpiresAt?: boolean
+    dataOwnerId?: boolean
+    dataOwner?: boolean | User$dataOwnerArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2912,6 +3044,8 @@ export namespace Prisma {
     googleAccessToken?: boolean
     googleRefreshToken?: boolean
     googleTokenExpiresAt?: boolean
+    dataOwnerId?: boolean
+    dataOwner?: boolean | User$dataOwnerArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -2931,10 +3065,15 @@ export namespace Prisma {
     googleAccessToken?: boolean
     googleRefreshToken?: boolean
     googleTokenExpiresAt?: boolean
+    dataOwnerId?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "googleId" | "phone" | "photo" | "preferencesJson" | "createdAt" | "updatedAt" | "themePreferences" | "role" | "status" | "googleAccessToken" | "googleRefreshToken" | "googleTokenExpiresAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "googleId" | "phone" | "photo" | "preferencesJson" | "createdAt" | "updatedAt" | "themePreferences" | "role" | "status" | "googleAccessToken" | "googleRefreshToken" | "googleTokenExpiresAt" | "dataOwnerId", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    dataOwner?: boolean | User$dataOwnerArgs<ExtArgs>
+    members?: boolean | User$membersArgs<ExtArgs>
+    invitationsSent?: boolean | User$invitationsSentArgs<ExtArgs>
+    invitationsAccepted?: boolean | User$invitationsAcceptedArgs<ExtArgs>
     accounts?: boolean | User$accountsArgs<ExtArgs>
     budgets?: boolean | User$budgetsArgs<ExtArgs>
     categories?: boolean | User$categoriesArgs<ExtArgs>
@@ -2950,12 +3089,20 @@ export namespace Prisma {
     telegramPendingTokens?: boolean | User$telegramPendingTokensArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    dataOwner?: boolean | User$dataOwnerArgs<ExtArgs>
+  }
+  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    dataOwner?: boolean | User$dataOwnerArgs<ExtArgs>
+  }
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
     objects: {
+      dataOwner: Prisma.$UserPayload<ExtArgs> | null
+      members: Prisma.$UserPayload<ExtArgs>[]
+      invitationsSent: Prisma.$InvitationPayload<ExtArgs>[]
+      invitationsAccepted: Prisma.$InvitationPayload<ExtArgs>[]
       accounts: Prisma.$AccountPayload<ExtArgs>[]
       budgets: Prisma.$BudgetPayload<ExtArgs>[]
       categories: Prisma.$CategoryPayload<ExtArgs>[]
@@ -2987,6 +3134,7 @@ export namespace Prisma {
       googleAccessToken: string | null
       googleRefreshToken: string | null
       googleTokenExpiresAt: Date | null
+      dataOwnerId: string | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -3381,6 +3529,10 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    dataOwner<T extends User$dataOwnerArgs<ExtArgs> = {}>(args?: Subset<T, User$dataOwnerArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    members<T extends User$membersArgs<ExtArgs> = {}>(args?: Subset<T, User$membersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    invitationsSent<T extends User$invitationsSentArgs<ExtArgs> = {}>(args?: Subset<T, User$invitationsSentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    invitationsAccepted<T extends User$invitationsAcceptedArgs<ExtArgs> = {}>(args?: Subset<T, User$invitationsAcceptedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     accounts<T extends User$accountsArgs<ExtArgs> = {}>(args?: Subset<T, User$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     budgets<T extends User$budgetsArgs<ExtArgs> = {}>(args?: Subset<T, User$budgetsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BudgetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     categories<T extends User$categoriesArgs<ExtArgs> = {}>(args?: Subset<T, User$categoriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -3439,6 +3591,7 @@ export namespace Prisma {
     readonly googleAccessToken: FieldRef<"User", 'String'>
     readonly googleRefreshToken: FieldRef<"User", 'String'>
     readonly googleTokenExpiresAt: FieldRef<"User", 'DateTime'>
+    readonly dataOwnerId: FieldRef<"User", 'String'>
   }
     
 
@@ -3693,6 +3846,10 @@ export namespace Prisma {
      */
     data: UserCreateManyInput | UserCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -3763,6 +3920,10 @@ export namespace Prisma {
      * Limit how many Users to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -3829,6 +3990,97 @@ export namespace Prisma {
      * Limit how many Users to delete.
      */
     limit?: number
+  }
+
+  /**
+   * User.dataOwner
+   */
+  export type User$dataOwnerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * User.members
+   */
+  export type User$membersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    cursor?: UserWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+  }
+
+  /**
+   * User.invitationsSent
+   */
+  export type User$invitationsSentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    where?: InvitationWhereInput
+    orderBy?: InvitationOrderByWithRelationInput | InvitationOrderByWithRelationInput[]
+    cursor?: InvitationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: InvitationScalarFieldEnum | InvitationScalarFieldEnum[]
+  }
+
+  /**
+   * User.invitationsAccepted
+   */
+  export type User$invitationsAcceptedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    where?: InvitationWhereInput
+    orderBy?: InvitationOrderByWithRelationInput | InvitationOrderByWithRelationInput[]
+    cursor?: InvitationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: InvitationScalarFieldEnum | InvitationScalarFieldEnum[]
   }
 
   /**
@@ -4154,6 +4406,1161 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Invitation
+   */
+
+  export type AggregateInvitation = {
+    _count: InvitationCountAggregateOutputType | null
+    _min: InvitationMinAggregateOutputType | null
+    _max: InvitationMaxAggregateOutputType | null
+  }
+
+  export type InvitationMinAggregateOutputType = {
+    id: string | null
+    token: string | null
+    invitedById: string | null
+    email: string | null
+    role: $Enums.Role | null
+    expiresAt: Date | null
+    acceptedAt: Date | null
+    acceptedByUserId: string | null
+    revokedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type InvitationMaxAggregateOutputType = {
+    id: string | null
+    token: string | null
+    invitedById: string | null
+    email: string | null
+    role: $Enums.Role | null
+    expiresAt: Date | null
+    acceptedAt: Date | null
+    acceptedByUserId: string | null
+    revokedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type InvitationCountAggregateOutputType = {
+    id: number
+    token: number
+    invitedById: number
+    email: number
+    role: number
+    expiresAt: number
+    acceptedAt: number
+    acceptedByUserId: number
+    revokedAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type InvitationMinAggregateInputType = {
+    id?: true
+    token?: true
+    invitedById?: true
+    email?: true
+    role?: true
+    expiresAt?: true
+    acceptedAt?: true
+    acceptedByUserId?: true
+    revokedAt?: true
+    createdAt?: true
+  }
+
+  export type InvitationMaxAggregateInputType = {
+    id?: true
+    token?: true
+    invitedById?: true
+    email?: true
+    role?: true
+    expiresAt?: true
+    acceptedAt?: true
+    acceptedByUserId?: true
+    revokedAt?: true
+    createdAt?: true
+  }
+
+  export type InvitationCountAggregateInputType = {
+    id?: true
+    token?: true
+    invitedById?: true
+    email?: true
+    role?: true
+    expiresAt?: true
+    acceptedAt?: true
+    acceptedByUserId?: true
+    revokedAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type InvitationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Invitation to aggregate.
+     */
+    where?: InvitationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Invitations to fetch.
+     */
+    orderBy?: InvitationOrderByWithRelationInput | InvitationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: InvitationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Invitations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Invitations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Invitations
+    **/
+    _count?: true | InvitationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: InvitationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: InvitationMaxAggregateInputType
+  }
+
+  export type GetInvitationAggregateType<T extends InvitationAggregateArgs> = {
+        [P in keyof T & keyof AggregateInvitation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateInvitation[P]>
+      : GetScalarType<T[P], AggregateInvitation[P]>
+  }
+
+
+
+
+  export type InvitationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InvitationWhereInput
+    orderBy?: InvitationOrderByWithAggregationInput | InvitationOrderByWithAggregationInput[]
+    by: InvitationScalarFieldEnum[] | InvitationScalarFieldEnum
+    having?: InvitationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: InvitationCountAggregateInputType | true
+    _min?: InvitationMinAggregateInputType
+    _max?: InvitationMaxAggregateInputType
+  }
+
+  export type InvitationGroupByOutputType = {
+    id: string
+    token: string
+    invitedById: string
+    email: string | null
+    role: $Enums.Role
+    expiresAt: Date
+    acceptedAt: Date | null
+    acceptedByUserId: string | null
+    revokedAt: Date | null
+    createdAt: Date
+    _count: InvitationCountAggregateOutputType | null
+    _min: InvitationMinAggregateOutputType | null
+    _max: InvitationMaxAggregateOutputType | null
+  }
+
+  type GetInvitationGroupByPayload<T extends InvitationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<InvitationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof InvitationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], InvitationGroupByOutputType[P]>
+            : GetScalarType<T[P], InvitationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type InvitationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    token?: boolean
+    invitedById?: boolean
+    email?: boolean
+    role?: boolean
+    expiresAt?: boolean
+    acceptedAt?: boolean
+    acceptedByUserId?: boolean
+    revokedAt?: boolean
+    createdAt?: boolean
+    invitedBy?: boolean | UserDefaultArgs<ExtArgs>
+    acceptedBy?: boolean | Invitation$acceptedByArgs<ExtArgs>
+  }, ExtArgs["result"]["invitation"]>
+
+  export type InvitationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    token?: boolean
+    invitedById?: boolean
+    email?: boolean
+    role?: boolean
+    expiresAt?: boolean
+    acceptedAt?: boolean
+    acceptedByUserId?: boolean
+    revokedAt?: boolean
+    createdAt?: boolean
+    invitedBy?: boolean | UserDefaultArgs<ExtArgs>
+    acceptedBy?: boolean | Invitation$acceptedByArgs<ExtArgs>
+  }, ExtArgs["result"]["invitation"]>
+
+  export type InvitationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    token?: boolean
+    invitedById?: boolean
+    email?: boolean
+    role?: boolean
+    expiresAt?: boolean
+    acceptedAt?: boolean
+    acceptedByUserId?: boolean
+    revokedAt?: boolean
+    createdAt?: boolean
+    invitedBy?: boolean | UserDefaultArgs<ExtArgs>
+    acceptedBy?: boolean | Invitation$acceptedByArgs<ExtArgs>
+  }, ExtArgs["result"]["invitation"]>
+
+  export type InvitationSelectScalar = {
+    id?: boolean
+    token?: boolean
+    invitedById?: boolean
+    email?: boolean
+    role?: boolean
+    expiresAt?: boolean
+    acceptedAt?: boolean
+    acceptedByUserId?: boolean
+    revokedAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type InvitationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "token" | "invitedById" | "email" | "role" | "expiresAt" | "acceptedAt" | "acceptedByUserId" | "revokedAt" | "createdAt", ExtArgs["result"]["invitation"]>
+  export type InvitationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    invitedBy?: boolean | UserDefaultArgs<ExtArgs>
+    acceptedBy?: boolean | Invitation$acceptedByArgs<ExtArgs>
+  }
+  export type InvitationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    invitedBy?: boolean | UserDefaultArgs<ExtArgs>
+    acceptedBy?: boolean | Invitation$acceptedByArgs<ExtArgs>
+  }
+  export type InvitationIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    invitedBy?: boolean | UserDefaultArgs<ExtArgs>
+    acceptedBy?: boolean | Invitation$acceptedByArgs<ExtArgs>
+  }
+
+  export type $InvitationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Invitation"
+    objects: {
+      invitedBy: Prisma.$UserPayload<ExtArgs>
+      acceptedBy: Prisma.$UserPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      token: string
+      invitedById: string
+      email: string | null
+      role: $Enums.Role
+      expiresAt: Date
+      acceptedAt: Date | null
+      acceptedByUserId: string | null
+      revokedAt: Date | null
+      createdAt: Date
+    }, ExtArgs["result"]["invitation"]>
+    composites: {}
+  }
+
+  type InvitationGetPayload<S extends boolean | null | undefined | InvitationDefaultArgs> = $Result.GetResult<Prisma.$InvitationPayload, S>
+
+  type InvitationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<InvitationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: InvitationCountAggregateInputType | true
+    }
+
+  export interface InvitationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Invitation'], meta: { name: 'Invitation' } }
+    /**
+     * Find zero or one Invitation that matches the filter.
+     * @param {InvitationFindUniqueArgs} args - Arguments to find a Invitation
+     * @example
+     * // Get one Invitation
+     * const invitation = await prisma.invitation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends InvitationFindUniqueArgs>(args: SelectSubset<T, InvitationFindUniqueArgs<ExtArgs>>): Prisma__InvitationClient<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Invitation that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {InvitationFindUniqueOrThrowArgs} args - Arguments to find a Invitation
+     * @example
+     * // Get one Invitation
+     * const invitation = await prisma.invitation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends InvitationFindUniqueOrThrowArgs>(args: SelectSubset<T, InvitationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__InvitationClient<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Invitation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InvitationFindFirstArgs} args - Arguments to find a Invitation
+     * @example
+     * // Get one Invitation
+     * const invitation = await prisma.invitation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends InvitationFindFirstArgs>(args?: SelectSubset<T, InvitationFindFirstArgs<ExtArgs>>): Prisma__InvitationClient<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Invitation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InvitationFindFirstOrThrowArgs} args - Arguments to find a Invitation
+     * @example
+     * // Get one Invitation
+     * const invitation = await prisma.invitation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends InvitationFindFirstOrThrowArgs>(args?: SelectSubset<T, InvitationFindFirstOrThrowArgs<ExtArgs>>): Prisma__InvitationClient<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Invitations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InvitationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Invitations
+     * const invitations = await prisma.invitation.findMany()
+     * 
+     * // Get first 10 Invitations
+     * const invitations = await prisma.invitation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const invitationWithIdOnly = await prisma.invitation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends InvitationFindManyArgs>(args?: SelectSubset<T, InvitationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Invitation.
+     * @param {InvitationCreateArgs} args - Arguments to create a Invitation.
+     * @example
+     * // Create one Invitation
+     * const Invitation = await prisma.invitation.create({
+     *   data: {
+     *     // ... data to create a Invitation
+     *   }
+     * })
+     * 
+     */
+    create<T extends InvitationCreateArgs>(args: SelectSubset<T, InvitationCreateArgs<ExtArgs>>): Prisma__InvitationClient<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Invitations.
+     * @param {InvitationCreateManyArgs} args - Arguments to create many Invitations.
+     * @example
+     * // Create many Invitations
+     * const invitation = await prisma.invitation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends InvitationCreateManyArgs>(args?: SelectSubset<T, InvitationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Invitations and returns the data saved in the database.
+     * @param {InvitationCreateManyAndReturnArgs} args - Arguments to create many Invitations.
+     * @example
+     * // Create many Invitations
+     * const invitation = await prisma.invitation.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Invitations and only return the `id`
+     * const invitationWithIdOnly = await prisma.invitation.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends InvitationCreateManyAndReturnArgs>(args?: SelectSubset<T, InvitationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Invitation.
+     * @param {InvitationDeleteArgs} args - Arguments to delete one Invitation.
+     * @example
+     * // Delete one Invitation
+     * const Invitation = await prisma.invitation.delete({
+     *   where: {
+     *     // ... filter to delete one Invitation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends InvitationDeleteArgs>(args: SelectSubset<T, InvitationDeleteArgs<ExtArgs>>): Prisma__InvitationClient<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Invitation.
+     * @param {InvitationUpdateArgs} args - Arguments to update one Invitation.
+     * @example
+     * // Update one Invitation
+     * const invitation = await prisma.invitation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends InvitationUpdateArgs>(args: SelectSubset<T, InvitationUpdateArgs<ExtArgs>>): Prisma__InvitationClient<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Invitations.
+     * @param {InvitationDeleteManyArgs} args - Arguments to filter Invitations to delete.
+     * @example
+     * // Delete a few Invitations
+     * const { count } = await prisma.invitation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends InvitationDeleteManyArgs>(args?: SelectSubset<T, InvitationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Invitations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InvitationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Invitations
+     * const invitation = await prisma.invitation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends InvitationUpdateManyArgs>(args: SelectSubset<T, InvitationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Invitations and returns the data updated in the database.
+     * @param {InvitationUpdateManyAndReturnArgs} args - Arguments to update many Invitations.
+     * @example
+     * // Update many Invitations
+     * const invitation = await prisma.invitation.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Invitations and only return the `id`
+     * const invitationWithIdOnly = await prisma.invitation.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends InvitationUpdateManyAndReturnArgs>(args: SelectSubset<T, InvitationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Invitation.
+     * @param {InvitationUpsertArgs} args - Arguments to update or create a Invitation.
+     * @example
+     * // Update or create a Invitation
+     * const invitation = await prisma.invitation.upsert({
+     *   create: {
+     *     // ... data to create a Invitation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Invitation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends InvitationUpsertArgs>(args: SelectSubset<T, InvitationUpsertArgs<ExtArgs>>): Prisma__InvitationClient<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Invitations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InvitationCountArgs} args - Arguments to filter Invitations to count.
+     * @example
+     * // Count the number of Invitations
+     * const count = await prisma.invitation.count({
+     *   where: {
+     *     // ... the filter for the Invitations we want to count
+     *   }
+     * })
+    **/
+    count<T extends InvitationCountArgs>(
+      args?: Subset<T, InvitationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], InvitationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Invitation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InvitationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends InvitationAggregateArgs>(args: Subset<T, InvitationAggregateArgs>): Prisma.PrismaPromise<GetInvitationAggregateType<T>>
+
+    /**
+     * Group by Invitation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InvitationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends InvitationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: InvitationGroupByArgs['orderBy'] }
+        : { orderBy?: InvitationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, InvitationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetInvitationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Invitation model
+   */
+  readonly fields: InvitationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Invitation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__InvitationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    invitedBy<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    acceptedBy<T extends Invitation$acceptedByArgs<ExtArgs> = {}>(args?: Subset<T, Invitation$acceptedByArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Invitation model
+   */
+  interface InvitationFieldRefs {
+    readonly id: FieldRef<"Invitation", 'String'>
+    readonly token: FieldRef<"Invitation", 'String'>
+    readonly invitedById: FieldRef<"Invitation", 'String'>
+    readonly email: FieldRef<"Invitation", 'String'>
+    readonly role: FieldRef<"Invitation", 'Role'>
+    readonly expiresAt: FieldRef<"Invitation", 'DateTime'>
+    readonly acceptedAt: FieldRef<"Invitation", 'DateTime'>
+    readonly acceptedByUserId: FieldRef<"Invitation", 'String'>
+    readonly revokedAt: FieldRef<"Invitation", 'DateTime'>
+    readonly createdAt: FieldRef<"Invitation", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Invitation findUnique
+   */
+  export type InvitationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    /**
+     * Filter, which Invitation to fetch.
+     */
+    where: InvitationWhereUniqueInput
+  }
+
+  /**
+   * Invitation findUniqueOrThrow
+   */
+  export type InvitationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    /**
+     * Filter, which Invitation to fetch.
+     */
+    where: InvitationWhereUniqueInput
+  }
+
+  /**
+   * Invitation findFirst
+   */
+  export type InvitationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    /**
+     * Filter, which Invitation to fetch.
+     */
+    where?: InvitationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Invitations to fetch.
+     */
+    orderBy?: InvitationOrderByWithRelationInput | InvitationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Invitations.
+     */
+    cursor?: InvitationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Invitations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Invitations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Invitations.
+     */
+    distinct?: InvitationScalarFieldEnum | InvitationScalarFieldEnum[]
+  }
+
+  /**
+   * Invitation findFirstOrThrow
+   */
+  export type InvitationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    /**
+     * Filter, which Invitation to fetch.
+     */
+    where?: InvitationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Invitations to fetch.
+     */
+    orderBy?: InvitationOrderByWithRelationInput | InvitationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Invitations.
+     */
+    cursor?: InvitationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Invitations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Invitations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Invitations.
+     */
+    distinct?: InvitationScalarFieldEnum | InvitationScalarFieldEnum[]
+  }
+
+  /**
+   * Invitation findMany
+   */
+  export type InvitationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    /**
+     * Filter, which Invitations to fetch.
+     */
+    where?: InvitationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Invitations to fetch.
+     */
+    orderBy?: InvitationOrderByWithRelationInput | InvitationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Invitations.
+     */
+    cursor?: InvitationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Invitations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Invitations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Invitations.
+     */
+    distinct?: InvitationScalarFieldEnum | InvitationScalarFieldEnum[]
+  }
+
+  /**
+   * Invitation create
+   */
+  export type InvitationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Invitation.
+     */
+    data: XOR<InvitationCreateInput, InvitationUncheckedCreateInput>
+  }
+
+  /**
+   * Invitation createMany
+   */
+  export type InvitationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Invitations.
+     */
+    data: InvitationCreateManyInput | InvitationCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Invitation createManyAndReturn
+   */
+  export type InvitationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * The data used to create many Invitations.
+     */
+    data: InvitationCreateManyInput | InvitationCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Invitation update
+   */
+  export type InvitationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Invitation.
+     */
+    data: XOR<InvitationUpdateInput, InvitationUncheckedUpdateInput>
+    /**
+     * Choose, which Invitation to update.
+     */
+    where: InvitationWhereUniqueInput
+  }
+
+  /**
+   * Invitation updateMany
+   */
+  export type InvitationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Invitations.
+     */
+    data: XOR<InvitationUpdateManyMutationInput, InvitationUncheckedUpdateManyInput>
+    /**
+     * Filter which Invitations to update
+     */
+    where?: InvitationWhereInput
+    /**
+     * Limit how many Invitations to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Invitation updateManyAndReturn
+   */
+  export type InvitationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * The data used to update Invitations.
+     */
+    data: XOR<InvitationUpdateManyMutationInput, InvitationUncheckedUpdateManyInput>
+    /**
+     * Filter which Invitations to update
+     */
+    where?: InvitationWhereInput
+    /**
+     * Limit how many Invitations to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Invitation upsert
+   */
+  export type InvitationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Invitation to update in case it exists.
+     */
+    where: InvitationWhereUniqueInput
+    /**
+     * In case the Invitation found by the `where` argument doesn't exist, create a new Invitation with this data.
+     */
+    create: XOR<InvitationCreateInput, InvitationUncheckedCreateInput>
+    /**
+     * In case the Invitation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<InvitationUpdateInput, InvitationUncheckedUpdateInput>
+  }
+
+  /**
+   * Invitation delete
+   */
+  export type InvitationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
+    /**
+     * Filter which Invitation to delete.
+     */
+    where: InvitationWhereUniqueInput
+  }
+
+  /**
+   * Invitation deleteMany
+   */
+  export type InvitationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Invitations to delete
+     */
+    where?: InvitationWhereInput
+    /**
+     * Limit how many Invitations to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Invitation.acceptedBy
+   */
+  export type Invitation$acceptedByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * Invitation without action
+   */
+  export type InvitationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Invitation
+     */
+    select?: InvitationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Invitation
+     */
+    omit?: InvitationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InvitationInclude<ExtArgs> | null
   }
 
 
@@ -20935,10 +22342,27 @@ export namespace Prisma {
     status: 'status',
     googleAccessToken: 'googleAccessToken',
     googleRefreshToken: 'googleRefreshToken',
-    googleTokenExpiresAt: 'googleTokenExpiresAt'
+    googleTokenExpiresAt: 'googleTokenExpiresAt',
+    dataOwnerId: 'dataOwnerId'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const InvitationScalarFieldEnum: {
+    id: 'id',
+    token: 'token',
+    invitedById: 'invitedById',
+    email: 'email',
+    role: 'role',
+    expiresAt: 'expiresAt',
+    acceptedAt: 'acceptedAt',
+    acceptedByUserId: 'acceptedByUserId',
+    revokedAt: 'revokedAt',
+    createdAt: 'createdAt'
+  };
+
+  export type InvitationScalarFieldEnum = (typeof InvitationScalarFieldEnum)[keyof typeof InvitationScalarFieldEnum]
 
 
   export const AccountScalarFieldEnum: {
@@ -21389,6 +22813,11 @@ export namespace Prisma {
     googleAccessToken?: StringNullableFilter<"User"> | string | null
     googleRefreshToken?: StringNullableFilter<"User"> | string | null
     googleTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    dataOwnerId?: StringNullableFilter<"User"> | string | null
+    dataOwner?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    members?: UserListRelationFilter
+    invitationsSent?: InvitationListRelationFilter
+    invitationsAccepted?: InvitationListRelationFilter
     accounts?: AccountListRelationFilter
     budgets?: BudgetListRelationFilter
     categories?: CategoryListRelationFilter
@@ -21421,6 +22850,11 @@ export namespace Prisma {
     googleAccessToken?: SortOrderInput | SortOrder
     googleRefreshToken?: SortOrderInput | SortOrder
     googleTokenExpiresAt?: SortOrderInput | SortOrder
+    dataOwnerId?: SortOrderInput | SortOrder
+    dataOwner?: UserOrderByWithRelationInput
+    members?: UserOrderByRelationAggregateInput
+    invitationsSent?: InvitationOrderByRelationAggregateInput
+    invitationsAccepted?: InvitationOrderByRelationAggregateInput
     accounts?: AccountOrderByRelationAggregateInput
     budgets?: BudgetOrderByRelationAggregateInput
     categories?: CategoryOrderByRelationAggregateInput
@@ -21456,6 +22890,11 @@ export namespace Prisma {
     googleAccessToken?: StringNullableFilter<"User"> | string | null
     googleRefreshToken?: StringNullableFilter<"User"> | string | null
     googleTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    dataOwnerId?: StringNullableFilter<"User"> | string | null
+    dataOwner?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    members?: UserListRelationFilter
+    invitationsSent?: InvitationListRelationFilter
+    invitationsAccepted?: InvitationListRelationFilter
     accounts?: AccountListRelationFilter
     budgets?: BudgetListRelationFilter
     categories?: CategoryListRelationFilter
@@ -21488,6 +22927,7 @@ export namespace Prisma {
     googleAccessToken?: SortOrderInput | SortOrder
     googleRefreshToken?: SortOrderInput | SortOrder
     googleTokenExpiresAt?: SortOrderInput | SortOrder
+    dataOwnerId?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -21513,6 +22953,90 @@ export namespace Prisma {
     googleAccessToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     googleRefreshToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     googleTokenExpiresAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    dataOwnerId?: StringNullableWithAggregatesFilter<"User"> | string | null
+  }
+
+  export type InvitationWhereInput = {
+    AND?: InvitationWhereInput | InvitationWhereInput[]
+    OR?: InvitationWhereInput[]
+    NOT?: InvitationWhereInput | InvitationWhereInput[]
+    id?: StringFilter<"Invitation"> | string
+    token?: StringFilter<"Invitation"> | string
+    invitedById?: StringFilter<"Invitation"> | string
+    email?: StringNullableFilter<"Invitation"> | string | null
+    role?: EnumRoleFilter<"Invitation"> | $Enums.Role
+    expiresAt?: DateTimeFilter<"Invitation"> | Date | string
+    acceptedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
+    acceptedByUserId?: StringNullableFilter<"Invitation"> | string | null
+    revokedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
+    createdAt?: DateTimeFilter<"Invitation"> | Date | string
+    invitedBy?: XOR<UserScalarRelationFilter, UserWhereInput>
+    acceptedBy?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }
+
+  export type InvitationOrderByWithRelationInput = {
+    id?: SortOrder
+    token?: SortOrder
+    invitedById?: SortOrder
+    email?: SortOrderInput | SortOrder
+    role?: SortOrder
+    expiresAt?: SortOrder
+    acceptedAt?: SortOrderInput | SortOrder
+    acceptedByUserId?: SortOrderInput | SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    invitedBy?: UserOrderByWithRelationInput
+    acceptedBy?: UserOrderByWithRelationInput
+  }
+
+  export type InvitationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    token?: string
+    AND?: InvitationWhereInput | InvitationWhereInput[]
+    OR?: InvitationWhereInput[]
+    NOT?: InvitationWhereInput | InvitationWhereInput[]
+    invitedById?: StringFilter<"Invitation"> | string
+    email?: StringNullableFilter<"Invitation"> | string | null
+    role?: EnumRoleFilter<"Invitation"> | $Enums.Role
+    expiresAt?: DateTimeFilter<"Invitation"> | Date | string
+    acceptedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
+    acceptedByUserId?: StringNullableFilter<"Invitation"> | string | null
+    revokedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
+    createdAt?: DateTimeFilter<"Invitation"> | Date | string
+    invitedBy?: XOR<UserScalarRelationFilter, UserWhereInput>
+    acceptedBy?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }, "id" | "token">
+
+  export type InvitationOrderByWithAggregationInput = {
+    id?: SortOrder
+    token?: SortOrder
+    invitedById?: SortOrder
+    email?: SortOrderInput | SortOrder
+    role?: SortOrder
+    expiresAt?: SortOrder
+    acceptedAt?: SortOrderInput | SortOrder
+    acceptedByUserId?: SortOrderInput | SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: InvitationCountOrderByAggregateInput
+    _max?: InvitationMaxOrderByAggregateInput
+    _min?: InvitationMinOrderByAggregateInput
+  }
+
+  export type InvitationScalarWhereWithAggregatesInput = {
+    AND?: InvitationScalarWhereWithAggregatesInput | InvitationScalarWhereWithAggregatesInput[]
+    OR?: InvitationScalarWhereWithAggregatesInput[]
+    NOT?: InvitationScalarWhereWithAggregatesInput | InvitationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Invitation"> | string
+    token?: StringWithAggregatesFilter<"Invitation"> | string
+    invitedById?: StringWithAggregatesFilter<"Invitation"> | string
+    email?: StringNullableWithAggregatesFilter<"Invitation"> | string | null
+    role?: EnumRoleWithAggregatesFilter<"Invitation"> | $Enums.Role
+    expiresAt?: DateTimeWithAggregatesFilter<"Invitation"> | Date | string
+    acceptedAt?: DateTimeNullableWithAggregatesFilter<"Invitation"> | Date | string | null
+    acceptedByUserId?: StringNullableWithAggregatesFilter<"Invitation"> | string | null
+    revokedAt?: DateTimeNullableWithAggregatesFilter<"Invitation"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Invitation"> | Date | string
   }
 
   export type AccountWhereInput = {
@@ -22702,6 +24226,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -22734,6 +24262,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -22766,6 +24298,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -22798,6 +24334,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -22830,6 +24370,7 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
   }
 
   export type UserUpdateManyMutationInput = {
@@ -22868,6 +24409,96 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type InvitationCreateInput = {
+    id?: string
+    token: string
+    email?: string | null
+    role?: $Enums.Role
+    expiresAt: Date | string
+    acceptedAt?: Date | string | null
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+    invitedBy: UserCreateNestedOneWithoutInvitationsSentInput
+    acceptedBy?: UserCreateNestedOneWithoutInvitationsAcceptedInput
+  }
+
+  export type InvitationUncheckedCreateInput = {
+    id?: string
+    token: string
+    invitedById: string
+    email?: string | null
+    role?: $Enums.Role
+    expiresAt: Date | string
+    acceptedAt?: Date | string | null
+    acceptedByUserId?: string | null
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type InvitationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    invitedBy?: UserUpdateOneRequiredWithoutInvitationsSentNestedInput
+    acceptedBy?: UserUpdateOneWithoutInvitationsAcceptedNestedInput
+  }
+
+  export type InvitationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    invitedById?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    acceptedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InvitationCreateManyInput = {
+    id?: string
+    token: string
+    invitedById: string
+    email?: string | null
+    role?: $Enums.Role
+    expiresAt: Date | string
+    acceptedAt?: Date | string | null
+    acceptedByUserId?: string | null
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type InvitationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InvitationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    invitedById?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    acceptedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AccountCreateInput = {
@@ -24177,6 +25808,23 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type UserNullableScalarRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
+  }
+
+  export type UserListRelationFilter = {
+    every?: UserWhereInput
+    some?: UserWhereInput
+    none?: UserWhereInput
+  }
+
+  export type InvitationListRelationFilter = {
+    every?: InvitationWhereInput
+    some?: InvitationWhereInput
+    none?: InvitationWhereInput
+  }
+
   export type AccountListRelationFilter = {
     every?: AccountWhereInput
     some?: AccountWhereInput
@@ -24259,6 +25907,14 @@ export namespace Prisma {
     nulls?: NullsOrder
   }
 
+  export type UserOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type InvitationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type AccountOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -24324,6 +25980,7 @@ export namespace Prisma {
     googleAccessToken?: SortOrder
     googleRefreshToken?: SortOrder
     googleTokenExpiresAt?: SortOrder
+    dataOwnerId?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -24341,6 +25998,7 @@ export namespace Prisma {
     googleAccessToken?: SortOrder
     googleRefreshToken?: SortOrder
     googleTokenExpiresAt?: SortOrder
+    dataOwnerId?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -24358,6 +26016,7 @@ export namespace Prisma {
     googleAccessToken?: SortOrder
     googleRefreshToken?: SortOrder
     googleTokenExpiresAt?: SortOrder
+    dataOwnerId?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -24470,6 +26129,50 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type InvitationCountOrderByAggregateInput = {
+    id?: SortOrder
+    token?: SortOrder
+    invitedById?: SortOrder
+    email?: SortOrder
+    role?: SortOrder
+    expiresAt?: SortOrder
+    acceptedAt?: SortOrder
+    acceptedByUserId?: SortOrder
+    revokedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type InvitationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    token?: SortOrder
+    invitedById?: SortOrder
+    email?: SortOrder
+    role?: SortOrder
+    expiresAt?: SortOrder
+    acceptedAt?: SortOrder
+    acceptedByUserId?: SortOrder
+    revokedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type InvitationMinOrderByAggregateInput = {
+    id?: SortOrder
+    token?: SortOrder
+    invitedById?: SortOrder
+    email?: SortOrder
+    role?: SortOrder
+    expiresAt?: SortOrder
+    acceptedAt?: SortOrder
+    acceptedByUserId?: SortOrder
+    revokedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -24502,11 +26205,6 @@ export namespace Prisma {
     in?: $Enums.AccountType[] | ListEnumAccountTypeFieldRefInput<$PrismaModel>
     notIn?: $Enums.AccountType[] | ListEnumAccountTypeFieldRefInput<$PrismaModel>
     not?: NestedEnumAccountTypeFilter<$PrismaModel> | $Enums.AccountType
-  }
-
-  export type UserScalarRelationFilter = {
-    is?: UserWhereInput
-    isNot?: UserWhereInput
   }
 
   export type AccountCountOrderByAggregateInput = {
@@ -25384,6 +27082,33 @@ export namespace Prisma {
     used?: SortOrder
   }
 
+  export type UserCreateNestedOneWithoutMembersInput = {
+    create?: XOR<UserCreateWithoutMembersInput, UserUncheckedCreateWithoutMembersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMembersInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserCreateNestedManyWithoutDataOwnerInput = {
+    create?: XOR<UserCreateWithoutDataOwnerInput, UserUncheckedCreateWithoutDataOwnerInput> | UserCreateWithoutDataOwnerInput[] | UserUncheckedCreateWithoutDataOwnerInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutDataOwnerInput | UserCreateOrConnectWithoutDataOwnerInput[]
+    createMany?: UserCreateManyDataOwnerInputEnvelope
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+  }
+
+  export type InvitationCreateNestedManyWithoutInvitedByInput = {
+    create?: XOR<InvitationCreateWithoutInvitedByInput, InvitationUncheckedCreateWithoutInvitedByInput> | InvitationCreateWithoutInvitedByInput[] | InvitationUncheckedCreateWithoutInvitedByInput[]
+    connectOrCreate?: InvitationCreateOrConnectWithoutInvitedByInput | InvitationCreateOrConnectWithoutInvitedByInput[]
+    createMany?: InvitationCreateManyInvitedByInputEnvelope
+    connect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+  }
+
+  export type InvitationCreateNestedManyWithoutAcceptedByInput = {
+    create?: XOR<InvitationCreateWithoutAcceptedByInput, InvitationUncheckedCreateWithoutAcceptedByInput> | InvitationCreateWithoutAcceptedByInput[] | InvitationUncheckedCreateWithoutAcceptedByInput[]
+    connectOrCreate?: InvitationCreateOrConnectWithoutAcceptedByInput | InvitationCreateOrConnectWithoutAcceptedByInput[]
+    createMany?: InvitationCreateManyAcceptedByInputEnvelope
+    connect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+  }
+
   export type AccountCreateNestedManyWithoutUserInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -25472,6 +27197,27 @@ export namespace Prisma {
     connectOrCreate?: TelegramPendingTokenCreateOrConnectWithoutUserInput | TelegramPendingTokenCreateOrConnectWithoutUserInput[]
     createMany?: TelegramPendingTokenCreateManyUserInputEnvelope
     connect?: TelegramPendingTokenWhereUniqueInput | TelegramPendingTokenWhereUniqueInput[]
+  }
+
+  export type UserUncheckedCreateNestedManyWithoutDataOwnerInput = {
+    create?: XOR<UserCreateWithoutDataOwnerInput, UserUncheckedCreateWithoutDataOwnerInput> | UserCreateWithoutDataOwnerInput[] | UserUncheckedCreateWithoutDataOwnerInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutDataOwnerInput | UserCreateOrConnectWithoutDataOwnerInput[]
+    createMany?: UserCreateManyDataOwnerInputEnvelope
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+  }
+
+  export type InvitationUncheckedCreateNestedManyWithoutInvitedByInput = {
+    create?: XOR<InvitationCreateWithoutInvitedByInput, InvitationUncheckedCreateWithoutInvitedByInput> | InvitationCreateWithoutInvitedByInput[] | InvitationUncheckedCreateWithoutInvitedByInput[]
+    connectOrCreate?: InvitationCreateOrConnectWithoutInvitedByInput | InvitationCreateOrConnectWithoutInvitedByInput[]
+    createMany?: InvitationCreateManyInvitedByInputEnvelope
+    connect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+  }
+
+  export type InvitationUncheckedCreateNestedManyWithoutAcceptedByInput = {
+    create?: XOR<InvitationCreateWithoutAcceptedByInput, InvitationUncheckedCreateWithoutAcceptedByInput> | InvitationCreateWithoutAcceptedByInput[] | InvitationUncheckedCreateWithoutAcceptedByInput[]
+    connectOrCreate?: InvitationCreateOrConnectWithoutAcceptedByInput | InvitationCreateOrConnectWithoutAcceptedByInput[]
+    createMany?: InvitationCreateManyAcceptedByInputEnvelope
+    connect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
   }
 
   export type AccountUncheckedCreateNestedManyWithoutUserInput = {
@@ -25586,6 +27332,58 @@ export namespace Prisma {
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
     set?: Date | string | null
+  }
+
+  export type UserUpdateOneWithoutMembersNestedInput = {
+    create?: XOR<UserCreateWithoutMembersInput, UserUncheckedCreateWithoutMembersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMembersInput
+    upsert?: UserUpsertWithoutMembersInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutMembersInput, UserUpdateWithoutMembersInput>, UserUncheckedUpdateWithoutMembersInput>
+  }
+
+  export type UserUpdateManyWithoutDataOwnerNestedInput = {
+    create?: XOR<UserCreateWithoutDataOwnerInput, UserUncheckedCreateWithoutDataOwnerInput> | UserCreateWithoutDataOwnerInput[] | UserUncheckedCreateWithoutDataOwnerInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutDataOwnerInput | UserCreateOrConnectWithoutDataOwnerInput[]
+    upsert?: UserUpsertWithWhereUniqueWithoutDataOwnerInput | UserUpsertWithWhereUniqueWithoutDataOwnerInput[]
+    createMany?: UserCreateManyDataOwnerInputEnvelope
+    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    update?: UserUpdateWithWhereUniqueWithoutDataOwnerInput | UserUpdateWithWhereUniqueWithoutDataOwnerInput[]
+    updateMany?: UserUpdateManyWithWhereWithoutDataOwnerInput | UserUpdateManyWithWhereWithoutDataOwnerInput[]
+    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
+  }
+
+  export type InvitationUpdateManyWithoutInvitedByNestedInput = {
+    create?: XOR<InvitationCreateWithoutInvitedByInput, InvitationUncheckedCreateWithoutInvitedByInput> | InvitationCreateWithoutInvitedByInput[] | InvitationUncheckedCreateWithoutInvitedByInput[]
+    connectOrCreate?: InvitationCreateOrConnectWithoutInvitedByInput | InvitationCreateOrConnectWithoutInvitedByInput[]
+    upsert?: InvitationUpsertWithWhereUniqueWithoutInvitedByInput | InvitationUpsertWithWhereUniqueWithoutInvitedByInput[]
+    createMany?: InvitationCreateManyInvitedByInputEnvelope
+    set?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    disconnect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    delete?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    connect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    update?: InvitationUpdateWithWhereUniqueWithoutInvitedByInput | InvitationUpdateWithWhereUniqueWithoutInvitedByInput[]
+    updateMany?: InvitationUpdateManyWithWhereWithoutInvitedByInput | InvitationUpdateManyWithWhereWithoutInvitedByInput[]
+    deleteMany?: InvitationScalarWhereInput | InvitationScalarWhereInput[]
+  }
+
+  export type InvitationUpdateManyWithoutAcceptedByNestedInput = {
+    create?: XOR<InvitationCreateWithoutAcceptedByInput, InvitationUncheckedCreateWithoutAcceptedByInput> | InvitationCreateWithoutAcceptedByInput[] | InvitationUncheckedCreateWithoutAcceptedByInput[]
+    connectOrCreate?: InvitationCreateOrConnectWithoutAcceptedByInput | InvitationCreateOrConnectWithoutAcceptedByInput[]
+    upsert?: InvitationUpsertWithWhereUniqueWithoutAcceptedByInput | InvitationUpsertWithWhereUniqueWithoutAcceptedByInput[]
+    createMany?: InvitationCreateManyAcceptedByInputEnvelope
+    set?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    disconnect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    delete?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    connect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    update?: InvitationUpdateWithWhereUniqueWithoutAcceptedByInput | InvitationUpdateWithWhereUniqueWithoutAcceptedByInput[]
+    updateMany?: InvitationUpdateManyWithWhereWithoutAcceptedByInput | InvitationUpdateManyWithWhereWithoutAcceptedByInput[]
+    deleteMany?: InvitationScalarWhereInput | InvitationScalarWhereInput[]
   }
 
   export type AccountUpdateManyWithoutUserNestedInput = {
@@ -25766,6 +27564,48 @@ export namespace Prisma {
     deleteMany?: TelegramPendingTokenScalarWhereInput | TelegramPendingTokenScalarWhereInput[]
   }
 
+  export type UserUncheckedUpdateManyWithoutDataOwnerNestedInput = {
+    create?: XOR<UserCreateWithoutDataOwnerInput, UserUncheckedCreateWithoutDataOwnerInput> | UserCreateWithoutDataOwnerInput[] | UserUncheckedCreateWithoutDataOwnerInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutDataOwnerInput | UserCreateOrConnectWithoutDataOwnerInput[]
+    upsert?: UserUpsertWithWhereUniqueWithoutDataOwnerInput | UserUpsertWithWhereUniqueWithoutDataOwnerInput[]
+    createMany?: UserCreateManyDataOwnerInputEnvelope
+    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    update?: UserUpdateWithWhereUniqueWithoutDataOwnerInput | UserUpdateWithWhereUniqueWithoutDataOwnerInput[]
+    updateMany?: UserUpdateManyWithWhereWithoutDataOwnerInput | UserUpdateManyWithWhereWithoutDataOwnerInput[]
+    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
+  }
+
+  export type InvitationUncheckedUpdateManyWithoutInvitedByNestedInput = {
+    create?: XOR<InvitationCreateWithoutInvitedByInput, InvitationUncheckedCreateWithoutInvitedByInput> | InvitationCreateWithoutInvitedByInput[] | InvitationUncheckedCreateWithoutInvitedByInput[]
+    connectOrCreate?: InvitationCreateOrConnectWithoutInvitedByInput | InvitationCreateOrConnectWithoutInvitedByInput[]
+    upsert?: InvitationUpsertWithWhereUniqueWithoutInvitedByInput | InvitationUpsertWithWhereUniqueWithoutInvitedByInput[]
+    createMany?: InvitationCreateManyInvitedByInputEnvelope
+    set?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    disconnect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    delete?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    connect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    update?: InvitationUpdateWithWhereUniqueWithoutInvitedByInput | InvitationUpdateWithWhereUniqueWithoutInvitedByInput[]
+    updateMany?: InvitationUpdateManyWithWhereWithoutInvitedByInput | InvitationUpdateManyWithWhereWithoutInvitedByInput[]
+    deleteMany?: InvitationScalarWhereInput | InvitationScalarWhereInput[]
+  }
+
+  export type InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput = {
+    create?: XOR<InvitationCreateWithoutAcceptedByInput, InvitationUncheckedCreateWithoutAcceptedByInput> | InvitationCreateWithoutAcceptedByInput[] | InvitationUncheckedCreateWithoutAcceptedByInput[]
+    connectOrCreate?: InvitationCreateOrConnectWithoutAcceptedByInput | InvitationCreateOrConnectWithoutAcceptedByInput[]
+    upsert?: InvitationUpsertWithWhereUniqueWithoutAcceptedByInput | InvitationUpsertWithWhereUniqueWithoutAcceptedByInput[]
+    createMany?: InvitationCreateManyAcceptedByInputEnvelope
+    set?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    disconnect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    delete?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    connect?: InvitationWhereUniqueInput | InvitationWhereUniqueInput[]
+    update?: InvitationUpdateWithWhereUniqueWithoutAcceptedByInput | InvitationUpdateWithWhereUniqueWithoutAcceptedByInput[]
+    updateMany?: InvitationUpdateManyWithWhereWithoutAcceptedByInput | InvitationUpdateManyWithWhereWithoutAcceptedByInput[]
+    deleteMany?: InvitationScalarWhereInput | InvitationScalarWhereInput[]
+  }
+
   export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -25942,6 +27782,36 @@ export namespace Prisma {
     update?: TelegramPendingTokenUpdateWithWhereUniqueWithoutUserInput | TelegramPendingTokenUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: TelegramPendingTokenUpdateManyWithWhereWithoutUserInput | TelegramPendingTokenUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: TelegramPendingTokenScalarWhereInput | TelegramPendingTokenScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutInvitationsSentInput = {
+    create?: XOR<UserCreateWithoutInvitationsSentInput, UserUncheckedCreateWithoutInvitationsSentInput>
+    connectOrCreate?: UserCreateOrConnectWithoutInvitationsSentInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutInvitationsAcceptedInput = {
+    create?: XOR<UserCreateWithoutInvitationsAcceptedInput, UserUncheckedCreateWithoutInvitationsAcceptedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutInvitationsAcceptedInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutInvitationsSentNestedInput = {
+    create?: XOR<UserCreateWithoutInvitationsSentInput, UserUncheckedCreateWithoutInvitationsSentInput>
+    connectOrCreate?: UserCreateOrConnectWithoutInvitationsSentInput
+    upsert?: UserUpsertWithoutInvitationsSentInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutInvitationsSentInput, UserUpdateWithoutInvitationsSentInput>, UserUncheckedUpdateWithoutInvitationsSentInput>
+  }
+
+  export type UserUpdateOneWithoutInvitationsAcceptedNestedInput = {
+    create?: XOR<UserCreateWithoutInvitationsAcceptedInput, UserUncheckedCreateWithoutInvitationsAcceptedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutInvitationsAcceptedInput
+    upsert?: UserUpsertWithoutInvitationsAcceptedInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutInvitationsAcceptedInput, UserUpdateWithoutInvitationsAcceptedInput>, UserUncheckedUpdateWithoutInvitationsAcceptedInput>
   }
 
   export type UserCreateNestedOneWithoutAccountsInput = {
@@ -27455,6 +29325,229 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type UserCreateWithoutMembersInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    budgets?: BudgetCreateNestedManyWithoutUserInput
+    categories?: CategoryCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionCreateNestedManyWithoutUserInput
+    payees?: PayeeCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupCreateNestedManyWithoutUserInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutMembersInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
+    categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupUncheckedCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionUncheckedCreateNestedManyWithoutUserInput
+    payees?: PayeeUncheckedCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionUncheckedCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageUncheckedCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupUncheckedCreateNestedManyWithoutUserInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutMembersInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutMembersInput, UserUncheckedCreateWithoutMembersInput>
+  }
+
+  export type UserCreateWithoutDataOwnerInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    budgets?: BudgetCreateNestedManyWithoutUserInput
+    categories?: CategoryCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionCreateNestedManyWithoutUserInput
+    payees?: PayeeCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupCreateNestedManyWithoutUserInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutDataOwnerInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
+    categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupUncheckedCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionUncheckedCreateNestedManyWithoutUserInput
+    payees?: PayeeUncheckedCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionUncheckedCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageUncheckedCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupUncheckedCreateNestedManyWithoutUserInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutDataOwnerInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutDataOwnerInput, UserUncheckedCreateWithoutDataOwnerInput>
+  }
+
+  export type UserCreateManyDataOwnerInputEnvelope = {
+    data: UserCreateManyDataOwnerInput | UserCreateManyDataOwnerInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type InvitationCreateWithoutInvitedByInput = {
+    id?: string
+    token: string
+    email?: string | null
+    role?: $Enums.Role
+    expiresAt: Date | string
+    acceptedAt?: Date | string | null
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+    acceptedBy?: UserCreateNestedOneWithoutInvitationsAcceptedInput
+  }
+
+  export type InvitationUncheckedCreateWithoutInvitedByInput = {
+    id?: string
+    token: string
+    email?: string | null
+    role?: $Enums.Role
+    expiresAt: Date | string
+    acceptedAt?: Date | string | null
+    acceptedByUserId?: string | null
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type InvitationCreateOrConnectWithoutInvitedByInput = {
+    where: InvitationWhereUniqueInput
+    create: XOR<InvitationCreateWithoutInvitedByInput, InvitationUncheckedCreateWithoutInvitedByInput>
+  }
+
+  export type InvitationCreateManyInvitedByInputEnvelope = {
+    data: InvitationCreateManyInvitedByInput | InvitationCreateManyInvitedByInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type InvitationCreateWithoutAcceptedByInput = {
+    id?: string
+    token: string
+    email?: string | null
+    role?: $Enums.Role
+    expiresAt: Date | string
+    acceptedAt?: Date | string | null
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+    invitedBy: UserCreateNestedOneWithoutInvitationsSentInput
+  }
+
+  export type InvitationUncheckedCreateWithoutAcceptedByInput = {
+    id?: string
+    token: string
+    invitedById: string
+    email?: string | null
+    role?: $Enums.Role
+    expiresAt: Date | string
+    acceptedAt?: Date | string | null
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type InvitationCreateOrConnectWithoutAcceptedByInput = {
+    where: InvitationWhereUniqueInput
+    create: XOR<InvitationCreateWithoutAcceptedByInput, InvitationUncheckedCreateWithoutAcceptedByInput>
+  }
+
+  export type InvitationCreateManyAcceptedByInputEnvelope = {
+    data: InvitationCreateManyAcceptedByInput | InvitationCreateManyAcceptedByInput[]
+    skipDuplicates?: boolean
+  }
+
   export type AccountCreateWithoutUserInput = {
     id: number
     name: string
@@ -27904,6 +29997,174 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type UserUpsertWithoutMembersInput = {
+    update: XOR<UserUpdateWithoutMembersInput, UserUncheckedUpdateWithoutMembersInput>
+    create: XOR<UserCreateWithoutMembersInput, UserUncheckedCreateWithoutMembersInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutMembersInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutMembersInput, UserUncheckedUpdateWithoutMembersInput>
+  }
+
+  export type UserUpdateWithoutMembersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUpdateManyWithoutUserNestedInput
+    categories?: CategoryUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUpdateManyWithoutUserNestedInput
+    payees?: PayeeUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutMembersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
+    categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUncheckedUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUncheckedUpdateManyWithoutUserNestedInput
+    payees?: PayeeUncheckedUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUncheckedUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUncheckedUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUncheckedUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUpsertWithWhereUniqueWithoutDataOwnerInput = {
+    where: UserWhereUniqueInput
+    update: XOR<UserUpdateWithoutDataOwnerInput, UserUncheckedUpdateWithoutDataOwnerInput>
+    create: XOR<UserCreateWithoutDataOwnerInput, UserUncheckedCreateWithoutDataOwnerInput>
+  }
+
+  export type UserUpdateWithWhereUniqueWithoutDataOwnerInput = {
+    where: UserWhereUniqueInput
+    data: XOR<UserUpdateWithoutDataOwnerInput, UserUncheckedUpdateWithoutDataOwnerInput>
+  }
+
+  export type UserUpdateManyWithWhereWithoutDataOwnerInput = {
+    where: UserScalarWhereInput
+    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyWithoutDataOwnerInput>
+  }
+
+  export type UserScalarWhereInput = {
+    AND?: UserScalarWhereInput | UserScalarWhereInput[]
+    OR?: UserScalarWhereInput[]
+    NOT?: UserScalarWhereInput | UserScalarWhereInput[]
+    id?: StringFilter<"User"> | string
+    name?: StringFilter<"User"> | string
+    email?: StringFilter<"User"> | string
+    passwordHash?: StringNullableFilter<"User"> | string | null
+    googleId?: StringNullableFilter<"User"> | string | null
+    phone?: StringNullableFilter<"User"> | string | null
+    photo?: StringNullableFilter<"User"> | string | null
+    preferencesJson?: JsonNullableFilter<"User">
+    createdAt?: DateTimeFilter<"User"> | Date | string
+    updatedAt?: DateTimeFilter<"User"> | Date | string
+    themePreferences?: JsonNullableFilter<"User">
+    role?: EnumRoleFilter<"User"> | $Enums.Role
+    status?: EnumUserStatusFilter<"User"> | $Enums.UserStatus
+    googleAccessToken?: StringNullableFilter<"User"> | string | null
+    googleRefreshToken?: StringNullableFilter<"User"> | string | null
+    googleTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    dataOwnerId?: StringNullableFilter<"User"> | string | null
+  }
+
+  export type InvitationUpsertWithWhereUniqueWithoutInvitedByInput = {
+    where: InvitationWhereUniqueInput
+    update: XOR<InvitationUpdateWithoutInvitedByInput, InvitationUncheckedUpdateWithoutInvitedByInput>
+    create: XOR<InvitationCreateWithoutInvitedByInput, InvitationUncheckedCreateWithoutInvitedByInput>
+  }
+
+  export type InvitationUpdateWithWhereUniqueWithoutInvitedByInput = {
+    where: InvitationWhereUniqueInput
+    data: XOR<InvitationUpdateWithoutInvitedByInput, InvitationUncheckedUpdateWithoutInvitedByInput>
+  }
+
+  export type InvitationUpdateManyWithWhereWithoutInvitedByInput = {
+    where: InvitationScalarWhereInput
+    data: XOR<InvitationUpdateManyMutationInput, InvitationUncheckedUpdateManyWithoutInvitedByInput>
+  }
+
+  export type InvitationScalarWhereInput = {
+    AND?: InvitationScalarWhereInput | InvitationScalarWhereInput[]
+    OR?: InvitationScalarWhereInput[]
+    NOT?: InvitationScalarWhereInput | InvitationScalarWhereInput[]
+    id?: StringFilter<"Invitation"> | string
+    token?: StringFilter<"Invitation"> | string
+    invitedById?: StringFilter<"Invitation"> | string
+    email?: StringNullableFilter<"Invitation"> | string | null
+    role?: EnumRoleFilter<"Invitation"> | $Enums.Role
+    expiresAt?: DateTimeFilter<"Invitation"> | Date | string
+    acceptedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
+    acceptedByUserId?: StringNullableFilter<"Invitation"> | string | null
+    revokedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
+    createdAt?: DateTimeFilter<"Invitation"> | Date | string
+  }
+
+  export type InvitationUpsertWithWhereUniqueWithoutAcceptedByInput = {
+    where: InvitationWhereUniqueInput
+    update: XOR<InvitationUpdateWithoutAcceptedByInput, InvitationUncheckedUpdateWithoutAcceptedByInput>
+    create: XOR<InvitationCreateWithoutAcceptedByInput, InvitationUncheckedCreateWithoutAcceptedByInput>
+  }
+
+  export type InvitationUpdateWithWhereUniqueWithoutAcceptedByInput = {
+    where: InvitationWhereUniqueInput
+    data: XOR<InvitationUpdateWithoutAcceptedByInput, InvitationUncheckedUpdateWithoutAcceptedByInput>
+  }
+
+  export type InvitationUpdateManyWithWhereWithoutAcceptedByInput = {
+    where: InvitationScalarWhereInput
+    data: XOR<InvitationUpdateManyMutationInput, InvitationUncheckedUpdateManyWithoutAcceptedByInput>
+  }
+
   export type AccountUpsertWithWhereUniqueWithoutUserInput = {
     where: AccountWhereUniqueInput
     update: XOR<AccountUpdateWithoutUserInput, AccountUncheckedUpdateWithoutUserInput>
@@ -28309,6 +30570,318 @@ export namespace Prisma {
     used?: BoolFilter<"TelegramPendingToken"> | boolean
   }
 
+  export type UserCreateWithoutInvitationsSentInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    budgets?: BudgetCreateNestedManyWithoutUserInput
+    categories?: CategoryCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionCreateNestedManyWithoutUserInput
+    payees?: PayeeCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupCreateNestedManyWithoutUserInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutInvitationsSentInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
+    categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupUncheckedCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionUncheckedCreateNestedManyWithoutUserInput
+    payees?: PayeeUncheckedCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionUncheckedCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageUncheckedCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupUncheckedCreateNestedManyWithoutUserInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutInvitationsSentInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutInvitationsSentInput, UserUncheckedCreateWithoutInvitationsSentInput>
+  }
+
+  export type UserCreateWithoutInvitationsAcceptedInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    budgets?: BudgetCreateNestedManyWithoutUserInput
+    categories?: CategoryCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionCreateNestedManyWithoutUserInput
+    payees?: PayeeCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupCreateNestedManyWithoutUserInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutInvitationsAcceptedInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
+    categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupUncheckedCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionUncheckedCreateNestedManyWithoutUserInput
+    payees?: PayeeUncheckedCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionUncheckedCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageUncheckedCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupUncheckedCreateNestedManyWithoutUserInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutInvitationsAcceptedInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutInvitationsAcceptedInput, UserUncheckedCreateWithoutInvitationsAcceptedInput>
+  }
+
+  export type UserUpsertWithoutInvitationsSentInput = {
+    update: XOR<UserUpdateWithoutInvitationsSentInput, UserUncheckedUpdateWithoutInvitationsSentInput>
+    create: XOR<UserCreateWithoutInvitationsSentInput, UserUncheckedCreateWithoutInvitationsSentInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutInvitationsSentInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutInvitationsSentInput, UserUncheckedUpdateWithoutInvitationsSentInput>
+  }
+
+  export type UserUpdateWithoutInvitationsSentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUpdateManyWithoutUserNestedInput
+    categories?: CategoryUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUpdateManyWithoutUserNestedInput
+    payees?: PayeeUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutInvitationsSentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
+    categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUncheckedUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUncheckedUpdateManyWithoutUserNestedInput
+    payees?: PayeeUncheckedUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUncheckedUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUncheckedUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUncheckedUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUpsertWithoutInvitationsAcceptedInput = {
+    update: XOR<UserUpdateWithoutInvitationsAcceptedInput, UserUncheckedUpdateWithoutInvitationsAcceptedInput>
+    create: XOR<UserCreateWithoutInvitationsAcceptedInput, UserUncheckedCreateWithoutInvitationsAcceptedInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutInvitationsAcceptedInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutInvitationsAcceptedInput, UserUncheckedUpdateWithoutInvitationsAcceptedInput>
+  }
+
+  export type UserUpdateWithoutInvitationsAcceptedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUpdateManyWithoutUserNestedInput
+    categories?: CategoryUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUpdateManyWithoutUserNestedInput
+    payees?: PayeeUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutInvitationsAcceptedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
+    categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUncheckedUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUncheckedUpdateManyWithoutUserNestedInput
+    payees?: PayeeUncheckedUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUncheckedUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUncheckedUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUncheckedUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+  }
+
   export type UserCreateWithoutAccountsInput = {
     id?: string
     name: string
@@ -28326,6 +30899,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
     categoryGroups?: CategoryGroupCreateNestedManyWithoutUserInput
@@ -28357,6 +30934,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
     categoryGroups?: CategoryGroupUncheckedCreateNestedManyWithoutUserInput
@@ -28558,6 +31139,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
     categoryGroups?: CategoryGroupUpdateManyWithoutUserNestedInput
@@ -28589,6 +31174,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
     categoryGroups?: CategoryGroupUncheckedUpdateManyWithoutUserNestedInput
@@ -28742,6 +31331,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -28773,6 +31366,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -28952,6 +31549,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -28983,6 +31584,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -29115,6 +31720,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categoryGroups?: CategoryGroupCreateNestedManyWithoutUserInput
@@ -29146,6 +31755,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categoryGroups?: CategoryGroupUncheckedCreateNestedManyWithoutUserInput
@@ -29346,6 +31959,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categoryGroups?: CategoryGroupUpdateManyWithoutUserNestedInput
@@ -29377,6 +31994,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categoryGroups?: CategoryGroupUncheckedUpdateManyWithoutUserNestedInput
@@ -29440,6 +32061,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -29471,6 +32096,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -29618,6 +32247,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -29649,6 +32282,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -29758,6 +32395,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -29789,6 +32430,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -29906,6 +32551,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -29937,6 +32586,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -30214,6 +32867,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -30245,6 +32902,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -30549,6 +33210,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -30580,6 +33245,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -30764,6 +33433,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -30795,6 +33468,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -30897,6 +33574,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -30928,6 +33609,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -30959,6 +33644,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -30990,6 +33679,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -31037,6 +33730,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -31068,6 +33765,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -31242,6 +33943,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -31273,6 +33978,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -31493,6 +34202,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -31524,6 +34237,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -31617,6 +34334,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
     categoryGroups?: CategoryGroupCreateNestedManyWithoutUserInput
@@ -31648,6 +34369,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
     categoryGroups?: CategoryGroupUncheckedCreateNestedManyWithoutUserInput
@@ -31769,6 +34494,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
     categoryGroups?: CategoryGroupUpdateManyWithoutUserNestedInput
@@ -31800,6 +34529,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
     categoryGroups?: CategoryGroupUncheckedUpdateManyWithoutUserNestedInput
@@ -31831,6 +34564,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -31862,6 +34599,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -31909,6 +34650,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -31940,6 +34685,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -31971,6 +34720,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -32002,6 +34755,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -32049,6 +34806,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -32080,6 +34841,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -32111,6 +34876,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwner?: UserCreateNestedOneWithoutMembersInput
+    members?: UserCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountCreateNestedManyWithoutUserInput
     budgets?: BudgetCreateNestedManyWithoutUserInput
     categories?: CategoryCreateNestedManyWithoutUserInput
@@ -32142,6 +34911,10 @@ export namespace Prisma {
     googleAccessToken?: string | null
     googleRefreshToken?: string | null
     googleTokenExpiresAt?: Date | string | null
+    dataOwnerId?: string | null
+    members?: UserUncheckedCreateNestedManyWithoutDataOwnerInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
     categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -32189,6 +34962,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwner?: UserUpdateOneWithoutMembersNestedInput
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
     budgets?: BudgetUpdateManyWithoutUserNestedInput
     categories?: CategoryUpdateManyWithoutUserNestedInput
@@ -32220,6 +34997,10 @@ export namespace Prisma {
     googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dataOwnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -32232,6 +35013,49 @@ export namespace Prisma {
     transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserCreateManyDataOwnerInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+  }
+
+  export type InvitationCreateManyInvitedByInput = {
+    id?: string
+    token: string
+    email?: string | null
+    role?: $Enums.Role
+    expiresAt: Date | string
+    acceptedAt?: Date | string | null
+    acceptedByUserId?: string | null
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type InvitationCreateManyAcceptedByInput = {
+    id?: string
+    token: string
+    invitedById: string
+    email?: string | null
+    role?: $Enums.Role
+    expiresAt: Date | string
+    acceptedAt?: Date | string | null
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
   }
 
   export type AccountCreateManyUserInput = {
@@ -32370,6 +35194,167 @@ export namespace Prisma {
     token?: string
     expiresAt: Date | string
     used?: boolean
+  }
+
+  export type UserUpdateWithoutDataOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    members?: UserUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUpdateManyWithoutUserNestedInput
+    categories?: CategoryUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUpdateManyWithoutUserNestedInput
+    payees?: PayeeUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutDataOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    members?: UserUncheckedUpdateManyWithoutDataOwnerNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
+    categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUncheckedUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUncheckedUpdateManyWithoutUserNestedInput
+    payees?: PayeeUncheckedUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUncheckedUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUncheckedUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUncheckedUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateManyWithoutDataOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type InvitationUpdateWithoutInvitedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedBy?: UserUpdateOneWithoutInvitationsAcceptedNestedInput
+  }
+
+  export type InvitationUncheckedUpdateWithoutInvitedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    acceptedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InvitationUncheckedUpdateManyWithoutInvitedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    acceptedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InvitationUpdateWithoutAcceptedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    invitedBy?: UserUpdateOneRequiredWithoutInvitationsSentNestedInput
+  }
+
+  export type InvitationUncheckedUpdateWithoutAcceptedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    invitedById?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InvitationUncheckedUpdateManyWithoutAcceptedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    invitedById?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AccountUpdateWithoutUserInput = {

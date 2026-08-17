@@ -4,7 +4,9 @@ import { getSessionUserId } from "@/lib/session"
 import {
   AdminAccessError,
   approveUser,
+  removeUser,
   requireAdminUser,
+  setUserRole,
 } from "@/features/settings/services/admin-users-service"
 
 export const dynamic = "force-dynamic"
@@ -30,24 +32,40 @@ export async function PATCH(
   const t = await getTranslations("api.admin")
 
   try {
-    await requireAdminUser(await getSessionUserId())
+    const actorId = await getSessionUserId()
+    await requireAdminUser(actorId)
 
     const body = await request.json().catch(() => null)
-    if (body?.action !== "approve") {
-      return NextResponse.json(
-        { success: false, message: t("invalidAction") },
-        { status: 400 },
-      )
+    const { id } = await params
+
+    if (body?.action === "approve") {
+      const user = await approveUser(id)
+      return NextResponse.json({ success: true, message: t("userApproved"), data: user })
     }
 
-    const { id } = await params
-    const user = await approveUser(id)
+    if (body?.action === "setRole") {
+      const user = await setUserRole(actorId as string, id, body.role)
+      return NextResponse.json({ success: true, message: t("roleUpdated"), data: user })
+    }
 
-    return NextResponse.json({
-      success: true,
-      message: t("userApproved"),
-      data: user,
-    })
+    return NextResponse.json({ success: false, message: t("invalidAction") }, { status: 400 })
+  } catch (error) {
+    return errorResponse(error)
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const t = await getTranslations("api.admin")
+
+  try {
+    const actorId = await getSessionUserId()
+    await requireAdminUser(actorId)
+    const { id } = await params
+    await removeUser(actorId as string, id)
+    return NextResponse.json({ success: true, message: t("userRemoved") })
   } catch (error) {
     return errorResponse(error)
   }

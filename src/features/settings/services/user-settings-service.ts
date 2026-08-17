@@ -3,6 +3,7 @@ import { Prisma } from "@/generated/prisma_new/client"
 import { isAppLocale, type AppLocale } from "@/i18n/config"
 import { resolveLocaleOrInstallDefault } from "@/i18n/install-locale"
 import { prisma } from "@/lib/prisma"
+import { resolveDataOwnerId } from "@/lib/data-owner"
 import {
   resolveMonetarySettings,
   type MonetarySettings,
@@ -227,14 +228,16 @@ export async function setUserLocale(userId: string, locale: string): Promise<voi
 export async function getQuickPaymentOptions(
   userId: string,
 ): Promise<QuickPaymentOptions> {
+  // Conta compartilhada: a preferência é da pessoa, mas contas e status são do dono.
+  const dataOwnerId = await resolveDataOwnerId(userId)
   const [accounts, statuses] = await Promise.all([
     prisma.account.findMany({
-      where: { userId, active: true },
+      where: { userId: dataOwnerId, active: true },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     prisma.transactionStatusLookup.findMany({
-      where: { userId },
+      where: { userId: dataOwnerId },
       select: { code: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -280,11 +283,12 @@ export async function updateUserQuickPaymentSettings(
     throw new Error(t("quickPaymentSelectionRequired"))
   }
 
+  const dataOwnerId = await resolveDataOwnerId(userId)
   const [account, status, currentPreferences] = await Promise.all([
     prisma.account.findFirst({
       where: {
         id: nextQuickPayment.defaultAccountId,
-        userId,
+        userId: dataOwnerId,
         active: true,
       },
       select: { id: true },
@@ -292,7 +296,7 @@ export async function updateUserQuickPaymentSettings(
     prisma.transactionStatusLookup.findFirst({
       where: {
         code: nextQuickPayment.defaultStatusCode,
-        userId,
+        userId: dataOwnerId,
       },
       select: { code: true },
     }),

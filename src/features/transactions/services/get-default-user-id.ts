@@ -1,12 +1,19 @@
 import { prisma } from "@/lib/prisma"
 import { getSessionUserId } from "@/lib/session"
+import { resolveDataOwnerId } from "@/lib/data-owner"
 
 /**
- * Resolve o usuário dono dos dados da requisição atual.
+ * Resolve o usuário DONO DOS DADOS da requisição atual.
  *
- * PRIMEIRO a sessão (cookie), SEMPRE. O fallback "usuário mais antigo do banco"
- * só existe para contextos sem sessão (ex.: renderização fora de uma requisição
- * ou base recém-semeada) e é o comportamento legado desta função.
+ * PRIMEIRO a sessão (cookie), SEMPRE — e, se o usuário logado for membro
+ * convidado de uma conta compartilhada, devolve o dono dessa conta
+ * (users.data_owner_id): tudo que é financeiro (transações, contas, orçamento,
+ * dashboard…) é lido e gravado em nome do dono. Para o usuário REAL (perfil,
+ * preferências, integrações) use getSessionUserId / getSettingsUserId.
+ *
+ * O fallback "usuário mais antigo do banco" só existe para contextos sem sessão
+ * (ex.: renderização fora de uma requisição ou base recém-semeada) e é o
+ * comportamento legado desta função.
  *
  * Sem a checagem de sessão, todo usuário logado enxergava os dados do PRIMEIRO
  * usuário criado no banco — na demo, isso significava que nenhum visitante via
@@ -16,7 +23,7 @@ export async function getDefaultUserId(): Promise<string | null> {
   try {
     const sessionUserId = await getSessionUserId()
     if (sessionUserId) {
-      return sessionUserId
+      return resolveDataOwnerId(sessionUserId)
     }
   } catch {
     // Fora do escopo de uma requisição (sem cookies disponíveis) — cai no fallback.

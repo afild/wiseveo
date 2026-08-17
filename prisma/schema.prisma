@@ -24,6 +24,13 @@ model User {
   googleAccessToken     String?                   @map("google_access_token")
   googleRefreshToken    String?                   @map("google_refresh_token")
   googleTokenExpiresAt  DateTime?                 @map("google_token_expires_at")
+  // Conta compartilhada: quem convidou este usuário. Todos os dados financeiros que ele
+  // vê/lança pertencem ao dono (data_owner_id); vazio = ele é dono da própria conta.
+  dataOwnerId           String?                   @map("data_owner_id")
+  dataOwner             User?                     @relation("AccountMembers", fields: [dataOwnerId], references: [id], onDelete: SetNull)
+  members               User[]                    @relation("AccountMembers")
+  invitationsSent       Invitation[]              @relation("InvitationInviter")
+  invitationsAccepted   Invitation[]              @relation("InvitationAcceptedBy")
   accounts              Account[]
   budgets               Budget[]
   categories            Category[]
@@ -38,7 +45,27 @@ model User {
   telegramConversationMemories TelegramConversationMemory[]
   telegramPendingTokens TelegramPendingToken[]
 
+  @@index([dataOwnerId])
   @@map("users")
+}
+
+/// Convite para entrar na conta (dados) de quem convidou. Link: /convite/<token>.
+model Invitation {
+  id               String    @id @default(cuid())
+  token            String    @unique
+  invitedById      String    @map("invited_by_id")
+  invitedBy        User      @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: Cascade)
+  email            String?
+  role             Role      @default(USER)
+  expiresAt        DateTime  @map("expires_at")
+  acceptedAt       DateTime? @map("accepted_at")
+  acceptedByUserId String?   @map("accepted_by_user_id")
+  acceptedBy       User?     @relation("InvitationAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+  revokedAt        DateTime? @map("revoked_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  @@index([invitedById])
+  @@map("invitations")
 }
 
 model Account {

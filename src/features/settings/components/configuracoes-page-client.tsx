@@ -9,6 +9,7 @@ import type {
   QuickPaymentSettings,
 } from "../services/user-settings-service"
 import type { AdminUserSummary } from "../services/admin-users-service"
+import type { InvitationSummary } from "../services/invitations-service"
 import { GeneralForm } from "./general-form"
 import { AppearanceForm } from "./appearance-form"
 import { MonetaryFormatForm } from "./monetary-format-form"
@@ -25,6 +26,14 @@ interface ConfiguracoesPageClientProps {
   quickPaymentOptions: QuickPaymentOptions
   initialMonetarySettings: MonetarySettings
   initialAdminUsers: AdminUserSummary[]
+  /** Contexto da conta compartilhada para a aba Usuários (só quando isAdmin). */
+  adminContext?: {
+    currentUserId: string
+    currentUserRole: "USER" | "ADMIN" | "SUPERADMIN"
+    dataOwnerId: string
+    invitations: InvitationSummary[]
+    invitationsEnabled: boolean
+  }
 }
 
 export function ConfiguracoesPageClient({
@@ -34,6 +43,7 @@ export function ConfiguracoesPageClient({
   quickPaymentOptions,
   initialMonetarySettings,
   initialAdminUsers,
+  adminContext,
 }: ConfiguracoesPageClientProps) {
   const searchParams = useSearchParams()
   const isOnboarding = searchParams.get("onboarding") === "true"
@@ -100,7 +110,7 @@ export function ConfiguracoesPageClient({
         {isAdmin && (
           <TabsContent value="admin" className="border-none p-0 mt-6 outline-none">
             <div className="max-w-5xl">
-              <AdminUsersForm initialUsers={initialAdminUsers} />
+              <AdminUsersForm initialUsers={initialAdminUsers} context={adminContext} />
             </div>
           </TabsContent>
         )}

@@ -10,6 +10,8 @@ import {
   getUserAdminAccess,
   listUsersForAdmin,
 } from "@/features/settings/services/admin-users-service"
+import { listPendingInvitations } from "@/features/settings/services/invitations-service"
+import { resolveDataOwnerId } from "@/lib/data-owner"
 import { defaultMonetarySettings } from "@/lib/monetary"
 
 const baseTabs = ["general", "appearance", "monetary", "profile", "account"] as const
@@ -41,11 +43,15 @@ export default async function ConfiguracoesPage({
     )
   }
 
-  const [settings, quickPaymentOptions, adminUsers] = await Promise.all([
+  const invitationsEnabled = process.env.NEXT_PUBLIC_DEMO_MODE !== "true"
+  const [settings, quickPaymentOptions, adminUsers, invitations, dataOwnerId] = await Promise.all([
     getUserSettings(userId),
     getQuickPaymentOptions(userId),
     isAdmin ? listUsersForAdmin() : Promise.resolve([]),
+    isAdmin && invitationsEnabled ? listPendingInvitations(userId).catch(() => []) : Promise.resolve([]),
+    resolveDataOwnerId(userId),
   ])
+  const currentUser = adminUsers.find((u) => u.id === userId)
 
   return (
     <ConfiguracoesPageClient
@@ -57,6 +63,17 @@ export default async function ConfiguracoesPage({
       quickPaymentOptions={quickPaymentOptions}
       initialMonetarySettings={settings?.monetary ?? defaultMonetarySettings}
       initialAdminUsers={adminUsers}
+      adminContext={
+        isAdmin && currentUser
+          ? {
+              currentUserId: userId,
+              currentUserRole: currentUser.role,
+              dataOwnerId,
+              invitations,
+              invitationsEnabled,
+            }
+          : undefined
+      }
     />
   )
 }

@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server"
 import { prisma } from "@/lib/prisma"
 import type { AppLocale } from "@/i18n/config"
 import { getInstallDefaultLocale } from "@/i18n/install-locale"
+import { resolveDataOwnerId } from "@/lib/data-owner"
 import { createMonetaryFormatter } from "@/lib/monetary"
 import {
   getUserLocale,
@@ -98,7 +99,12 @@ async function handleFinancialQuestion(chatId: TelegramChatId, text: string) {
     return
   }
 
-  const locale = await getUserLocale(connection.userId)
+  // Conta compartilhada: idioma, moeda e memória de conversa são do usuário REAL;
+  // os dados financeiros consultados são do DONO da conta (data_owner_id).
+  const [locale, dataOwnerId] = await Promise.all([
+    getUserLocale(connection.userId),
+    resolveDataOwnerId(connection.userId),
+  ])
   const [t, monetarySettings] = await Promise.all([
     getTranslations({ locale, namespace: "telegram" }),
     getUserMonetarySettings(connection.userId),
@@ -147,7 +153,7 @@ async function handleFinancialQuestion(chatId: TelegramChatId, text: string) {
     return
   }
 
-  const dispatched = await dispatchQuery(connection.userId, classified, ctx)
+  const dispatched = await dispatchQuery(dataOwnerId, classified, ctx)
 
   if (classified.intent === "financial_analysis") {
     await sendTelegramChatAction(chatId, "typing")
