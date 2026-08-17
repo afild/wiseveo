@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   serverExternalPackages: ['@resvg/resvg-js', 'node-telegram-bot-api'],
+  // O Setup Wizard aplica as migrações lendo prisma/migrations/*/migration.sql
+  // em runtime (sem o CLI do Prisma). Sem isto a pasta não vai no bundle da
+  // função na Vercel e o wizard não teria o que aplicar.
+  outputFileTracingIncludes: {
+    "/api/setup/configure": ["./prisma/migrations/**/*"],
+  },
 };
 
 const analyzer = withBundleAnalyzer({

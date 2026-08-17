@@ -228,6 +228,7 @@
         "invalidPassword": "Senha incorreta. Confira a senha do banco.",
         "invalidToken": "Token inválido ou expirado. Gere um novo token no Supabase.",
         "ipv6Unreachable": "Esse endereço é o de conexão direta (só IPv6) e não é alcançável daqui. Use a URL da aba Transaction pooler.",
+        "migrationFailed": "A migração {migration} falhou: {message}",
         "projectInitFailed": "O Supabase não conseguiu criar o projeto. Tente de novo ou crie pelo painel.",
         "projectLimit": "Sua conta Supabase atingiu o limite de projetos do plano. Apague um projeto ou use um existente.",
         "projectNotReady": "O projeto ainda não ficou pronto. Aguarde um pouco e tente de novo.",
@@ -1661,6 +1662,28 @@
       "urlPlaceholder": "postgresql://…",
       "usePooler": "Abrir a aba Transaction pooler no Supabase"
     },
+    "finish": {
+      "autoReloadDesc": "O sistema está recarregando com as novas configurações. Você será levado ao login automaticamente.",
+      "autoReloadTitle": "Aplicando as configurações…",
+      "copied": "Copiado!",
+      "copyAll": "Copiar tudo",
+      "envBlockLabel": "Variáveis de ambiente",
+      "hideValues": "Ocultar valores",
+      "manualStep1": "Abra o painel da hospedagem → seu projeto → Settings → Environment Variables.",
+      "manualStep2": "Clique em Copiar tudo e cole no painel (na Vercel, use “Import .env” ou adicione uma a uma).",
+      "manualStep3": "Vá em Deployments → ⋯ → Redeploy. Depois clique em “Já fiz o redeploy” aqui embaixo.",
+      "manualSubtitle": "Seu banco já está pronto e o administrador foi criado. Nesta hospedagem as configurações ficam no painel — cole as variáveis abaixo e faça o redeploy.",
+      "manualTitle": "Falta só um passo",
+      "openHosting": "Abrir painel",
+      "redeployDone": "Já fiz o redeploy",
+      "restartDesc": "As configurações foram gravadas no arquivo .env.local do servidor. Reinicie o WISEVEO; assim que ele voltar, você será levado ao login automaticamente.",
+      "restartHintCommands": "npm start  ·  docker compose restart",
+      "restartTitle": "Configurações salvas — reinicie o servidor",
+      "secretsWarning": "Esses valores incluem a URL do banco e o segredo de sessão. Eles aparecem só agora — não feche esta página antes de copiar.",
+      "showValues": "Mostrar valores",
+      "waitingRedeployDesc": "Assim que o redeploy terminar, você será levado ao login. Pode levar 1–2 minutos.",
+      "waitingRedeployTitle": "Aguardando o app voltar configurado…"
+    },
     "integrations": {
       "configureCredentials": "Configurar credenciais",
       "google": {
@@ -1712,7 +1735,7 @@
       "dbExisting": "Conectado com dados existentes",
       "dbNew": "Novo banco (Docker / Limpo)",
       "finish": "Finalizar Setup 🎉",
-      "finishNote": "Ao finalizar, o sistema irá aplicar as migrações no banco, salvar suas configurações e reiniciar o servidor automaticamente.",
+      "finishNote": "Ao finalizar, o sistema vai aplicar as migrações no banco, criar o administrador e salvar as configurações. O próximo passo depende de onde o WISEVEO está hospedado — a tela seguinte explica.",
       "freshInstall": "Instalação Limpa (Semente padrão)",
       "google": "Google",
       "initialize": "Inicializar Sistema",
@@ -1740,9 +1763,7 @@
     "wizard": {
       "error": "Erro ao configurar o sistema.",
       "fatalError": "Erro fatal ao tentar configurar o sistema.",
-      "restarting": "Reiniciando...",
-      "restartingDesc": "O servidor está aplicando as configurações e reiniciando. Você será redirecionado para o login automaticamente.",
-      "success": "Setup concluído! Reiniciando servidor..."
+      "success": "Setup concluído!"
     }
   },
   "sidebar": {

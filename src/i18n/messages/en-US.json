@@ -228,6 +228,7 @@
         "invalidPassword": "Incorrect password. Check the database password.",
         "invalidToken": "Invalid or expired token. Generate a new token in Supabase.",
         "ipv6Unreachable": "This is the direct connection address (IPv6 only) and it cannot be reached from here. Use the URL from the Transaction pooler tab.",
+        "migrationFailed": "Migration {migration} failed: {message}",
         "projectInitFailed": "Supabase could not create the project. Try again or create it from the dashboard.",
         "projectLimit": "Your Supabase account has reached the plan's project limit. Delete a project or use an existing one.",
         "projectNotReady": "The project is not ready yet. Wait a bit and try again.",
@@ -1661,6 +1662,28 @@
       "urlPlaceholder": "postgresql://…",
       "usePooler": "Open the Transaction pooler tab in Supabase"
     },
+    "finish": {
+      "autoReloadDesc": "The system is reloading with the new settings. You will be taken to the login automatically.",
+      "autoReloadTitle": "Applying settings…",
+      "copied": "Copied!",
+      "copyAll": "Copy all",
+      "envBlockLabel": "Environment variables",
+      "hideValues": "Hide values",
+      "manualStep1": "Open your hosting dashboard → your project → Settings → Environment Variables.",
+      "manualStep2": "Click Copy all and paste it in the dashboard (on Vercel, use “Import .env” or add them one by one).",
+      "manualStep3": "Go to Deployments → ⋯ → Redeploy. Then click “I redeployed” below.",
+      "manualSubtitle": "Your database is ready and the administrator was created. On this hosting, settings live in the dashboard — paste the variables below and redeploy.",
+      "manualTitle": "One last step",
+      "openHosting": "Open dashboard",
+      "redeployDone": "I redeployed",
+      "restartDesc": "Your settings were written to the server's .env.local file. Restart WISEVEO; as soon as it is back, you will be taken to the login automatically.",
+      "restartHintCommands": "npm start  ·  docker compose restart",
+      "restartTitle": "Settings saved — restart the server",
+      "secretsWarning": "These values include the database URL and the session secret. They are shown only now — do not close this page before copying.",
+      "showValues": "Show values",
+      "waitingRedeployDesc": "As soon as the redeploy finishes, you will be taken to the login. This may take 1–2 minutes.",
+      "waitingRedeployTitle": "Waiting for the app to come back configured…"
+    },
     "integrations": {
       "configureCredentials": "Configure credentials",
       "google": {
@@ -1712,7 +1735,7 @@
       "dbExisting": "Connected with existing data",
       "dbNew": "New database (Docker / Clean)",
       "finish": "Finish Setup 🎉",
-      "finishNote": "When you finish, the system will apply the database migrations, save your settings and restart the server automatically.",
+      "finishNote": "When you finish, the system will apply the database migrations, create the administrator and save your settings. The next step depends on where WISEVEO is hosted — the next screen explains.",
       "freshInstall": "Clean Install (Default seed)",
       "google": "Google",
       "initialize": "Initialize System",
@@ -1740,9 +1763,7 @@
     "wizard": {
       "error": "Error configuring the system.",
       "fatalError": "Fatal error configuring the system.",
-      "restarting": "Restarting...",
-      "restartingDesc": "The server is applying settings and restarting. You will be redirected to login automatically.",
-      "success": "Setup complete! Restarting server..."
+      "success": "Setup complete!"
     }
   },
   "sidebar": {

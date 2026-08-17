@@ -9,7 +9,8 @@ import { AdminStep } from "./steps/admin-step"
 import { IntegrationsStep } from "./steps/integrations-step"
 import { ChartOfAccountsStep } from "./steps/chart-of-accounts-step"
 import { SummaryStep } from "./steps/summary-step"
-import { Globe, Database, UserPlus, Puzzle, LayoutList, CheckCircle2, Loader2 } from "lucide-react"
+import { FinishPanel, type SetupFinishState } from "./steps/finish-panel"
+import { Globe, Database, UserPlus, Puzzle, LayoutList, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { useLocale, useTranslations } from "next-intl"
 import { resolveAppLocale, type AppLocale } from "@/i18n/config"
@@ -22,7 +23,9 @@ export function SetupWizard() {
   const renderedLocale = resolveAppLocale(useLocale())
   const [currentStep, setCurrentStep] = useState(0)
   const [isConfiguring, setIsConfiguring] = useState(false)
-  const [isRestarting, setIsRestarting] = useState(false)
+  // Tela final: depende de como este ambiente persiste a configuração
+  // (dev recarrega sozinho; self-host precisa reiniciar; Vercel precisa colar variáveis).
+  const [finishState, setFinishState] = useState<SetupFinishState | null>(null)
 
   // Global State
   const [locale, setLocale] = useState<AppLocale>(renderedLocale)
@@ -84,10 +87,11 @@ export function SetupWizard() {
         body: JSON.stringify(payload),
       })
       
-      const data = await res.json()
+      const data = await res.json().catch(() => ({ success: false }))
 
       if (data.success) {
-        // Segredos já estão no servidor: nada deles sobra na memória do navegador.
+        // Segredos já estão no servidor (ou na tela final, para copiar UMA vez):
+        // nada deles sobra no estado do wizard.
         setConnectionString("")
         setAdmin((prev) => ({ ...prev, password: "", confirmPassword: "" }))
         setIntegrations({
@@ -95,11 +99,12 @@ export function SetupWizard() {
           telegram: { enabled: false, botToken: "", botUsername: "", webhookSecret: "" },
           openai: { enabled: false, apiKey: "" },
         })
-        setIsRestarting(true)
+        setFinishState({
+          mode: data.mode ?? "auto-reload",
+          hosting: data.hosting,
+          envVars: Array.isArray(data.envVars) ? data.envVars : undefined,
+        })
         toast.success(t("wizard.success"))
-        
-        // Poll status until server is back up, then redirect
-        pollServerStatus()
       } else {
         toast.error(data.message || t("wizard.error"))
         setIsConfiguring(false)
@@ -111,34 +116,24 @@ export function SetupWizard() {
     }
   }
 
-  const pollServerStatus = () => {
-    const check = async () => {
-      try {
-        const res = await fetch("/api/setup/status")
-        if (res.ok) {
-          const data = await res.json()
-          if (data.setupComplete) {
-            router.push("/login")
-            return
-          }
-        }
-      } catch (e) {
-        // Expected to fail while server is restarting
-      }
-      setTimeout(check, 2000)
-    }
-    setTimeout(check, 2000)
+  const checkSetupComplete = async (): Promise<boolean> => {
+    // Falha (servidor reiniciando / redeploy em andamento) conta como "ainda não".
+    const res = await fetch("/api/setup/status", { cache: "no-store" })
+    if (!res.ok) return false
+    const data = await res.json()
+    return data.setupComplete === true
   }
 
-  if (isRestarting) {
+  if (finishState) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 text-center animate-in fade-in duration-500 max-w-md w-full bg-background/80 backdrop-blur-md p-8 rounded-3xl border shadow-xl">
-        <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <h2 className="text-2xl font-bold">{t("wizard.restarting")}</h2>
-        <p className="text-muted-foreground text-sm">
-          {t("wizard.restartingDesc")}
-        </p>
-      </div>
+      <FinishPanel
+        state={finishState}
+        checkSetupComplete={checkSetupComplete}
+        onComplete={() => {
+          setFinishState(null)
+          router.push("/login")
+        }}
+      />
     )
   }
 
