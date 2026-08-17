@@ -11,15 +11,24 @@ import { Pool } from "pg"
 import { initializeUserData } from "@/lib/user-init"
 import { resolveAppLocale } from "@/i18n/config"
 import { INSTALL_LOCALE_ENV } from "@/i18n/install-locale"
+import { isSetupComplete } from "@/lib/setup-check"
+import { redactConnectionUrl } from "@/features/setup/lib/connection-url"
+
+// Nada que saia daqui em log pode conter a senha do banco.
+const redact = (value: unknown) => redactConnectionUrl(String(value ?? ""))
 
 export async function POST(req: Request) {
+  // Instalação concluída → o wizard (e esta rota) não existem mais. Sem isso,
+  // qualquer pessoa poderia recriar um SUPERADMIN e reescrever o .env.local.
+  if (isSetupComplete()) return new NextResponse(null, { status: 404 })
+
   const t = await getTranslations("api.setup")
 
   try {
     const payload = await req.json()
     const { databaseUrl, useExistingData, admin, locale, integrations } = payload
 
-    if (!databaseUrl || !admin?.email || !admin?.password) {
+    if (!databaseUrl || typeof databaseUrl !== "string" || !admin?.email || !admin?.password) {
       return NextResponse.json({ success: false, message: t("missingFields") }, { status: 400 })
     }
 
@@ -35,7 +44,7 @@ export async function POST(req: Request) {
         stdio: "pipe",
       })
     } catch (e: any) {
-      console.error("[SETUP] Migration error:", e.stdout?.toString(), e.stderr?.toString())
+      console.error("[SETUP] Migration error:", redact(e.stdout?.toString()), redact(e.stderr?.toString()))
       return NextResponse.json({ success: false, message: t("migrationFailed") }, { status: 500 })
     }
 
@@ -68,9 +77,9 @@ export async function POST(req: Request) {
         await initializeUserData(client, userId)
       }
     } catch (e: any) {
-      console.error("[SETUP] Error creating user/data:", e)
+      console.error("[SETUP] Error creating user/data:", redact(e?.message ?? e))
       return NextResponse.json(
-        { success: false, message: t("adminCreationFailed", { message: e.message }) },
+        { success: false, message: t("adminCreationFailed", { message: redact(e?.message) }) },
         { status: 500 },
       )
     } finally {
@@ -110,7 +119,13 @@ export async function POST(req: Request) {
     if (fs.existsSync(envPath)) {
       fs.appendFileSync(envPath, envContent)
     } else {
-      fs.writeFileSync(envPath, envContent)
+      fs.writeFileSync(envPath, envContent, { mode: 0o600 })
+    }
+    // Só o dono do processo lê o arquivo com os segredos (no-op no Windows).
+    try {
+      fs.chmodSync(envPath, 0o600)
+    } catch {
+      // Sistemas de arquivos sem permissões POSIX: segue sem bloquear a instalação.
     }
 
     console.log("[SETUP] Setup completed successfully!")
@@ -124,9 +139,9 @@ export async function POST(req: Request) {
     
     return response
   } catch (error: any) {
-    console.error("[SETUP] Fatal error:", error)
+    console.error("[SETUP] Fatal error:", redact(error?.message ?? error))
     return NextResponse.json(
-      { success: false, message: error.message || t("unknownError") },
+      { success: false, message: redact(error?.message) || t("unknownError") },
       { status: 500 }
     )
   }

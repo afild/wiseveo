@@ -87,6 +87,14 @@ export function SetupWizard() {
       const data = await res.json()
 
       if (data.success) {
+        // Segredos já estão no servidor: nada deles sobra na memória do navegador.
+        setConnectionString("")
+        setAdmin((prev) => ({ ...prev, password: "", confirmPassword: "" }))
+        setIntegrations({
+          google: { enabled: false, clientId: "", clientSecret: "" },
+          telegram: { enabled: false, botToken: "", botUsername: "", webhookSecret: "" },
+          openai: { enabled: false, apiKey: "" },
+        })
         setIsRestarting(true)
         toast.success(t("wizard.success"))
         

@@ -3,50 +3,42 @@
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Database,
-  Server,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  Container,
-  PlugZap,
-  Info,
-  HelpCircle
-} from "lucide-react"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+import { Database, CheckCircle2, XCircle, Loader2, Container, PlugZap, Sparkles, Server } from "lucide-react"
+import { SupabaseManagedPanel } from "./database/supabase-managed-panel"
+import { ConnectionUrlPanel } from "./database/connection-url-panel"
 
 interface DatabaseStepProps {
   connectionString: string
   onConnectionStringChange: (value: string) => void
   useExistingData: boolean
   onUseExistingDataChange: (value: boolean) => void
-  onExistingChartChange: (value: { groups: any[], accounts: any[] } | null) => void
+  onExistingChartChange: (value: ExistingChart | null) => void
   onNext: () => void
   onBack: () => void
 }
 
+type ExistingChart = { groups: unknown[]; accounts: unknown[] }
+type Path = "managed" | "url" | "docker"
 type ConnectionStatus = "idle" | "testing" | "success" | "error"
 interface AuditResult {
   accounts: number
   transactions: number
   categories: number
   groups: number
+  existingChart?: ExistingChart
 }
 
+// i18n-ignore: URL técnica do banco local do docker-compose (dado, não texto de UI)
+const DOCKER_URL = "postgresql://postgres:postgres@localhost:5432/wiseveo?schema=public"
+
+/**
+ * Passo "Banco de dados" do wizard: três caminhos (criar/conectar com token,
+ * colar a URL, Docker local). O teste de conexão e o resultado são únicos
+ * para os três; o Avançar só libera depois de uma conexão bem-sucedida.
+ */
 export function DatabaseStep({
-
-
   connectionString,
   onConnectionStringChange,
-  useExistingData,
   onUseExistingDataChange,
   onExistingChartChange,
   onNext,
@@ -54,21 +46,32 @@ export function DatabaseStep({
 }: DatabaseStepProps) {
   const t = useTranslations("setup.database")
   const tc = useTranslations("setup.common")
+  const [path, setPath] = useState<Path>("managed")
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("idle")
+  const [errorCode, setErrorCode] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState("")
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null)
 
-  const handleUseDocker = () => {
-    onConnectionStringChange("postgresql://postgres:postgres@localhost:5432/wiseveo?schema=public")
-    onUseExistingDataChange(false)
-    onExistingChartChange(null)
+  const resetResult = () => {
     setConnectionStatus("idle")
+    setErrorCode(null)
+    setErrorMessage("")
     setAuditResult(null)
+    onExistingChartChange(null)
   }
 
-  const handleTestConnection = async () => {
-    if (!connectionString.trim()) return
+  const choosePath = (next: Path) => {
+    setPath(next)
+    resetResult()
+    onConnectionStringChange(next === "docker" ? DOCKER_URL : "")
+    onUseExistingDataChange(false)
+  }
+
+  /** Testa uma URL no servidor e atualiza o resultado; devolve se conectou. */
+  const runConnectionTest = async (url: string): Promise<boolean> => {
+    if (!url.trim()) return false
     setConnectionStatus("testing")
+    setErrorCode(null)
     setErrorMessage("")
     setAuditResult(null)
     onExistingChartChange(null)
@@ -77,7 +80,7 @@ export function DatabaseStep({
       const res = await fetch("/api/setup/test-db", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ connectionString }),
+        body: JSON.stringify({ connectionString: url }),
       })
       const data = await res.json()
 
@@ -86,22 +89,45 @@ export function DatabaseStep({
         if (data.hasData && data.audit) {
           setAuditResult(data.audit)
           onUseExistingDataChange(true)
-          if (data.audit.existingChart) {
-            onExistingChartChange(data.audit.existingChart)
-          }
+          if (data.audit.existingChart) onExistingChartChange(data.audit.existingChart)
         } else {
           onUseExistingDataChange(false)
           onExistingChartChange(null)
         }
-      } else {
-        setConnectionStatus("error")
-        setErrorMessage(data.message || t("cantConnect"))
+        return true
       }
+      setConnectionStatus("error")
+      setErrorCode(data.code ?? null)
+      setErrorMessage(data.message || t("cantConnect"))
+      return false
     } catch {
       setConnectionStatus("error")
       setErrorMessage(t("networkError"))
+      return false
     }
   }
+
+  const paths: Array<{ id: Path; icon: React.ReactNode; title: string; subtitle: string; badge?: string }> = [
+    {
+      id: "managed",
+      icon: <Sparkles className="w-7 h-7 text-primary shrink-0" />,
+      title: t("pathManaged"),
+      subtitle: t("pathManagedDesc"),
+      badge: t("pathManagedBadge"),
+    },
+    {
+      id: "url",
+      icon: <PlugZap className="w-7 h-7 text-positive shrink-0" />,
+      title: t("pathUrl"),
+      subtitle: t("pathUrlDesc"),
+    },
+    {
+      id: "docker",
+      icon: <Container className="w-7 h-7 text-info shrink-0" />,
+      title: t("dockerTitle"),
+      subtitle: t("dockerSubtitle"),
+    },
+  ]
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -110,111 +136,77 @@ export function DatabaseStep({
           <Database className="w-6 h-6 text-primary" />
         </div>
         <h2 className="text-2xl font-bold">{t("title")}</h2>
-        <p className="text-muted-foreground mt-1 text-sm">
-          {t("subtitle")}
-        </p>
+        <p className="text-muted-foreground mt-1 text-sm">{t("subtitle")}</p>
       </div>
 
-      {/* Quick Options */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <button
-          onClick={handleUseDocker}
-          className="flex items-center gap-3 p-4 rounded-xl border-2 border-muted hover:border-primary/50 transition-all text-left cursor-pointer"
-        >
-          <Container className="w-8 h-8 text-info shrink-0" />
-          <div>
-            <p className="font-medium text-sm">{t("dockerTitle")}</p>
-            <p className="text-xs text-muted-foreground">{t("dockerSubtitle")}</p>
-          </div>
-        </button>
-        <button
-          onClick={() => {
-            onConnectionStringChange("")
-            setConnectionStatus("idle")
-            setAuditResult(null)
-            onExistingChartChange(null)
-          }}
-          className="flex items-center gap-3 p-4 rounded-xl border-2 border-muted hover:border-primary/50 transition-all text-left cursor-pointer"
-        >
-          <PlugZap className="w-8 h-8 text-positive shrink-0" />
-          <div>
-            <p className="font-medium text-sm">{t("existingTitle")}</p>
-            <p className="text-xs text-muted-foreground">{t("existingSubtitle")}</p>
-          </div>
-        </button>
-      </div>
-
-      {/* Connection String Input */}
-      <div className="space-y-2">
-        <Label htmlFor="db-url" className="text-sm font-medium">
-          {t("connectionString")}
-        </Label>
-        <Input
-          id="db-url"
-          value={connectionString}
-          onChange={(e) => {
-            onConnectionStringChange(e.target.value)
-            setConnectionStatus("idle")
-            setAuditResult(null)
-            onExistingChartChange(null)
-          }}
-          placeholder={t("connectionPlaceholder")}
-          className="font-mono text-sm"
-        />
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <Info className="w-3 h-3" />
-          {t("format")}
-        </p>
-
-        {/* Mini Tutorial */}
-        <Accordion type="single" collapsible className="w-full mt-2 border rounded-lg px-4 bg-muted/20">
-          <AccordionItem value="help" className="border-b-0">
-            <AccordionTrigger className="py-3 text-xs text-muted-foreground hover:no-underline">
-              <span className="flex items-center gap-1.5">
-                <HelpCircle className="w-4 h-4 text-primary" />
-                {t("helpTitle")}
+      {/* Escolha do caminho */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {paths.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => choosePath(p.id)}
+            className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 transition-all text-left cursor-pointer ${
+              path === p.id ? "border-primary bg-primary/5 shadow-sm" : "border-muted hover:border-primary/40"
+            }`}
+          >
+            {p.badge && (
+              <span className="absolute top-2 right-2 rounded-full bg-primary/10 text-primary text-[10px] font-semibold px-2 py-0.5 uppercase tracking-wide">
+                {p.badge}
               </span>
-            </AccordionTrigger>
-            <AccordionContent className="text-xs text-muted-foreground space-y-3 pb-4">
-              <div>
-                <strong className="text-foreground">{t("supabaseLabel")}</strong>
-                <ol className="list-decimal list-inside mt-1 space-y-1 ml-1">
-                  <li>{t("helpSupabase").split(". ")[0]}</li>
-                  <li>{t.rich("helpSupabaseStep2", { strong: (chunks) => <strong>{chunks}</strong> })}</li>
-                  <li>{t.rich("helpSupabaseStep3", { strong: (chunks) => <strong>{chunks}</strong> })}</li>
-                  <li>{t.rich("helpSupabaseStep4", { code: (chunks) => <code className="bg-muted px-1 rounded">{chunks}</code> })}</li>
-                </ol>
-              </div>
-              <div>
-                <strong className="text-foreground">{t("neonLabel")}</strong>
-                <p className="mt-1 ml-1 leading-relaxed text-muted-foreground">{t("helpNeon")}</p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            )}
+            {p.icon}
+            <div>
+              <p className="font-medium text-sm">{p.title}</p>
+              <p className="text-xs text-muted-foreground">{p.subtitle}</p>
+            </div>
+          </button>
+        ))}
       </div>
 
-      {/* Test Connection Button */}
-      <Button
-        onClick={handleTestConnection}
-        disabled={!connectionString.trim() || connectionStatus === "testing"}
-        variant="outline"
-        className="w-full"
-      >
-        {connectionStatus === "testing" ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            {t("testing")}
-          </>
-        ) : (
-          <>
-            <Server className="w-4 h-4 mr-2" />
-            {t("testConnection")}
-          </>
-        )}
-      </Button>
+      {/* Painel do caminho escolhido */}
+      {path === "managed" && <SupabaseManagedPanel testConnection={runConnectionTest} />}
 
-      {/* Connection Result */}
+      {path === "url" && (
+        <ConnectionUrlPanel
+          onConnectionStringChange={(value) => {
+            onConnectionStringChange(value)
+            if (connectionStatus !== "idle") resetResult()
+          }}
+          onTest={() => runConnectionTest(connectionString)}
+          testing={connectionStatus === "testing"}
+          errorCode={errorCode}
+        />
+      )}
+
+      {path === "docker" && (
+        <div className="flex flex-col gap-3">
+          <div className="rounded-xl border bg-muted/20 p-4 space-y-2">
+            <p className="text-sm">{t("dockerNote")}</p>
+            <code className="block text-xs bg-muted px-2 py-1.5 rounded font-mono break-all">{DOCKER_URL}</code>
+          </div>
+          <Button
+            onClick={() => runConnectionTest(DOCKER_URL)}
+            disabled={connectionStatus === "testing"}
+            variant="outline"
+            className="w-full"
+          >
+            {connectionStatus === "testing" ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {t("testing")}
+              </>
+            ) : (
+              <>
+                <Server className="w-4 h-4 mr-2" />
+                {t("testConnection")}
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Resultado */}
       {connectionStatus === "success" && (
         <div className="rounded-xl border border-positive/30 bg-positive/5 p-4 animate-in fade-in duration-300">
           <div className="flex items-center gap-2 text-positive font-medium">
@@ -224,9 +216,7 @@ export function DatabaseStep({
 
           {auditResult && (
             <div className="mt-3 space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                {t("existingDataFound")}
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">{t("existingDataFound")}</p>
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-background/50 p-2.5 text-center">
                   <p className="text-lg font-bold">{auditResult.accounts}</p>
@@ -245,9 +235,7 @@ export function DatabaseStep({
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{t("categories")}</p>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground italic">
-                {t("preserveDataMsg")}
-              </p>
+              <p className="text-xs text-muted-foreground italic">{t("preserveDataMsg")}</p>
             </div>
           )}
         </div>
@@ -263,16 +251,12 @@ export function DatabaseStep({
         </div>
       )}
 
-      {/* Navigation */}
+      {/* Navegação */}
       <div className="flex gap-3 pt-2">
         <Button variant="outline" onClick={onBack} className="flex-1">
           {tc("back")}
         </Button>
-        <Button
-          onClick={onNext}
-          disabled={connectionStatus !== "success"}
-          className="flex-1"
-        >
+        <Button onClick={onNext} disabled={connectionStatus !== "success"} className="flex-1">
           {tc("next")}
         </Button>
       </div>
