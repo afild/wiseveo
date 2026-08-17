@@ -14,9 +14,10 @@ import { acceptInvitationForUser, peekInvitation } from "@/features/settings/ser
 import { isPublicSignupEnabled } from "@/lib/public-signup"
 import { isSetupComplete } from "@/lib/setup-check"
 import { encodeSetupIdentity, setSetupIdentityCookie } from "@/lib/setup-identity"
+import { getAppUrl } from "@/lib/app-url"
 
 export async function GET(request: NextRequest) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const appUrl = getAppUrl(request)
 
   if (!isGoogleConfigured()) {
     return NextResponse.redirect(`${appUrl}/login?error=google_not_configured`)
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Exchange code for tokens
-    const tokens = await exchangeCodeForTokens(code)
+    const tokens = await exchangeCodeForTokens(code, appUrl)
     const userInfo = decodeIdToken(tokens.id_token)
     const normalizedEmail = normalizeEmail(userInfo.email)
 

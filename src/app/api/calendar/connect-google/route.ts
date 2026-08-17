@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server"
 import { generateState, getGoogleCalendarAuthUrl, isGoogleConfigured } from "@/lib/google-auth"
 import { getSessionUserId } from "@/lib/session"
+import { getAppUrl } from "@/lib/app-url"
 
-export async function GET() {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+export async function GET(request: Request) {
+  const appUrl = getAppUrl(request)
 
   if (!isGoogleConfigured()) {
     return NextResponse.redirect(`${appUrl}/calendar?error=google_not_configured`)
@@ -16,7 +17,7 @@ export async function GET() {
   }
 
   const state = generateState()
-  const authUrl = getGoogleCalendarAuthUrl(state)
+  const authUrl = getGoogleCalendarAuthUrl(state, appUrl)
 
   const response = NextResponse.redirect(authUrl)
 

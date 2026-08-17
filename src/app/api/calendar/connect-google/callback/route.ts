@@ -3,9 +3,10 @@ import type { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { exchangeCalendarCodeForTokens, isGoogleConfigured } from "@/lib/google-auth"
 import { getSessionUserId } from "@/lib/session"
+import { getAppUrl } from "@/lib/app-url"
 
 export async function GET(request: NextRequest) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const appUrl = getAppUrl(request)
 
   if (!isGoogleConfigured()) {
     return NextResponse.redirect(`${appUrl}/calendar?error=google_not_configured`)
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const tokens = await exchangeCalendarCodeForTokens(code)
+    const tokens = await exchangeCalendarCodeForTokens(code, appUrl)
 
     await prisma.user.update({
       where: { id: userId },

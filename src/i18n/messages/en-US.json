@@ -314,6 +314,7 @@
     },
     "firstAccess": {
       "desc": "With email and password or with your Google account. Next you connect or import the database; integrations are optional.",
+      "googleHint": "Want to sign in with Google? Before this first access, set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your hosting environment variables (on Vercel: Settings → Environment Variables → Redeploy) and reload this page. The “Continue with Google” button will show up here.",
       "title": "First access — create the administrator account"
     },
     "google": "Continue with Google",

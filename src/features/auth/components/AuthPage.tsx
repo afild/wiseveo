@@ -345,6 +345,11 @@ export function AuthPage({
               <FirstAccessBanner />
               <h1 className="text-lg font-semibold text-center">{t("signup.tab")}</h1>
               <SignupTabContent showGoogle={showGoogle} />
+              {!showGoogle && (
+                <p className="mt-4 rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                  {t("firstAccess.googleHint")}
+                </p>
+              )}
             </CardContent>
           </Card>
         ) : (

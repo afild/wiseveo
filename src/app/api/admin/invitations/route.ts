@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getTranslations } from "next-intl/server"
 import { getSessionUserId } from "@/lib/session"
+import { getAppUrl } from "@/lib/app-url"
 import { AdminAccessError, requireAdminUser } from "@/features/settings/services/admin-users-service"
 import {
   createInvitation,
@@ -49,8 +50,7 @@ export async function POST(request: Request) {
       email,
       role: typeof body.role === "string" ? (body.role as "USER" | "ADMIN" | "SUPERADMIN") : undefined,
     })
-    const origin = new URL(request.url).origin
-    const link = `${process.env.NEXT_PUBLIC_APP_URL || origin}/convite/${invitation.token}`
+    const link = `${getAppUrl(request)}/convite/${invitation.token}`
     return NextResponse.json({ success: true, data: { ...invitation, link } }, { status: 201 })
   } catch (error) {
     return errorResponse(error)

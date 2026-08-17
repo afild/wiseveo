@@ -1,4 +1,5 @@
 import { randomBytes } from "crypto"
+import { getAppUrl } from "@/lib/app-url"
 
 const SCOPES = [
   "openid",
@@ -7,11 +8,16 @@ const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
 ].join(" ")
 
-function getConfig() {
+/**
+ * `appUrl` = endereço público desta instalação (getAppUrl(request)); o
+ * redirect_uri precisa ser IGUAL na ida (getGoogleAuthUrl) e na volta
+ * (exchangeCodeForTokens), então as rotas passam a mesma origem nos dois.
+ */
+function getConfig(appUrl?: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID || ""
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || ""
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-  const redirectUri = `${appUrl}/api/auth/google/callback`
+  const base = appUrl || getAppUrl()
+  const redirectUri = `${base}/api/auth/google/callback`
   return { clientId, clientSecret, redirectUri }
 }
 
@@ -27,8 +33,8 @@ export function generateState(): string {
   return randomBytes(32).toString("hex")
 }
 
-export function getGoogleAuthUrl(state: string): string {
-  const { clientId, redirectUri } = getConfig()
+export function getGoogleAuthUrl(state: string, appUrl?: string): string {
+  const { clientId, redirectUri } = getConfig(appUrl)
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -49,8 +55,8 @@ interface GoogleTokens {
   token_type: string
 }
 
-export async function exchangeCodeForTokens(code: string): Promise<GoogleTokens> {
-  const { clientId, clientSecret, redirectUri } = getConfig()
+export async function exchangeCodeForTokens(code: string, appUrl?: string): Promise<GoogleTokens> {
+  const { clientId, clientSecret, redirectUri } = getConfig(appUrl)
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -90,10 +96,9 @@ export function decodeIdToken(idToken: string): GoogleUserInfo {
  * Generates a Google OAuth URL for calendar-only connection.
  * Used when user logged in via email/password but wants to connect Google Calendar.
  */
-export function getGoogleCalendarAuthUrl(state: string): string {
+export function getGoogleCalendarAuthUrl(state: string, appUrl?: string): string {
   const { clientId } = getConfig()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-  const redirectUri = `${appUrl}/api/calendar/connect-google/callback`
+  const redirectUri = `${appUrl || getAppUrl()}/api/calendar/connect-google/callback`
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -111,10 +116,10 @@ export function getGoogleCalendarAuthUrl(state: string): string {
  */
 export async function exchangeCalendarCodeForTokens(
   code: string,
+  appUrl?: string,
 ): Promise<GoogleTokens> {
   const { clientId, clientSecret } = getConfig()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-  const redirectUri = `${appUrl}/api/calendar/connect-google/callback`
+  const redirectUri = `${appUrl || getAppUrl()}/api/calendar/connect-google/callback`
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },

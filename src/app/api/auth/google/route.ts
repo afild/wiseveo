@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server"
 import { generateState, getGoogleAuthUrl, GOOGLE_INVITE_COOKIE, isGoogleConfigured } from "@/lib/google-auth"
+import { getAppUrl } from "@/lib/app-url"
 
 export async function GET(request: Request) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const appUrl = getAppUrl(request)
 
   if (!isGoogleConfigured()) {
     return NextResponse.redirect(`${appUrl}/login?error=google_not_configured`)
   }
 
   const state = generateState()
-  const authUrl = getGoogleAuthUrl(state)
+  const authUrl = getGoogleAuthUrl(state, appUrl)
 
   const response = NextResponse.redirect(authUrl)
 
