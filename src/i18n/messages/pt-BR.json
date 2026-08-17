@@ -188,6 +188,8 @@
       "allFieldsRequired": "Todos os campos são obrigatórios",
       "emailAlreadyRegistered": "Esse email já foi registrado",
       "emailPasswordRequired": "Email e senha são obrigatórios",
+      "firstAccess": "Primeiro acesso: ainda não há contas. Crie a conta do administrador na aba \"Criar conta\".",
+      "firstAccessContinue": "Conta criada! Vamos configurar o WISEVEO.",
       "googleAccountRequired": "Esta conta usa login pelo Google. Clique em 'Continuar com Google'.",
       "invalidCredentials": "Email ou senha incorretos",
       "loginSuccess": "Login realizado com sucesso",
@@ -310,6 +312,10 @@
       "loginFailed": "Erro ao fazer login. Tente novamente.",
       "signupFailed": "Erro ao criar conta. Tente novamente."
     },
+    "firstAccess": {
+      "desc": "Com e-mail e senha ou com sua conta Google. Em seguida você conecta ou importa o banco de dados; as integrações são opcionais.",
+      "title": "Primeiro acesso — crie a conta do administrador"
+    },
     "google": "Continuar com Google",
     "googleSyncNote": "Ao conectar com Google, será possível sincronizar sua agenda (em breve)",
     "login": {
@@ -321,11 +327,6 @@
       "validation": {
         "passwordRequired": "Senha é obrigatória"
       }
-    },
-    "notConfigured": {
-      "cta": "Configurar agora",
-      "desc": "Antes de entrar, conecte o banco de dados e crie o administrador. Leva poucos minutos.",
-      "title": "Este WISEVEO ainda não foi configurado"
     },
     "orContinueWith": "Ou continue com",
     "password": "Senha",
@@ -1648,6 +1649,14 @@
         "passwordMin": "Senha deve ter pelo menos 6 caracteres",
         "passwordMismatch": "Senhas não conferem",
         "passwordRequired": "Senha é obrigatória"
+      },
+      "identity": {
+        "google": "Conta Google",
+        "hint": "Depois de configurar, você entra com estes dados. Nome e foto ficam no seu perfil e podem ser alterados nas Configurações.",
+        "password": "E-mail e senha",
+        "ready": "Conta pronta",
+        "signInWith": "Entrar com",
+        "subtitle": "Esta é a conta que vai administrar o WISEVEO — criada no seu cadastro."
       },
       "nameLabel": "Nome completo",
       "namePlaceholder": "Seu nome",

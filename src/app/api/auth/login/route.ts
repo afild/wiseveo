@@ -8,9 +8,16 @@ import {
   normalizeEmail,
   PENDING_APPROVAL_PATH,
 } from "@/lib/user-approval"
+import { isSetupComplete } from "@/lib/setup-check"
 
 export async function POST(request: Request) {
   const t = await getTranslations("api.auth")
+
+  // Primeiro acesso (sem banco): não há conta para entrar — a pessoa cria a do
+  // administrador na aba "Criar conta" e segue para o Setup Wizard.
+  if (!isSetupComplete()) {
+    return NextResponse.json({ success: false, code: "firstAccess", message: t("firstAccess") }, { status: 409 })
+  }
 
   try {
     const { email, password } = await request.json()

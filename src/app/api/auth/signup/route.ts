@@ -11,12 +11,15 @@ import {
   PENDING_APPROVAL_PATH,
 } from "@/lib/user-approval"
 import { isPublicSignupEnabled } from "@/lib/public-signup"
+import { isSetupComplete } from "@/lib/setup-check"
+import { encodeSetupIdentity, setSetupIdentityCookie } from "@/lib/setup-identity"
 
 export async function POST(request: Request) {
   const t = await getTranslations("api.auth")
+  const firstAccess = !isSetupComplete()
 
-  // Instância privada: só o convite cria usuários.
-  if (!isPublicSignupEnabled()) {
+  // Instância privada (já configurada): só o convite cria usuários.
+  if (!firstAccess && !isPublicSignupEnabled()) {
     return NextResponse.json({ success: false, message: t("signupDisabled") }, { status: 403 })
   }
 
@@ -37,6 +40,24 @@ export async function POST(request: Request) {
         { success: false, message: t("passwordTooShort") },
         { status: 400 }
       )
+    }
+
+    // PRIMEIRO ACESSO (ainda sem banco): a conta criada aqui é a do administrador.
+    // Guarda a identidade num cookie assinado e segue para o Setup Wizard, que a
+    // usa para preencher o passo "Administrador" e criar o SUPERADMIN ao concluir.
+    if (firstAccess) {
+      const token = await encodeSetupIdentity({
+        name: normalizedName,
+        email: normalizedEmail,
+        provider: "password",
+        passwordHash: await bcrypt.hash(password, 10),
+      })
+      const response = NextResponse.json(
+        { success: true, message: t("firstAccessContinue"), redirectTo: "/setup" },
+        { status: 200 },
+      )
+      setSetupIdentityCookie(response, token)
+      return response
     }
 
     const existingUser = await prisma.user.findUnique({

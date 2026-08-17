@@ -188,6 +188,8 @@
       "allFieldsRequired": "All fields are required",
       "emailAlreadyRegistered": "This email is already registered",
       "emailPasswordRequired": "Email and password are required",
+      "firstAccess": "First access: there are no accounts yet. Create the administrator account in the \"Create Account\" tab.",
+      "firstAccessContinue": "Account created! Let's set up WISEVEO.",
       "googleAccountRequired": "This account uses Google sign-in. Click 'Continue with Google'.",
       "invalidCredentials": "Incorrect email or password",
       "loginSuccess": "Login successful",
@@ -310,6 +312,10 @@
       "loginFailed": "Error logging in. Please try again.",
       "signupFailed": "Error creating account. Please try again."
     },
+    "firstAccess": {
+      "desc": "With email and password or with your Google account. Next you connect or import the database; integrations are optional.",
+      "title": "First access — create the administrator account"
+    },
     "google": "Continue with Google",
     "googleSyncNote": "By connecting with Google, you will be able to sync your calendar (soon)",
     "login": {
@@ -321,11 +327,6 @@
       "validation": {
         "passwordRequired": "Password is required"
       }
-    },
-    "notConfigured": {
-      "cta": "Set up now",
-      "desc": "Before signing in, connect the database and create the administrator. It takes a few minutes.",
-      "title": "This WISEVEO is not set up yet"
     },
     "orContinueWith": "Or continue with",
     "password": "Password",
@@ -1648,6 +1649,14 @@
         "passwordMin": "Password must be at least 6 characters",
         "passwordMismatch": "Passwords do not match",
         "passwordRequired": "Password is required"
+      },
+      "identity": {
+        "google": "Google account",
+        "hint": "After setup you sign in with these details. Name and photo go to your profile and can be changed in Settings.",
+        "password": "Email and password",
+        "ready": "Account ready",
+        "signInWith": "Sign in with",
+        "subtitle": "This is the account that will administer WISEVEO — created at sign-up."
       },
       "nameLabel": "Full name",
       "namePlaceholder": "Your name",

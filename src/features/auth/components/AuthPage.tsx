@@ -296,21 +296,14 @@ interface AuthPageProps extends React.ComponentProps<"div"> {
   publicSignup?: boolean
 }
 
-function NotConfiguredCard() {
-  const t = useTranslations("auth.notConfigured")
+/** Primeiro acesso (sem banco): a conta criada aqui será a do administrador; depois vem o Setup. */
+function FirstAccessBanner() {
+  const t = useTranslations("auth.firstAccess")
   return (
-    <Card>
-      <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
-        <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
-          <Logo size={28} className="text-primary" />
-        </div>
-        <h1 className="text-lg font-semibold">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("desc")}</p>
-        <Button asChild className="w-full mt-2 cursor-pointer">
-          <a href="/setup">{t("cta")}</a>
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="mb-4 rounded-md border border-primary/20 bg-primary/5 p-3 text-sm">
+      <p className="font-medium">{t("title")}</p>
+      <p className="text-muted-foreground text-xs mt-0.5">{t("desc")}</p>
+    </div>
   )
 }
 
@@ -322,7 +315,7 @@ export function AuthPage({
   ...props
 }: AuthPageProps) {
   const t = useTranslations("auth")
-  const [activeTab, setActiveTab] = useState("login")
+  const [activeTab, setActiveTab] = useState(setupComplete ? "login" : "signup")
   const searchParams = useSearchParams()
   const googleError = searchParams.get("error")
 
@@ -347,7 +340,13 @@ export function AuthPage({
         <GoogleErrorMessage error={googleError} />
 
         {!setupComplete ? (
-          <NotConfiguredCard />
+          <Card>
+            <CardContent className="pt-6">
+              <FirstAccessBanner />
+              <h1 className="text-lg font-semibold text-center">{t("signup.tab")}</h1>
+              <SignupTabContent showGoogle={showGoogle} />
+            </CardContent>
+          </Card>
         ) : (
           <Card>
             <CardContent className="pt-6">
@@ -376,7 +375,7 @@ export function AuthPage({
           </Card>
         )}
 
-        {setupComplete && showGoogle && (
+        {showGoogle && (
           <p className="mt-4 text-center text-xs text-muted-foreground">
             {t("googleSyncNote")}
           </p>

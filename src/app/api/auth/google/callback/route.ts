@@ -12,6 +12,8 @@ import {
 } from "@/lib/user-approval"
 import { acceptInvitationForUser, peekInvitation } from "@/features/settings/services/invitations-service"
 import { isPublicSignupEnabled } from "@/lib/public-signup"
+import { isSetupComplete } from "@/lib/setup-check"
+import { encodeSetupIdentity, setSetupIdentityCookie } from "@/lib/setup-identity"
 
 export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
@@ -45,6 +47,22 @@ export async function GET(request: NextRequest) {
     const tokens = await exchangeCodeForTokens(code)
     const userInfo = decodeIdToken(tokens.id_token)
     const normalizedEmail = normalizeEmail(userInfo.email)
+
+    // PRIMEIRO ACESSO (ainda sem banco): a conta Google vira a identidade do
+    // administrador; nada é gravado — segue para o Setup Wizard com o cookie.
+    if (!isSetupComplete()) {
+      const identity = await encodeSetupIdentity({
+        name: userInfo.name || normalizedEmail,
+        email: normalizedEmail,
+        provider: "google",
+        googleId: userInfo.sub,
+        photo: userInfo.picture || null,
+      })
+      const response = NextResponse.redirect(`${appUrl}/setup`)
+      setSetupIdentityCookie(response, identity)
+      response.cookies.set("google_oauth_state", "", { httpOnly: true, maxAge: 0, path: "/" })
+      return response
+    }
 
     // Convite (aceite via Google): só vale para usuário NOVO; quem já tem conta
     // entra normalmente e o convite fica de fora (sem mesclar contas).

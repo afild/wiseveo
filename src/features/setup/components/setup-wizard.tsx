@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { WizardStepper } from "./wizard-stepper"
 import { WelcomeStep } from "./steps/welcome-step"
 import { DatabaseStep } from "./steps/database-step"
-import { AdminStep } from "./steps/admin-step"
+import { AdminStep, type SetupIdentitySummary } from "./steps/admin-step"
 import { IntegrationsStep } from "./steps/integrations-step"
 import { ChartOfAccountsStep } from "./steps/chart-of-accounts-step"
 import { SummaryStep } from "./steps/summary-step"
@@ -18,9 +18,11 @@ import { resolveAppLocale, type AppLocale } from "@/i18n/config"
 interface SetupWizardProps {
   /** Instalação já configurada: SUPERADMIN refazendo o setup (testes de conexão/interface). */
   reconfiguring?: boolean
+  /** Primeiro acesso: conta criada na página de cadastro (e-mail+senha ou Google). */
+  identity?: SetupIdentitySummary
 }
 
-export function SetupWizard({ reconfiguring = false }: SetupWizardProps) {
+export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProps) {
   const router = useRouter()
   const t = useTranslations("setup")
   // Idioma em que a página foi renderizada (cookie → env da instalação → en-US):
@@ -37,7 +39,12 @@ export function SetupWizard({ reconfiguring = false }: SetupWizardProps) {
   const [connectionString, setConnectionString] = useState("")
   const [useExistingData, setUseExistingData] = useState(false)
   const [existingChartOfAccounts, setExistingChartOfAccounts] = useState<{ groups: any[], accounts: any[] } | null>(null)
-  const [admin, setAdmin] = useState({ name: "", email: "", password: "", confirmPassword: "" })
+  const [admin, setAdmin] = useState({
+    name: identity?.name ?? "",
+    email: identity?.email ?? "",
+    password: "",
+    confirmPassword: "",
+  })
   const [integrations, setIntegrations] = useState({
     google: { enabled: false, clientId: "", clientSecret: "" },
     telegram: { enabled: false, botToken: "", botUsername: "", webhookSecret: "" },
@@ -170,7 +177,7 @@ export function SetupWizard({ reconfiguring = false }: SetupWizardProps) {
           />
         )}
         {currentStep === 2 && (
-          <AdminStep admin={admin} onAdminChange={handleAdminChange} onNext={handleNext} onBack={handleBack} />
+          <AdminStep admin={admin} onAdminChange={handleAdminChange} onNext={handleNext} onBack={handleBack} identity={identity} />
         )}
         {currentStep === 3 && (
           <IntegrationsStep 

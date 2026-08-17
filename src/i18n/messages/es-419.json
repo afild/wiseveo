@@ -188,6 +188,8 @@
       "allFieldsRequired": "Todos los campos son obligatorios",
       "emailAlreadyRegistered": "Ese correo ya está registrado",
       "emailPasswordRequired": "El correo y la contraseña son obligatorios",
+      "firstAccess": "Primer acceso: todavía no hay cuentas. Crea la cuenta del administrador en la pestaña \"Crear cuenta\".",
+      "firstAccessContinue": "¡Cuenta creada! Vamos a configurar WISEVEO.",
       "googleAccountRequired": "Esta cuenta usa inicio de sesión con Google. Haz clic en 'Continuar con Google'.",
       "invalidCredentials": "Correo o contraseña incorrectos",
       "loginSuccess": "Inicio de sesión exitoso",
@@ -310,6 +312,10 @@
       "loginFailed": "Error al iniciar sesión. Inténtalo de nuevo.",
       "signupFailed": "Error al crear la cuenta. Inténtalo de nuevo."
     },
+    "firstAccess": {
+      "desc": "Con correo y contraseña o con tu cuenta de Google. Después conectas o importas la base de datos; las integraciones son opcionales.",
+      "title": "Primer acceso: crea la cuenta del administrador"
+    },
     "google": "Continuar con Google",
     "googleSyncNote": "Al conectar con Google, será posible sincronizar tu agenda (pronto)",
     "login": {
@@ -321,11 +327,6 @@
       "validation": {
         "passwordRequired": "La contraseña es obligatoria"
       }
-    },
-    "notConfigured": {
-      "cta": "Configurar ahora",
-      "desc": "Antes de entrar, conecta la base de datos y crea el administrador. Toma unos minutos.",
-      "title": "Este WISEVEO todavía no está configurado"
     },
     "orContinueWith": "O continuar con",
     "password": "Contraseña",
@@ -1648,6 +1649,14 @@
         "passwordMin": "La contraseña debe tener al menos 6 caracteres",
         "passwordMismatch": "Las contraseñas no coinciden",
         "passwordRequired": "La contraseña es obligatoria"
+      },
+      "identity": {
+        "google": "Cuenta de Google",
+        "hint": "Después de configurar, entras con estos datos. Nombre y foto van a tu perfil y se pueden cambiar en Configuración.",
+        "password": "Correo y contraseña",
+        "ready": "Cuenta lista",
+        "signInWith": "Entrar con",
+        "subtitle": "Esta es la cuenta que administrará WISEVEO, creada en tu registro."
       },
       "nameLabel": "Nombre completo",
       "namePlaceholder": "Tu nombre",

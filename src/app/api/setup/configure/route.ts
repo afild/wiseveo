@@ -10,7 +10,9 @@ import { Client, Pool } from "pg"
 import { initializeUserData } from "@/lib/user-init"
 import { resolveAppLocale } from "@/i18n/config"
 import { INSTALL_LOCALE_ENV } from "@/i18n/install-locale"
+import { cookies } from "next/headers"
 import { canAccessSetup } from "@/lib/setup-access"
+import { clearSetupIdentityCookie, decodeSetupIdentity, SETUP_IDENTITY_COOKIE } from "@/lib/setup-identity"
 import { redactConnectionUrl } from "@/features/setup/lib/connection-url"
 import { applyPrismaMigrations, loadMigrationFiles } from "@/features/setup/services/prisma-migrations.service"
 import { detectHostingProvider, detectSetupPersistence } from "@/features/setup/services/setup-environment"
@@ -32,7 +34,18 @@ export async function POST(req: Request) {
     const payload = await req.json()
     const { databaseUrl, useExistingData, admin, locale, integrations } = payload
 
-    if (!databaseUrl || typeof databaseUrl !== "string" || !admin?.email || !admin?.password) {
+    // Primeiro acesso: a conta do administrador veio da página de cadastro
+    // (cookie assinado) — nome, e-mail e senha/Google saem DELE, não do payload.
+    // Reconfiguração (SUPERADMIN logado): sem cookie, vale o payload como antes.
+    const cookieStore = await cookies()
+    const identity = await decodeSetupIdentity(cookieStore.get(SETUP_IDENTITY_COOKIE)?.value)
+
+    const adminInput = identity
+      ? { name: identity.name, email: identity.email }
+      : { name: String(admin?.name ?? ""), email: String(admin?.email ?? "") }
+    const adminPassword: string | null = identity ? null : typeof admin?.password === "string" ? admin.password : null
+
+    if (!databaseUrl || typeof databaseUrl !== "string" || !adminInput.email || (!identity && !adminPassword)) {
       return NextResponse.json({ success: false, message: t("missingFields") }, { status: 400 })
     }
 
@@ -81,8 +94,17 @@ export async function POST(req: Request) {
     const client = new PrismaClient({ adapter })
 
     try {
-      const hashedPassword = await bcrypt.hash(admin.password, 10)
-      const email = String(admin.email).trim().toLowerCase()
+      // Senha: do cadastro (já em hash) ou do payload (reconfiguração); Google: sem senha, com googleId.
+      const passwordHash =
+        identity?.provider === "password"
+          ? (identity.passwordHash as string)
+          : adminPassword
+            ? await bcrypt.hash(adminPassword, 10)
+            : null
+      const googleId = identity?.provider === "google" ? identity.googleId : undefined
+      const photo = identity?.photo ?? undefined
+      const email = adminInput.email.trim().toLowerCase()
+      const name = adminInput.name.trim() || email
       const existing = await client.user.findUnique({ where: { email }, select: { id: true } })
       const userId = existing?.id ?? crypto.randomUUID()
 
@@ -90,16 +112,20 @@ export async function POST(req: Request) {
         where: { email },
         create: {
           id: userId,
-          name: admin.name,
+          name,
           email,
-          passwordHash: hashedPassword,
+          passwordHash,
+          googleId,
+          photo,
           role: "SUPERADMIN",
           status: "ACTIVE",
           preferencesJson: { locale: chosenLocale },
         },
         update: {
-          name: admin.name || undefined,
-          passwordHash: hashedPassword,
+          name,
+          ...(passwordHash ? { passwordHash } : {}),
+          ...(googleId ? { googleId } : {}),
+          ...(photo ? { photo } : {}),
           role: "SUPERADMIN",
           status: "ACTIVE",
         },
@@ -147,13 +173,15 @@ export async function POST(req: Request) {
       // para a pessoa colar no painel da hospedagem; o app volta configurado
       // depois do redeploy. (Único momento em que os segredos voltam ao navegador.)
       console.log("[SETUP] Read-only host: returning env vars for manual configuration")
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         mode,
         hosting: detectHostingProvider(),
         envVars,
         migrations: migrationsSummary,
       })
+      clearSetupIdentityCookie(response)
+      return response
     }
 
     // 4. Self-host: grava .env.local
@@ -182,6 +210,7 @@ export async function POST(req: Request) {
       path: "/",
       maxAge: 60 * 60, // 1 hour
     })
+    clearSetupIdentityCookie(response)
 
     return response
   } catch (error: any) {

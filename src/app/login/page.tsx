@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic"
 
 export default function LoginPage() {
   const setupComplete = isSetupComplete()
-  const showGoogle = setupComplete && isGoogleConfigured()
+  // Google funciona também no primeiro acesso (só precisa de GOOGLE_CLIENT_ID/SECRET no ambiente).
+  const showGoogle = isGoogleConfigured()
   return (
     <Suspense>
       <AuthPage showGoogle={showGoogle} setupComplete={setupComplete} publicSignup={isPublicSignupEnabled()} />
