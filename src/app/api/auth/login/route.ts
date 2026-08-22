@@ -10,6 +10,7 @@ import {
   PENDING_APPROVAL_PATH,
 } from "@/lib/user-approval"
 import { isSetupComplete } from "@/lib/setup-check"
+import { applySessionLocaleCookie } from "@/i18n/session-locale"
 
 export async function POST(request: NextRequest) {
   const t = await getTranslations("api.auth")
@@ -94,6 +95,9 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7, // 7 dias
       path: "/",
     })
+
+    // O idioma salvo no perfil acompanha a pessoa neste navegador.
+    applySessionLocaleCookie(response, user.preferencesJson)
 
     if (isNewSetup) {
       response.cookies.delete("wiseveo-new-setup")

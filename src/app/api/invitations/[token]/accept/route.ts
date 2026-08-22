@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getTranslations } from "next-intl/server"
 import { createSessionToken, COOKIE_NAME } from "@/lib/auth"
 import { acceptInvitationWithPassword, InvitationError } from "@/features/settings/services/invitations-service"
+import { applySessionLocaleCookie } from "@/i18n/session-locale"
 
 export const dynamic = "force-dynamic"
 
@@ -25,7 +26,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       return NextResponse.json({ success: false, message: tAuth("passwordTooShort") }, { status: 400 })
     }
 
-    const { userId } = await acceptInvitationWithPassword({ token, name, email, password })
+    const { userId, preferencesJson } = await acceptInvitationWithPassword({ token, name, email, password })
     const sessionToken = await createSessionToken(userId)
 
     const response = NextResponse.json({ success: true, message: t("accepted"), redirectTo: "/dashboard" })
@@ -36,6 +37,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
     })
+    applySessionLocaleCookie(response, preferencesJson)
     return response
   } catch (error) {
     if (error instanceof InvitationError) {

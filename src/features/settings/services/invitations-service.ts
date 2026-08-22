@@ -161,7 +161,7 @@ export async function acceptInvitationWithPassword(input: {
   name: string
   email: string
   password: string
-}): Promise<{ userId: string }> {
+}): Promise<{ userId: string; preferencesJson: unknown }> {
   const t = await getTranslations("api.invitations")
   const invitation = await loadUsableInvitation(input.token)
   const email = normalizeEmail(input.email)
@@ -181,7 +181,7 @@ export async function acceptInvitationWithPassword(input: {
         status: "ACTIVE",
         dataOwnerId,
       },
-      select: { id: true },
+      select: { id: true, preferencesJson: true },
     })
     await tx.invitation.update({
       where: { id: invitation.id },
@@ -189,7 +189,7 @@ export async function acceptInvitationWithPassword(input: {
     })
     return created
   })
-  return { userId: user.id }
+  return { userId: user.id, preferencesJson: user.preferencesJson }
 }
 
 /** Aceite via Google (usuário recém-criado no callback): vincula ao dono e marca aceito. */

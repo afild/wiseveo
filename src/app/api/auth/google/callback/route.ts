@@ -15,6 +15,7 @@ import { isPublicSignupEnabled } from "@/lib/public-signup"
 import { isSetupComplete } from "@/lib/setup-check"
 import { encodeSetupIdentity, setSetupIdentityCookie } from "@/lib/setup-identity"
 import { getAppUrl } from "@/lib/app-url"
+import { applySessionLocaleCookie } from "@/i18n/session-locale"
 
 export async function GET(request: NextRequest) {
   const appUrl = getAppUrl(request)
@@ -166,6 +167,9 @@ export async function GET(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",
     })
+
+    // O idioma salvo no perfil acompanha a pessoa neste navegador.
+    applySessionLocaleCookie(response, user.preferencesJson)
 
     // Clear OAuth state cookie
     response.cookies.set("google_oauth_state", "", {

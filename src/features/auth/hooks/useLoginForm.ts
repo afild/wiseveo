@@ -72,7 +72,12 @@ export function useLoginForm() {
       const result = await submitLogin(formData)
       if (result.success) {
         setSuccessMessage(result.message || t("login.successMessage"))
-        setTimeout(() => router.push(result.redirectTo ?? "/dashboard"), 1500)
+        setTimeout(() => {
+          router.push(result.redirectTo ?? "/dashboard")
+          // Re-renderiza a casca (NextIntlClientProvider, <html lang>) com o cookie de
+          // idioma que a resposta do login acabou de gravar — como no aceite de convite.
+          router.refresh()
+        }, 1500)
       } else {
         setServerError(result.message)
       }
