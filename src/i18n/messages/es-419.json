@@ -318,7 +318,7 @@
       "title": "Primer acceso: crea la cuenta del administrador"
     },
     "google": "Continuar con Google",
-    "googleSyncNote": "Al conectar con Google, será posible sincronizar tu agenda (pronto)",
+    "googleSyncNote": "Iniciar sesión con Google usa solo tu correo y perfil. Google Calendar lo conectas después, en la página Calendario.",
     "login": {
       "button": "Ingresar",
       "forgotPassword": "¿Olvidaste tu contraseña?",

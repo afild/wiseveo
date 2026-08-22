@@ -83,7 +83,9 @@ export async function GET(request: NextRequest) {
     if (user) {
       const bootstrapAdmin = isBootstrapAdminEmail(user.email)
 
-      // Link Google account and persist OAuth tokens
+      // Vincula a conta Google (só identidade). Tokens da Agenda NÃO são gravados
+      // aqui — vêm apenas do fluxo api/calendar/connect-google; os já existentes
+      // ficam intactos.
       user = await prisma.user.update({
         where: { id: user.id },
         data: {
@@ -95,12 +97,6 @@ export async function GET(request: NextRequest) {
                 status: "ACTIVE",
               }
             : {}),
-          googleAccessToken: tokens.access_token,
-          googleRefreshToken:
-            tokens.refresh_token ?? user.googleRefreshToken,
-          googleTokenExpiresAt: new Date(
-            Date.now() + tokens.expires_in * 1000,
-          ),
         },
       })
     } else if (invitation && inviteToken) {
@@ -115,9 +111,6 @@ export async function GET(request: NextRequest) {
           role: invitation.role,
           status: "ACTIVE",
           dataOwnerId: invitation.dataOwnerId,
-          googleAccessToken: tokens.access_token,
-          googleRefreshToken: tokens.refresh_token ?? null,
-          googleTokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
         },
       })
       await acceptInvitationForUser({ token: inviteToken, userId: user.id })
@@ -132,7 +125,7 @@ export async function GET(request: NextRequest) {
       const userCount = await prisma.user.count()
       const isFirstUser = userCount === 0
 
-      // Create new user (no password) with OAuth tokens
+      // Create new user (no password); identity only, no calendar tokens
       user = await prisma.user.create({
         data: {
           name: userInfo.name,
@@ -141,11 +134,6 @@ export async function GET(request: NextRequest) {
           photo: userInfo.picture || null,
           role: isFirstUser ? "SUPERADMIN" : initialAccess.role,
           status: isFirstUser ? "ACTIVE" : initialAccess.status,
-          googleAccessToken: tokens.access_token,
-          googleRefreshToken: tokens.refresh_token ?? null,
-          googleTokenExpiresAt: new Date(
-            Date.now() + tokens.expires_in * 1000,
-          ),
         },
       })
 

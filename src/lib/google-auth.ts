@@ -1,12 +1,15 @@
 import { randomBytes } from "crypto"
 import { getAppUrl } from "@/lib/app-url"
 
-const SCOPES = [
-  "openid",
-  "email",
-  "profile",
-  "https://www.googleapis.com/auth/calendar.events",
-].join(" ")
+/**
+ * Login = só identidade (openid/email/profile): escopos não sensíveis, publicáveis
+ * sem verificação do Google e sem expiração de 7 dias em app "em teste". A Agenda
+ * (escopo sensível) é pedida APENAS ao conectar o calendário — ver
+ * getGoogleCalendarAuthUrl / api/calendar/connect-google.
+ */
+export const GOOGLE_LOGIN_SCOPES = ["openid", "email", "profile"] as const
+export const GOOGLE_CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events"
+const LOGIN_SCOPE = GOOGLE_LOGIN_SCOPES.join(" ")
 
 /**
  * `appUrl` = endereço público desta instalação (getAppUrl(request)); o
@@ -35,13 +38,15 @@ export function generateState(): string {
 
 export function getGoogleAuthUrl(state: string, appUrl?: string): string {
   const { clientId, redirectUri } = getConfig(appUrl)
+  // Sem access_type=offline (nenhum refresh token é guardado no login) e sem
+  // prompt=consent (o Google só mostra a permissão na primeira vez; depois
+  // apenas a escolha da conta).
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: SCOPES,
-    access_type: "offline",
-    prompt: "consent",
+    scope: LOGIN_SCOPE,
+    prompt: "select_account",
     state,
   })
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
@@ -103,7 +108,7 @@ export function getGoogleCalendarAuthUrl(state: string, appUrl?: string): string
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: "https://www.googleapis.com/auth/calendar.events",
+    scope: GOOGLE_CALENDAR_SCOPE,
     access_type: "offline",
     prompt: "consent",
     state,
@@ -195,10 +200,26 @@ export async function getValidAccessToken(
     return user.googleAccessToken
   }
 
-  // Refresh
-  const { access_token, expires_in } = await refreshAccessToken(
-    user.googleRefreshToken,
-  )
+  // Refresh. Se o Google responder invalid_grant (refresh token expirado — 7 dias
+  // em app "em teste" — ou revogado), desconecta: limpa os tokens para a página
+  // Calendário voltar a oferecer "Conectar Google Calendar". Antes o login com
+  // Google renovava esse token por tabela; desde que o login pede só identidade,
+  // este é o único caminho de recuperação.
+  let refreshed: { access_token: string; expires_in: number }
+  try {
+    refreshed = await refreshAccessToken(user.googleRefreshToken)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    if (message.includes("invalid_grant")) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { googleAccessToken: null, googleRefreshToken: null, googleTokenExpiresAt: null },
+      })
+      return null
+    }
+    throw err
+  }
+  const { access_token, expires_in } = refreshed
   await prisma.user.update({
     where: { id: userId },
     data: {

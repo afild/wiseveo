@@ -4,6 +4,7 @@ import { getDefaultUserId } from "@/features/transactions/services/get-default-u
 import { getCalendarStatement } from "@/features/calendar/services/get-calendar-statement"
 import { CalendarPageClient } from "@/features/calendar/components/calendar-page-client"
 import { prisma } from "@/lib/prisma"
+import { getSessionUserId } from "@/lib/session"
 import { startOfUTCDay, endOfUTCDay } from "@/lib/financial"
 
 export default async function CalendarPage() {
@@ -24,10 +25,13 @@ export default async function CalendarPage() {
   const from = startOfUTCDay(startOfMonth(now))
   const to = endOfUTCDay(endOfMonth(now))
 
+  // Dados financeiros são do DONO (userId); a conexão com o Google Calendar é da
+  // PESSOA logada — o mesmo id que sync-google/clear-google/connect-google usam.
+  const sessionUserId = await getSessionUserId()
   const [calendarData, user] = await Promise.all([
     getCalendarStatement(userId, from, to),
     prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: sessionUserId ?? userId },
       select: { googleRefreshToken: true },
     }),
   ])

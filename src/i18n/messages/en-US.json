@@ -318,7 +318,7 @@
       "title": "First access — create the administrator account"
     },
     "google": "Continue with Google",
-    "googleSyncNote": "By connecting with Google, you will be able to sync your calendar (soon)",
+    "googleSyncNote": "Signing in with Google uses only your email and profile. You connect Google Calendar later, on the Calendar page.",
     "login": {
       "button": "Log in",
       "forgotPassword": "Forgot password?",
