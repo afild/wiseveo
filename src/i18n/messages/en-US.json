@@ -314,7 +314,19 @@
     },
     "firstAccess": {
       "desc": "With email and password or with your Google account. Next you connect or import the database; integrations are optional.",
-      "googleHint": "Want to sign in with Google? Before this first access, set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your hosting environment variables (on Vercel: Settings → Environment Variables → Redeploy) and reload this page. The “Continue with Google” button will show up here.",
+      "googleGuide": {
+        "calendarUriLabel": "Google Calendar",
+        "copied": "Copied!",
+        "copy": "Copy",
+        "envHint": "On Vercel: Settings → Environment Variables → Redeploy. Then reload this page — the “Continue with Google” button shows up here.",
+        "envTitle": "Paste the client ID and the client secret into your hosting environment variables:",
+        "intro": "For the “Continue with Google” button to show up here, create an OAuth client in Google Cloud and set the two keys in your hosting. It takes about 5 minutes:",
+        "loginUriLabel": "Sign-in",
+        "step1": "Create the credentials (OAuth client ID → Web application) at",
+        "step1Link": "Google Cloud Console → Credentials",
+        "step2": "Under “Authorized redirect URIs”, add exactly these two addresses:",
+        "trigger": "Enable sign-in with Google"
+      },
       "title": "First access — create the administrator account"
     },
     "google": "Continue with Google",

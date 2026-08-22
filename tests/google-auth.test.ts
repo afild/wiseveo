@@ -5,6 +5,7 @@ import {
   getGoogleAuthUrl,
   getGoogleCalendarAuthUrl,
 } from "../src/lib/google-auth"
+import { getGoogleRedirectUris } from "../src/lib/google-redirect-uris"
 
 const APP_URL = "https://app.wiseveo.com"
 
@@ -58,5 +59,22 @@ describe("getGoogleCalendarAuthUrl (conectar Agenda)", () => {
   it("volta para /api/calendar/connect-google/callback da origem informada", () => {
     expect(p.get("redirect_uri")).toBe(`${APP_URL}/api/calendar/connect-google/callback`)
     expect(p.get("state")).toBe("state-456")
+  })
+})
+
+describe("getGoogleRedirectUris (fonte única: fluxo OAuth e guia da tela de primeiro acesso)", () => {
+  it("gera os dois endereços de retorno a partir da origem, com ou sem barra final", () => {
+    expect(getGoogleRedirectUris(APP_URL)).toEqual({
+      login: `${APP_URL}/api/auth/google/callback`,
+      calendar: `${APP_URL}/api/calendar/connect-google/callback`,
+    })
+    expect(getGoogleRedirectUris(`${APP_URL}/`)).toEqual(getGoogleRedirectUris(APP_URL))
+    expect(getGoogleRedirectUris("http://localhost:3000").login).toBe("http://localhost:3000/api/auth/google/callback")
+  })
+
+  it("é exatamente o redirect_uri que o login e o calendário mandam ao Google", () => {
+    const uris = getGoogleRedirectUris(APP_URL)
+    expect(paramsOf(getGoogleAuthUrl("s", APP_URL)).get("redirect_uri")).toBe(uris.login)
+    expect(paramsOf(getGoogleCalendarAuthUrl("s", APP_URL)).get("redirect_uri")).toBe(uris.calendar)
   })
 })

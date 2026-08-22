@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto"
 import { getAppUrl } from "@/lib/app-url"
+import { getGoogleRedirectUris } from "@/lib/google-redirect-uris"
 
 /**
  * Login = só identidade (openid/email/profile): escopos não sensíveis, publicáveis
@@ -20,7 +21,7 @@ function getConfig(appUrl?: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID || ""
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || ""
   const base = appUrl || getAppUrl()
-  const redirectUri = `${base}/api/auth/google/callback`
+  const redirectUri = getGoogleRedirectUris(base).login
   return { clientId, clientSecret, redirectUri }
 }
 
@@ -103,7 +104,7 @@ export function decodeIdToken(idToken: string): GoogleUserInfo {
  */
 export function getGoogleCalendarAuthUrl(state: string, appUrl?: string): string {
   const { clientId } = getConfig()
-  const redirectUri = `${appUrl || getAppUrl()}/api/calendar/connect-google/callback`
+  const redirectUri = getGoogleRedirectUris(appUrl || getAppUrl()).calendar
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -124,7 +125,7 @@ export async function exchangeCalendarCodeForTokens(
   appUrl?: string,
 ): Promise<GoogleTokens> {
   const { clientId, clientSecret } = getConfig()
-  const redirectUri = `${appUrl || getAppUrl()}/api/calendar/connect-google/callback`
+  const redirectUri = getGoogleRedirectUris(appUrl || getAppUrl()).calendar
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },

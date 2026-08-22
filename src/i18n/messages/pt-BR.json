@@ -314,7 +314,19 @@
     },
     "firstAccess": {
       "desc": "Com e-mail e senha ou com sua conta Google. Em seguida você conecta ou importa o banco de dados; as integrações são opcionais.",
-      "googleHint": "Quer entrar com o Google? Antes deste primeiro acesso, defina GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET nas variáveis de ambiente da hospedagem (na Vercel: Settings → Environment Variables → Redeploy) e recarregue esta página. O botão “Continuar com Google” aparece aqui.",
+      "googleGuide": {
+        "calendarUriLabel": "Google Calendar",
+        "copied": "Copiado!",
+        "copy": "Copiar",
+        "envHint": "Na Vercel: Settings → Environment Variables → Redeploy. Depois recarregue esta página — o botão “Continuar com Google” aparece aqui.",
+        "envTitle": "Cole o ID do cliente e a chave secreta nas variáveis de ambiente da hospedagem:",
+        "intro": "Para o botão “Continuar com Google” aparecer aqui, crie um cliente OAuth no Google Cloud e informe as duas chaves na hospedagem. Leva uns 5 minutos:",
+        "loginUriLabel": "Login",
+        "step1": "Crie as credenciais (ID do cliente OAuth → Aplicativo da Web) em",
+        "step1Link": "Google Cloud Console → Credenciais",
+        "step2": "Em “URIs de redirecionamento autorizados”, adicione exatamente estes dois endereços:",
+        "trigger": "Ative o login com Google"
+      },
       "title": "Primeiro acesso — crie a conta do administrador"
     },
     "google": "Continuar com Google",

@@ -20,6 +20,7 @@ import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { LocaleSwitcher } from "@/components/locale-switcher"
+import { GoogleSetupGuide } from "./GoogleSetupGuide"
 
 function GoogleIcon() {
   return (
@@ -294,6 +295,8 @@ interface AuthPageProps extends React.ComponentProps<"div"> {
   setupComplete?: boolean
   /** Cadastro público visível. Numa instância privada (WISEVEO_PUBLIC_SIGNUP=false) só o convite entra. */
   publicSignup?: boolean
+  /** Origem pública desta instalação (getAppUrl no servidor) — base dos redirect URIs mostrados no guia do Google. */
+  appUrl?: string
 }
 
 /** Primeiro acesso (sem banco): a conta criada aqui será a do administrador; depois vem o Setup. */
@@ -312,6 +315,7 @@ export function AuthPage({
   showGoogle = false,
   setupComplete = true,
   publicSignup = true,
+  appUrl = "",
   ...props
 }: AuthPageProps) {
   const t = useTranslations("auth")
@@ -345,11 +349,7 @@ export function AuthPage({
               <FirstAccessBanner />
               <h1 className="text-lg font-semibold text-center">{t("signup.tab")}</h1>
               <SignupTabContent showGoogle={showGoogle} />
-              {!showGoogle && (
-                <p className="mt-4 rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-                  {t("firstAccess.googleHint")}
-                </p>
-              )}
+              {!showGoogle && <GoogleSetupGuide appUrl={appUrl} />}
             </CardContent>
           </Card>
         ) : (
