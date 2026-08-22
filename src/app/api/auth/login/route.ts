@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 import bcrypt from "bcryptjs"
 import { getTranslations } from "next-intl/server"
 import { prisma } from "@/lib/prisma"
@@ -10,7 +11,7 @@ import {
 } from "@/lib/user-approval"
 import { isSetupComplete } from "@/lib/setup-check"
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const t = await getTranslations("api.auth")
 
   // Primeiro acesso (sem banco): não há conta para entrar — a pessoa cria a do

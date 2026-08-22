@@ -100,7 +100,7 @@ export async function POST(request: Request) {
     })
 
     const { initializeUserData } = await import("@/lib/user-init")
-    await initializeUserData(newUser.id)
+    await initializeUserData(prisma, newUser.id)
 
     if (!isActiveUser(newUser.status)) {
       return NextResponse.json(

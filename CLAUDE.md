@@ -20,11 +20,12 @@ O sistema é trilíngue: **pt-BR, en-US, es-419 (Español LatAm)**. Toda feature
 6. Canais sem cookie (Telegram, jobs): use o locale persistido em `User.preferencesJson.locale`
    (helper `getUserLocale` em `src/features/settings/services/user-settings-service.ts`).
 7. **Gates — rode antes de finalizar qualquer tarefa:**
-   `npm run check:i18n && npm run check:i18n:code && npx tsc --noEmit && npm run lint`.
-   Os dois primeiros rodam dentro de `npm run build` e **bloqueiam o deploy na Vercel** (wiseveo-app
+   `npm run check:i18n && npm run check:i18n:code && npm run check:migrations && npx tsc --noEmit --incremental false && npm run lint`.
+   Os três primeiros rodam dentro de `npm run build` e **bloqueiam o deploy na Vercel** (wiseveo-app
    e wiseveo-demo). O tsc NÃO roda no build da Vercel (`ignoreBuildErrors` por causa do
-   Prisma 7/Turbopack) — por isso é obrigatório rodá-lo manualmente. Baseline tolerada: 4 erros
-   pré-existentes (auth/google/callback, auth/login, auth/signup, recurring/types.ts).
+   Prisma 7/Turbopack) — por isso é obrigatório rodá-lo manualmente. Baseline tolerada: **0 erros**
+   (os 4 antigos — auth/google/callback, auth/login, auth/signup, recurring/types.ts — foram
+   corrigidos em 2026-08-22; qualquer erro novo é regressão).
 8. `scripts/i18n-allowlist.json` é uma catraca: só encolhe. **Proibido adicionar caminhos.**
 9. String que é dado e não UI (ex.: lista de palavras-chave de detecção) pode ser isenta com
    `// i18n-ignore` na própria linha ou na linha acima — use com parcimônia e justifique no commit.

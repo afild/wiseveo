@@ -1,4 +1,4 @@
-import { TransactionType } from "@/generated/prisma"
+import type { TransactionType } from "@/generated/prisma_new/client"
 
 export interface SerializedRecurringTransaction {
     id: string

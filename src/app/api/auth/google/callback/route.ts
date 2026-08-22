@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
       })
 
       const { initializeUserData } = await import("@/lib/user-init")
-      await initializeUserData(user.id)
+      await initializeUserData(prisma, user.id)
     }
 
     if (!isActiveUser(user.status)) {
