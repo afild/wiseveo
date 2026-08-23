@@ -1,5 +1,10 @@
 import { Client } from "pg"
 import { detectProviderFromUrl } from "../lib/connection-url"
+import { checkUsersSchema, SCHEMA_OK, type SchemaCheck } from "../lib/schema-check"
+import type { DbAudit } from "../lib/connection-result"
+import type { MigrationQueryable } from "./prisma-migrations.service"
+
+export type { DbAudit, ExistingChart } from "../lib/connection-result"
 
 /**
  * Teste de conexão do Setup Wizard. Devolve códigos ESTÁVEIS (as rotas
@@ -16,24 +21,20 @@ export type DbConnectionErrorCode =
   | "sslRequired"
   | "unknown"
 
-export interface ExistingChart {
-  groups: Array<{ id: unknown; code: unknown; name: unknown; type: unknown; categories: unknown[] }>
-  accounts: Array<{ id: unknown; name: unknown; type: unknown }>
-}
-
-export interface DbAudit {
-  accounts: number
-  transactions: number
-  categories: number
-  groups: number
-  existingChart: ExistingChart
-}
-
 export type DbConnectionResult =
-  | { ok: true; hasData: boolean; audit: DbAudit | null }
+  | { ok: true; hasData: boolean; audit: DbAudit | null; schemaCheck: SchemaCheck }
   | { ok: false; code: DbConnectionErrorCode; detail: string }
 
 const CONNECT_TIMEOUT_MS = 8000
+
+/** Colunas reais da tabela `users` (só leitura) — usada no teste de conexão e no Finalizar. */
+export async function readUsersColumns(client: MigrationQueryable): Promise<string[]> {
+  const { rows } = await client.query(
+    // i18n-ignore: SQL bruto, não é texto de UI
+    `SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'users'`,
+  )
+  return rows.map((row) => String(row.column_name))
+}
 
 export async function testDatabaseConnection(connectionString: string): Promise<DbConnectionResult> {
   // Sem SSL forçado aqui: espelha o que o app fará em produção com a mesma URL.
@@ -47,6 +48,7 @@ export async function testDatabaseConnection(connectionString: string): Promise<
 
   let hasData = false
   let audit: DbAudit | null = null
+  let schemaCheck: SchemaCheck = SCHEMA_OK
 
   try {
     const tableCheck = await client.query(`
@@ -85,6 +87,10 @@ export async function testDatabaseConnection(connectionString: string): Promise<
         groups: groupsRes.rows.length,
         existingChart: { groups, accounts },
       }
+
+      // Estrutura: esta versão precisa de certas colunas em `users` (ex.: data_owner_id).
+      // Só informa — quem bloqueia é a tela (Próximo) e o Finalizar (servidor).
+      schemaCheck = checkUsersSchema(await readUsersColumns(client))
     }
   } catch {
     // Tabelas do WISEVEO ausentes ou com outro formato: banco tratado como novo.
@@ -92,7 +98,7 @@ export async function testDatabaseConnection(connectionString: string): Promise<
     await client.end().catch(() => {})
   }
 
-  return { ok: true, hasData, audit }
+  return { ok: true, hasData, audit, schemaCheck }
 }
 
 /** Mapeia o erro do `pg` (SQLSTATE ou código de rede) para um código estável. */

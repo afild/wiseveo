@@ -249,7 +249,9 @@
         "projectNotReady": "O projeto ainda não ficou pronto. Aguarde um pouco e tente de novo.",
         "providerError": "O Supabase respondeu com um erro inesperado. Tente de novo em instantes.",
         "rateLimited": "Muitas tentativas em pouco tempo. Aguarde um minuto e tente de novo.",
+        "schemaIncompatible": "Seu banco não tem as colunas que esta versão exige na tabela de usuários: {columns}. Ajuste a estrutura (sem perda de dados) antes de finalizar.",
         "sslRequired": "O servidor exige conexão segura (SSL). Acrescente ?sslmode=require ao final da URL.",
+        "templateNotAllowedOnExistingData": "Este banco já tem dados: o modelo padrão não pode ser aplicado sobre ele. Use o banco na íntegra.",
         "timeout": "O banco não respondeu. Se for um projeto gratuito do Supabase, ele pode estar pausado — abra o painel e clique em Restore.",
         "tokenRequired": "Cole o token de acesso do Supabase.",
         "unknownDetail": "Não foi possível conectar: {message}"

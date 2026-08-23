@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, code: result.code, message })
     }
 
-    return NextResponse.json({ success: true, hasData: result.hasData, audit: result.audit })
+    return NextResponse.json({ success: true, hasData: result.hasData, audit: result.audit, schemaCheck: result.schemaCheck })
   } catch (error) {
     const detail = error instanceof Error ? error.message : ""
     return NextResponse.json(

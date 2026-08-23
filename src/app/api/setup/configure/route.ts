@@ -16,6 +16,8 @@ import { clearSetupIdentityCookie, decodeSetupIdentity, SETUP_IDENTITY_COOKIE } 
 import { redactConnectionUrl } from "@/features/setup/lib/connection-url"
 import { applyPrismaMigrations, loadMigrationFiles } from "@/features/setup/services/prisma-migrations.service"
 import { detectHostingProvider, detectSetupPersistence } from "@/features/setup/services/setup-environment"
+import { checkUsersSchema } from "@/features/setup/lib/schema-check"
+import { readUsersColumns } from "@/features/setup/services/db-connection.service"
 
 // Nada que saia daqui em log pode conter a senha do banco.
 const redact = (value: unknown) => redactConnectionUrl(String(value ?? ""))
@@ -79,6 +81,35 @@ export async function POST(req: Request) {
           ? "[SETUP] Existing WISEVEO schema detected: migrations skipped"
           : `[SETUP] Migrations: ${result.applied.length} applied, ${result.alreadyApplied} already there`,
       )
+
+      if (result.skippedExistingSchema) {
+        // Banco com dados: ou ele na íntegra, ou nada. O modelo padrão renomearia e
+        // reatribuiria o que colidir com os códigos compartilhados — recusado aqui,
+        // não só na tela. Nada foi gravado até este ponto.
+        if (useExistingData !== true) {
+          return NextResponse.json(
+            {
+              success: false,
+              code: "templateNotAllowedOnExistingData",
+              message: t("errors.templateNotAllowedOnExistingData"),
+            },
+            { status: 400 },
+          )
+        }
+        // Estrutura: o upsert do admin e o login leem `users` inteira; coluna faltando
+        // (ex.: data_owner_id) quebraria o primeiro acesso depois de "concluído".
+        const schema = checkUsersSchema(await readUsersColumns(migrationClient))
+        if (!schema.ok) {
+          return NextResponse.json(
+            {
+              success: false,
+              code: "schemaIncompatible",
+              message: t("errors.schemaIncompatible", { columns: schema.missingColumns.join(", ") }),
+            },
+            { status: 400 },
+          )
+        }
+      }
     } catch (e: any) {
       console.error("[SETUP] Migration connection error:", redact(e?.message ?? e))
       return NextResponse.json({ success: false, message: t("migrationFailed") }, { status: 500 })

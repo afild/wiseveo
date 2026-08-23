@@ -249,7 +249,9 @@
         "projectNotReady": "The project is not ready yet. Wait a bit and try again.",
         "providerError": "Supabase returned an unexpected error. Try again in a moment.",
         "rateLimited": "Too many attempts in a short time. Wait a minute and try again.",
+        "schemaIncompatible": "Your database is missing columns this version requires in the users table: {columns}. Adjust the structure (without data loss) before finishing.",
         "sslRequired": "The server requires a secure connection (SSL). Add ?sslmode=require to the end of the URL.",
+        "templateNotAllowedOnExistingData": "This database already has data: the default template cannot be applied on top of it. Use the database as it is.",
         "timeout": "The database did not respond. If it is a free Supabase project, it may be paused — open the dashboard and click Restore.",
         "tokenRequired": "Paste your Supabase access token.",
         "unknownDetail": "Could not connect: {message}"
