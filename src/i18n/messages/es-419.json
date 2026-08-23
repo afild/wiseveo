@@ -230,6 +230,7 @@
       "invalid": "Invitación no encontrada.",
       "invalidForm": "Revisa el nombre, el correo y una contraseña de al menos 8 caracteres.",
       "notFound": "Invitación no encontrada.",
+      "notPrepared": "Antes de invitar a alguien, prepara tu base de datos en Configuración → Usuarios.",
       "revoked": "Esta invitación fue cancelada."
     },
     "recurringTransactions": {

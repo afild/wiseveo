@@ -5,6 +5,7 @@ import { listAccountMemberIds, resolveDataOwnerId, setDataOwner } from "@/lib/da
 import { normalizeEmail } from "@/lib/user-approval"
 import { invitableRoles, isUserRole, type UserRole } from "@/lib/user-roles"
 import { AdminAccessError } from "./admin-users-service"
+import { readSharedAccountStructure } from "./shared-account-service"
 import {
   canAcceptInvitation,
   generateInviteToken,
@@ -52,6 +53,7 @@ export type InvitationErrorCode =
   | "emailTaken"
   | "emailRequired"
   | "forbiddenRole"
+  | "notPrepared"
 
 export class InvitationError extends Error {
   constructor(
@@ -61,6 +63,19 @@ export class InvitationError extends Error {
   ) {
     super(message)
     this.name = "InvitationError"
+  }
+}
+
+/**
+ * Sem a coluna de dono e a tabela de convites, um convite nasceria impossível de
+ * aceitar. Barrar aqui — e não só na tela — mantém a promessa de que ninguém fica
+ * pela metade numa instalação que ainda não foi preparada.
+ */
+async function requirePreparedDatabase() {
+  const structure = await readSharedAccountStructure()
+  if (!structure.ready) {
+    const t = await getTranslations("api.invitations")
+    throw new InvitationError("notPrepared", 409, t("notPrepared"))
   }
 }
 
@@ -94,6 +109,7 @@ export async function createInvitation(input: {
 }): Promise<InvitationSummary & { token: string }> {
   const t = await getTranslations("api.invitations")
   const actor = await requireInviter(input.invitedById)
+  await requirePreparedDatabase()
 
   const email = normalizeEmail(String(input.email ?? ""))
   if (!email || !email.includes("@")) throw new InvitationError("emailRequired", 400, t("emailRequired"))
@@ -232,6 +248,7 @@ export async function acceptInvitationWithPassword(input: {
   password: string
 }): Promise<{ userId: string; preferencesJson: unknown }> {
   const t = await getTranslations("api.invitations")
+  await requirePreparedDatabase()
   const email = normalizeEmail(input.email)
   const invitation = await loadAcceptableInvitation(input.token, email)
 
@@ -241,24 +258,26 @@ export async function acceptInvitationWithPassword(input: {
   const passwordHash = await bcrypt.hash(input.password, 10)
   const ownerId = await resolveDataOwnerId(invitation.invitedById)
 
-  const created = await prisma.user.create({
-    data: {
-      name: input.name.trim() || email,
-      email,
-      passwordHash,
-      role: invitation.role,
-      status: "ACTIVE",
-    },
-    select: { id: true, preferencesJson: true },
-  })
-
-  // Fora da transação de propósito: `data_owner_id` é escrito por consulta direta
-  // (não é campo do Prisma). Se falhar, o convite NÃO é marcado como usado e a
-  // pessoa recém-criada não vira dona de nada — o erro sobe e a tela avisa.
-  await setDataOwner(created.id, ownerId)
-  await prisma.invitation.update({
-    where: { id: invitation.id },
-    data: { acceptedAt: new Date(), acceptedByUserId: created.id },
+  // TUDO OU NADA: criar a pessoa, apontá-la para o dono e queimar o convite acontecem
+  // na mesma transação. Sem isto, uma falha no meio deixaria uma conta ATIVA solta na
+  // instalação — e o convidado travado, porque o e-mail já estaria em uso.
+  const created = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name: input.name.trim() || email,
+        email,
+        passwordHash,
+        role: invitation.role,
+        status: "ACTIVE",
+      },
+      select: { id: true, preferencesJson: true },
+    })
+    await setDataOwner(user.id, ownerId, tx)
+    await tx.invitation.update({
+      where: { id: invitation.id },
+      data: { acceptedAt: new Date(), acceptedByUserId: user.id },
+    })
+    return user
   })
 
   return { userId: created.id, preferencesJson: created.preferencesJson }
@@ -270,17 +289,21 @@ export async function acceptInvitationForUser(input: {
   userId: string
   email: string
 }): Promise<void> {
+  await requirePreparedDatabase()
   const invitation = await loadAcceptableInvitation(input.token, input.email)
   const ownerId = await resolveDataOwnerId(invitation.invitedById)
 
-  await prisma.user.update({
-    where: { id: input.userId },
-    data: { role: invitation.role, status: "ACTIVE" },
-  })
-  await setDataOwner(input.userId, ownerId)
-  await prisma.invitation.update({
-    where: { id: invitation.id },
-    data: { acceptedAt: new Date(), acceptedByUserId: input.userId },
+  // Mesma regra do aceite por senha: ou vira membro por completo, ou nada muda.
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: input.userId },
+      data: { role: invitation.role, status: "ACTIVE" },
+    })
+    await setDataOwner(input.userId, ownerId, tx)
+    await tx.invitation.update({
+      where: { id: invitation.id },
+      data: { acceptedAt: new Date(), acceptedByUserId: input.userId },
+    })
   })
 }
 

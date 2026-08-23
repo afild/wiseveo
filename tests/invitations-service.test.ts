@@ -26,8 +26,9 @@ const m = vi.hoisted(() => ({
   updateInvitation: vi.fn(async (_args: { where: unknown; data: Record<string, unknown> }) => ({})),
   createUser: vi.fn(async (_args: { data: Record<string, unknown> }) => m.created),
   updateUser: vi.fn(async (_args: unknown) => ({})),
-  setDataOwner: vi.fn(async (_userId: string, _ownerId: string) => {}),
+  setDataOwner: vi.fn(async (_userId: string, _ownerId: string, _client?: unknown) => {}),
   ownerOf: vi.fn(async (id: string) => (id === "convidada" ? "dono" : id)),
+  structure: { ready: true, missing: [] as string[] },
 }))
 
 vi.mock("@/lib/prisma", () => ({
@@ -45,12 +46,27 @@ vi.mock("@/lib/prisma", () => ({
       findMany: vi.fn(async () => []),
       update: (args: { where: unknown; data: Record<string, unknown> }) => m.updateInvitation(args),
     },
+    // O aceite roda tudo numa transação; aqui ela é atravessada direto (a atomicidade
+    // de verdade é do Postgres — o que se testa é que nada acontece fora dela).
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({
+        user: {
+          create: (args: { data: Record<string, unknown> }) => m.createUser(args),
+          update: (args: unknown) => m.updateUser(args),
+        },
+        invitation: {
+          update: (args: { where: unknown; data: Record<string, unknown> }) => m.updateInvitation(args),
+        },
+      }),
   },
+}))
+vi.mock("@/features/settings/services/shared-account-service", () => ({
+  readSharedAccountStructure: async () => m.structure,
 }))
 vi.mock("@/lib/data-owner", () => ({
   resolveDataOwnerId: (id: string) => m.ownerOf(id),
   listAccountMemberIds: async (id: string) => [id],
-  setDataOwner: (userId: string, ownerId: string) => m.setDataOwner(userId, ownerId),
+  setDataOwner: (userId: string, ownerId: string, client?: unknown) => m.setDataOwner(userId, ownerId, client),
 }))
 vi.mock("next-intl/server", () => ({
   getTranslations: async () => (key: string) => key,
@@ -83,6 +99,8 @@ beforeEach(() => {
   m.actor = { id: "dono", role: "SUPERADMIN", status: "ACTIVE" }
   m.userByEmail = null
   m.invitation = null
+  m.structure = { ready: true, missing: [] }
+  m.setDataOwner.mockImplementation(async () => {})
   m.createInvitation.mockClear()
   m.updateInvitation.mockClear()
   m.createUser.mockClear()
@@ -172,7 +190,8 @@ describe("aceite com senha", () => {
     })
     expect(result.userId).toBe("novo")
     expect(m.createUser.mock.calls[0]?.[0]).toMatchObject({ data: { status: "ACTIVE", role: "USER" } })
-    expect(m.setDataOwner).toHaveBeenCalledWith("novo", "dono")
+    // O terceiro argumento é o cliente da transação — o que importa é o par (pessoa, dono).
+    expect(m.setDataOwner.mock.calls[0]?.slice(0, 2)).toEqual(["novo", "dono"])
     expect(m.updateInvitation.mock.calls[0]?.[0]?.data.acceptedByUserId).toBe("novo")
   })
 
@@ -182,6 +201,38 @@ describe("aceite com senha", () => {
       acceptInvitationWithPassword({ token: TOKEN, name: "X", email: "convidada@example.com", password: "12345678" }),
     ).rejects.toMatchObject({ code: "accepted" })
     expect(m.createUser).not.toHaveBeenCalled()
+  })
+})
+
+describe("banco ainda não preparado", () => {
+  it("não deixa convidar — o convite nasceria impossível de aceitar", async () => {
+    m.structure = { ready: false, missing: ["column"] }
+    await expect(createInvitation({ invitedById: "dono", email: "nova@example.com" })).rejects.toMatchObject({
+      code: "notPrepared",
+    })
+    expect(m.createInvitation).not.toHaveBeenCalled()
+  })
+
+  it("não deixa aceitar — antes de criar qualquer pessoa", async () => {
+    m.structure = { ready: false, missing: ["column"] }
+    m.invitation = conviteValido()
+    await expect(
+      acceptInvitationWithPassword({ token: TOKEN, name: "X", email: "convidada@example.com", password: "12345678" }),
+    ).rejects.toMatchObject({ code: "notPrepared" })
+    expect(m.createUser).not.toHaveBeenCalled()
+  })
+})
+
+describe("aceite é tudo ou nada", () => {
+  it("se apontar o dono falhar, o convite NÃO é queimado (e a transação desfaz a pessoa)", async () => {
+    m.invitation = conviteValido()
+    m.setDataOwner.mockImplementation(async () => {
+      throw new Error("coluna ausente")
+    })
+    await expect(
+      acceptInvitationWithPassword({ token: TOKEN, name: "X", email: "convidada@example.com", password: "12345678" }),
+    ).rejects.toThrow()
+    expect(m.updateInvitation).not.toHaveBeenCalled()
   })
 })
 

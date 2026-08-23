@@ -230,6 +230,7 @@
       "invalid": "Convite não encontrado.",
       "invalidForm": "Confira o nome, o e-mail e uma senha de pelo menos 8 caracteres.",
       "notFound": "Convite não encontrado.",
+      "notPrepared": "Antes de convidar alguém, prepare o seu banco em Configurações → Usuários.",
       "revoked": "Este convite foi cancelado."
     },
     "recurringTransactions": {
