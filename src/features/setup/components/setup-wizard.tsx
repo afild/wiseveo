@@ -190,6 +190,9 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
         {currentStep === 4 && (
           <ChartOfAccountsStep
             hasData={hasData}
+            owner={connection?.owner ?? null}
+            knownEmails={connection?.knownEmails ?? []}
+            lookupEmail={connection?.lookupEmail ?? null}
             audit={connection?.audit ?? null}
             existingChart={connection?.audit?.existingChart ?? null}
             schemaCheck={connection?.schemaCheck ?? null}

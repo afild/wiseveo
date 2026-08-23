@@ -83,6 +83,9 @@ export function DatabaseStep({
         setAuditResult(audit)
         onConnectionResult({
           hasData: Boolean(data.hasData),
+          lookupEmail: typeof data.lookupEmail === "string" ? data.lookupEmail : null,
+          owner: data.owner ?? null,
+          knownEmails: Array.isArray(data.knownEmails) ? data.knownEmails : [],
           audit,
           schemaCheck: data.schemaCheck ?? null,
         })

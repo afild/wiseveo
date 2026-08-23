@@ -1,10 +1,10 @@
 import { Client } from "pg"
 import { detectProviderFromUrl } from "../lib/connection-url"
 import { checkUsersSchema, SCHEMA_OK, type SchemaCheck } from "../lib/schema-check"
-import type { DbAudit } from "../lib/connection-result"
+import type { DbAudit, DbOwner } from "../lib/connection-result"
 import type { MigrationQueryable } from "./prisma-migrations.service"
 
-export type { DbAudit, ExistingChart } from "../lib/connection-result"
+export type { DbAudit, DbOwner, ExistingChart } from "../lib/connection-result"
 
 /**
  * Teste de conexão do Setup Wizard. Devolve códigos ESTÁVEIS (as rotas
@@ -22,8 +22,22 @@ export type DbConnectionErrorCode =
   | "unknown"
 
 export type DbConnectionResult =
-  | { ok: true; hasData: boolean; audit: DbAudit | null; schemaCheck: SchemaCheck }
+  | {
+      ok: true
+      hasData: boolean
+      /** E-mail de quem está instalando, o que foi de fato procurado em `users`. */
+      lookupEmail: string | null
+      /** Usuário do banco cujo e-mail é o de quem está instalando; null = não existe lá. */
+      owner: DbOwner | null
+      /** Só quando não há dono: e-mails que existem em `users`, para a pessoa se localizar. */
+      knownEmails: string[]
+      audit: DbAudit | null
+      schemaCheck: SchemaCheck
+    }
   | { ok: false; code: DbConnectionErrorCode; detail: string }
+
+/** Quantos e-mails listar quando o e-mail de quem instala não está no banco. */
+const KNOWN_EMAILS_LIMIT = 20
 
 const CONNECT_TIMEOUT_MS = 8000
 
@@ -36,7 +50,72 @@ export async function readUsersColumns(client: MigrationQueryable): Promise<stri
   return rows.map((row) => String(row.column_name))
 }
 
-export async function testDatabaseConnection(connectionString: string): Promise<DbConnectionResult> {
+/** Usuário de `users` com este e-mail (sem diferenciar maiúsculas); null se não houver. */
+async function findOwnerByEmail(client: MigrationQueryable, email: string): Promise<DbOwner | null> {
+  const { rows } = await client.query(
+    // i18n-ignore: SQL bruto, não é texto de UI
+    `SELECT id, email FROM users WHERE lower(email) = lower($1) LIMIT 1`,
+    [email],
+  )
+  const row = rows[0]
+  return row ? { id: String(row.id), email: String(row.email) } : null
+}
+
+/** E-mails já cadastrados (só leitura), para a tela dizer o que existe no banco. */
+async function readKnownEmails(client: MigrationQueryable): Promise<string[]> {
+  const { rows } = await client.query(
+    // i18n-ignore: SQL bruto, não é texto de UI
+    `SELECT email FROM users ORDER BY created_at ASC LIMIT ${KNOWN_EMAILS_LIMIT}`,
+  )
+  return rows.map((row) => String(row.email))
+}
+
+/**
+ * Números e conteúdo do plano de contas DO DONO (nunca do banco inteiro: o mesmo
+ * banco pode ter linhas de outros `user_id`). Formato inesperado → null.
+ */
+async function readOwnerAudit(client: MigrationQueryable, ownerId: string): Promise<DbAudit | null> {
+  try {
+    // i18n-ignore: strings SQL brutas, não são texto de UI
+    const [accountsRes, transactionsRes, categoriesRes, groupsRes] = await Promise.all([
+      client.query('SELECT "COD_ACC" as id, "CONTA" as name, "TIPO" as type FROM accounts WHERE user_id = $1', [ownerId]), // i18n-ignore
+      client.query("SELECT COUNT(*) FROM transactions WHERE user_id = $1", [ownerId]), // i18n-ignore
+      client.query('SELECT id, "COD_CAT" as code, "CATEGORIA" as name, "TIPO" as type, group_id FROM categories WHERE user_id = $1', [ownerId]), // i18n-ignore
+      client.query('SELECT id, "COD_GRU" as code, "GRUPO" as name, type FROM category_groups WHERE user_id = $1', [ownerId]), // i18n-ignore
+    ])
+
+    const groups = groupsRes.rows.map((g) => ({
+      id: g.id,
+      code: g.code,
+      name: g.name,
+      type: g.type,
+      categories: categoriesRes.rows
+        .filter((c) => c.group_id === g.id)
+        .map((c) => ({ id: c.id, code: c.code, name: c.name, type: c.type })),
+    }))
+    const accounts = accountsRes.rows.map((a) => ({ id: a.id, name: a.name, type: a.type }))
+
+    return {
+      accounts: accountsRes.rows.length,
+      transactions: parseInt(String(transactionsRes.rows[0]?.count ?? "0"), 10),
+      categories: categoriesRes.rows.length,
+      groups: groupsRes.rows.length,
+      existingChart: { groups, accounts },
+    }
+  } catch {
+    // Sem números: o wizard mostra a conexão como válida e sem auditoria.
+    return null
+  }
+}
+
+/**
+ * @param adminEmail e-mail de quem está instalando (Google/cadastro). A auditoria
+ * mostra SÓ os dados desse usuário — o banco pode ter linhas de outros `user_id`.
+ */
+export async function testDatabaseConnection(
+  connectionString: string,
+  options: { adminEmail?: string | null } = {},
+): Promise<DbConnectionResult> {
   // Sem SSL forçado aqui: espelha o que o app fará em produção com a mesma URL.
   const client = new Client({ connectionString, connectionTimeoutMillis: CONNECT_TIMEOUT_MS })
 
@@ -48,6 +127,9 @@ export async function testDatabaseConnection(connectionString: string): Promise<
 
   let hasData = false
   let audit: DbAudit | null = null
+  const lookupEmail = options.adminEmail?.trim() || null
+  let owner: DbOwner | null = null
+  let knownEmails: string[] = []
   let schemaCheck: SchemaCheck = SCHEMA_OK
 
   try {
@@ -73,42 +155,22 @@ export async function testDatabaseConnection(connectionString: string): Promise<
       return { ok: false, code: "unknown", detail: errorMessage(e) }
     }
 
-    // 2) Auditoria — só informativa: tabela financeira com outro formato não invalida
-    //    a conexão nem a checagem de estrutura.
+    // 2) Dono: o e-mail de quem está instalando tem de existir em `users`. Sem ele
+    //    não há o que auditar — o banco é de outra pessoa (ou o e-mail está errado).
     try {
-      // i18n-ignore: strings SQL brutas, não são texto de UI
-      const [accountsRes, transactionsRes, categoriesRes, groupsRes] = await Promise.all([
-        client.query('SELECT "COD_ACC" as id, "CONTA" as name, "TIPO" as type FROM accounts'), // i18n-ignore
-        client.query("SELECT COUNT(*) FROM transactions"), // i18n-ignore
-        client.query('SELECT id, "COD_CAT" as code, "CATEGORIA" as name, "TIPO" as type, group_id FROM categories'), // i18n-ignore
-        client.query('SELECT id, "COD_GRU" as code, "GRUPO" as name, type FROM category_groups'), // i18n-ignore
-      ])
-
-      const groups = groupsRes.rows.map((g) => ({
-        id: g.id,
-        code: g.code,
-        name: g.name,
-        type: g.type,
-        categories: categoriesRes.rows
-          .filter((c) => c.group_id === g.id)
-          .map((c) => ({ id: c.id, code: c.code, name: c.name, type: c.type })),
-      }))
-      const accounts = accountsRes.rows.map((a) => ({ id: a.id, name: a.name, type: a.type }))
-
-      audit = {
-        accounts: accountsRes.rows.length,
-        transactions: parseInt(transactionsRes.rows[0].count, 10),
-        categories: categoriesRes.rows.length,
-        groups: groupsRes.rows.length,
-        existingChart: { groups, accounts },
-      }
+      owner = lookupEmail ? await findOwnerByEmail(client, lookupEmail) : null
+      if (!owner) knownEmails = await readKnownEmails(client)
     } catch {
-      // Sem números: o wizard mostra a conexão como válida e sem auditoria.
+      // `users` fora do formato esperado: a checagem de estrutura acima já bloqueia.
     }
+
+    // 3) Auditoria — SÓ os dados do dono e só informativa: tabela financeira com outro
+    //    formato não invalida a conexão nem a checagem de estrutura.
+    if (owner) audit = await readOwnerAudit(client, owner.id)
   }
 
   await client.end().catch(() => {})
-  return { ok: true, hasData, audit, schemaCheck }
+  return { ok: true, hasData, lookupEmail, owner, knownEmails, audit, schemaCheck }
 }
 
 /** Mapeia o erro do `pg` (SQLSTATE ou código de rede) para um código estável. */

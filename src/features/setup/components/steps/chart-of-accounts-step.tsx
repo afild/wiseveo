@@ -18,10 +18,11 @@ import {
   Trash2,
   TrendingDown,
   TrendingUp,
+  UserRound,
   Wallet,
 } from "lucide-react"
 import { resolveChartChoice } from "../../lib/chart-choice"
-import type { DbAudit, ExistingChart } from "../../lib/connection-result"
+import type { DbAudit, DbOwner, ExistingChart } from "../../lib/connection-result"
 import type { SchemaCheck } from "../../lib/schema-check"
 
 // Default groups and categories matching prisma/data/default-chart-of-accounts.ts.
@@ -136,6 +137,12 @@ const typeIcons: Record<string, React.ReactNode> = {
 interface ChartOfAccountsStepProps {
   /** Banco conectado já tem o esquema/dados do WISEVEO (tabela `transactions` existe). */
   hasData: boolean
+  /** Usuário do banco com o e-mail de quem instala; null = não existe lá (bloqueia). */
+  owner: DbOwner | null
+  /** Só quando não há dono: e-mails que existem no banco, para a pessoa se localizar. */
+  knownEmails: string[]
+  /** E-mail que o servidor procurou em `users` — nunca o digitado no formulário. */
+  lookupEmail: string | null
   audit: DbAudit | null
   existingChart: ExistingChart | null
   schemaCheck: SchemaCheck | null
@@ -456,12 +463,25 @@ function TemplateEditor() {
   )
 }
 
-export function ChartOfAccountsStep({ hasData, audit, existingChart, schemaCheck, onNext, onBack }: ChartOfAccountsStepProps) {
+export function ChartOfAccountsStep({
+  hasData,
+  owner,
+  knownEmails,
+  lookupEmail,
+  audit,
+  existingChart,
+  schemaCheck,
+  onNext,
+  onBack,
+}: ChartOfAccountsStepProps) {
   const t = useTranslations("setup.chartOfAccounts")
   const tc = useTranslations("setup.common")
   const choice = resolveChartChoice(hasData)
   // Coluna faltando em `users`: o Finalizar falharia (e o login depois) — bloqueia aqui.
   const schemaBlocked = hasData && schemaCheck?.ok === false
+  // O e-mail do login não existe no banco: não há dados dele para mostrar nem para usar.
+  // Quem decide o que fazer é o dono — o wizard não escolhe usuário nem cria nada.
+  const ownerMissing = hasData && !owner
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -481,6 +501,27 @@ export function ChartOfAccountsStep({ hasData, audit, existingChart, schemaCheck
           description={t("choiceExistingDesc")}
           unavailable={t("choiceExistingUnavailable")}
         >
+          {ownerMissing ? (
+            <div role="alert" className="space-y-1 rounded-md border border-warning/40 bg-warning/10 p-2 text-xs">
+              <p className="flex items-center gap-1.5 font-medium text-foreground">
+                <AlertTriangle className="size-3.5 shrink-0 text-warning" />
+                {lookupEmail ? t("ownerMissing", { email: lookupEmail }) : t("ownerUnknown")}
+              </p>
+              <p className="text-muted-foreground">{t("ownerMissingHint")}</p>
+              <p className="text-muted-foreground">
+                {knownEmails.length > 0
+                  ? t("ownerMissingEmails", { emails: knownEmails.join(", ") })
+                  : t("ownerMissingNone")}
+              </p>
+            </div>
+          ) : (
+            owner && (
+              <p className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                <UserRound className="size-3.5 shrink-0 text-muted-foreground" />
+                {t("ownerFound", { email: owner.email })}
+              </p>
+            )
+          )}
           {audit && (
             <p className="text-xs font-medium text-foreground">
               {t("stats", {
@@ -524,7 +565,7 @@ export function ChartOfAccountsStep({ hasData, audit, existingChart, schemaCheck
         <Button variant="outline" onClick={onBack} className="flex-1">
           {tc("back")}
         </Button>
-        <Button onClick={onNext} disabled={schemaBlocked} className="flex-1">
+        <Button onClick={onNext} disabled={schemaBlocked || ownerMissing} className="flex-1">
           {tc("next")}
         </Button>
       </div>

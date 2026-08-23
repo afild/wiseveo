@@ -25,7 +25,13 @@ export interface ExistingAccount {
   type: unknown
 }
 
-/** Conteúdo integral do banco (todos os usuários), exatamente como foi lido. */
+/** Usuário do banco cujo e-mail é o de quem está instalando. */
+export interface DbOwner {
+  id: string
+  email: string
+}
+
+/** Conteúdo do banco pertencente ao dono (`user_id`), exatamente como foi lido. */
 export interface ExistingChart {
   groups: ExistingGroup[]
   accounts: ExistingAccount[]
@@ -42,6 +48,12 @@ export interface DbAudit {
 /** Estado que o wizard guarda entre os passos depois de uma conexão bem-sucedida. */
 export interface ConnectionResultSummary {
   hasData: boolean
+  /** E-mail que o servidor procurou em `users` (identidade do primeiro acesso ou sessão). */
+  lookupEmail: string | null
+  /** Usuário do banco com o e-mail de quem instala; null = não existe lá (bloqueia). */
+  owner: DbOwner | null
+  /** Só quando não há dono: e-mails encontrados em `users`, para a pessoa se localizar. */
+  knownEmails: string[]
   audit: DbAudit | null
   /** null = o servidor não informou (versão antiga): a tela não afirma nada; o Finalizar confere de novo. */
   schemaCheck: SchemaCheck | null
