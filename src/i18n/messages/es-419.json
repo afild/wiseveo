@@ -220,6 +220,18 @@
       "transactionNotFound": "Transacción no encontrada",
       "userNotFound": "Usuario no encontrado"
     },
+    "invitations": {
+      "alreadyAccepted": "Esta invitación ya fue usada.",
+      "emailMismatch": "Esta invitación es de otra persona. Entra con el correo que la recibió.",
+      "emailRequired": "Escribe el correo de la persona que quieres invitar.",
+      "emailTaken": "Ya existe una cuenta con ese correo en esta instalación.",
+      "expired": "Esta invitación venció.",
+      "forbiddenRole": "No puedes invitar a alguien con ese nivel de acceso.",
+      "invalid": "Invitación no encontrada.",
+      "invalidForm": "Revisa el nombre, el correo y una contraseña de al menos 8 caracteres.",
+      "notFound": "Invitación no encontrada.",
+      "revoked": "Esta invitación fue cancelada."
+    },
     "recurringTransactions": {
       "launchFailed": "Error al generar la transacción recurrente"
     },

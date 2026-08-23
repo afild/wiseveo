@@ -37,8 +37,36 @@ model User {
   telegramConnection           TelegramConnection?
   telegramConversationMemories TelegramConversationMemory[]
   telegramPendingTokens        TelegramPendingToken[]
+  invitationsSent              Invitation[]                 @relation("InvitationInviter")
+  invitationsAccepted          Invitation[]                 @relation("InvitationAcceptedBy")
 
   @@map("users")
+}
+
+/// Convite para lançar transações na conta de quem convidou. Link: /convite/<token>.
+///
+/// De propósito NÃO existe aqui o campo `data_owner_id` de `users`: metade do app lê a
+/// linha inteira de `users`, e mapear uma coluna que uma instalação ainda não tem
+/// quebraria tudo (P2022). Quem lê/grava o dono é `src/lib/data-owner.ts`, por consulta
+/// direta e tolerante. Esta tabela é nova — ninguém mais a lê — então pode ser mapeada.
+model Invitation {
+  id               String    @id @default(cuid())
+  token            String    @unique
+  invitedById      String    @map("invited_by_id")
+  invitedBy        User      @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: Cascade)
+  /// Nulo só por compatibilidade com bancos preparados antes desta regra: o convite
+  /// SEMPRE nasce preso a um e-mail (validado no serviço).
+  email            String?
+  role             Role      @default(USER)
+  expiresAt        DateTime  @map("expires_at")
+  acceptedAt       DateTime? @map("accepted_at")
+  acceptedByUserId String?   @map("accepted_by_user_id")
+  acceptedBy       User?     @relation("InvitationAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+  revokedAt        DateTime? @map("revoked_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  @@index([invitedById])
+  @@map("invitations")
 }
 
 model Account {

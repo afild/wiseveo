@@ -220,6 +220,18 @@
       "transactionNotFound": "Transaction not found",
       "userNotFound": "User not found"
     },
+    "invitations": {
+      "alreadyAccepted": "This invite has already been used.",
+      "emailMismatch": "This invite belongs to someone else. Sign in with the email that received it.",
+      "emailRequired": "Enter the email of the person you want to invite.",
+      "emailTaken": "There is already an account with that email in this installation.",
+      "expired": "This invite has expired.",
+      "forbiddenRole": "You cannot invite someone with that level of access.",
+      "invalid": "Invite not found.",
+      "invalidForm": "Check the name, the email and a password of at least 8 characters.",
+      "notFound": "Invite not found.",
+      "revoked": "This invite was cancelled."
+    },
     "recurringTransactions": {
       "launchFailed": "Failed to launch recurring transaction"
     },

@@ -220,6 +220,18 @@
       "transactionNotFound": "Transação não encontrada",
       "userNotFound": "Usuário não encontrado"
     },
+    "invitations": {
+      "alreadyAccepted": "Este convite já foi usado.",
+      "emailMismatch": "Este convite é de outra pessoa. Entre com o e-mail que recebeu o convite.",
+      "emailRequired": "Informe o e-mail de quem você quer convidar.",
+      "emailTaken": "Já existe uma conta com esse e-mail nesta instalação.",
+      "expired": "Este convite expirou.",
+      "forbiddenRole": "Você não pode convidar alguém com esse nível de acesso.",
+      "invalid": "Convite não encontrado.",
+      "invalidForm": "Confira o nome, o e-mail e uma senha de pelo menos 8 caracteres.",
+      "notFound": "Convite não encontrado.",
+      "revoked": "Este convite foi cancelado."
+    },
     "recurringTransactions": {
       "launchFailed": "Erro ao lançar transação recorrente"
     },
