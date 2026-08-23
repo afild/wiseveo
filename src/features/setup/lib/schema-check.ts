@@ -24,7 +24,6 @@ export const REQUIRED_USERS_COLUMNS = [
   "google_access_token",
   "google_refresh_token",
   "google_token_expires_at",
-  "data_owner_id",
 ] as const
 
 export interface SchemaCheck {

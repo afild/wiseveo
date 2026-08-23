@@ -97,7 +97,7 @@ export async function POST(req: Request) {
           )
         }
         // Estrutura: o upsert do admin e o login leem `users` inteira; coluna faltando
-        // (ex.: data_owner_id) quebraria o primeiro acesso depois de "concluído".
+        // (ex.: google_id) quebraria o primeiro acesso depois de "concluído".
         let columns: string[]
         try {
           columns = await readUsersColumns(migrationClient)

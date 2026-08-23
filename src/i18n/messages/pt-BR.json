@@ -220,16 +220,6 @@
       "transactionNotFound": "Transação não encontrada",
       "userNotFound": "Usuário não encontrado"
     },
-    "invitations": {
-      "accepted": "Convite aceito! Bem-vindo(a).",
-      "alreadyAccepted": "Este convite já foi usado.",
-      "emailTaken": "Já existe uma conta com este e-mail. Entre pelo login ou peça ao dono da conta para incluir você.",
-      "expired": "Este convite expirou.",
-      "forbiddenRole": "Você não pode convidar com esse papel.",
-      "invalid": "Convite inválido.",
-      "notFound": "Convite não encontrado.",
-      "revoked": "Convite revogado."
-    },
     "recurringTransactions": {
       "launchFailed": "Erro ao lançar transação recorrente"
     },
@@ -1215,40 +1205,6 @@
       "warning": "Atenção"
     }
   },
-  "invite": {
-    "accept": "Entrar na conta",
-    "confirmPassword": "Repita a senha",
-    "continueWithGoogle": "Continuar com Google",
-    "email": "Seu e-mail",
-    "errors": {
-      "generic": "Não foi possível concluir. Tente de novo.",
-      "passwordMismatch": "As senhas não conferem."
-    },
-    "goToLogin": "Ir para o login",
-    "name": "Seu nome",
-    "or": "ou",
-    "password": "Crie uma senha",
-    "subtitle": "Crie seu acesso e você já entra vendo os mesmos dados da conta.",
-    "title": "<strong>{name}</strong> convidou você para a conta WISEVEO dele",
-    "unusable": {
-      "accepted": {
-        "desc": "Este link já foi aceito. Se foi você, entre pelo login.",
-        "title": "Convite já usado"
-      },
-      "expired": {
-        "desc": "Este link venceu. Peça um novo convite a quem convidou você.",
-        "title": "Convite expirado"
-      },
-      "invalid": {
-        "desc": "Confira o link recebido ou peça um novo convite.",
-        "title": "Convite não encontrado"
-      },
-      "revoked": {
-        "desc": "Este convite foi revogado por quem o criou.",
-        "title": "Convite cancelado"
-      }
-    }
-  },
   "mail": {
     "addLabel": "Adicionar etiqueta",
     "allMail": "Todos os e-mails",
@@ -1451,7 +1407,6 @@
       "usernameReq": "O nome de usuário deve ter pelo menos 3 caracteres"
     },
     "adminUsers": {
-      "accountOwner": "Dono da conta",
       "active": "Ativo",
       "approve": "Aprovar",
       "approved": "Liberado",
@@ -1475,35 +1430,6 @@
         },
         "userNotFound": "Usuário não encontrado"
       },
-      "invitations": {
-        "anyEmail": "qualquer e-mail",
-        "cancel": "Cancelar",
-        "colEmail": "Para",
-        "colExpires": "Expira em",
-        "colInvitedBy": "Convidado por",
-        "copied": "Link copiado!",
-        "copy": "Copiar",
-        "copyError": "Não foi possível copiar. Selecione o link e copie manualmente.",
-        "createError": "Não foi possível criar o convite.",
-        "creating": "Gerando…",
-        "desc": "Links de convite ainda válidos (7 dias). Quem aceita entra direto na sua conta.",
-        "dialogDesc": "A pessoa recebe um link, cria o login dela e passa a ver e lançar os mesmos dados que você — sem precisar de nenhuma senha ou configuração sua.",
-        "dialogTitle": "Convidar para a sua conta",
-        "done": "Concluir",
-        "emailHint": "Só para você identificar o convite; a pessoa pode entrar com outro e-mail.",
-        "emailLabel": "E-mail da pessoa (opcional)",
-        "emailPlaceholder": "nome@exemplo.com",
-        "generate": "Gerar link de convite",
-        "inviteButton": "Convidar",
-        "linkHint": "O link vale por 7 dias e só pode ser usado uma vez.",
-        "linkReady": "Convite criado! Copie o link e envie por WhatsApp, e-mail ou como preferir:",
-        "none": "Nenhum convite pendente.",
-        "revoke": "Revogar",
-        "revokeError": "Não foi possível revogar o convite.",
-        "revokeSuccess": "Convite revogado.",
-        "title": "Convites pendentes"
-      },
-      "member": "Membro",
       "noUsers": "Nenhum usuário encontrado.",
       "pending": "Pendente",
       "pendingCount": "Cadastros pendentes: {count}",

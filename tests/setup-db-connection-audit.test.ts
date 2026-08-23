@@ -62,11 +62,11 @@ describe("testDatabaseConnection — auditoria + checagem de estrutura", () => {
     expect(result.schemaCheck).toEqual({ ok: true, missingColumns: [] })
   })
 
-  it("banco com dados sem data_owner_id → schemaCheck aponta a coluna (a conexão continua ok)", async () => {
-    scriptWithData(REQUIRED_USERS_COLUMNS.filter((c) => c !== "data_owner_id"))
+  it("banco com dados sem google_token_expires_at → schemaCheck aponta a coluna (a conexão continua ok)", async () => {
+    scriptWithData(REQUIRED_USERS_COLUMNS.filter((c) => c !== "google_token_expires_at"))
     const result = await testDatabaseConnection(URL)
     expect(result.ok && result.hasData).toBe(true)
-    expect(result.ok && result.schemaCheck).toEqual({ ok: false, missingColumns: ["data_owner_id"] })
+    expect(result.ok && result.schemaCheck).toEqual({ ok: false, missingColumns: ["google_token_expires_at"] })
   })
 
   it("banco vazio → hasData=false, sem audit, schemaCheck ok e SEM consultar colunas", async () => {
@@ -77,10 +77,10 @@ describe("testDatabaseConnection — auditoria + checagem de estrutura", () => {
   })
 
   it("tabela financeira com outro formato NÃO esconde a falta de coluna em users (estrutura vem antes da auditoria)", async () => {
-    scriptWithData(REQUIRED_USERS_COLUMNS.filter((c) => c !== "data_owner_id"))
+    scriptWithData(REQUIRED_USERS_COLUMNS.filter((c) => c !== "google_token_expires_at"))
     m.script = m.script.map(([f, rows]) => (f === "FROM accounts" ? [f, Object.assign(new Error("column does not exist"), { code: "42703" })] : [f, rows]))
     const result = await testDatabaseConnection(URL)
-    expect(result).toEqual({ ok: true, hasData: true, audit: null, schemaCheck: { ok: false, missingColumns: ["data_owner_id"] } })
+    expect(result).toEqual({ ok: true, hasData: true, audit: null, schemaCheck: { ok: false, missingColumns: ["google_token_expires_at"] } })
     expect(m.queries.some((q) => q.includes("information_schema.columns"))).toBe(true)
   })
 

@@ -136,21 +136,7 @@ exports.Prisma.UserScalarFieldEnum = {
   status: 'status',
   googleAccessToken: 'googleAccessToken',
   googleRefreshToken: 'googleRefreshToken',
-  googleTokenExpiresAt: 'googleTokenExpiresAt',
-  dataOwnerId: 'dataOwnerId'
-};
-
-exports.Prisma.InvitationScalarFieldEnum = {
-  id: 'id',
-  token: 'token',
-  invitedById: 'invitedById',
-  email: 'email',
-  role: 'role',
-  expiresAt: 'expiresAt',
-  acceptedAt: 'acceptedAt',
-  acceptedByUserId: 'acceptedByUserId',
-  revokedAt: 'revokedAt',
-  createdAt: 'createdAt'
+  googleTokenExpiresAt: 'googleTokenExpiresAt'
 };
 
 exports.Prisma.AccountScalarFieldEnum = {
@@ -377,7 +363,6 @@ exports.TransactionType = exports.$Enums.TransactionType = {
 
 exports.Prisma.ModelName = {
   User: 'User',
-  Invitation: 'Invitation',
   Account: 'Account',
   CategoryGroup: 'CategoryGroup',
   Category: 'Category',

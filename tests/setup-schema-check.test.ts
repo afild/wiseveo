@@ -31,7 +31,7 @@ describe("REQUIRED_USERS_COLUMNS", () => {
   })
 
   it("inclui as colunas que o primeiro acesso precisa", () => {
-    for (const c of ["id", "email", "password_hash", "google_id", "role", "status", "preferences_json", "data_owner_id"]) {
+    for (const c of ["id", "email", "password_hash", "google_id", "role", "status", "preferences_json"]) {
       expect(REQUIRED_USERS_COLUMNS).toContain(c)
     }
   })
@@ -42,9 +42,9 @@ describe("checkUsersSchema", () => {
     expect(checkUsersSchema([...REQUIRED_USERS_COLUMNS, "legacy_col"])).toEqual(SCHEMA_OK)
   })
 
-  it("sem data_owner_id → lista só ela", () => {
-    const cols = REQUIRED_USERS_COLUMNS.filter((c) => c !== "data_owner_id")
-    expect(checkUsersSchema(cols)).toEqual({ ok: false, missingColumns: ["data_owner_id"] })
+  it("sem google_token_expires_at → lista só ela", () => {
+    const cols = REQUIRED_USERS_COLUMNS.filter((c) => c !== "google_token_expires_at")
+    expect(checkUsersSchema(cols)).toEqual({ ok: false, missingColumns: ["google_token_expires_at"] })
   })
 
   it("compara sem diferenciar maiúsculas (themePreferences vem assim do Postgres)", () => {

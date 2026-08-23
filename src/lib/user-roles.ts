@@ -1,11 +1,12 @@
 /**
- * Regras de papel da conta compartilhada (puras, sem banco):
+ * Regras de papel (puras, sem banco):
  *
  * - USER: usa tudo, menos administrar.
- * - ADMIN: também convida (só USER), aprova e remove usuários comuns.
- * - SUPERADMIN: iguala o dono — promove/rebaixa até SUPERADMIN, convida ADMIN.
- * - Ninguém altera/remove a si mesmo por aqui; o DONO dos dados (SUPERADMIN sem
- *   data_owner_id) não pode ser rebaixado nem removido por outros.
+ * - ADMIN: aprova e remove usuários comuns.
+ * - SUPERADMIN: promove/rebaixa qualquer um, até SUPERADMIN.
+ * - Ninguém altera/remove a si mesmo por aqui. `targetIsDataOwner` protege o dono
+ *   dos dados de ser rebaixado/removido por outros — hoje sempre falso (não há
+ *   coluna de dono no banco); volta a valer quando os convites existirem.
  */
 export type UserRole = "USER" | "ADMIN" | "SUPERADMIN"
 

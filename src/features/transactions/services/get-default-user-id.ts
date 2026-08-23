@@ -5,11 +5,10 @@ import { resolveDataOwnerId } from "@/lib/data-owner"
 /**
  * Resolve o usuário DONO DOS DADOS da requisição atual.
  *
- * PRIMEIRO a sessão (cookie), SEMPRE — e, se o usuário logado for membro
- * convidado de uma conta compartilhada, devolve o dono dessa conta
- * (users.data_owner_id): tudo que é financeiro (transações, contas, orçamento,
- * dashboard…) é lido e gravado em nome do dono. Para o usuário REAL (perfil,
- * preferências, integrações) use getSessionUserId / getSettingsUserId.
+ * PRIMEIRO a sessão (cookie), SEMPRE — passando por `resolveDataOwnerId`, o
+ * ponto único que decide de quem são os dados financeiros (hoje, do próprio
+ * usuário). Para o usuário REAL (perfil, preferências, integrações) use
+ * getSessionUserId / getSettingsUserId.
  *
  * O fallback "usuário mais antigo do banco" só existe para contextos sem sessão
  * (ex.: renderização fora de uma requisição ou base recém-semeada) e é o

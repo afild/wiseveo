@@ -16,7 +16,6 @@ vi.mock("@/lib/setup-check", () => ({ isSetupComplete: () => true }))
 vi.mock("@/lib/public-signup", () => ({ isPublicSignupEnabled: () => false }))
 vi.mock("@/lib/auth", () => ({ createSessionToken: async () => "session-token", COOKIE_NAME: "wiseveo-session" }))
 vi.mock("@/lib/google-auth", () => ({
-  GOOGLE_INVITE_COOKIE: "google_oauth_invite",
   isGoogleConfigured: () => true,
   exchangeCodeForTokens: async () => ({
     access_token: "ya29.access",
@@ -26,10 +25,6 @@ vi.mock("@/lib/google-auth", () => ({
     token_type: "Bearer",
   }),
   decodeIdToken: () => ({ sub: "google-sub", email: "Ana@Example.com", name: "Ana", picture: "https://p/ana.png" }),
-}))
-vi.mock("@/features/settings/services/invitations-service", () => ({
-  peekInvitation: async () => null,
-  acceptInvitationForUser: async () => {},
 }))
 
 import { GET } from "@/app/api/auth/google/callback/route"

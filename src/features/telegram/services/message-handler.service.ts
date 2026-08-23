@@ -99,8 +99,8 @@ async function handleFinancialQuestion(chatId: TelegramChatId, text: string) {
     return
   }
 
-  // Conta compartilhada: idioma, moeda e memória de conversa são do usuário REAL;
-  // os dados financeiros consultados são do DONO da conta (data_owner_id).
+  // Idioma, moeda e memória de conversa são do usuário REAL; os dados financeiros
+  // consultados são do dono desses dados (hoje, o próprio usuário).
   const [locale, dataOwnerId] = await Promise.all([
     getUserLocale(connection.userId),
     resolveDataOwnerId(connection.userId),

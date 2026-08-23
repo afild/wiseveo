@@ -104,12 +104,12 @@ describe("POST /api/setup/configure — banco com dados", () => {
   })
 
   it("recusa quando falta coluna em users, citando a coluna, antes de qualquer escrita", async () => {
-    m.columns = REQUIRED_USERS_COLUMNS.filter((c) => c !== "data_owner_id")
+    m.columns = REQUIRED_USERS_COLUMNS.filter((c) => c !== "google_token_expires_at")
     const res = await configure({ useExistingData: true })
     const json = await res.json()
     expect(res.status).toBe(400)
     expect(json.code).toBe("schemaIncompatible")
-    expect(String(json.message)).toContain("data_owner_id")
+    expect(String(json.message)).toContain("google_token_expires_at")
     expect(m.upsert).not.toHaveBeenCalled()
   })
 

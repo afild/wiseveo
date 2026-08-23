@@ -34,25 +34,8 @@ CREATE TABLE "users" (
     "google_access_token" TEXT,
     "google_refresh_token" TEXT,
     "google_token_expires_at" TIMESTAMP(3),
-    "data_owner_id" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "invitations" (
-    "id" TEXT NOT NULL,
-    "token" TEXT NOT NULL,
-    "invited_by_id" TEXT NOT NULL,
-    "email" TEXT,
-    "role" "Role" NOT NULL DEFAULT 'USER',
-    "expires_at" TIMESTAMP(3) NOT NULL,
-    "accepted_at" TIMESTAMP(3),
-    "accepted_by_user_id" TEXT,
-    "revoked_at" TIMESTAMP(3),
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "invitations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -273,15 +256,6 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 CREATE UNIQUE INDEX "users_google_id_key" ON "users"("google_id");
 
 -- CreateIndex
-CREATE INDEX "users_data_owner_id_idx" ON "users"("data_owner_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "invitations_token_key" ON "invitations"("token");
-
--- CreateIndex
-CREATE INDEX "invitations_invited_by_id_idx" ON "invitations"("invited_by_id");
-
--- CreateIndex
 CREATE INDEX "accounts_user_id_idx" ON "accounts"("user_id");
 
 -- CreateIndex
@@ -331,15 +305,6 @@ CREATE UNIQUE INDEX "telegram_conversation_memories_telegram_chat_id_key" ON "te
 
 -- CreateIndex
 CREATE INDEX "telegram_conversation_memories_user_id_idx" ON "telegram_conversation_memories"("user_id");
-
--- AddForeignKey
-ALTER TABLE "users" ADD CONSTRAINT "users_data_owner_id_fkey" FOREIGN KEY ("data_owner_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "invitations" ADD CONSTRAINT "invitations_invited_by_id_fkey" FOREIGN KEY ("invited_by_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "invitations" ADD CONSTRAINT "invitations_accepted_by_user_id_fkey" FOREIGN KEY ("accepted_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

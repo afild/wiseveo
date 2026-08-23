@@ -220,16 +220,6 @@
       "transactionNotFound": "Transaction not found",
       "userNotFound": "User not found"
     },
-    "invitations": {
-      "accepted": "Invitation accepted! Welcome.",
-      "alreadyAccepted": "This invitation was already used.",
-      "emailTaken": "An account with this email already exists. Log in, or ask the account owner to add you.",
-      "expired": "This invitation has expired.",
-      "forbiddenRole": "You cannot invite with that role.",
-      "invalid": "Invalid invitation.",
-      "notFound": "Invitation not found.",
-      "revoked": "Invitation revoked."
-    },
     "recurringTransactions": {
       "launchFailed": "Failed to launch recurring transaction"
     },
@@ -1215,40 +1205,6 @@
       "warning": "Watch"
     }
   },
-  "invite": {
-    "accept": "Join the account",
-    "confirmPassword": "Repeat the password",
-    "continueWithGoogle": "Continue with Google",
-    "email": "Your email",
-    "errors": {
-      "generic": "Could not complete. Try again.",
-      "passwordMismatch": "Passwords do not match."
-    },
-    "goToLogin": "Go to login",
-    "name": "Your name",
-    "or": "or",
-    "password": "Create a password",
-    "subtitle": "Create your access and you'll get in already seeing the account's data.",
-    "title": "<strong>{name}</strong> invited you to their WISEVEO account",
-    "unusable": {
-      "accepted": {
-        "desc": "This link was already accepted. If that was you, use the login.",
-        "title": "Invitation already used"
-      },
-      "expired": {
-        "desc": "This link has expired. Ask whoever invited you for a new one.",
-        "title": "Invitation expired"
-      },
-      "invalid": {
-        "desc": "Check the link you received or ask for a new invitation.",
-        "title": "Invitation not found"
-      },
-      "revoked": {
-        "desc": "This invitation was revoked by its creator.",
-        "title": "Invitation cancelled"
-      }
-    }
-  },
   "mail": {
     "addLabel": "Add label",
     "allMail": "All mail",
@@ -1451,7 +1407,6 @@
       "usernameReq": "Username must be at least 3 characters"
     },
     "adminUsers": {
-      "accountOwner": "Account owner",
       "active": "Active",
       "approve": "Approve",
       "approved": "Approved",
@@ -1475,35 +1430,6 @@
         },
         "userNotFound": "User not found"
       },
-      "invitations": {
-        "anyEmail": "any email",
-        "cancel": "Cancel",
-        "colEmail": "To",
-        "colExpires": "Expires",
-        "colInvitedBy": "Invited by",
-        "copied": "Link copied!",
-        "copy": "Copy",
-        "copyError": "Could not copy. Select the link and copy it manually.",
-        "createError": "Could not create the invitation.",
-        "creating": "Generating…",
-        "desc": "Invitation links still valid (7 days). Whoever accepts joins your account directly.",
-        "dialogDesc": "The person gets a link, creates their login and starts seeing and entering the same data as you — with no password or setup of yours.",
-        "dialogTitle": "Invite to your account",
-        "done": "Done",
-        "emailHint": "Just so you can identify the invitation; the person may sign up with another email.",
-        "emailLabel": "Person's email (optional)",
-        "emailPlaceholder": "name@example.com",
-        "generate": "Generate invitation link",
-        "inviteButton": "Invite",
-        "linkHint": "The link is valid for 7 days and can be used only once.",
-        "linkReady": "Invitation created! Copy the link and send it by WhatsApp, email or however you like:",
-        "none": "No pending invitations.",
-        "revoke": "Revoke",
-        "revokeError": "Could not revoke the invitation.",
-        "revokeSuccess": "Invitation revoked.",
-        "title": "Pending invitations"
-      },
-      "member": "Member",
       "noUsers": "No users found.",
       "pending": "Pending",
       "pendingCount": "Pending registrations: {count}",

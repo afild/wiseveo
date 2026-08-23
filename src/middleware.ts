@@ -6,8 +6,6 @@ import { routing } from "./i18n/routing"
 import { isSetupComplete } from "@/lib/setup-check"
 
 const publicRoutes = ["/login", "/signup", "/cadastro-pendente"]
-// Página de aceite de convite (/convite/<token>) é pública por prefixo.
-const publicPrefixes = ["/convite/"]
 const intlMiddleware = createMiddleware(routing)
 
 export async function middleware(request: NextRequest) {
@@ -35,12 +33,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // ─── Normal Auth Flow (only runs after setup is complete) ──────────
-
-  // Convite: quem já está logado é levado ao dashboard; quem não está vê a página.
-  if (publicPrefixes.some((prefix) => pathname.startsWith(prefix))) {
-    if (isDemoMode) return NextResponse.redirect(new URL("/dashboard", request.url))
-    return session ? NextResponse.redirect(new URL("/dashboard", request.url)) : NextResponse.next()
-  }
 
   // Em modo demo, usuário não autenticado cai no provisionamento
   if (isDemoMode && !session) {

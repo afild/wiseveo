@@ -9,7 +9,6 @@ import type {
   QuickPaymentSettings,
 } from "../services/user-settings-service"
 import type { AdminUserSummary } from "../services/admin-users-service"
-import type { InvitationSummary } from "../services/invitations-service"
 import { GeneralForm } from "./general-form"
 import { AppearanceForm } from "./appearance-form"
 import { MonetaryFormatForm } from "./monetary-format-form"
@@ -26,13 +25,10 @@ interface ConfiguracoesPageClientProps {
   quickPaymentOptions: QuickPaymentOptions
   initialMonetarySettings: MonetarySettings
   initialAdminUsers: AdminUserSummary[]
-  /** Contexto da conta compartilhada para a aba Usuários (só quando isAdmin). */
+  /** Contexto da aba Usuários (só quando isAdmin). */
   adminContext?: {
     currentUserId: string
     currentUserRole: "USER" | "ADMIN" | "SUPERADMIN"
-    dataOwnerId: string
-    invitations: InvitationSummary[]
-    invitationsEnabled: boolean
   }
 }
 

@@ -6,7 +6,6 @@ import {
   isBootstrapAdminEmail,
   isActiveUser,
 } from "@/lib/user-approval"
-import { resolveDataOwnerId } from "@/lib/data-owner"
 import { canChangeRole, canRemoveUser, isUserRole, type UserRole } from "@/lib/user-roles"
 
 export interface AdminUserSummary {
@@ -17,10 +16,6 @@ export interface AdminUserSummary {
   status: "PENDING" | "ACTIVE"
   createdAt: string
   updatedAt: string
-  /** Dono dos dados que este usuário enxerga (null = ele mesmo). */
-  dataOwnerId: string | null
-  /** Membro convidado da conta de outra pessoa. */
-  isMember: boolean
 }
 
 export class AdminAccessError extends Error {
@@ -41,7 +36,6 @@ const ADMIN_USER_SELECT = {
   status: true,
   createdAt: true,
   updatedAt: true,
-  dataOwnerId: true,
 } as const
 
 function serializeAdminUser(user: {
@@ -52,7 +46,6 @@ function serializeAdminUser(user: {
   status: "PENDING" | "ACTIVE"
   createdAt: Date
   updatedAt: Date
-  dataOwnerId: string | null
 }): AdminUserSummary {
   return {
     id: user.id,
@@ -62,8 +55,6 @@ function serializeAdminUser(user: {
     status: user.status,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
-    dataOwnerId: user.dataOwnerId,
-    isMember: user.dataOwnerId !== null,
   }
 }
 
@@ -138,16 +129,17 @@ export async function approveUser(userId: string): Promise<AdminUserSummary> {
 
 async function loadActorAndTarget(actorId: string, targetId: string) {
   const t = await getTranslations("settings.adminUsers.errors")
-  const [actor, target, ownerId] = await Promise.all([
+  const [actor, target] = await Promise.all([
     prisma.user.findUnique({ where: { id: actorId }, select: { id: true, role: true, status: true } }),
     prisma.user.findUnique({ where: { id: targetId }, select: ADMIN_USER_SELECT }),
-    resolveDataOwnerId(actorId),
   ])
   if (!actor || !isActiveUser(actor.status) || !isAdminRole(actor.role)) {
     throw new AdminAccessError(403, t("adminOnly"))
   }
   if (!target) throw new AdminAccessError(404, t("userNotFound"))
-  return { actor, target, targetIsDataOwner: target.id === ownerId }
+  // Sem coluna de dono no banco, ninguém é dono dos dados de outra pessoa: cada
+  // usuário é dono de si. A proteção de "não mexer em si mesmo" vem de `isSelf`.
+  return { actor, target, targetIsDataOwner: false }
 }
 
 /** Promove/rebaixa um usuário (regras em src/lib/user-roles.ts). */
@@ -171,9 +163,9 @@ export async function setUserRole(actorId: string, targetId: string, role: unkno
 }
 
 /**
- * Remove um usuário da instalação. Dados financeiros de membros são do dono
- * (userId = dono), então nada financeiro se perde; conexões pessoais (Telegram,
- * memória de conversa) caem em cascata.
+ * Remove um usuário da instalação. Os dados financeiros ficam com o `user_id`
+ * de quem os lançou; conexões pessoais (Telegram, memória de conversa) caem em
+ * cascata.
  */
 export async function removeUser(actorId: string, targetId: string): Promise<void> {
   const t = await getTranslations("settings.adminUsers.errors")
