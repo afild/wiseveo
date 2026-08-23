@@ -144,8 +144,10 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
         state={finishState}
         checkSetupComplete={checkSetupComplete}
         onComplete={() => {
+          // A sessão do administrador já foi assinada pelo Finalizar com a chave que
+          // vale depois do reinício/redeploy: dá para entrar direto, sem passar pelo login.
           setFinishState(null)
-          router.push("/login")
+          router.push("/dashboard")
         }}
       />
     )

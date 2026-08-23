@@ -1,11 +1,14 @@
 import { SignJWT, jwtVerify } from "jose"
 import type { NextResponse } from "next/server"
+import { getSessionKey } from "./auth-secret"
 
 /**
  * Identidade do PRIMEIRO ACESSO: a pessoa cria a conta (e-mail+senha ou Google)
  * ANTES de existir banco. Os dados viajam neste cookie httpOnly (assinado com o
  * mesmo segredo da sessão) até o Setup Wizard concluir — aí viram o SUPERADMIN
  * no banco recém-conectado e o cookie é apagado.
+ *
+ * Assinado com a mesma chave da sessão (`src/lib/auth-secret.ts`).
  *
  * Só carrega afirmações da própria pessoa sobre ela mesma (nome, e-mail, hash da
  * senha ou id do Google): numa instalação ainda não configurada qualquer visitante
@@ -30,20 +33,18 @@ export interface SetupIdentity {
   photo?: string | null
 }
 
-const secret = new TextEncoder().encode(process.env.AUTH_SECRET || "fallback-secret-change-me")
-
 export async function encodeSetupIdentity(identity: SetupIdentity): Promise<string> {
   return new SignJWT({ ...identity })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${MAX_AGE_SECONDS}s`)
-    .sign(secret)
+    .sign(await getSessionKey())
 }
 
 export async function decodeSetupIdentity(token: string | undefined | null): Promise<SetupIdentity | null> {
   if (!token) return null
   try {
-    const { payload } = await jwtVerify(token, secret)
+    const { payload } = await jwtVerify(token, await getSessionKey())
     const p = payload as Partial<SetupIdentity>
     if (typeof p.name !== "string" || typeof p.email !== "string") return null
     if (p.provider !== "password" && p.provider !== "google") return null

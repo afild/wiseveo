@@ -8,6 +8,9 @@ import { PrismaClient } from "@/generated/prisma_new/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Client, Pool } from "pg"
 import { initializeUserData } from "@/lib/user-init"
+import { COOKIE_NAME, createSessionToken } from "@/lib/auth"
+import { deriveSessionKey, futureSessionSource } from "@/lib/auth-secret"
+import { applySessionLocaleCookie } from "@/i18n/session-locale"
 import { resolveAppLocale } from "@/i18n/config"
 import { INSTALL_LOCALE_ENV } from "@/i18n/install-locale"
 import { cookies } from "next/headers"
@@ -131,6 +134,8 @@ export async function POST(req: Request) {
     // 2. Admin (SUPERADMIN) — em banco reaproveitado o e-mail pode já existir:
     //    quem roda o wizard controla o servidor, então promovemos e trocamos a senha.
     console.log("[SETUP] Connecting to database to create admin user...")
+    // Guardado fora do bloco: é com ele que a sessão do administrador é assinada no fim.
+    let adminUserId: string | null = null
     const pool = new Pool({ connectionString: databaseUrl })
     const adapter = new PrismaPg(pool)
     const client = new PrismaClient({ adapter })
@@ -149,6 +154,7 @@ export async function POST(req: Request) {
       const name = adminInput.name.trim() || email
       const existing = await client.user.findUnique({ where: { email }, select: { id: true } })
       const userId = existing?.id ?? crypto.randomUUID()
+      adminUserId = userId
 
       await client.user.upsert({
         where: { email },
@@ -189,13 +195,17 @@ export async function POST(req: Request) {
       await pool.end()
     }
 
-    // 3. Variáveis de ambiente da instalação
-    const authSecret = crypto.randomBytes(32).toString("base64")
+    // 3. Variáveis de ambiente da instalação — o mínimo que a hospedagem precisa
+    //    guardar. `AUTH_SECRET` NÃO entra: a chave de sessão é calculada a partir da
+    //    própria `DATABASE_URL` (src/lib/auth-secret.ts). O idioma também não: quem
+    //    instala leva o cookie `NEXT_LOCALE` desta resposta, e onde há arquivo a env
+    //    é gravada de graça (`fileOnlyEnvVars`).
     const envVars: Array<{ key: string; value: string }> = [
       { key: "WISEVEO_SETUP_COMPLETE", value: "true" },
-      { key: INSTALL_LOCALE_ENV, value: chosenLocale },
       { key: "DATABASE_URL", value: databaseUrl },
-      { key: "AUTH_SECRET", value: authSecret },
+    ]
+    const fileOnlyEnvVars: Array<{ key: string; value: string }> = [
+      { key: INSTALL_LOCALE_ENV, value: chosenLocale },
     ]
     if (integrations?.google?.enabled) {
       envVars.push({ key: "GOOGLE_CLIENT_ID", value: String(integrations.google.clientId ?? "") })
@@ -210,26 +220,48 @@ export async function POST(req: Request) {
       envVars.push({ key: "OPENAI_API_KEY", value: String(integrations.openai.apiKey ?? "") })
     }
 
+    // 4. Crachá do administrador — assinado com a chave que passará a valer DEPOIS
+    //    do reinício/redeploy (a URL do banco recém-conectada). Sem isto a sessão
+    //    morreria justamente na virada e a pessoa cairia no login em vez do dashboard.
+    const sessionToken = adminUserId
+      ? await createSessionToken(adminUserId, await deriveSessionKey(futureSessionSource(databaseUrl)))
+      : null
+
+    /** Sessão + idioma escolhido + limpeza do cookie de identidade do primeiro acesso. */
+    const finishResponse = (body: Record<string, unknown>) => {
+      const response = NextResponse.json(body)
+      if (sessionToken) {
+        response.cookies.set(COOKIE_NAME, sessionToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 7,
+          path: "/",
+        })
+      }
+      applySessionLocaleCookie(response, { locale: chosenLocale })
+      clearSetupIdentityCookie(response)
+      return response
+    }
+
     if (mode === "manual-env") {
-      // Vercel & cia: sem arquivo gravável nem reinício. Devolvemos as variáveis
-      // para a pessoa colar no painel da hospedagem; o app volta configurado
-      // depois do redeploy. (Único momento em que os segredos voltam ao navegador.)
+      // Vercel & cia: sem arquivo gravável nem reinício. Devolvemos as duas variáveis
+      // para a pessoa colar no painel da hospedagem; o app volta configurado depois do
+      // redeploy — e já logado. (Único momento em que a URL do banco volta ao navegador.)
       console.log("[SETUP] Read-only host: returning env vars for manual configuration")
-      const response = NextResponse.json({
+      return finishResponse({
         success: true,
         mode,
         hosting: detectHostingProvider(),
         envVars,
         migrations: migrationsSummary,
       })
-      clearSetupIdentityCookie(response)
-      return response
     }
 
     // 4. Self-host: grava .env.local
     console.log("[SETUP] Generating .env.local...")
     let envContent = `\n# --- Gerado automaticamente pelo Setup Wizard ---\n`
-    for (const { key, value } of envVars) envContent += `${key}="${value}"\n`
+    for (const { key, value } of [...envVars, ...fileOnlyEnvVars]) envContent += `${key}="${value}"\n`
 
     const envPath = path.resolve(process.cwd(), ".env.local")
     if (fs.existsSync(envPath)) {
@@ -244,15 +276,28 @@ export async function POST(req: Request) {
       // Sistemas de arquivos sem permissões POSIX: segue sem bloquear a instalação.
     }
 
+    // Hospedagem com Passenger (cPanel, Hostinger e afins) reinicia o app sozinha
+    // quando `tmp/restart.txt` é tocado — melhor esforço: onde não vale, a tela
+    // continua pedindo o reinício e esperando o app voltar.
+    if (mode === "restart-required") {
+      try {
+        const tmpDir = path.resolve(process.cwd(), "tmp")
+        fs.mkdirSync(tmpDir, { recursive: true })
+        fs.writeFileSync(path.join(tmpDir, "restart.txt"), "")
+        console.log("[SETUP] Touched tmp/restart.txt (Passenger-style restart)")
+      } catch {
+        // Sem permissão ou outro modelo de hospedagem: segue com o reinício manual.
+      }
+    }
+
     console.log(`[SETUP] Setup completed successfully (mode=${mode})`)
 
     // Set a cookie so the login page knows to redirect to settings onboarding
-    const response = NextResponse.json({ success: true, mode, migrations: migrationsSummary })
+    const response = finishResponse({ success: true, mode, migrations: migrationsSummary })
     response.cookies.set("wiseveo-new-setup", "true", {
       path: "/",
       maxAge: 60 * 60, // 1 hour
     })
-    clearSetupIdentityCookie(response)
 
     return response
   } catch (error: any) {

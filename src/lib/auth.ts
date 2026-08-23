@@ -1,22 +1,23 @@
 import { SignJWT, jwtVerify } from "jose"
-
-const secret = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "fallback-secret-change-me"
-)
+import { getSessionKey } from "./auth-secret"
 
 const COOKIE_NAME = "session"
 
-export async function createSessionToken(userId: string) {
+/**
+ * @param key chave alternativa — só o Setup usa, para assinar a sessão com a chave
+ * que passará a valer depois do reinício/redeploy (ver `futureSessionSource`).
+ */
+export async function createSessionToken(userId: string, key?: Uint8Array) {
   return new SignJWT({ userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(secret)
+    .sign(key ?? (await getSessionKey()))
 }
 
 export async function verifySessionToken(token: string) {
   try {
-    const { payload } = await jwtVerify(token, secret)
+    const { payload } = await jwtVerify(token, await getSessionKey())
     return payload as { userId: string }
   } catch {
     return null

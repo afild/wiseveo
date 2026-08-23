@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { jwtVerify } from "jose"
 import { REQUIRED_USERS_COLUMNS } from "../src/features/setup/lib/schema-check"
+import { deriveSessionKey, futureSessionSource } from "../src/lib/auth-secret"
 
 /**
  * Finalizar do wizard num banco COM dados: ou ele na íntegra, ou nada.
@@ -118,12 +120,24 @@ describe("POST /api/setup/configure — banco com dados", () => {
     const json = await res.json()
     expect(res.status).toBe(200)
     expect(json).toMatchObject({ success: true, mode: "manual-env" })
-    expect(json.envVars.map((v: { key: string }) => v.key)).toEqual(
-      expect.arrayContaining(["WISEVEO_SETUP_COMPLETE", "DATABASE_URL", "AUTH_SECRET"]),
-    )
+    // Só o mínimo que a hospedagem precisa guardar: a chave de sessão é calculada da
+    // URL do banco e o idioma viaja no cookie desta resposta.
+    expect(json.envVars.map((v: { key: string }) => v.key)).toEqual(["WISEVEO_SETUP_COMPLETE", "DATABASE_URL"])
     expect(m.upsert).toHaveBeenCalledTimes(1)
     expect(m.upsert.mock.calls[0][0]).toMatchObject({ where: { email: "dono@example.com" } })
     expect(m.initializeUserData).not.toHaveBeenCalled()
+  })
+
+  it("devolve a sessão do administrador já assinada com a chave de DEPOIS do redeploy", async () => {
+    const res = await configure({ useExistingData: true })
+    const token = res.cookies.get("session")?.value
+    expect(token).toBeTruthy()
+    // Verifica com a chave que a instalação passará a usar (derivada da URL nova).
+    const key = await deriveSessionKey(futureSessionSource("postgresql://u:p@h:5432/db", {} as NodeJS.ProcessEnv))
+    const { payload } = await jwtVerify(token as string, key)
+    expect(typeof payload.userId).toBe("string")
+    // E o idioma escolhido no wizard acompanha quem instalou, sem virar variável.
+    expect(res.cookies.get("NEXT_LOCALE")?.value).toBe("pt-BR")
   })
 })
 

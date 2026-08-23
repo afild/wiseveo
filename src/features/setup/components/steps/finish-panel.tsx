@@ -63,7 +63,8 @@ export function FinishPanel({ state, checkSetupComplete, onComplete }: FinishPan
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [polling, state.mode])
 
-  const envText = (state.envVars ?? []).map(({ key, value }) => `${key}=${value}`).join("\n")
+  const envVars = state.envVars ?? []
+  const envText = envVars.map(({ key, value }) => `${key}=${value}`).join("\n")
 
   const copyAll = async () => {
     try {
@@ -101,7 +102,7 @@ export function FinishPanel({ state, checkSetupComplete, onComplete }: FinishPan
           <CheckCircle2 className="w-6 h-6 text-positive" />
         </div>
         <h2 className="text-2xl font-bold">{t("manualTitle")}</h2>
-        <p className="text-muted-foreground mt-1 text-sm">{t("manualSubtitle")}</p>
+        <p className="text-muted-foreground mt-1 text-sm">{t("manualSubtitle", { count: envVars.length })}</p>
       </div>
 
       <ol className="space-y-2 text-sm list-decimal list-inside">
@@ -138,7 +139,7 @@ export function FinishPanel({ state, checkSetupComplete, onComplete }: FinishPan
           </div>
         </div>
         <pre className="text-xs font-mono p-3 overflow-x-auto whitespace-pre leading-relaxed">
-          {(state.envVars ?? []).map(({ key, value }) => (
+          {envVars.map(({ key, value }) => (
             <div key={key}>
               <span className="text-primary">{key}</span>=<span>{revealed ? value : "•".repeat(Math.min(24, Math.max(8, value.length)))}</span>
             </div>
