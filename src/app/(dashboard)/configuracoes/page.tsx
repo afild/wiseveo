@@ -11,6 +11,8 @@ import {
   listUsersForAdmin,
 } from "@/features/settings/services/admin-users-service"
 import { readSharedAccountStructure } from "@/features/settings/services/shared-account-service"
+import { getAccountOwnership } from "@/features/settings/services/admin-users-service"
+import { listPendingInvitations } from "@/features/settings/services/invitations-service"
 import { defaultMonetarySettings } from "@/lib/monetary"
 
 const baseTabs = ["general", "appearance", "monetary", "profile", "account"] as const
@@ -45,12 +47,16 @@ export default async function ConfiguracoesPage({
   // Convites não existem na demo; fora dela, o dono precisa saber se o banco já foi
   // preparado (a estrutura só entra com a confirmação dele).
   const invitationsEnabled = process.env.NEXT_PUBLIC_DEMO_MODE !== "true"
-  const [settings, quickPaymentOptions, adminUsers, sharedAccount] = await Promise.all([
+  const [settings, quickPaymentOptions, adminUsers, sharedAccount, ownership] = await Promise.all([
     getUserSettings(userId),
     getQuickPaymentOptions(userId),
     isAdmin ? listUsersForAdmin() : Promise.resolve([]),
     isAdmin && invitationsEnabled ? readSharedAccountStructure().catch(() => null) : Promise.resolve(null),
+    isAdmin ? getAccountOwnership(userId).catch(() => null) : Promise.resolve(null),
   ])
+  // Convites só depois de o banco estar preparado — antes disso a tabela nem existe.
+  const invitations =
+    sharedAccount?.ready && isAdmin ? await listPendingInvitations(userId).catch(() => []) : []
   const currentUser = adminUsers.find((u) => u.id === userId)
 
   return (
@@ -69,6 +75,9 @@ export default async function ConfiguracoesPage({
               currentUserId: userId,
               currentUserRole: currentUser.role,
               sharedAccount,
+              invitations,
+              ownerId: ownership?.ownerId ?? userId,
+              memberIds: ownership?.memberIds ?? [],
             }
           : undefined
       }

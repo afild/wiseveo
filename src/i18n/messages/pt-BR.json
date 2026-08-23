@@ -1224,6 +1224,41 @@
       "warning": "Atenção"
     }
   },
+  "invite": {
+    "accept": "Entrar na conta",
+    "confirmPassword": "Repita a senha",
+    "continueWithGoogle": "Continuar com Google",
+    "email": "Seu e-mail",
+    "emailHint": "Use o e-mail que recebeu este convite ({masked}).",
+    "errors": {
+      "generic": "Não foi possível concluir. Tente de novo.",
+      "passwordMismatch": "As senhas não conferem."
+    },
+    "goToLogin": "Ir para o login",
+    "name": "Seu nome",
+    "or": "ou",
+    "password": "Crie uma senha",
+    "subtitle": "Crie seu acesso e você já entra vendo os mesmos dados da conta.",
+    "title": "<strong>{name}</strong> convidou você para a conta WISEVEO dele",
+    "unusable": {
+      "accepted": {
+        "desc": "Este link já foi aceito. Se foi você, entre pelo login.",
+        "title": "Convite já usado"
+      },
+      "expired": {
+        "desc": "Este link venceu. Peça um novo convite a quem convidou você.",
+        "title": "Convite expirado"
+      },
+      "invalid": {
+        "desc": "Confira o link recebido ou peça um novo convite.",
+        "title": "Convite não encontrado"
+      },
+      "revoked": {
+        "desc": "Este convite foi revogado por quem o criou.",
+        "title": "Convite cancelado"
+      }
+    }
+  },
   "mail": {
     "addLabel": "Adicionar etiqueta",
     "allMail": "Todos os e-mails",
@@ -1426,6 +1461,7 @@
       "usernameReq": "O nome de usuário deve ter pelo menos 3 caracteres"
     },
     "adminUsers": {
+      "accountOwner": "Dono da conta",
       "active": "Ativo",
       "approve": "Aprovar",
       "approveError": "Não foi possível aprovar o usuário.",
@@ -1449,6 +1485,34 @@
         },
         "userNotFound": "Usuário não encontrado"
       },
+      "invitations": {
+        "cancel": "Cancelar",
+        "colEmail": "Convidado",
+        "colExpires": "Expira em",
+        "colInvitedBy": "Convidado por",
+        "copied": "Link copiado!",
+        "copy": "Copiar",
+        "copyError": "Não foi possível copiar. Selecione o link e copie manualmente.",
+        "createError": "Não foi possível criar o convite.",
+        "creating": "Gerando…",
+        "desc": "Links de convite ainda válidos (7 dias). Quem aceita entra direto na sua conta.",
+        "dialogDesc": "A pessoa recebe um link, entra com o e-mail que você indicar e passa a ver e lançar os mesmos dados que você — sem precisar administrar nada.",
+        "dialogTitle": "Convidar para a sua conta",
+        "done": "Concluir",
+        "emailHint": "O convite vale só para este e-mail — se o link vazar, não serve para mais ninguém.",
+        "emailLabel": "E-mail de quem você quer convidar",
+        "emailPlaceholder": "nome@exemplo.com",
+        "generate": "Gerar link de convite",
+        "inviteButton": "Convidar",
+        "linkHint": "Vale por 7 dias, só pode ser usado uma vez e só por quem tiver esse e-mail.",
+        "linkReady": "Convite criado! Copie o link e envie por WhatsApp, e-mail ou como preferir:",
+        "none": "Nenhum convite pendente.",
+        "revoke": "Cancelar convite",
+        "revokeError": "Não foi possível cancelar o convite.",
+        "revokeSuccess": "Convite cancelado.",
+        "title": "Convites pendentes"
+      },
+      "member": "Membro",
       "noUsers": "Nenhum usuário encontrado.",
       "pending": "Pendente",
       "pendingCount": "Cadastros pendentes: {count}",
@@ -1474,7 +1538,6 @@
         "pieceTable": "uma tabela “invitations”, com os convites (quem, prazo, uso e cancelamento)",
         "prepare": "Preparar meu banco",
         "preparing": "Preparando…",
-        "readyDesc": "A estrutura está no lugar. Os convites aparecem aqui na próxima atualização do sistema.",
         "readyTitle": "Banco pronto para os convites",
         "safety": "Só acrescenta. Nenhum dado seu é alterado, movido ou apagado, e o sistema continua no ar durante a mudança.",
         "title": "Convidar pessoas"

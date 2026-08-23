@@ -10,6 +10,7 @@ import type {
 } from "../services/user-settings-service"
 import type { AdminUserSummary } from "../services/admin-users-service"
 import type { SharedAccountStructure } from "../lib/shared-account-structure"
+import type { InvitationSummary } from "../services/invitations-service"
 import { GeneralForm } from "./general-form"
 import { AppearanceForm } from "./appearance-form"
 import { MonetaryFormatForm } from "./monetary-format-form"
@@ -31,6 +32,9 @@ interface ConfiguracoesPageClientProps {
     currentUserId: string
     currentUserRole: "USER" | "ADMIN" | "SUPERADMIN"
     sharedAccount: SharedAccountStructure | null
+    invitations: InvitationSummary[]
+    ownerId: string
+    memberIds: string[]
   }
 }
 

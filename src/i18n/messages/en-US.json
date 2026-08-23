@@ -1224,6 +1224,41 @@
       "warning": "Watch"
     }
   },
+  "invite": {
+    "accept": "Join the account",
+    "confirmPassword": "Repeat the password",
+    "continueWithGoogle": "Continue with Google",
+    "email": "Your email",
+    "emailHint": "Use the email that received this invite ({masked}).",
+    "errors": {
+      "generic": "Could not complete. Try again.",
+      "passwordMismatch": "Passwords do not match."
+    },
+    "goToLogin": "Go to login",
+    "name": "Your name",
+    "or": "or",
+    "password": "Create a password",
+    "subtitle": "Create your access and you'll get in already seeing the account's data.",
+    "title": "<strong>{name}</strong> invited you to their WISEVEO account",
+    "unusable": {
+      "accepted": {
+        "desc": "This link was already accepted. If that was you, use the login.",
+        "title": "Invitation already used"
+      },
+      "expired": {
+        "desc": "This link has expired. Ask whoever invited you for a new one.",
+        "title": "Invitation expired"
+      },
+      "invalid": {
+        "desc": "Check the link you received or ask for a new invitation.",
+        "title": "Invitation not found"
+      },
+      "revoked": {
+        "desc": "This invitation was revoked by its creator.",
+        "title": "Invitation cancelled"
+      }
+    }
+  },
   "mail": {
     "addLabel": "Add label",
     "allMail": "All mail",
@@ -1426,6 +1461,7 @@
       "usernameReq": "Username must be at least 3 characters"
     },
     "adminUsers": {
+      "accountOwner": "Account owner",
       "active": "Active",
       "approve": "Approve",
       "approveError": "Could not approve the user.",
@@ -1449,6 +1485,34 @@
         },
         "userNotFound": "User not found"
       },
+      "invitations": {
+        "cancel": "Cancel",
+        "colEmail": "Invited",
+        "colExpires": "Expires",
+        "colInvitedBy": "Invited by",
+        "copied": "Link copied!",
+        "copy": "Copy",
+        "copyError": "Could not copy. Select the link and copy it manually.",
+        "createError": "Could not create the invitation.",
+        "creating": "Generating…",
+        "desc": "Invitation links still valid (7 days). Whoever accepts joins your account directly.",
+        "dialogDesc": "The person gets a link, signs in with the email you set, and starts seeing and recording the same data as you — without administering anything.",
+        "dialogTitle": "Invite to your account",
+        "done": "Done",
+        "emailHint": "The invite works only for this email — if the link leaks, it is useless to anyone else.",
+        "emailLabel": "Email of the person you want to invite",
+        "emailPlaceholder": "name@example.com",
+        "generate": "Generate invitation link",
+        "inviteButton": "Invite",
+        "linkHint": "Valid for 7 days, can be used only once, and only by whoever has that email.",
+        "linkReady": "Invitation created! Copy the link and send it by WhatsApp, email or however you like:",
+        "none": "No pending invitations.",
+        "revoke": "Cancel invite",
+        "revokeError": "Could not cancel the invite.",
+        "revokeSuccess": "Invite cancelled.",
+        "title": "Pending invitations"
+      },
+      "member": "Member",
       "noUsers": "No users found.",
       "pending": "Pending",
       "pendingCount": "Pending registrations: {count}",
@@ -1474,7 +1538,6 @@
         "pieceTable": "an “invitations” table, holding the invites (who, deadline, use and cancellation)",
         "prepare": "Prepare my database",
         "preparing": "Preparing…",
-        "readyDesc": "The structure is in place. Invites will show up here on the next system update.",
         "readyTitle": "Database ready for invites",
         "safety": "It only adds. None of your data is changed, moved or deleted, and the system stays up during the change.",
         "title": "Invite people"

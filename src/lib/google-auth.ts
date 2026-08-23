@@ -25,6 +25,9 @@ function getConfig(appUrl?: string) {
   return { clientId, clientSecret, redirectUri }
 }
 
+/** Cookie curto que carrega o token do convite pelo fluxo OAuth (aceite via Google). */
+export const GOOGLE_INVITE_COOKIE = "google_oauth_invite"
+
 export function isGoogleConfigured(): boolean {
   const { clientId, clientSecret } = getConfig()
   return !!(clientId && clientSecret)

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createSessionToken, COOKIE_NAME } from "@/lib/auth"
-import { exchangeCodeForTokens, decodeIdToken, isGoogleConfigured } from "@/lib/google-auth"
+import { exchangeCodeForTokens, decodeIdToken, GOOGLE_INVITE_COOKIE, isGoogleConfigured } from "@/lib/google-auth"
 import {
   getInitialUserAccess,
   isActiveUser,
@@ -10,6 +10,7 @@ import {
   normalizeEmail,
   PENDING_APPROVAL_PATH,
 } from "@/lib/user-approval"
+import { acceptInvitationForUser, peekInvitation } from "@/features/settings/services/invitations-service"
 import { isPublicSignupEnabled } from "@/lib/public-signup"
 import { isSetupComplete } from "@/lib/setup-check"
 import { encodeSetupIdentity, setSetupIdentityCookie } from "@/lib/setup-identity"
@@ -65,6 +66,11 @@ export async function GET(request: NextRequest) {
       return response
     }
 
+    // Convite pelo Google: só vale para conta NOVA e só se a conta Google for a do
+    // e-mail convidado. Quem já tem conta aqui entra normalmente (nada é mesclado).
+    const inviteToken = request.cookies.get(GOOGLE_INVITE_COOKIE)?.value ?? null
+    const invitation = inviteToken ? await peekInvitation(inviteToken, normalizedEmail).catch(() => null) : null
+
     // Find or create user
     let user = await prisma.user.findFirst({
       where: {
@@ -94,9 +100,35 @@ export async function GET(request: NextRequest) {
             : {}),
         },
       })
+    } else if (invitation && inviteToken) {
+      // Pessoa convidada: entra ATIVA, com o papel do convite, lançando na conta de
+      // quem convidou — e sem plano de contas próprio (usa o do dono).
+      user = await prisma.user.create({
+        data: {
+          name: userInfo.name,
+          email: normalizedEmail,
+          googleId: userInfo.sub,
+          photo: userInfo.picture || null,
+          role: invitation.role,
+          status: "PENDING",
+        },
+      })
+      try {
+        // Ativa a pessoa e a vincula ao dono na mesma transação do aceite.
+        await acceptInvitationForUser({ token: inviteToken, userId: user.id, email: normalizedEmail })
+        user = { ...user, status: "ACTIVE", role: invitation.role }
+      } catch (inviteError) {
+        // Nada pela metade: sem o vínculo, a conta recém-criada é desfeita.
+        console.error("[Google OAuth callback] invite accept failed:", inviteError)
+        await prisma.user.delete({ where: { id: user.id } }).catch(() => {})
+        const failed = NextResponse.redirect(`${appUrl}/convite/${inviteToken}`)
+        failed.cookies.set("google_oauth_state", "", { httpOnly: true, maxAge: 0, path: "/" })
+        failed.cookies.set(GOOGLE_INVITE_COOKIE, "", { httpOnly: true, maxAge: 0, path: "/" })
+        return failed
+      }
     } else {
       // Instância privada (WISEVEO_PUBLIC_SIGNUP=false): Google não cria conta nova
-      // — só entra quem já existe.
+      // sem convite — só entra quem já existe.
       if (!isPublicSignupEnabled()) {
         return NextResponse.redirect(`${appUrl}/login?error=signup_disabled`)
       }
@@ -129,6 +161,7 @@ export async function GET(request: NextRequest) {
         maxAge: 0,
         path: "/",
       })
+      response.cookies.set(GOOGLE_INVITE_COOKIE, "", { httpOnly: true, maxAge: 0, path: "/" })
       return response
     }
 
@@ -154,6 +187,7 @@ export async function GET(request: NextRequest) {
       maxAge: 0,
       path: "/",
     })
+    response.cookies.set(GOOGLE_INVITE_COOKIE, "", { httpOnly: true, maxAge: 0, path: "/" })
     return response
   } catch (err) {
     console.error("[Google OAuth callback] error:", err)

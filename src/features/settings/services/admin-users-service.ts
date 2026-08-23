@@ -7,6 +7,7 @@ import {
   isActiveUser,
 } from "@/lib/user-approval"
 import { canChangeRole, canRemoveUser, isUserRole, type UserRole } from "@/lib/user-roles"
+import { listAccountMemberIds, resolveDataOwnerId } from "@/lib/data-owner"
 
 export interface AdminUserSummary {
   id: string
@@ -16,6 +17,17 @@ export interface AdminUserSummary {
   status: "PENDING" | "ACTIVE"
   createdAt: string
   updatedAt: string
+}
+
+/** Quem é o dono dos dados desta conta e quem entrou nela por convite. */
+export interface AccountOwnership {
+  ownerId: string
+  memberIds: string[]
+}
+
+export async function getAccountOwnership(actorId: string): Promise<AccountOwnership> {
+  const ownerId = await resolveDataOwnerId(actorId)
+  return { ownerId, memberIds: await listAccountMemberIds(ownerId) }
 }
 
 export class AdminAccessError extends Error {
@@ -129,17 +141,18 @@ export async function approveUser(userId: string): Promise<AdminUserSummary> {
 
 async function loadActorAndTarget(actorId: string, targetId: string) {
   const t = await getTranslations("settings.adminUsers.errors")
-  const [actor, target] = await Promise.all([
+  const [actor, target, ownerId] = await Promise.all([
     prisma.user.findUnique({ where: { id: actorId }, select: { id: true, role: true, status: true } }),
     prisma.user.findUnique({ where: { id: targetId }, select: ADMIN_USER_SELECT }),
+    resolveDataOwnerId(actorId),
   ])
   if (!actor || !isActiveUser(actor.status) || !isAdminRole(actor.role)) {
     throw new AdminAccessError(403, t("adminOnly"))
   }
   if (!target) throw new AdminAccessError(404, t("userNotFound"))
-  // Sem coluna de dono no banco, ninguém é dono dos dados de outra pessoa: cada
-  // usuário é dono de si. A proteção de "não mexer em si mesmo" vem de `isSelf`.
-  return { actor, target, targetIsDataOwner: false }
+  // O dono dos dados não é rebaixado nem removido por mais ninguém: apagá-lo levaria
+  // junto, em cascata, todo o histórico financeiro da conta.
+  return { actor, target, targetIsDataOwner: target.id === ownerId }
 }
 
 /** Promove/rebaixa um usuário (regras em src/lib/user-roles.ts). */

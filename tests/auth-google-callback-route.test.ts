@@ -15,7 +15,12 @@ vi.mock("@/lib/prisma", () => ({ prisma: m.prisma }))
 vi.mock("@/lib/setup-check", () => ({ isSetupComplete: () => true }))
 vi.mock("@/lib/public-signup", () => ({ isPublicSignupEnabled: () => false }))
 vi.mock("@/lib/auth", () => ({ createSessionToken: async () => "session-token", COOKIE_NAME: "wiseveo-session" }))
+vi.mock("@/features/settings/services/invitations-service", () => ({
+  peekInvitation: async () => null,
+  acceptInvitationForUser: async () => {},
+}))
 vi.mock("@/lib/google-auth", () => ({
+  GOOGLE_INVITE_COOKIE: "google_oauth_invite",
   isGoogleConfigured: () => true,
   exchangeCodeForTokens: async () => ({
     access_token: "ya29.access",

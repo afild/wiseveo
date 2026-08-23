@@ -2,9 +2,11 @@
 
 import * as React from "react"
 import { toast } from "sonner"
-import { CheckCircle2, Database, ShieldCheck, Trash2, UserCheck, UserPlus } from "lucide-react"
+import { CheckCircle2, Copy, Database, Link2, ShieldCheck, Trash2, UserCheck, UserPlus, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Card,
   CardContent,
@@ -12,6 +14,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +43,8 @@ import {
 } from "@/components/ui/table"
 import type { AdminUserSummary } from "../services/admin-users-service"
 import type { SharedAccountStructure } from "../lib/shared-account-structure"
-import { canChangeRole, canRemoveUser, USER_ROLES, type UserRole } from "@/lib/user-roles"
+import type { InvitationSummary } from "../services/invitations-service"
+import { canChangeRole, canRemoveUser, invitableRoles, USER_ROLES, type UserRole } from "@/lib/user-roles"
 import { useLocale, useTranslations } from "next-intl"
 import { createDateFormatter } from "@/i18n/format"
 
@@ -42,6 +53,11 @@ interface AdminContext {
   currentUserRole: UserRole
   /** Estrutura dos convites no banco; null = não dá para saber (demo ou falha de leitura). */
   sharedAccount: SharedAccountStructure | null
+  invitations: InvitationSummary[]
+  /** Dono dos dados da conta: nunca é rebaixado nem removido por outra pessoa. */
+  ownerId: string
+  /** Dono + quem entrou por convite. */
+  memberIds: string[]
 }
 
 interface AdminUsersFormProps {
@@ -92,6 +108,12 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
   const [busyId, setBusyId] = React.useState<string | null>(null)
   const [removeTarget, setRemoveTarget] = React.useState<AdminUserSummary | null>(null)
   const [sharedAccount, setSharedAccount] = React.useState(context?.sharedAccount ?? null)
+  const [invitations, setInvitations] = React.useState<InvitationSummary[]>(context?.invitations ?? [])
+  const [inviteOpen, setInviteOpen] = React.useState(false)
+  const [inviteEmail, setInviteEmail] = React.useState("")
+  const [inviteRole, setInviteRole] = React.useState<UserRole>("USER")
+  const [inviteLink, setInviteLink] = React.useState<string | null>(null)
+  const [creating, setCreating] = React.useState(false)
   const [preparing, setPreparing] = React.useState(false)
   const [confirmPrepare, setConfirmPrepare] = React.useState(false)
   const pendingCount = users.filter((user) => user.status === "PENDING").length
@@ -99,6 +121,12 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
   const actorRole = context?.currentUserRole ?? "ADMIN"
   // Só o dono dos dados (SUPERADMIN) manda mexer na estrutura do banco.
   const isOwner = actorRole === "SUPERADMIN"
+  const rolesToInvite = invitableRoles(actorRole)
+  // Convidar só depois de o banco estar preparado: antes disso o convite nasceria
+  // impossível de aceitar (é a mesma checagem que o servidor faz).
+  const canInvite = Boolean(sharedAccount?.ready) && rolesToInvite.length > 0
+  const ownerId = context?.ownerId ?? null
+  const isMember = (userId: string) => Boolean(context?.memberIds.includes(userId)) && userId !== ownerId
 
   async function approve(userId: string) {
     setBusyId(userId)
@@ -171,13 +199,69 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
     }
   }
 
+  async function createInvite() {
+    setCreating(true)
+    try {
+      const response = await fetch("/api/admin/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
+      })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok || !payload?.success) throw new Error(payload?.message ?? t("invitations.createError"))
+      setInviteLink(payload.data.link)
+      setInvitations((current) => [payload.data, ...current])
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("invitations.createError"))
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  async function revokeInvite(id: string) {
+    setBusyId(id)
+    try {
+      const response = await fetch(`/api/admin/invitations/${id}`, { method: "DELETE" })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok || !payload?.success) throw new Error(payload?.message ?? t("invitations.revokeError"))
+      setInvitations((current) => current.filter((i) => i.id !== id))
+      toast.success(t("invitations.revokeSuccess"))
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("invitations.revokeError"))
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function copyLink(link: string) {
+    try {
+      await navigator.clipboard.writeText(link)
+      toast.success(t("invitations.copied"))
+    } catch {
+      toast.error(t("invitations.copyError"))
+    }
+  }
+
+  function closeInviteDialog() {
+    setInviteOpen(false)
+    setInviteLink(null)
+    setInviteEmail("")
+    setInviteRole("USER")
+  }
+
   function roleControl(user: AdminUserSummary) {
     if (!context) return roleBadge(user.role, t)
     const isSelf = user.id === context.currentUserId
     const options = USER_ROLES.filter(
       (role) =>
         role === user.role ||
-        canChangeRole({ actorRole, targetRole: user.role, newRole: role, isSelf, targetIsDataOwner: false }) === "ok",
+        canChangeRole({
+          actorRole,
+          targetRole: user.role,
+          newRole: role,
+          isSelf,
+          targetIsDataOwner: user.id === ownerId,
+        }) === "ok",
     )
     if (options.length <= 1 || user.status !== "ACTIVE") return roleBadge(user.role, t)
     return (
@@ -203,7 +287,7 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
         actorRole,
         targetRole: user.role,
         isSelf: user.id === context.currentUserId,
-        targetIsDataOwner: false,
+        targetIsDataOwner: user.id === ownerId,
       }) === "ok"
     )
   }
@@ -215,6 +299,12 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
           <h1 className="text-2xl font-bold">{t("title")}</h1>
           <p className="text-muted-foreground">{t("pendingCount", { count: pendingCount })}</p>
         </div>
+        {canInvite && (
+          <Button type="button" className="cursor-pointer" onClick={() => setInviteOpen(true)}>
+            <UserPlus className="size-4" />
+            {t("invitations.inviteButton")}
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -247,6 +337,15 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
                           {user.name}
                           {context && user.id === context.currentUserId && (
                             <Badge variant="secondary" className="text-[10px]">{t("you")}</Badge>
+                          )}
+                          {user.id === ownerId && (
+                            <Badge variant="secondary" className="gap-1 text-[10px]">
+                              <Users className="size-3" />
+                              {t("accountOwner")}
+                            </Badge>
+                          )}
+                          {isMember(user.id) && (
+                            <Badge variant="outline" className="text-[10px]">{t("member")}</Badge>
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground">{user.email}</div>
@@ -299,20 +398,148 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
         </CardContent>
       </Card>
 
+      {canInvite && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("invitations.title")}</CardTitle>
+            <CardDescription>{t("invitations.desc")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {invitations.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                {t("invitations.none")}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("invitations.colEmail")}</TableHead>
+                      <TableHead>{t("colRole")}</TableHead>
+                      <TableHead>{t("invitations.colInvitedBy")}</TableHead>
+                      <TableHead>{t("invitations.colExpires")}</TableHead>
+                      <TableHead className="text-right">{t("colAction")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invitations.map((invitation) => (
+                      <TableRow key={invitation.id}>
+                        <TableCell className="text-sm">{invitation.email}</TableCell>
+                        <TableCell>{roleBadge(invitation.role, t)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{invitation.invitedByName}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(invitation.expiresAt, locale)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="cursor-pointer text-destructive hover:text-destructive"
+                            disabled={busyId === invitation.id}
+                            onClick={() => revokeInvite(invitation.id)}
+                          >
+                            {t("invitations.revoke")}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Diálogo: convidar */}
+      <Dialog open={inviteOpen} onOpenChange={(open) => (open ? setInviteOpen(true) : closeInviteDialog())}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("invitations.dialogTitle")}</DialogTitle>
+            <DialogDescription>{t("invitations.dialogDesc")}</DialogDescription>
+          </DialogHeader>
+          {inviteLink ? (
+            <div className="space-y-3">
+              <p className="text-sm">{t("invitations.linkReady")}</p>
+              <div className="flex items-center gap-2">
+                <Input readOnly value={inviteLink} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
+                <Button type="button" variant="secondary" className="shrink-0 cursor-pointer" onClick={() => copyLink(inviteLink)}>
+                  <Copy className="size-4" />
+                  {t("invitations.copy")}
+                </Button>
+              </div>
+              <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <Link2 className="mt-0.5 size-3.5 shrink-0" />
+                {t("invitations.linkHint")}
+              </p>
+              <DialogFooter>
+                <Button type="button" onClick={closeInviteDialog} className="cursor-pointer">
+                  {t("invitations.done")}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="invite-email">{t("invitations.emailLabel")}</Label>
+                <Input
+                  id="invite-email"
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder={t("invitations.emailPlaceholder")}
+                />
+                <p className="text-xs text-muted-foreground">{t("invitations.emailHint")}</p>
+              </div>
+              {rolesToInvite.length > 1 && (
+                <div className="space-y-1.5">
+                  <Label>{t("colRole")}</Label>
+                  <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as UserRole)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rolesToInvite.map((role) => (
+                        <SelectItem key={role} value={role}>
+                          {t(`roles.${role}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={closeInviteDialog} className="cursor-pointer">
+                  {tCommon("cancel")}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={createInvite}
+                  disabled={creating || !inviteEmail.includes("@")}
+                  className="cursor-pointer"
+                >
+                  <Link2 className="size-4" />
+                  {creating ? t("invitations.creating") : t("invitations.generate")}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Convites: o banco precisa ganhar a estrutura, com a confirmação do dono */}
-      {isOwner && sharedAccount && (
+      {/* Pronto o banco, este cartão dá lugar ao de convites — nada a explicar. */}
+      {isOwner && sharedAccount && !sharedAccount.ready && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <UserPlus className="size-4" />
-              {sharedAccount.ready ? t("sharedAccount.readyTitle") : t("sharedAccount.title")}
+              {t("sharedAccount.title")}
             </CardTitle>
-            <CardDescription>
-              {sharedAccount.ready ? t("sharedAccount.readyDesc") : t("sharedAccount.desc")}
-            </CardDescription>
+            <CardDescription>{t("sharedAccount.desc")}</CardDescription>
           </CardHeader>
-          {!sharedAccount.ready && (
-            <CardContent className="space-y-3">
+          <CardContent className="space-y-3">
               <ul className="space-y-1.5 text-sm">
                 {sharedAccount.missing.map((piece) => (
                   <li key={piece} className="flex items-start gap-2">
@@ -333,8 +560,7 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
                 <Database className="size-4" />
                 {preparing ? t("sharedAccount.preparing") : t("sharedAccount.prepare")}
               </Button>
-            </CardContent>
-          )}
+          </CardContent>
         </Card>
       )}
 
