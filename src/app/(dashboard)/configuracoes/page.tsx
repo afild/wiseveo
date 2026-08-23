@@ -10,6 +10,7 @@ import {
   getUserAdminAccess,
   listUsersForAdmin,
 } from "@/features/settings/services/admin-users-service"
+import { readSharedAccountStructure } from "@/features/settings/services/shared-account-service"
 import { defaultMonetarySettings } from "@/lib/monetary"
 
 const baseTabs = ["general", "appearance", "monetary", "profile", "account"] as const
@@ -41,10 +42,14 @@ export default async function ConfiguracoesPage({
     )
   }
 
-  const [settings, quickPaymentOptions, adminUsers] = await Promise.all([
+  // Convites não existem na demo; fora dela, o dono precisa saber se o banco já foi
+  // preparado (a estrutura só entra com a confirmação dele).
+  const invitationsEnabled = process.env.NEXT_PUBLIC_DEMO_MODE !== "true"
+  const [settings, quickPaymentOptions, adminUsers, sharedAccount] = await Promise.all([
     getUserSettings(userId),
     getQuickPaymentOptions(userId),
     isAdmin ? listUsersForAdmin() : Promise.resolve([]),
+    isAdmin && invitationsEnabled ? readSharedAccountStructure().catch(() => null) : Promise.resolve(null),
   ])
   const currentUser = adminUsers.find((u) => u.id === userId)
 
@@ -63,6 +68,7 @@ export default async function ConfiguracoesPage({
           ? {
               currentUserId: userId,
               currentUserRole: currentUser.role,
+              sharedAccount,
             }
           : undefined
       }

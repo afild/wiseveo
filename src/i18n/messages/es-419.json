@@ -250,6 +250,12 @@
       "missingFields": "Faltan campos obligatorios.",
       "unknownError": "Error desconocido"
     },
+    "sharedAccount": {
+      "applyFailed": "No se pudo preparar la base de datos: {message}. No se cambió nada.",
+      "noConnection": "No hay una base de datos conectada a esta instalación.",
+      "notAdditive": "Cambio rechazado: solo se permite agregar a tu base de datos, nunca quitar.",
+      "stillMissing": "La base de datos no confirmó el cambio. Nada quedó a medias — inténtalo de nuevo."
+    },
     "telegram": {
       "notConfigured": "La integración con el Bot de Telegram no está configurada"
     },
@@ -1409,9 +1415,9 @@
     "adminUsers": {
       "active": "Activo",
       "approve": "Aprobar",
-      "approved": "Aprobado",
       "approveError": "No se pudo aprobar al usuario.",
       "approveSuccess": "Usuario aprobado con éxito.",
+      "approved": "Aprobado",
       "approving": "Aprobando...",
       "colAction": "Acción",
       "colDate": "Registro",
@@ -1439,12 +1445,27 @@
       "removeSuccess": "Usuario quitado.",
       "removeTitle": "¿Quitar usuario?",
       "roleError": "No se pudo cambiar el rol.",
+      "roleSuccess": "Rol actualizado.",
       "roles": {
         "ADMIN": "Administrador",
         "SUPERADMIN": "Superadministrador",
         "USER": "Usuario"
       },
-      "roleSuccess": "Rol actualizado.",
+      "sharedAccount": {
+        "confirm": "Sí, adelante",
+        "confirmDesc": "WISEVEO va a agregar a tu base de datos la columna y la tabla de arriba. Es el único cambio de estructura que hace, y ocurre ahora solo porque tú lo pediste.",
+        "confirmTitle": "¿Preparar la base de datos para las invitaciones?",
+        "desc": "Para invitar a alguien a registrar transacciones contigo, tu base de datos necesita guardar dos cosas que todavía no tiene.",
+        "error": "No se pudo preparar la base de datos.",
+        "pieceColumn": "una columna en “usuarios”, que dice de quién son los datos que cada persona ve",
+        "pieceTable": "una tabla “invitations”, con las invitaciones (quién, plazo, uso y cancelación)",
+        "prepare": "Preparar mi base de datos",
+        "preparing": "Preparando…",
+        "readyDesc": "La estructura ya está. Las invitaciones aparecerán aquí en la próxima actualización del sistema.",
+        "readyTitle": "Base de datos lista para las invitaciones",
+        "safety": "Solo agrega. Ningún dato tuyo se cambia, se mueve ni se borra, y el sistema sigue funcionando durante el cambio.",
+        "title": "Invitar personas"
+      },
       "title": "Admin",
       "usersDesc": "Liberación de nuevos accesos a WISEVEO.",
       "usersTitle": "Usuarios",

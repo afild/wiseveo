@@ -250,6 +250,12 @@
       "missingFields": "Campos obrigatórios ausentes.",
       "unknownError": "Erro desconhecido"
     },
+    "sharedAccount": {
+      "applyFailed": "Não foi possível preparar o banco: {message}. Nada foi alterado.",
+      "noConnection": "Não há um banco conectado a esta instalação.",
+      "notAdditive": "Mudança recusada: só é permitido acrescentar ao seu banco, nunca remover.",
+      "stillMissing": "O banco não confirmou a mudança. Nada ficou pela metade — tente de novo."
+    },
     "telegram": {
       "notConfigured": "Integração com o Bot do Telegram não configurada"
     },
@@ -1409,9 +1415,9 @@
     "adminUsers": {
       "active": "Ativo",
       "approve": "Aprovar",
-      "approved": "Liberado",
       "approveError": "Não foi possível aprovar o usuário.",
       "approveSuccess": "Usuário aprovado com sucesso.",
+      "approved": "Liberado",
       "approving": "Aprovando...",
       "colAction": "Ação",
       "colDate": "Cadastro",
@@ -1439,12 +1445,27 @@
       "removeSuccess": "Usuário removido.",
       "removeTitle": "Remover usuário?",
       "roleError": "Não foi possível alterar o papel.",
+      "roleSuccess": "Papel atualizado.",
       "roles": {
         "ADMIN": "Administrador",
         "SUPERADMIN": "Superadministrador",
         "USER": "Usuário"
       },
-      "roleSuccess": "Papel atualizado.",
+      "sharedAccount": {
+        "confirm": "Sim, pode preparar",
+        "confirmDesc": "O WISEVEO vai acrescentar ao seu banco a coluna e a tabela acima. É a única mudança de estrutura que ele faz, e só acontece agora porque você mandou.",
+        "confirmTitle": "Preparar o banco para os convites?",
+        "desc": "Para convidar alguém a lançar transações com você, o seu banco precisa guardar duas coisas que ele ainda não tem.",
+        "error": "Não foi possível preparar o banco.",
+        "pieceColumn": "uma coluna em “usuários”, que diz de quem são os dados que a pessoa vê",
+        "pieceTable": "uma tabela “invitations”, com os convites (quem, prazo, uso e cancelamento)",
+        "prepare": "Preparar meu banco",
+        "preparing": "Preparando…",
+        "readyDesc": "A estrutura está no lugar. Os convites aparecem aqui na próxima atualização do sistema.",
+        "readyTitle": "Banco pronto para os convites",
+        "safety": "Só acrescenta. Nenhum dado seu é alterado, movido ou apagado, e o sistema continua no ar durante a mudança.",
+        "title": "Convidar pessoas"
+      },
       "title": "Admin",
       "usersDesc": "Liberação de novos acessos ao WISEVEO.",
       "usersTitle": "Usuários",

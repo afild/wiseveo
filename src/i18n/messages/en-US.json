@@ -250,6 +250,12 @@
       "missingFields": "Missing required fields.",
       "unknownError": "Unknown error"
     },
+    "sharedAccount": {
+      "applyFailed": "Could not prepare the database: {message}. Nothing was changed.",
+      "noConnection": "There is no database connected to this installation.",
+      "notAdditive": "Change refused: only additions to your database are allowed, never removals.",
+      "stillMissing": "The database did not confirm the change. Nothing was left half done — try again."
+    },
     "telegram": {
       "notConfigured": "Telegram Bot integration not configured"
     },
@@ -1409,9 +1415,9 @@
     "adminUsers": {
       "active": "Active",
       "approve": "Approve",
-      "approved": "Approved",
       "approveError": "Could not approve the user.",
       "approveSuccess": "User approved successfully.",
+      "approved": "Approved",
       "approving": "Approving...",
       "colAction": "Action",
       "colDate": "Registered",
@@ -1439,12 +1445,27 @@
       "removeSuccess": "User removed.",
       "removeTitle": "Remove user?",
       "roleError": "Could not change the role.",
+      "roleSuccess": "Role updated.",
       "roles": {
         "ADMIN": "Administrator",
         "SUPERADMIN": "Super administrator",
         "USER": "User"
       },
-      "roleSuccess": "Role updated.",
+      "sharedAccount": {
+        "confirm": "Yes, go ahead",
+        "confirmDesc": "WISEVEO will add the column and the table above to your database. It is the only structural change it makes, and it only happens now because you asked.",
+        "confirmTitle": "Prepare the database for invites?",
+        "desc": "To invite someone to record transactions with you, your database needs to keep two things it does not have yet.",
+        "error": "Could not prepare the database.",
+        "pieceColumn": "a column on “users”, saying whose data each person sees",
+        "pieceTable": "an “invitations” table, holding the invites (who, deadline, use and cancellation)",
+        "prepare": "Prepare my database",
+        "preparing": "Preparing…",
+        "readyDesc": "The structure is in place. Invites will show up here on the next system update.",
+        "readyTitle": "Database ready for invites",
+        "safety": "It only adds. None of your data is changed, moved or deleted, and the system stays up during the change.",
+        "title": "Invite people"
+      },
       "title": "Admin",
       "usersDesc": "Release of new access to WISEVEO.",
       "usersTitle": "Users",

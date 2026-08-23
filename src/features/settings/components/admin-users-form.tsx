@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { toast } from "sonner"
-import { CheckCircle2, ShieldCheck, Trash2, UserCheck } from "lucide-react"
+import { CheckCircle2, Database, ShieldCheck, Trash2, UserCheck, UserPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { AdminUserSummary } from "../services/admin-users-service"
+import type { SharedAccountStructure } from "../lib/shared-account-structure"
 import { canChangeRole, canRemoveUser, USER_ROLES, type UserRole } from "@/lib/user-roles"
 import { useLocale, useTranslations } from "next-intl"
 import { createDateFormatter } from "@/i18n/format"
@@ -39,6 +40,8 @@ import { createDateFormatter } from "@/i18n/format"
 interface AdminContext {
   currentUserId: string
   currentUserRole: UserRole
+  /** Estrutura dos convites no banco; null = não dá para saber (demo ou falha de leitura). */
+  sharedAccount: SharedAccountStructure | null
 }
 
 interface AdminUsersFormProps {
@@ -88,9 +91,14 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
   const [users, setUsers] = React.useState(initialUsers)
   const [busyId, setBusyId] = React.useState<string | null>(null)
   const [removeTarget, setRemoveTarget] = React.useState<AdminUserSummary | null>(null)
+  const [sharedAccount, setSharedAccount] = React.useState(context?.sharedAccount ?? null)
+  const [preparing, setPreparing] = React.useState(false)
+  const [confirmPrepare, setConfirmPrepare] = React.useState(false)
   const pendingCount = users.filter((user) => user.status === "PENDING").length
 
   const actorRole = context?.currentUserRole ?? "ADMIN"
+  // Só o dono dos dados (SUPERADMIN) manda mexer na estrutura do banco.
+  const isOwner = actorRole === "SUPERADMIN"
 
   async function approve(userId: string) {
     setBusyId(userId)
@@ -143,6 +151,23 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
     } finally {
       setBusyId(null)
       setRemoveTarget(null)
+    }
+  }
+
+  /** Única mudança de estrutura do sistema — e só o dono manda fazer. */
+  async function prepareSharedAccount() {
+    setPreparing(true)
+    try {
+      const response = await fetch("/api/admin/shared-account", { method: "POST" })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok || !payload?.success) throw new Error(payload?.message ?? t("sharedAccount.error"))
+      setSharedAccount(payload.data)
+      toast.success(t("sharedAccount.readyTitle"))
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("sharedAccount.error"))
+    } finally {
+      setPreparing(false)
+      setConfirmPrepare(false)
     }
   }
 
@@ -273,6 +298,60 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Convites: o banco precisa ganhar a estrutura, com a confirmação do dono */}
+      {isOwner && sharedAccount && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <UserPlus className="size-4" />
+              {sharedAccount.ready ? t("sharedAccount.readyTitle") : t("sharedAccount.title")}
+            </CardTitle>
+            <CardDescription>
+              {sharedAccount.ready ? t("sharedAccount.readyDesc") : t("sharedAccount.desc")}
+            </CardDescription>
+          </CardHeader>
+          {!sharedAccount.ready && (
+            <CardContent className="space-y-3">
+              <ul className="space-y-1.5 text-sm">
+                {sharedAccount.missing.map((piece) => (
+                  <li key={piece} className="flex items-start gap-2">
+                    <Database className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                    <span>{piece === "column" ? t("sharedAccount.pieceColumn") : t("sharedAccount.pieceTable")}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="rounded-lg border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                {t("sharedAccount.safety")}
+              </p>
+              <Button
+                type="button"
+                className="cursor-pointer"
+                disabled={preparing}
+                onClick={() => setConfirmPrepare(true)}
+              >
+                <Database className="size-4" />
+                {preparing ? t("sharedAccount.preparing") : t("sharedAccount.prepare")}
+              </Button>
+            </CardContent>
+          )}
+        </Card>
+      )}
+
+      <AlertDialog open={confirmPrepare} onOpenChange={(open) => !open && setConfirmPrepare(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("sharedAccount.confirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("sharedAccount.confirmDesc")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="cursor-pointer">{tCommon("cancel")}</AlertDialogCancel>
+            <AlertDialogAction className="cursor-pointer" onClick={prepareSharedAccount} disabled={preparing}>
+              {t("sharedAccount.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Confirmação: remover */}
       <AlertDialog open={removeTarget !== null} onOpenChange={(open) => !open && setRemoveTarget(null)}>
