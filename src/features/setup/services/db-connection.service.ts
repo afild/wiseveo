@@ -58,9 +58,24 @@ export async function testDatabaseConnection(connectionString: string): Promise<
         AND table_name = 'transactions'
       );
     `)
+    hasData = tableCheck.rows[0]?.exists === true
+  } catch {
+    // Sem acesso ao information_schema: trata como banco novo (comportamento anterior).
+  }
 
-    if (tableCheck.rows[0]?.exists) {
-      hasData = true
+  if (hasData) {
+    // 1) Estrutura PRIMEIRO, independente do formato das tabelas financeiras. Falha
+    //    aqui (permissão/conexão) é erro real: nunca devolver "compatível" sem ter lido.
+    try {
+      schemaCheck = checkUsersSchema(await readUsersColumns(client))
+    } catch (e) {
+      await client.end().catch(() => {})
+      return { ok: false, code: "unknown", detail: errorMessage(e) }
+    }
+
+    // 2) Auditoria — só informativa: tabela financeira com outro formato não invalida
+    //    a conexão nem a checagem de estrutura.
+    try {
       // i18n-ignore: strings SQL brutas, não são texto de UI
       const [accountsRes, transactionsRes, categoriesRes, groupsRes] = await Promise.all([
         client.query('SELECT "COD_ACC" as id, "CONTA" as name, "TIPO" as type FROM accounts'), // i18n-ignore
@@ -87,17 +102,12 @@ export async function testDatabaseConnection(connectionString: string): Promise<
         groups: groupsRes.rows.length,
         existingChart: { groups, accounts },
       }
-
-      // Estrutura: esta versão precisa de certas colunas em `users` (ex.: data_owner_id).
-      // Só informa — quem bloqueia é a tela (Próximo) e o Finalizar (servidor).
-      schemaCheck = checkUsersSchema(await readUsersColumns(client))
+    } catch {
+      // Sem números: o wizard mostra a conexão como válida e sem auditoria.
     }
-  } catch {
-    // Tabelas do WISEVEO ausentes ou com outro formato: banco tratado como novo.
-  } finally {
-    await client.end().catch(() => {})
   }
 
+  await client.end().catch(() => {})
   return { ok: true, hasData, audit, schemaCheck }
 }
 

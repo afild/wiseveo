@@ -111,9 +111,7 @@ export function SummaryStep({
       </div>
 
       <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-center">
-        <p>
-          {t("finishNote")}
-        </p>
+        <p>{useExistingData ? t("finishNoteExisting") : t("finishNote")}</p>
       </div>
 
       {/* Navigation */}

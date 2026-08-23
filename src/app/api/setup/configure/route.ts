@@ -98,7 +98,18 @@ export async function POST(req: Request) {
         }
         // Estrutura: o upsert do admin e o login leem `users` inteira; coluna faltando
         // (ex.: data_owner_id) quebraria o primeiro acesso depois de "concluído".
-        const schema = checkUsersSchema(await readUsersColumns(migrationClient))
+        let columns: string[]
+        try {
+          columns = await readUsersColumns(migrationClient)
+        } catch (e: unknown) {
+          const detail = e instanceof Error ? e.message : String(e)
+          console.error("[SETUP] Users schema check failed:", redact(detail))
+          return NextResponse.json(
+            { success: false, code: "unknown", message: t("errors.unknownDetail", { message: redact(detail) }) },
+            { status: 500 },
+          )
+        }
+        const schema = checkUsersSchema(columns)
         if (!schema.ok) {
           return NextResponse.json(
             {

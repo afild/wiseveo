@@ -7,7 +7,7 @@ import { REQUIRED_USERS_COLUMNS } from "../src/features/setup/lib/schema-check"
  * "table_name = 'transactions'".
  */
 const m = vi.hoisted(() => ({
-  script: [] as Array<[fragment: string, rows: unknown[]]>,
+  script: [] as Array<[fragment: string, rows: unknown[] | Error]>,
   queries: [] as string[],
   connectError: null as Error | null,
 }))
@@ -21,6 +21,7 @@ vi.mock("pg", () => {
     async query(text: string) {
       m.queries.push(text)
       const hit = m.script.find(([fragment]) => text.includes(fragment))
+      if (hit && hit[1] instanceof Error) throw hit[1]
       return { rows: hit ? hit[1] : [] }
     }
   }
@@ -73,6 +74,21 @@ describe("testDatabaseConnection — auditoria + checagem de estrutura", () => {
     const result = await testDatabaseConnection(URL)
     expect(result).toEqual({ ok: true, hasData: false, audit: null, schemaCheck: { ok: true, missingColumns: [] } })
     expect(m.queries.some((q) => q.includes("information_schema.columns"))).toBe(false)
+  })
+
+  it("tabela financeira com outro formato NÃO esconde a falta de coluna em users (estrutura vem antes da auditoria)", async () => {
+    scriptWithData(REQUIRED_USERS_COLUMNS.filter((c) => c !== "data_owner_id"))
+    m.script = m.script.map(([f, rows]) => (f === "FROM accounts" ? [f, Object.assign(new Error("column does not exist"), { code: "42703" })] : [f, rows]))
+    const result = await testDatabaseConnection(URL)
+    expect(result).toEqual({ ok: true, hasData: true, audit: null, schemaCheck: { ok: false, missingColumns: ["data_owner_id"] } })
+    expect(m.queries.some((q) => q.includes("information_schema.columns"))).toBe(true)
+  })
+
+  it("falha ao ler as colunas de users → erro de conexão (nunca 'compatível' sem ter lido)", async () => {
+    scriptWithData(REQUIRED_USERS_COLUMNS)
+    m.script = m.script.map(([f, rows]) => (f === "information_schema.columns" ? [f, new Error("permission denied")] : [f, rows]))
+    const result = await testDatabaseConnection(URL)
+    expect(result).toMatchObject({ ok: false, code: "unknown" })
   })
 
   it("falha de conexão → código estável, nada de audit", async () => {

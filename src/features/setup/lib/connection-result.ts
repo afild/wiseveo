@@ -43,5 +43,6 @@ export interface DbAudit {
 export interface ConnectionResultSummary {
   hasData: boolean
   audit: DbAudit | null
-  schemaCheck: SchemaCheck
+  /** null = o servidor não informou (versão antiga): a tela não afirma nada; o Finalizar confere de novo. */
+  schemaCheck: SchemaCheck | null
 }

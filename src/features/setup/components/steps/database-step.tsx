@@ -6,27 +6,20 @@ import { Button } from "@/components/ui/button"
 import { Database, CheckCircle2, XCircle, Loader2, Container, PlugZap, Sparkles, Server } from "lucide-react"
 import { SupabaseManagedPanel } from "./database/supabase-managed-panel"
 import { ConnectionUrlPanel } from "./database/connection-url-panel"
+import type { ConnectionResultSummary, DbAudit } from "../../lib/connection-result"
 
 interface DatabaseStepProps {
   connectionString: string
   onConnectionStringChange: (value: string) => void
-  useExistingData: boolean
-  onUseExistingDataChange: (value: boolean) => void
-  onExistingChartChange: (value: ExistingChart | null) => void
+  /** Resultado do teste (hasData + audit + schemaCheck) ou null quando ainda não conectou / mudou a URL. */
+  onConnectionResult: (value: ConnectionResultSummary | null) => void
   onNext: () => void
   onBack: () => void
 }
 
-type ExistingChart = { groups: unknown[]; accounts: unknown[] }
 type Path = "managed" | "url" | "docker"
 type ConnectionStatus = "idle" | "testing" | "success" | "error"
-interface AuditResult {
-  accounts: number
-  transactions: number
-  categories: number
-  groups: number
-  existingChart?: ExistingChart
-}
+type AuditResult = DbAudit
 
 // i18n-ignore: URL técnica do banco local do docker-compose (dado, não texto de UI)
 const DOCKER_URL = "postgresql://postgres:postgres@localhost:5432/wiseveo?schema=public"
@@ -39,8 +32,7 @@ const DOCKER_URL = "postgresql://postgres:postgres@localhost:5432/wiseveo?schema
 export function DatabaseStep({
   connectionString,
   onConnectionStringChange,
-  onUseExistingDataChange,
-  onExistingChartChange,
+  onConnectionResult,
   onNext,
   onBack,
 }: DatabaseStepProps) {
@@ -57,14 +49,13 @@ export function DatabaseStep({
     setErrorCode(null)
     setErrorMessage("")
     setAuditResult(null)
-    onExistingChartChange(null)
+    onConnectionResult(null)
   }
 
   const choosePath = (next: Path) => {
     setPath(next)
     resetResult()
     onConnectionStringChange(next === "docker" ? DOCKER_URL : "")
-    onUseExistingDataChange(false)
   }
 
   /** Testa uma URL no servidor e atualiza o resultado; devolve se conectou. */
@@ -74,7 +65,7 @@ export function DatabaseStep({
     setErrorCode(null)
     setErrorMessage("")
     setAuditResult(null)
-    onExistingChartChange(null)
+    onConnectionResult(null)
 
     try {
       const res = await fetch("/api/setup/test-db", {
@@ -86,14 +77,15 @@ export function DatabaseStep({
 
       if (data.success) {
         setConnectionStatus("success")
-        if (data.hasData && data.audit) {
-          setAuditResult(data.audit)
-          onUseExistingDataChange(true)
-          if (data.audit.existingChart) onExistingChartChange(data.audit.existingChart)
-        } else {
-          onUseExistingDataChange(false)
-          onExistingChartChange(null)
-        }
+        // Caminho gerenciado (token Supabase) monta a URL por dentro: o wizard precisa dela no Finalizar.
+        onConnectionStringChange(url)
+        const audit: DbAudit | null = data.hasData && data.audit ? data.audit : null
+        setAuditResult(audit)
+        onConnectionResult({
+          hasData: Boolean(data.hasData),
+          audit,
+          schemaCheck: data.schemaCheck ?? null,
+        })
         return true
       }
       setConnectionStatus("error")

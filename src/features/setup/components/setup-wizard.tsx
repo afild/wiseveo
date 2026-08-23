@@ -14,6 +14,8 @@ import { Globe, Database, UserPlus, Puzzle, LayoutList, CheckCircle2 } from "luc
 import { toast } from "sonner"
 import { useLocale, useTranslations } from "next-intl"
 import { resolveAppLocale, type AppLocale } from "@/i18n/config"
+import { resolveChartChoice } from "../lib/chart-choice"
+import type { ConnectionResultSummary } from "../lib/connection-result"
 
 interface SetupWizardProps {
   /** Instalação já configurada: SUPERADMIN refazendo o setup (testes de conexão/interface). */
@@ -37,8 +39,11 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
   // Global State
   const [locale, setLocale] = useState<AppLocale>(renderedLocale)
   const [connectionString, setConnectionString] = useState("")
-  const [useExistingData, setUseExistingData] = useState(false)
-  const [existingChartOfAccounts, setExistingChartOfAccounts] = useState<{ groups: any[], accounts: any[] } | null>(null)
+  // Resultado do teste de conexão (sem a URL). A escolha "banco na íntegra OU modelo"
+  // é derivada dele — nunca escolhida pela pessoa (ver resolveChartChoice).
+  const [connection, setConnection] = useState<ConnectionResultSummary | null>(null)
+  const hasData = connection?.hasData ?? false
+  const useExistingData = resolveChartChoice(hasData) === "existing"
   const [admin, setAdmin] = useState({
     name: identity?.name ?? "",
     email: identity?.email ?? "",
@@ -51,9 +56,6 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
     openai: { enabled: false, apiKey: "" },
   })
   
-  // Future: the chart of accounts step will mutate this state if customized
-  // Currently, we'll let the backend use the defaults if we don't pass a custom one yet,
-  // but the UI step is ready for it.
   
   const steps = [
     { label: t("stepper.welcome"), icon: <Globe className="w-5 h-5" /> },
@@ -169,9 +171,7 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
           <DatabaseStep 
             connectionString={connectionString} 
             onConnectionStringChange={setConnectionString}
-            useExistingData={useExistingData}
-            onUseExistingDataChange={setUseExistingData}
-            onExistingChartChange={setExistingChartOfAccounts}
+            onConnectionResult={setConnection}
             onNext={handleNext} 
             onBack={handleBack} 
           />
@@ -188,10 +188,11 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
           />
         )}
         {currentStep === 4 && (
-          <ChartOfAccountsStep 
-            useExistingData={useExistingData} 
-            onUseExistingDataChange={setUseExistingData}
-            existingChart={existingChartOfAccounts}
+          <ChartOfAccountsStep
+            hasData={hasData}
+            audit={connection?.audit ?? null}
+            existingChart={connection?.audit?.existingChart ?? null}
+            schemaCheck={connection?.schemaCheck ?? null}
             onNext={handleNext} 
             onBack={handleBack} 
           />

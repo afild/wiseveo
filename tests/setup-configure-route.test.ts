@@ -9,6 +9,7 @@ import { REQUIRED_USERS_COLUMNS } from "../src/features/setup/lib/schema-check"
 const m = vi.hoisted(() => ({
   migrations: { ok: true as const, applied: [] as string[], alreadyApplied: 0, skippedExistingSchema: true },
   columns: [] as string[],
+  columnsError: null as Error | null,
   upsert: vi.fn<(args: { where: { email: string } }) => Promise<Record<string, never>>>(async () => ({})),
   findUnique: vi.fn(async () => null),
   initializeUserData: vi.fn(async () => ({})),
@@ -53,7 +54,12 @@ vi.mock("@/features/setup/services/setup-environment", () => ({
   detectSetupPersistence: () => "manual-env",
   detectHostingProvider: () => "vercel",
 }))
-vi.mock("@/features/setup/services/db-connection.service", () => ({ readUsersColumns: async () => m.columns }))
+vi.mock("@/features/setup/services/db-connection.service", () => ({
+  readUsersColumns: async () => {
+    if (m.columnsError) throw m.columnsError
+    return m.columns
+  },
+}))
 vi.mock("bcryptjs", () => ({ default: { hash: async () => "hash" } }))
 
 import { POST } from "@/app/api/setup/configure/route"
@@ -72,9 +78,20 @@ describe("POST /api/setup/configure — banco com dados", () => {
   beforeEach(() => {
     m.migrations = { ok: true, applied: [], alreadyApplied: 0, skippedExistingSchema: true }
     m.columns = [...REQUIRED_USERS_COLUMNS]
+    m.columnsError = null
     m.upsert.mockClear()
     m.findUnique.mockClear()
     m.initializeUserData.mockClear()
+  })
+
+  it("falha ao ler as colunas → erro próprio (não 'migração falhou') e nenhuma escrita", async () => {
+    m.columnsError = new Error("permission denied for schema information_schema")
+    const res = await configure({ useExistingData: true })
+    const json = await res.json()
+    expect(res.status).toBe(500)
+    expect(json.code).toBe("unknown")
+    expect(String(json.message)).not.toContain("migrationFailed")
+    expect(m.upsert).not.toHaveBeenCalled()
   })
 
   it("recusa o modelo padrão sobre banco com dados, antes de qualquer escrita", async () => {
