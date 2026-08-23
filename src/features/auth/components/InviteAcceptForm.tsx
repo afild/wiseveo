@@ -52,6 +52,9 @@ export function InviteAcceptForm({ token, status, inviterName, maskedEmail, show
   const [error, setError] = useState<string | null>(null)
 
   const passwordMismatch = confirm.length > 0 && password !== confirm
+  // Sem isto, uma senha curta apenas deixava o botão cinza, sem explicar nada — e esta
+  // é a primeira tela da pessoa no sistema, sem ninguém a quem perguntar.
+  const passwordTooShort = password.length > 0 && password.length < 8
   const canSubmit = name.trim().length > 0 && email.trim().length > 0 && password.length >= 8 && password === confirm
 
   async function handleSubmit(e: React.FormEvent) {
@@ -146,8 +149,16 @@ export function InviteAcceptForm({ token, status, inviterName, maskedEmail, show
                         onChange={(e) => setPassword(e.target.value)}
                         autoComplete="new-password"
                         minLength={8}
+                        aria-invalid={passwordTooShort}
+                        aria-describedby="invite-password-hint"
                         required
                       />
+                      <p
+                        id="invite-password-hint"
+                        className={passwordTooShort ? "text-xs text-destructive" : "text-xs text-muted-foreground"}
+                      >
+                        {t("passwordHint")}
+                      </p>
                     </Field>
                     <Field>
                       <FieldLabel htmlFor="invite-confirm">{t("confirmPassword")}</FieldLabel>

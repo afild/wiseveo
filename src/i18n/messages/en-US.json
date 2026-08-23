@@ -1238,6 +1238,7 @@
     "name": "Your name",
     "or": "or",
     "password": "Create a password",
+    "passwordHint": "At least 8 characters.",
     "subtitle": "Create your access and you'll get in already seeing the account's data.",
     "title": "<strong>{name}</strong> invited you to their WISEVEO account",
     "unusable": {
@@ -1486,7 +1487,6 @@
         "userNotFound": "User not found"
       },
       "invitations": {
-        "cancel": "Cancel",
         "colEmail": "Invited",
         "colExpires": "Expires",
         "colInvitedBy": "Invited by",

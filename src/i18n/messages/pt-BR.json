@@ -1238,6 +1238,7 @@
     "name": "Seu nome",
     "or": "ou",
     "password": "Crie uma senha",
+    "passwordHint": "Pelo menos 8 caracteres.",
     "subtitle": "Crie seu acesso e você já entra vendo os mesmos dados da conta.",
     "title": "<strong>{name}</strong> convidou você para a conta WISEVEO dele",
     "unusable": {
@@ -1486,7 +1487,6 @@
         "userNotFound": "Usuário não encontrado"
       },
       "invitations": {
-        "cancel": "Cancelar",
         "colEmail": "Convidado",
         "colExpires": "Expira em",
         "colInvitedBy": "Convidado por",
