@@ -184,6 +184,17 @@
       "userApproved": "User approved successfully.",
       "userRemoved": "User removed."
     },
+    "aiSettings": {
+      "invalidBudget": "Invalid cap. Use a number greater than or equal to zero, or leave it empty for no cap.",
+      "invalidModels": "Choose a provider and a model for both tiers.",
+      "invalidPayload": "Invalid request.",
+      "invalidProvider": "Unknown provider.",
+      "invalidUrl": "Invalid address. Use http:// or https://.",
+      "notPrepared": "Before storing AI keys, prepare your database here in Integrations.",
+      "providerNotConfigured": "Paste that provider's key before picking it as a model.",
+      "testFailed": "The test failed: {message}",
+      "testNeedsModel": "Type the model id in one of the tiers below before testing this provider."
+    },
     "auth": {
       "allFieldsRequired": "All fields are required",
       "emailAlreadyRegistered": "This email is already registered",
@@ -1597,6 +1608,41 @@
       "unavailableFeatures": "Register at least one active bank and one status in the database to enable this global feature."
     },
     "integrations": {
+      "ai": {
+        "baseUrlLabel": "Compatible server address",
+        "budgetHint": "Empty = no cap; zero pauses AI. When the cap is hit, AI pauses until the month turns and the bot says so.",
+        "budgetLabel": "Monthly spending cap (US$)",
+        "budgetPlaceholder": "e.g. 10",
+        "desc": "What understands and analyzes your questions (on Telegram today; Advisor and bulletins soon). Keys are stored encrypted in your database.",
+        "error": "Could not complete. Try again.",
+        "fastDesc": "Understands and classifies questions — runs all the time, needs to be cheap.",
+        "fastLabel": "Economy model",
+        "invalidBudget": "Invalid cap: use a number greater than or equal to zero, or leave it empty.",
+        "keyLabel": "Provider key",
+        "keyPlaceholder": "paste the API key",
+        "keyRemoved": "Key removed.",
+        "keySaved": "Key stored safely.",
+        "modelPlaceholder": "model id",
+        "modelsIncomplete": "Cap saved. The models were NOT changed: pick a provider that has a key and type the model id in both tiers.",
+        "modelsTitle": "The two model tiers",
+        "monthSpend": "Estimated spend this month: US$ {amount} ({calls, plural, one {# call} other {# calls}}).",
+        "needsPrepare": "Prepare the database above so the keys can be stored safely.",
+        "providerLabel": "Provider",
+        "removeKey": "Remove",
+        "save": "Save models and cap",
+        "saveKey": "Save key",
+        "saved": "AI settings saved.",
+        "savedBudgetOnly": "Cap saved. The models come in once there is a provider key.",
+        "saving": "Saving…",
+        "savingKey": "Saving…",
+        "smartDesc": "Does the real analysis — used only when the question calls for it.",
+        "smartLabel": "Advanced model",
+        "sourceEnv": "defined in the hosting environment variables",
+        "test": "Test",
+        "testOk": "It worked: {model} answered in {ms} ms.",
+        "testing": "Testing…",
+        "title": "Artificial intelligence"
+      },
       "bot": {
         "autoNote": "When connecting, WISEVEO checks the token with Telegram and does the rest of the setup on its own.",
         "connect": "Connect bot",
@@ -1622,11 +1668,12 @@
       },
       "prepare": {
         "confirm": "Yes, go ahead",
-        "confirmDesc": "WISEVEO will add the table above to your database. Nothing that exists is changed, and it only happens now because you asked.",
+        "confirmDesc": "WISEVEO will add the tables above to your database. Nothing that exists is changed, and it only happens now because you asked.",
         "confirmTitle": "Prepare the database for integrations?",
-        "desc": "To store the bot token (and, later on, AI keys) safely, your database needs one piece it does not have yet.",
+        "desc": "To store the bot token and the AI keys safely — and to meter AI spending — your database needs pieces it does not have yet.",
         "error": "Could not prepare the database.",
         "pieceTable": "an “app_settings” table, holding the integration secrets — stored encrypted",
+        "pieceUsage": "an “ai_usage” table, holding monthly AI consumption — for the spending cap",
         "prepare": "Prepare my database",
         "preparing": "Preparing…",
         "readyTitle": "Database ready for integrations",
@@ -2136,6 +2183,8 @@
   },
   "telegram": {
     "bot": {
+      "aiNotConfigured": "Artificial intelligence has not been set up in this installation yet, so I cannot understand questions. Ask whoever administers it to add a key in Settings → Integrations.",
+      "budgetExceeded": "This installation's monthly AI spending limit was reached. I'll answer again when the month turns — or ask whoever administers it to adjust the cap in Settings → Integrations.",
       "cardFormatError": "Sorry, I couldn't process your request right now.",
       "connected": "WISEVEO account connected successfully. You can now ask me questions about your finances.",
       "genericError": "Sorry, a technical error occurred while processing your question.",

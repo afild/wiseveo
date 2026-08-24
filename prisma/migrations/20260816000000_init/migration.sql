@@ -274,6 +274,20 @@ CREATE TABLE "app_settings" (
     CONSTRAINT "app_settings_pkey" PRIMARY KEY ("key")
 );
 
+-- CreateTable
+CREATE TABLE "ai_usage" (
+    "period" CHAR(6) NOT NULL,
+    "provider" TEXT NOT NULL,
+    "model" TEXT NOT NULL,
+    "calls" INTEGER NOT NULL DEFAULT 0,
+    "input_tokens" BIGINT NOT NULL DEFAULT 0,
+    "output_tokens" BIGINT NOT NULL DEFAULT 0,
+    "cost_micro_usd" BIGINT NOT NULL DEFAULT 0,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ai_usage_pkey" PRIMARY KEY ("period","provider","model")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 

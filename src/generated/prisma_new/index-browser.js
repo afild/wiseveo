@@ -327,6 +327,17 @@ exports.Prisma.AppSettingScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.AiUsageScalarFieldEnum = {
+  period: 'period',
+  provider: 'provider',
+  model: 'model',
+  calls: 'calls',
+  inputTokens: 'inputTokens',
+  outputTokens: 'outputTokens',
+  costMicroUsd: 'costMicroUsd',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -397,7 +408,8 @@ exports.Prisma.ModelName = {
   TelegramConnection: 'TelegramConnection',
   TelegramConversationMemory: 'TelegramConversationMemory',
   TelegramPendingToken: 'TelegramPendingToken',
-  AppSetting: 'AppSetting'
+  AppSetting: 'AppSetting',
+  AiUsage: 'AiUsage'
 };
 
 /**

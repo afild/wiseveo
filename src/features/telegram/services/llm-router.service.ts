@@ -4,7 +4,7 @@ import { DEFAULT_LOCALE, LOCALE_META, type AppLocale } from "@/i18n/config";
 import { formatAppDate } from "@/i18n/format";
 import type { CardData } from "../types/telegram.types";
 import type { HistoryMessage } from "./conversation-history.service";
-import { getLlmModels } from "./llm-models";
+import { aiGenerateText } from "@/features/ai/services/llm.service";
 
 // NOTE: processUserQuery below is not currently wired into any active bot
 // path — message-handler.service.ts drives the real flow via
@@ -50,8 +50,6 @@ export async function processUserQuery(
   history: HistoryMessage[] = [],
   locale: AppLocale = DEFAULT_LOCALE,
 ): Promise<CardData> {
-  const models = getLlmModels();
-
   const today = new Date()
   const todayStr = today.toISOString().slice(0, 10)
   const currentMonthLabel = formatAppDate(today, "MMMM yyyy", locale)
@@ -101,23 +99,16 @@ Responda SEMPRE em ${LOCALE_META[locale].label} (idioma do usuário) — inclusi
     { role: "user" as const, content: query },
   ]
 
-  let lastError;
-  for (const model of models) {
-    try {
-      const result = await generateText({
-        model,
-        system: systemPrompt,
-        messages,
-        tools,
-        stopWhen: stepCountIs(4),
-      });
-      
-      return parseCardData(result.text);
-    } catch (e) {
-      lastError = e;
-      console.warn(`Model failed, trying next...`, e);
-    }
-  }
-  
-  throw lastError || new Error("All models failed"); // i18n-ignore: internal diagnostic error, never sent to the Telegram user
+  // Pela porta única de IA: ela respeita o teto do mês, tenta o modelo de reserva
+  // e MEDE o consumo de todos os passos (a chamada com tools vai ao modelo várias
+  // vezes). Pegar os modelos crus aqui deixaria o gasto fora do medidor.
+  const result = await aiGenerateText({
+    tier: "smart",
+    system: systemPrompt,
+    messages,
+    tools,
+    stopWhen: stepCountIs(4),
+  });
+
+  return parseCardData(result.text);
 }

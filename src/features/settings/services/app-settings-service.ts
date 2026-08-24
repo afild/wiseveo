@@ -7,23 +7,24 @@ import {
 } from "@/features/setup/services/db-connection.service"
 import { describeConnectionError, isAdditiveOnly } from "./shared-account-service"
 import {
-  APP_SETTINGS_TABLE,
+  INTEGRATION_TABLES,
   checkAppSettingsStructure,
   type AppSettingsStructure,
 } from "../lib/app-settings-structure"
 
 /**
- * `app_settings`: segredos da instalação, cifrados (src/lib/secret-cipher.ts) — o
- * token do bot do Telegram hoje, chaves de IA adiante. Nasce em instalação nova pela
- * migração inicial; em banco existente, SÓ pelo "Preparar meu banco" da aba
- * Integrações — aditivo, aplicado pelo app, com a confirmação do dono (o mesmo
- * padrão dos convites, `shared-account-service.ts`).
+ * As duas tabelas das integrações: `app_settings` (segredos cifrados —
+ * src/lib/secret-cipher.ts — token do bot do Telegram e chaves de IA) e
+ * `ai_usage` (consumo de IA por mês, para o teto de gasto). Nascem em instalação
+ * nova pela migração inicial; em banco existente, SÓ pelo "Preparar meu banco" da
+ * aba Integrações — aditivo, aplicado pelo app, com a confirmação do dono (o
+ * mesmo padrão dos convites, `shared-account-service.ts`).
  *
  * O SQL vive aqui, e não num arquivo lido em tempo de execução, porque em
  * hospedagem serverless o repositório pode não acompanhar a função. O arquivo
  * `prisma/additive/2026-08-23-app-settings.sql` continua no repositório para a
  * linha de comando — `tests/app-settings-structure.test.ts` garante que os dois
- * nunca divirjam.
+ * (e a migração inicial) nunca divirjam.
  */
 export const APP_SETTINGS_SQL = `BEGIN;
 
@@ -33,6 +34,19 @@ CREATE TABLE IF NOT EXISTS "app_settings" (
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "app_settings_pkey" PRIMARY KEY ("key")
+);
+
+CREATE TABLE IF NOT EXISTS "ai_usage" (
+    "period" CHAR(6) NOT NULL,
+    "provider" TEXT NOT NULL,
+    "model" TEXT NOT NULL,
+    "calls" INTEGER NOT NULL DEFAULT 0,
+    "input_tokens" BIGINT NOT NULL DEFAULT 0,
+    "output_tokens" BIGINT NOT NULL DEFAULT 0,
+    "cost_micro_usd" BIGINT NOT NULL DEFAULT 0,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ai_usage_pkey" PRIMARY KEY ("period","provider","model")
 );
 
 COMMIT;`
@@ -56,11 +70,11 @@ function isTableMissing(error: unknown): boolean {
 
 /** O que o banco JÁ tem (só leitura, pelo cliente normal do app). */
 export async function readAppSettingsStructure(): Promise<AppSettingsStructure> {
-  const tables = await prisma.$queryRaw<Array<{ count: bigint }>>`
-    SELECT COUNT(*)::bigint AS count FROM information_schema.tables
-    WHERE table_schema = 'public' AND table_name = ${APP_SETTINGS_TABLE}
+  const rows = await prisma.$queryRaw<Array<{ table_name: string }>>`
+    SELECT table_name FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = ANY(${[...INTEGRATION_TABLES]})
   `
-  return checkAppSettingsStructure({ hasTable: Number(tables[0]?.count ?? 0) > 0 })
+  return checkAppSettingsStructure({ existingTables: rows.map((row) => row.table_name) })
 }
 
 /**

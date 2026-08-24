@@ -1,5 +1,6 @@
-import { generateText } from "ai"
-import { getLlmModels } from "./llm-models"
+import { z } from "zod"
+import { aiGenerateObject, AiNotConfiguredError } from "@/features/ai/services/llm.service"
+import { AiBudgetExceededError } from "@/features/ai/services/ai-usage.service"
 import { DEFAULT_LOCALE, LOCALE_META, type AppLocale } from "@/i18n/config"
 import type { HistoryMessage, TelegramConversationMemoryState } from "./conversation-history.service"
 
@@ -31,7 +32,7 @@ export interface ClassifiedQuery {
   searchText?: string
 }
 
-const VALID_INTENTS: QueryIntent[] = [
+const VALID_INTENTS = [
   "financial_summary",
   "spending_by_payee",
   "transaction_search",
@@ -44,20 +45,45 @@ const VALID_INTENTS: QueryIntent[] = [
   "recurring",
   "financial_analysis",
   "unknown",
-]
+] as const satisfies readonly QueryIntent[]
 
-function parseClassification(text: string): ClassifiedQuery {
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) return { intent: "unknown" }
+// Saída ESTRUTURADA (generateObject): o modelo é obrigado a devolver este formato —
+// acabou o "caçar JSON com regex" que quebrava em silêncio ao trocar de modelo.
+//
+// `nullable` e NÃO `optional`: o modo estrito de saída estruturada da OpenAI (ligado
+// por padrão) exige que TODA chave apareça na lista de obrigatórias — campo opcional
+// vira esquema recusado e a pergunta morre antes de chegar ao banco. Nulo é o "não
+// informado" aqui, e vira ausente em `toClassifiedQuery`.
+export const classificationSchema = z.object({
+  intent: z.enum(VALID_INTENTS),
+  period: z.object({ from: z.string(), to: z.string() }).nullable(),
+  groupName: z.string().nullable(),
+  categoryName: z.string().nullable(),
+  payeeName: z.string().nullable(),
+  accountName: z.string().nullable(),
+  transactionType: z.enum(["INCOME", "EXPENSE", "TRANSFER"]).nullable(),
+  status: z.enum(["PAID", "PENDING", "OVERDUE", "SCHEDULED"]).nullable(),
+  date: z.string().nullable(),
+  limit: z.number().nullable(),
+  searchText: z.string().nullable(),
+})
 
-  try {
-    const parsed = JSON.parse(jsonMatch[0]) as Partial<ClassifiedQuery>
-    const intent = VALID_INTENTS.includes(parsed.intent as QueryIntent)
-      ? (parsed.intent as QueryIntent)
-      : "unknown"
-    return { ...parsed, intent }
-  } catch {
-    return { intent: "unknown" }
+/** Nulo do modelo = campo não informado (o resto do fluxo espera ausência). */
+const orUndefined = <T,>(value: T | null): T | undefined => value ?? undefined
+
+function toClassifiedQuery(raw: z.infer<typeof classificationSchema>): ClassifiedQuery {
+  return {
+    intent: raw.intent,
+    period: orUndefined(raw.period),
+    groupName: orUndefined(raw.groupName),
+    categoryName: orUndefined(raw.categoryName),
+    payeeName: orUndefined(raw.payeeName),
+    accountName: orUndefined(raw.accountName),
+    transactionType: orUndefined(raw.transactionType),
+    status: orUndefined(raw.status),
+    date: orUndefined(raw.date),
+    limit: orUndefined(raw.limit),
+    searchText: orUndefined(raw.searchText),
   }
 }
 
@@ -173,8 +199,8 @@ export async function classifyQuery(
   // regardless of the language the user's question is written in. i18n-ignore
   const systemPrompt = `Classificador de perguntas financeiras do WISEVEO. Hoje: ${todayStr}. Idioma do usuário: ${LOCALE_META[locale].label}.${contextSection}${memorySection}
 
-Retorne APENAS JSON:
-{"intent":"...","period":{"from":"YYYY-MM-DD","to":"YYYY-MM-DD"},"groupName":"...","categoryName":"...","accountName":"...","searchText":"...","transactionType":"INCOME|EXPENSE|TRANSFER","status":"PAID|PENDING|OVERDUE|SCHEDULED","date":"YYYY-MM-DD","limit":N}
+TODAS as chaves são obrigatórias: preencha null no que não se aplicar (nunca omita).
+Datas (period.from/period.to/date) sempre no formato YYYY-MM-DD.
 
 Intents disponíveis:
 - financial_summary: resumo do período ("resumo do mês", "total de entradas", "quanto economizei", "balanço")
@@ -193,7 +219,7 @@ Regras de período:
 - "DEZ/25" → from:"2025-12-01", to:"2025-12-31"
 - "Novembro de 25" → from:"2025-11-01", to:"2025-11-30"
 - "janeiro" sem ano → use o ano mais recente plausível dado o contexto
-- Sem período informado → omita o campo period
+- Sem período informado → period: null
 - Use o contexto recente para inferir "esse período", "o mesmo mês" etc.
 
 Regras de categorias e grupos:
@@ -210,28 +236,23 @@ Regras de busca literal:
 - Se a pergunta for "e em dezembro?", reaproveite searchText e filtros da memória persistente, alterando apenas o período.
 - "quanto gastei" implica transactionType:"EXPENSE".
 - Em "quanto gastei em/com/no/na/de X", use X como searchText literal quando X não for apenas período.
-- "quanto recebi" implica transactionType:"INCOME".
+- "quanto recebi" implica transactionType:"INCOME".`
 
-Retorne APENAS o JSON, sem texto, sem markdown.`
-
-  const models = getLlmModels()
-  let lastError: unknown
-
-  for (const model of models) {
-    try {
-      const result = await generateText({
-        model,
-        system: systemPrompt,
-        prompt: query,
-        maxOutputTokens: 200,
-      })
-      return normalizeExpenseQuery(query, parseClassification(result.text))
-    } catch (e) {
-      lastError = e
-      console.warn("Classifier model failed, trying next:", e)
-    }
+  try {
+    const object = await aiGenerateObject({
+      tier: "fast",
+      schema: classificationSchema,
+      system: systemPrompt,
+      prompt: query,
+      maxOutputTokens: 300,
+    })
+    return normalizeExpenseQuery(query, toClassifiedQuery(object))
+  } catch (e) {
+    // Teto estourado e IA não configurada sobem para o canal AVISAR o que houve —
+    // degradar para "não entendi" faria o bot fingir burrice a cada mensagem, sem
+    // ninguém descobrir que falta a chave. O resto degrada como antes.
+    if (e instanceof AiBudgetExceededError || e instanceof AiNotConfiguredError) throw e
+    console.error("Query classifier failed:", e)
+    return { intent: "unknown" }
   }
-
-  console.error("Query classifier failed:", lastError)
-  return { intent: "unknown" }
 }

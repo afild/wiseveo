@@ -184,6 +184,17 @@
       "userApproved": "Usuario aprobado con éxito.",
       "userRemoved": "Usuario quitado."
     },
+    "aiSettings": {
+      "invalidBudget": "Tope inválido. Usa un número mayor o igual a cero, o déjalo vacío para sin tope.",
+      "invalidModels": "Elige proveedor y modelo para los dos niveles.",
+      "invalidPayload": "Solicitud inválida.",
+      "invalidProvider": "Proveedor desconocido.",
+      "invalidUrl": "Dirección inválida. Usa http:// o https://.",
+      "notPrepared": "Antes de guardar claves de IA, prepara tu base de datos aquí en Integraciones.",
+      "providerNotConfigured": "Pega la clave de ese proveedor antes de elegirlo como modelo.",
+      "testFailed": "La prueba falló: {message}",
+      "testNeedsModel": "Escribe el id del modelo en uno de los niveles de abajo antes de probar este proveedor."
+    },
     "auth": {
       "allFieldsRequired": "Todos los campos son obligatorios",
       "emailAlreadyRegistered": "Ese correo ya está registrado",
@@ -1597,6 +1608,41 @@
       "unavailableFeatures": "Registre al menos un banco activo y un estado en la base de datos para habilitar esta función global."
     },
     "integrations": {
+      "ai": {
+        "baseUrlLabel": "Dirección del servidor compatible",
+        "budgetHint": "Vacío = sin tope; cero pausa la IA. Al llegar al tope, la IA pausa hasta que cambie el mes y el bot avisa.",
+        "budgetLabel": "Tope mensual de gasto (US$)",
+        "budgetPlaceholder": "ej.: 10",
+        "desc": "Lo que entiende y analiza tus preguntas (en Telegram hoy; Advisor y boletines pronto). Las claves se guardan cifradas en tu base de datos.",
+        "error": "No se pudo completar. Inténtalo de nuevo.",
+        "fastDesc": "Entiende y clasifica las preguntas — corre todo el tiempo, debe ser barato.",
+        "fastLabel": "Modelo económico",
+        "invalidBudget": "Tope inválido: usa un número mayor o igual a cero, o déjalo vacío.",
+        "keyLabel": "Clave del proveedor",
+        "keyPlaceholder": "pega la clave de API",
+        "keyRemoved": "Clave eliminada.",
+        "keySaved": "Clave guardada con seguridad.",
+        "modelPlaceholder": "id del modelo",
+        "modelsIncomplete": "Tope guardado. Los modelos NO se cambiaron: elige un proveedor con clave y escribe el id del modelo en los dos niveles.",
+        "modelsTitle": "Los dos niveles de modelo",
+        "monthSpend": "Gasto estimado este mes: US$ {amount} ({calls, plural, one {# llamada} other {# llamadas}}).",
+        "needsPrepare": "Prepara la base de datos de arriba para poder guardar las claves con seguridad.",
+        "providerLabel": "Proveedor",
+        "removeKey": "Quitar",
+        "save": "Guardar modelos y tope",
+        "saveKey": "Guardar clave",
+        "saved": "Configuración de IA guardada.",
+        "savedBudgetOnly": "Tope guardado. Los modelos entran cuando haya clave de proveedor.",
+        "saving": "Guardando…",
+        "savingKey": "Guardando…",
+        "smartDesc": "Hace el análisis de verdad — se usa solo cuando la pregunta lo exige.",
+        "smartLabel": "Modelo avanzado",
+        "sourceEnv": "definido en las variables del hosting",
+        "test": "Probar",
+        "testOk": "Funcionó: {model} respondió en {ms} ms.",
+        "testing": "Probando…",
+        "title": "Inteligencia artificial"
+      },
       "bot": {
         "autoNote": "Al conectar, WISEVEO verifica el token con Telegram y hace el resto de la configuración por su cuenta.",
         "connect": "Conectar bot",
@@ -1622,11 +1668,12 @@
       },
       "prepare": {
         "confirm": "Sí, adelante",
-        "confirmDesc": "WISEVEO va a agregar a tu base de datos la tabla de arriba. Nada de lo existente se modifica, y ocurre ahora solo porque tú lo pediste.",
+        "confirmDesc": "WISEVEO va a agregar a tu base de datos las tablas de arriba. Nada de lo existente se modifica, y ocurre ahora solo porque tú lo pediste.",
         "confirmTitle": "¿Preparar la base de datos para las integraciones?",
-        "desc": "Para guardar el token del bot (y, más adelante, claves de IA) con seguridad, tu base de datos necesita una pieza que aún no tiene.",
+        "desc": "Para guardar el token del bot y las claves de IA con seguridad — y medir el gasto de IA —, tu base de datos necesita piezas que aún no tiene.",
         "error": "No se pudo preparar la base de datos.",
         "pieceTable": "una tabla “app_settings”, con los secretos de las integraciones — guardados cifrados",
+        "pieceUsage": "una tabla “ai_usage”, con el consumo de IA por mes — para el tope de gasto",
         "prepare": "Preparar mi base de datos",
         "preparing": "Preparando…",
         "readyTitle": "Base de datos lista para las integraciones",
@@ -2136,6 +2183,8 @@
   },
   "telegram": {
     "bot": {
+      "aiNotConfigured": "La inteligencia artificial todavía no está configurada en esta instalación, así que no puedo entender preguntas. Pide a quien la administra que registre una clave en Configuración → Integraciones.",
+      "budgetExceeded": "Se alcanzó el límite mensual de gasto de IA de esta instalación. Volveré a responder cuando cambie el mes — o pide a quien la administra que ajuste el tope en Configuración → Integraciones.",
       "cardFormatError": "Lo siento, no pude procesar tu solicitud en este momento.",
       "connected": "Cuenta de WISEVEO conectada con éxito. Ya puedes hacerme preguntas sobre tus finanzas.",
       "genericError": "Lo siento, ocurrió un error técnico al procesar tu pregunta.",

@@ -184,6 +184,17 @@
       "userApproved": "Usuário aprovado com sucesso.",
       "userRemoved": "Usuário removido."
     },
+    "aiSettings": {
+      "invalidBudget": "Teto inválido. Use um número maior ou igual a zero, ou deixe vazio para sem teto.",
+      "invalidModels": "Escolha provedor e modelo para os dois níveis.",
+      "invalidPayload": "Pedido inválido.",
+      "invalidProvider": "Provedor desconhecido.",
+      "invalidUrl": "Endereço inválido. Use http:// ou https://.",
+      "notPrepared": "Antes de guardar chaves de IA, prepare o seu banco aqui em Integrações.",
+      "providerNotConfigured": "Cole a chave desse provedor antes de escolhê-lo como modelo.",
+      "testFailed": "O teste falhou: {message}",
+      "testNeedsModel": "Escreva o id do modelo em um dos níveis abaixo antes de testar este provedor."
+    },
     "auth": {
       "allFieldsRequired": "Todos os campos são obrigatórios",
       "emailAlreadyRegistered": "Esse email já foi registrado",
@@ -1597,6 +1608,41 @@
       "unavailableFeatures": "Cadastre pelo menos um banco ativo e um status no banco de dados para habilitar este recurso global."
     },
     "integrations": {
+      "ai": {
+        "baseUrlLabel": "Endereço do servidor compatível",
+        "budgetHint": "Vazio = sem teto; zero pausa a IA. Ao bater o teto, a IA pausa até o mês virar e o bot avisa.",
+        "budgetLabel": "Teto mensal de gasto (US$)",
+        "budgetPlaceholder": "ex.: 10",
+        "desc": "Quem entende e analisa as suas perguntas (no Telegram hoje; Advisor e boletins em breve). As chaves ficam cifradas no seu banco.",
+        "error": "Não foi possível concluir. Tente de novo.",
+        "fastDesc": "Entende e classifica as perguntas — roda toda hora, precisa ser barato.",
+        "fastLabel": "Modelo econômico",
+        "invalidBudget": "Teto inválido: use um número maior ou igual a zero, ou deixe vazio.",
+        "keyLabel": "Chave do provedor",
+        "keyPlaceholder": "cole a chave de API",
+        "keyRemoved": "Chave removida.",
+        "keySaved": "Chave guardada com segurança.",
+        "modelPlaceholder": "id do modelo",
+        "modelsIncomplete": "Teto salvo. Os modelos NÃO foram alterados: escolha um provedor com chave e escreva o id do modelo nos dois níveis.",
+        "modelsTitle": "Os dois níveis de modelo",
+        "monthSpend": "Gasto estimado neste mês: US$ {amount} ({calls, plural, one {# chamada} other {# chamadas}}).",
+        "needsPrepare": "Prepare o banco acima para poder guardar as chaves com segurança.",
+        "providerLabel": "Provedor",
+        "removeKey": "Remover",
+        "save": "Salvar modelos e teto",
+        "saveKey": "Salvar chave",
+        "saved": "Configuração de IA salva.",
+        "savedBudgetOnly": "Teto salvo. Os modelos entram quando houver chave de provedor.",
+        "saving": "Salvando…",
+        "savingKey": "Salvando…",
+        "smartDesc": "Faz as análises de verdade — usado só quando a pergunta exige.",
+        "smartLabel": "Modelo avançado",
+        "sourceEnv": "definido nas variáveis da hospedagem",
+        "test": "Testar",
+        "testOk": "Funcionou: {model} respondeu em {ms} ms.",
+        "testing": "Testando…",
+        "title": "Inteligência artificial"
+      },
       "bot": {
         "autoNote": "Ao conectar, o WISEVEO confere o token com o Telegram e faz o resto da configuração sozinho.",
         "connect": "Conectar bot",
@@ -1622,11 +1668,12 @@
       },
       "prepare": {
         "confirm": "Sim, pode preparar",
-        "confirmDesc": "O WISEVEO vai acrescentar ao seu banco a tabela acima. Nada existente é alterado, e só acontece agora porque você mandou.",
+        "confirmDesc": "O WISEVEO vai acrescentar ao seu banco as tabelas acima. Nada existente é alterado, e só acontece agora porque você mandou.",
         "confirmTitle": "Preparar o banco para as integrações?",
-        "desc": "Para guardar o token do bot (e, adiante, chaves de IA) com segurança, o seu banco precisa de uma peça que ele ainda não tem.",
+        "desc": "Para guardar o token do bot e as chaves de IA com segurança — e medir o gasto com IA —, o seu banco precisa de peças que ele ainda não tem.",
         "error": "Não foi possível preparar o banco.",
         "pieceTable": "uma tabela “app_settings”, com os segredos das integrações — gravados cifrados",
+        "pieceUsage": "uma tabela “ai_usage”, com o consumo de IA por mês — para o teto de gasto",
         "prepare": "Preparar meu banco",
         "preparing": "Preparando…",
         "readyTitle": "Banco pronto para as integrações",
@@ -2136,6 +2183,8 @@
   },
   "telegram": {
     "bot": {
+      "aiNotConfigured": "A inteligência artificial ainda não foi configurada nesta instalação, então não consigo entender perguntas. Peça a quem administra para cadastrar uma chave em Configurações → Integrações.",
+      "budgetExceeded": "O limite mensal de gasto com IA desta instalação foi atingido. Volto a responder quando o mês virar — ou peça a quem administra para ajustar o teto em Configurações → Integrações.",
       "cardFormatError": "Desculpe, não consegui processar sua solicitação no momento.",
       "connected": "Conta WISEVEO conectada com sucesso. Você já pode me fazer perguntas sobre suas finanças.",
       "genericError": "Desculpe, ocorreu um erro técnico ao processar sua pergunta.",

@@ -15,6 +15,8 @@ import {
   sendTelegramPhoto,
 } from "./bot.service"
 import { getConversationMemory, recordTelegramInteraction } from "./conversation-history.service"
+import { AiBudgetExceededError } from "@/features/ai/services/ai-usage.service"
+import { AiNotConfiguredError } from "@/features/ai/services/llm.service"
 import { classifyQuery } from "./query-classifier.service"
 import { dispatchQuery } from "./tool-dispatcher.service"
 import { formatCard } from "./card-formatter.service"
@@ -217,11 +219,21 @@ export async function handleTelegramUpdate(update: TelegramWebhookUpdate) {
   try {
     await handleFinancialQuestion(chatId, text)
   } catch (error) {
-    console.error("Telegram message processing error", error)
     const t = await getTranslations({
       locale: await resolveTelegramLocale(chatId),
       namespace: "telegram",
     })
+    // Teto mensal batido ou IA sem chave: aviso claro do QUE houve, não um
+    // "erro técnico" nem um "não entendi" que esconderia a falta de configuração.
+    if (error instanceof AiBudgetExceededError) {
+      await sendTelegramMessage(chatId, t("bot.budgetExceeded"))
+      return
+    }
+    if (error instanceof AiNotConfiguredError) {
+      await sendTelegramMessage(chatId, t("bot.aiNotConfigured"))
+      return
+    }
+    console.error("Telegram message processing error", error)
     await sendTelegramMessage(chatId, t("bot.genericError"))
   }
 }

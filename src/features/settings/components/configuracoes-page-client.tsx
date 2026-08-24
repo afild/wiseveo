@@ -18,6 +18,7 @@ import { ProfileForm } from "./profile-form"
 import { AccountForm } from "./account-form"
 import { AdminUsersForm } from "./admin-users-form"
 import { IntegrationsForm, type TelegramBotSummary } from "./integrations-form"
+import type { AiSettingsSnapshot } from "./ai-settings-card"
 import type { AppSettingsStructure } from "../lib/app-settings-structure"
 import { PartyPopper } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -29,10 +30,11 @@ interface ConfiguracoesPageClientProps {
   quickPaymentOptions: QuickPaymentOptions
   initialMonetarySettings: MonetarySettings
   initialAdminUsers: AdminUserSummary[]
-  /** Aba Integrações (só SUPERADMIN, fora da demo): bot do Telegram + preparo do banco. */
+  /** Aba Integrações (só SUPERADMIN, fora da demo): preparo do banco + bot + IA. */
   integrationsContext?: {
     structure: AppSettingsStructure | null
     bot: TelegramBotSummary
+    ai: AiSettingsSnapshot | null
   }
   /** Contexto da aba Usuários (só quando isAdmin). */
   adminContext?: {
@@ -134,6 +136,7 @@ export function ConfiguracoesPageClient({
               <IntegrationsForm
                 initialStructure={integrationsContext.structure}
                 initialBot={integrationsContext.bot}
+                initialAi={integrationsContext.ai}
               />
             </div>
           </TabsContent>

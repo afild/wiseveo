@@ -53,8 +53,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, code: "invalidToken", message: t("invalidToken") }, { status: 400 })
     }
 
+    // O bot precisa só da tabela de SEGREDOS — a do medidor de IA não entra nisto.
     const structure = await readAppSettingsStructure()
-    if (!structure.ready) {
+    if (!structure.secretsReady) {
       return NextResponse.json({ success: false, code: "notPrepared", message: t("notPrepared") }, { status: 409 })
     }
 

@@ -368,3 +368,21 @@ model AppSetting {
 
   @@map("app_settings")
 }
+
+/// Consumo de IA por mês/provedor/modelo — alimenta o teto mensal de gasto.
+/// Nasce junto com `app_settings` (mesmo "Preparar meu banco"); todo acesso passa
+/// por ai-usage-service.ts, que tolera a tabela ausente (P2021 → não conta, não
+/// bloqueia). Custo em MICRO-dólares (inteiro) para somar sem erro de vírgula.
+model AiUsage {
+  period       String   @db.Char(6)
+  provider     String
+  model        String
+  calls        Int      @default(0)
+  inputTokens  BigInt   @default(0) @map("input_tokens")
+  outputTokens BigInt   @default(0) @map("output_tokens")
+  costMicroUsd BigInt   @default(0) @map("cost_micro_usd")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@id([period, provider, model])
+  @@map("ai_usage")
+}

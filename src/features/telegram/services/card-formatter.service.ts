@@ -1,40 +1,57 @@
-import { generateText } from "ai"
-import { getLlmModels } from "./llm-models"
+import { z } from "zod"
+import { aiGenerateObject, AiNotConfiguredError } from "@/features/ai/services/llm.service"
+import { AiBudgetExceededError } from "@/features/ai/services/ai-usage.service"
 import { LOCALE_META, type AppLocale } from "@/i18n/config"
 import type { ClassifiedQuery } from "./query-classifier.service"
 import type { DispatchResult } from "./tool-dispatcher.service"
 import type { CardData, TelegramTranslator } from "../types/telegram.types"
 import type { TransactionSearchResult } from "./transaction-search.service"
 
-function parseCardData(text: string, t: TelegramTranslator): CardData {
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) {
-    return { type: "error", headline: t("cards.couldNotAnswer"), insight: t("cardFormatter.parseError") }
-  }
+// Saída ESTRUTURADA (generateObject): o modelo devolve o card já neste formato —
+// fim do "caçar JSON com regex" que quebrava em silêncio ao trocar de modelo.
+//
+// `nullable` e NÃO `optional`: o modo estrito de saída estruturada da OpenAI (ligado
+// por padrão) exige que TODA chave apareça na lista de obrigatórias — campo opcional
+// vira esquema recusado e nenhum card sai. Nulo é o "não informado".
+export const cardSchema = z.object({
+  type: z.enum(["summary", "list", "category", "comparison", "single-value", "error"]),
+  eyebrow: z.string().nullable(),
+  headline: z.string(),
+  value: z.string().nullable(),
+  trend: z.string().nullable(),
+  insight: z.string().nullable(),
+  progress: z.number().nullable(),
+  items: z
+    .array(
+      z.object({
+        label: z.string(),
+        value: z.string(),
+        detail: z.string().nullable(),
+        progress: z.number().nullable(),
+        tone: z.enum(["default", "positive", "negative", "warning"]).nullable(),
+      }),
+    )
+    .nullable(),
+})
 
-  try {
-    const parsed = JSON.parse(jsonMatch[0]) as Partial<CardData>
-    const validTypes = ["summary", "list", "category", "comparison", "single-value", "error"]
-    const type = validTypes.includes(parsed.type ?? "") ? parsed.type! : "summary"
+const orUndefined = <T,>(value: T | null): T | undefined => value ?? undefined
 
-    return {
-      type,
-      eyebrow: parsed.eyebrow,
-      headline: parsed.headline || "WISEVEO",
-      value: parsed.value,
-      trend: parsed.trend,
-      insight: parsed.insight,
-      progress: parsed.progress,
-      items: parsed.items?.slice(0, 5).map((item) => ({
-        label: item.label,
-        value: item.value,
-        detail: item.detail,
-        progress: item.progress,
-        tone: item.tone,
-      })),
-    }
-  } catch {
-    return { type: "error", headline: t("cards.couldNotAnswer"), insight: t("cardFormatter.processError") }
+function normalizeCard(parsed: z.infer<typeof cardSchema>): CardData {
+  return {
+    type: parsed.type,
+    headline: parsed.headline || "WISEVEO",
+    eyebrow: orUndefined(parsed.eyebrow),
+    value: orUndefined(parsed.value),
+    trend: orUndefined(parsed.trend),
+    insight: orUndefined(parsed.insight),
+    progress: orUndefined(parsed.progress),
+    items: parsed.items?.slice(0, 5).map((item) => ({
+      label: item.label,
+      value: item.value,
+      detail: orUndefined(item.detail),
+      progress: orUndefined(item.progress),
+      tone: orUndefined(item.tone),
+    })),
   }
 }
 
@@ -173,15 +190,17 @@ export async function formatCard(
   const systemPrompt = `Você é um formatador de cards financeiros de ALTA PERFORMANCE para o bot Telegram do WISEVEO.
 Sua missão é transformar dados crus em cards elegantes, inteligentes e úteis.
 
-FORMATO JSON:
+FORMATO JSON (TODAS as chaves são obrigatórias — use null no que não se aplicar,
+nunca omita uma chave; o mesmo vale para as chaves de cada item):
 {
-  "type": "summary"|"list"|"category"|"single-value"|"error",
-  "eyebrow": "período ou contexto curto (ex: Janeiro 2026)",
+  "type": "summary"|"list"|"category"|"comparison"|"single-value"|"error",
+  "eyebrow": "período ou contexto curto (ex: Janeiro 2026) ou null",
   "headline": "título descritivo curto e elegante",
-  "value": "valor principal formatado (use campos formatted*)",
-  "trend": "texto curto de tendência ou comparativo (opcional)",
-  "insight": "DICA: Um insight curto e inteligente sobre os dados (ex: 'Representa 12% da sua renda', '3 ida(s) ao mercado este mês')",
-  "items": [{"label":"...","value":"...","detail":"...","tone":"positive"|"negative"|"default"|"warning"}]
+  "value": "valor principal formatado (use campos formatted*) ou null",
+  "trend": "texto curto de tendência ou comparativo, ou null",
+  "insight": "DICA: Um insight curto e inteligente sobre os dados (ex: 'Representa 12% da sua renda', '3 ida(s) ao mercado este mês') ou null",
+  "progress": 0-100 ou null,
+  "items": [{"label":"...","value":"...","detail":"..."|null,"progress":0-100|null,"tone":"positive"|"negative"|"default"|"warning"|null}] ou null
 }
 
 REGRAS DE OURO:
@@ -202,24 +221,20 @@ Pergunta: "${originalQuery}"
 Responda SEMPRE em ${LOCALE_META[locale].label} (idioma do usuário) — inclusive headline, eyebrow, trend, insight e labels dos items.`
 
   const dataStr = JSON.stringify(dispatched.data, null, 2)
-  const models = getLlmModels()
-  let lastError: unknown
 
-  for (const model of models) {
-    try {
-      const result = await generateText({
-        model,
-        system: systemPrompt,
-        prompt: `Dados:\n${dataStr}`,
-        maxOutputTokens: 600,
-      })
-      return parseCardData(result.text, t)
-    } catch (e) {
-      lastError = e
-      console.warn("Card formatter model failed, trying next:", e)
-    }
+  try {
+    const parsed = await aiGenerateObject({
+      tier: "fast",
+      schema: cardSchema,
+      system: systemPrompt,
+      prompt: `Dados:\n${dataStr}`,
+      maxOutputTokens: 600,
+    })
+    return normalizeCard(parsed)
+  } catch (e) {
+    // Teto estourado e IA não configurada sobem para o canal AVISAR; o resto degrada.
+    if (e instanceof AiBudgetExceededError || e instanceof AiNotConfiguredError) throw e
+    console.error("Card formatter failed:", e)
+    return { type: "error", headline: t("cards.couldNotAnswer"), insight: t("cardFormatter.parseError") }
   }
-
-  console.error("Card formatter failed:", lastError)
-  return { type: "error", headline: t("cards.couldNotAnswer"), insight: t("cardFormatter.parseError") }
 }

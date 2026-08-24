@@ -13,6 +13,8 @@ import {
 import { readSharedAccountStructure } from "@/features/settings/services/shared-account-service"
 import { readAppSettingsStructure } from "@/features/settings/services/app-settings-service"
 import { getTelegramBotStatus } from "@/features/telegram/services/telegram-config.service"
+import { getAiStatusSummary } from "@/features/ai/services/ai-config.service"
+import { getMonthUsage } from "@/features/ai/services/ai-usage.service"
 import { getAccountOwnership } from "@/features/settings/services/admin-users-service"
 import { listPendingInvitations } from "@/features/settings/services/invitations-service"
 import { defaultMonetarySettings } from "@/lib/monetary"
@@ -60,12 +62,14 @@ export default async function ConfiguracoesPage({
   // SUPERADMIN vê a aba; na demo ela não existe, como os convites.
   const showIntegrations =
     currentUser?.role === "SUPERADMIN" && process.env.NEXT_PUBLIC_DEMO_MODE !== "true"
-  const [appSettings, telegramBot] = showIntegrations
+  const [appSettings, telegramBot, aiSummary, aiUsage] = showIntegrations
     ? await Promise.all([
         readAppSettingsStructure().catch(() => null),
         getTelegramBotStatus().catch(() => null),
+        getAiStatusSummary().catch(() => null),
+        getMonthUsage().catch(() => null),
       ])
-    : [null, null]
+    : [null, null, null, null]
 
   const validTabs: string[] = [
     ...baseTabs,
@@ -84,6 +88,16 @@ export default async function ConfiguracoesPage({
           ? {
               structure: appSettings,
               bot: telegramBot ?? { configured: false, source: null, botUsername: null },
+              ai:
+                aiSummary && aiUsage
+                  ? {
+                      providers: aiSummary.providers,
+                      compatibleBaseUrl: aiSummary.compatibleBaseUrl,
+                      models: aiSummary.models,
+                      budget: aiSummary.budget,
+                      usage: { period: aiUsage.period, calls: aiUsage.calls, costUsd: aiUsage.costUsd },
+                    }
+                  : null,
             }
           : undefined
       }

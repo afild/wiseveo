@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Bot, CheckCircle2, Database, Loader2, Unplug } from "lucide-react"
 import type { AppSettingsStructure } from "../lib/app-settings-structure"
+import { AiSettingsCard, type AiSettingsSnapshot } from "./ai-settings-card"
 
 export interface TelegramBotSummary {
   configured: boolean
@@ -36,6 +37,8 @@ interface IntegrationsFormProps {
   /** null = leitura falhou no servidor; o preparo continua disponível e explica. */
   initialStructure: AppSettingsStructure | null
   initialBot: TelegramBotSummary
+  /** null = leitura falhou; o cartão de IA fica de fora nesta visita. */
+  initialAi: AiSettingsSnapshot | null
 }
 
 /**
@@ -45,7 +48,7 @@ interface IntegrationsFormProps {
  * token": o app valida, gera o segredo e registra o webhook sozinho).
  * O VÍNCULO de cada pessoa continua em Conta → Telegram — aqui é o bot da casa.
  */
-export function IntegrationsForm({ initialStructure, initialBot }: IntegrationsFormProps) {
+export function IntegrationsForm({ initialStructure, initialBot, initialAi }: IntegrationsFormProps) {
   const t = useTranslations("settings.integrations")
   const tCommon = useTranslations("common")
   const [structure, setStructure] = React.useState(initialStructure)
@@ -57,7 +60,10 @@ export function IntegrationsForm({ initialStructure, initialBot }: IntegrationsF
   const [confirmDisconnect, setConfirmDisconnect] = React.useState(false)
   const [disconnecting, setDisconnecting] = React.useState(false)
 
+  // "Tudo pronto" decide o cartão de preparar; guardar token/chave depende só da
+  // tabela de segredos (o medidor de IA pode faltar sem travar nada).
   const ready = structure?.ready === true
+  const secretsReady = structure?.secretsReady === true
 
   async function prepare() {
     setPreparing(true)
@@ -128,10 +134,12 @@ export function IntegrationsForm({ initialStructure, initialBot }: IntegrationsF
           </CardHeader>
           <CardContent className="space-y-3">
             <ul className="space-y-1.5 text-sm">
-              <li className="flex items-start gap-2">
-                <Database className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                <span>{t("prepare.pieceTable")}</span>
-              </li>
+              {(structure?.missing ?? ["app_settings", "ai_usage"]).map((table) => (
+                <li key={table} className="flex items-start gap-2">
+                  <Database className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                  <span>{table === "ai_usage" ? t("prepare.pieceUsage") : t("prepare.pieceTable")}</span>
+                </li>
+              ))}
             </ul>
             <p className="rounded-lg border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
               {t("prepare.safety")}
@@ -175,7 +183,7 @@ export function IntegrationsForm({ initialStructure, initialBot }: IntegrationsF
             </div>
           )}
 
-          {!ready ? (
+          {!secretsReady ? (
             <p className="text-sm text-muted-foreground">{t("bot.needsPrepare")}</p>
           ) : (
             <>
@@ -240,6 +248,8 @@ export function IntegrationsForm({ initialStructure, initialBot }: IntegrationsF
           <p className="text-xs text-muted-foreground">{t("bot.personalHint")}</p>
         </CardContent>
       </Card>
+
+      {initialAi && <AiSettingsCard structureReady={secretsReady} initial={initialAi} />}
 
       <AlertDialog open={confirmPrepare} onOpenChange={(open) => !open && setConfirmPrepare(false)}>
         <AlertDialogContent>

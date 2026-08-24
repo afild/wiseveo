@@ -18,6 +18,7 @@ import { canAccessSetup } from "@/lib/setup-access"
 import { clearSetupIdentityCookie, decodeSetupIdentity, SETUP_IDENTITY_COOKIE } from "@/lib/setup-identity"
 import { redactConnectionUrl } from "@/features/setup/lib/connection-url"
 import { encryptSecret, futureSecretsSource } from "@/lib/secret-cipher"
+import { aiKeySettingName } from "@/features/ai/services/ai-config.service"
 import {
   fetchBotIdentity,
   isValidBotTokenFormat,
@@ -217,6 +218,24 @@ export async function POST(req: Request) {
           telegramResult = await connectTelegramDuringSetup(client, botToken, databaseUrl, req)
         }
       }
+
+      // Chave OpenAI do wizard: em banco NOVO vai CIFRADA para `app_settings`
+      // (mesmo cofre do Telegram) — nada de variável no painel. Banco existente
+      // segue no caminho antigo (env), pela regra de ouro: estrutura intocada.
+      const openaiKey = typeof integrations?.openai?.apiKey === "string" ? integrations.openai.apiKey.trim() : ""
+      if (integrations?.openai?.enabled && openaiKey && !existingSchema) {
+        try {
+          const settingKey = aiKeySettingName("openai")
+          const value = encryptSecret(openaiKey, futureSecretsSource(databaseUrl))
+          await client.appSetting.upsert({
+            where: { key: settingKey },
+            create: { key: settingKey, value },
+            update: { value },
+          })
+        } catch (e) {
+          console.error("[SETUP] OpenAI key storage skipped:", e instanceof Error ? e.message : String(e))
+        }
+      }
     } catch (e: any) {
       console.error("[SETUP] Error creating user/data:", redact(e?.message ?? e))
       return NextResponse.json(
@@ -244,9 +263,10 @@ export async function POST(req: Request) {
       envVars.push({ key: "GOOGLE_CLIENT_ID", value: String(integrations.google.clientId ?? "") })
       envVars.push({ key: "GOOGLE_CLIENT_SECRET", value: String(integrations.google.clientSecret ?? "") })
     }
-    // Telegram não entra mais nas variáveis: o token vive cifrado no banco
-    // (`app_settings`), gravado acima — nada novo para colar no painel.
-    if (integrations?.openai?.enabled) {
+    // Telegram e OpenAI não entram mais nas variáveis em banco novo: vivem
+    // cifrados em `app_settings`, gravados acima. Banco existente (estrutura
+    // intocada no setup) ainda recebe a chave OpenAI pelo caminho antigo.
+    if (integrations?.openai?.enabled && existingSchema) {
       envVars.push({ key: "OPENAI_API_KEY", value: String(integrations.openai.apiKey ?? "") })
     }
 

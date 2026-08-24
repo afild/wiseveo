@@ -1,5 +1,4 @@
-import { generateText } from "ai"
-import { getLlmModels } from "./llm-models"
+import { aiGenerateText } from "@/features/ai/services/llm.service"
 import { LOCALE_META, type AppLocale } from "@/i18n/config"
 import type { ClassifiedQuery } from "./query-classifier.service"
 import type { DispatchResult } from "./tool-dispatcher.service"
@@ -10,12 +9,11 @@ export async function generateAnalystResponse(
   dispatched: DispatchResult,
   locale: AppLocale,
 ): Promise<string> {
-  const [model] = getLlmModels()
-
   const dataStr = JSON.stringify(dispatched.data, null, 2)
 
-  const { text } = await generateText({
-    model,
+  // Análise de verdade usa o nível AVANÇADO (o econômico fica para classificar).
+  const { text } = await aiGenerateText({
+    tier: "smart",
     // LLM system-prompt instructions (content, not UI copy); output language
     // is enforced via the "Responda SEMPRE em" directive below. i18n-ignore
     system: `Você é um Analista Financeiro Senior do WISEVEO.
