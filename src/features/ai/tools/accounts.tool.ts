@@ -3,9 +3,9 @@ import { z } from "zod"
 import { getAccountsWithBalance } from "@/features/accounts/services/get-accounts"
 import { parseToolDate } from "./tool-utils"
 import { endOfUTCDay } from "@/lib/financial"
-import type { TelegramToolContext } from "../types/telegram.types"
+import type { AgentToolContext } from "@/features/ai/types/agent.types"
 
-export function createAccountBalancesTool(userId: string, ctx: TelegramToolContext) {
+export function createAccountBalancesTool(userId: string, ctx: AgentToolContext) {
   return tool({
     // Tool metadata below (description/describe) is an LLM function-calling
     // definition, not UI copy — kept in Portuguese and i18n-ignored throughout.

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { unpaidStatusFilter } from "@/lib/paid-status"
 
 export interface UpcomingTransactionItem {
   id: string
@@ -54,15 +55,7 @@ export async function getUpcomingTransactions(
       userId,
       type: { in: ["INCOME", "EXPENSE"] },
       date: { gte: start, lte: to },
-      NOT: {
-        OR: [
-          { statusLookup: { is: { name: { equals: "PAGO", mode: "insensitive" } } } },
-          { statusLookup: { is: { name: { equals: "PAID", mode: "insensitive" } } } },
-          { statusLookup: { is: { name: { equals: "PAGA", mode: "insensitive" } } } },
-          { statusLookup: { is: { name: { equals: "REALIZADO", mode: "insensitive" } } } },
-          { statusLookup: { is: { name: { equals: "QUITADO", mode: "insensitive" } } } },
-        ],
-      },
+      ...unpaidStatusFilter(),
     },
     orderBy: [{ date: "asc" }, { createdAt: "asc" }],
     take,

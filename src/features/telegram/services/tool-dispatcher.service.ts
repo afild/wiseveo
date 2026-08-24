@@ -1,7 +1,7 @@
 import { getTransactions } from "@/features/transactions/services/get-transactions"
 import {
   endOfCurrentMonthUtc,
-} from "../tools/tool-utils"
+} from "@/features/ai/tools/tool-utils"
 import { startOfUTCDay, endOfUTCDay } from "@/lib/financial"
 import type { ClassifiedQuery } from "./query-classifier.service"
 import { searchTransactions, includesLiteralSearch } from "./transaction-search.service"
@@ -112,81 +112,6 @@ async function groupByPayee(
   }
 }
 
-async function financialAnalysis(
-  userId: string,
-  classified: ClassifiedQuery,
-  ctx: TelegramToolContext,
-): Promise<DispatchResult> {
-  const { from, to } = await resolveRange(userId, classified)
-  const { transactions } = await getTransactions({ userId, from, to })
-
-  const filtered = transactions.filter((t) => {
-    // Usamos a mesma lógica de filtragem robusta e cumulativa do groupByPayee
-    if (classified.searchText) {
-      const q = classified.searchText
-      const matchesSearch = 
-        includesLiteralSearch(t.category.name, q) ||
-        includesLiteralSearch(t.category.group.name, q) ||
-        includesLiteralSearch(t.payee?.name, q) ||
-        includesLiteralSearch(t.description, q) ||
-        includesLiteralSearch(t.note, q) ||
-        includesLiteralSearch(t.reference, q)
-      if (!matchesSearch) return false
-    }
-
-    if (classified.categoryName) {
-      const catMatch = includesLiteralSearch(t.category.name, classified.categoryName)
-      if (!catMatch && !classified.searchText) return false
-    }
-
-    if (classified.groupName && !includesLiteralSearch(t.category.group.name, classified.groupName)) return false
-
-    if (classified.transactionType) {
-      const typeMatch = t.type.toUpperCase() === classified.transactionType.toUpperCase()
-      if (!typeMatch && !classified.searchText) return false
-    }
-
-    return true
-  })
-
-  const monthlyData = new Map<string, { month: string; year: number; total: number; count: number }>()
-
-  for (const t of filtered) {
-    const date = new Date(t.date)
-    const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`
-    const existing = monthlyData.get(key) ?? {
-      month: String(date.getUTCMonth() + 1).padStart(2, "0"),
-      year: date.getUTCFullYear(),
-      total: 0,
-      count: 0,
-    }
-    monthlyData.set(key, {
-      ...existing,
-      total: existing.total + t.amount,
-      count: existing.count + 1,
-    })
-  }
-
-  const history = Array.from(monthlyData.values())
-    .sort((a, b) => b.year - a.year || Number(b.month) - Number(a.month))
-    .map(m => ({
-      ...m,
-      formattedTotal: ctx.monetary.formatNumberValue(m.total)
-    }))
-
-  return {
-    intent: "financial_analysis",
-    data: {
-      period: { from: from.toISOString(), to: to.toISOString() },
-      filter:
-        [classified.categoryName, classified.groupName, classified.searchText].filter(Boolean).join(" + ") ||
-        ctx.t("cardFormatter.generalFilter"),
-      totalTransactions: filtered.length,
-      history
-    }
-  }
-}
-
 export async function dispatchQuery(
   userId: string,
   classified: ClassifiedQuery,
@@ -219,8 +144,8 @@ export async function dispatchQuery(
     case "spending_by_payee":
       return groupByPayee(userId, classified, ctx)
 
-    case "financial_analysis":
-      return financialAnalysis(userId, classified, ctx)
+    // "financial_analysis" não chega mais aqui: o agente atende esse caso com as
+    // próprias ferramentas, antes do despacho (message-handler.service.ts).
 
     case "upcoming":
       return {

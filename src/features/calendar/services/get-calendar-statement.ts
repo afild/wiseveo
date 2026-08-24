@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { isPaidStatusName } from "@/lib/paid-status"
 import { safeBalance } from "@/lib/financial"
 import type {
   CalendarDayStatement,
@@ -70,7 +71,11 @@ export async function getCalendarStatement(
     if (!dailyMap.has(key)) dailyMap.set(key, [])
 
     const statusRaw = tx.statusLookup?.name ?? "PENDING"
-    const status = STATUS_MAP[statusRaw.toUpperCase()] ?? "PENDING"
+    // "Pago" pelo critério único do sistema (src/lib/paid-status.ts) — antes,
+    // "Quitado"/"Realizado" viravam PENDENTE aqui e pago nos insights.
+    const status = isPaidStatusName(statusRaw)
+      ? "PAID"
+      : (STATUS_MAP[statusRaw.trim().toUpperCase()] ?? "PENDING")
 
     dailyMap.get(key)!.push({
       id: tx.id,

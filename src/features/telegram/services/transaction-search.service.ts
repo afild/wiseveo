@@ -9,7 +9,7 @@ import {
   normalizeSearch,
   startOfCurrentMonthUtc,
   endOfCurrentMonthUtc,
-} from "../tools/tool-utils"
+} from "@/features/ai/tools/tool-utils"
 import type { TelegramToolContext } from "../types/telegram.types"
 
 type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER"

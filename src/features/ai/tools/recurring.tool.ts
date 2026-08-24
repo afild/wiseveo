@@ -6,9 +6,9 @@ import {
   includesSearch,
   pickTransactionTitle,
 } from "./tool-utils"
-import type { TelegramToolContext } from "../types/telegram.types"
+import type { AgentToolContext } from "@/features/ai/types/agent.types"
 
-export function createRecurringTransactionsTool(userId: string, ctx: TelegramToolContext) {
+export function createRecurringTransactionsTool(userId: string, ctx: AgentToolContext) {
   return tool({
     // Tool metadata below (description/describe) is an LLM function-calling
     // definition, not UI copy — kept in Portuguese and i18n-ignored throughout.

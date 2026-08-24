@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { isPaidStatusName } from "@/lib/paid-status"
 import type { SerializedTransaction, TransactionFilterOptions } from "../types"
 import { Prisma } from "@/generated/prisma_new/client"
 
@@ -13,7 +14,10 @@ type TxType = "INCOME" | "EXPENSE" | "TRANSFER"
 
 function mapLegacyStatus(status: string | null): TxStatus {
   const key = (status ?? "").toUpperCase().trim()
-  if (key === "PAGO" || key === "PAID") return "PAID"
+  // "Pago" pelo critério único do sistema (src/lib/paid-status.ts): antes, um
+  // status chamado "Quitado" ou "Realizado" caía no fim da função e aparecia
+  // como PENDENTE na tabela, embora contasse como pago nos insights.
+  if (isPaidStatusName(key)) return "PAID"
   if (key === "VENCIDO" || key === "OVERDUE") return "OVERDUE"
   if (key === "ABERTO" || key === "SCHEDULED") return "SCHEDULED"
   if (key === "PENDENTE" || key === "PENDING") return "PENDING"

@@ -1,20 +1,15 @@
-import type { getTranslations } from "next-intl/server"
-import type { AppLocale } from "@/i18n/config"
-import type { MonetaryFormatter } from "@/lib/monetary"
+import type { AgentToolContext, AgentTranslator } from "@/features/ai/types/agent.types"
 
 /** Translator bound to the "telegram" namespace, resolved once per incoming
  * message in message-handler.service.ts and threaded down to every service
- * that produces user-visible text (single resolution point — see CLAUDE.md). */
-export type TelegramTranslator = Awaited<ReturnType<typeof getTranslations<"telegram">>>
+ * that produces user-visible text (single resolution point — see CLAUDE.md).
+ * A definição vive na camada de IA: as mesmas ferramentas servem outros canais. */
+export type TelegramTranslator = AgentTranslator
 
 /** Per-request context (locale-aware translator, UI locale, and the user's
  * monetary formatting preference) threaded through the tool-dispatch chain so
  * every service/tool can produce localized text without re-resolving it. */
-export interface TelegramToolContext {
-  t: TelegramTranslator
-  locale: AppLocale
-  monetary: MonetaryFormatter
-}
+export type TelegramToolContext = AgentToolContext
 
 export interface TelegramConnectionStatus {
   connected: boolean;

@@ -1,27 +1,6 @@
 /**
- * Critério canônico de "pago" da feature de insights.
- *
- * Mesmo conjunto de nomes usado por get-upcoming-transactions.ts: o status é
- * um lookup por usuário, então o match é pelo nome, case-insensitive.
+ * Critério de "pago" dos insights — agora a definição ÚNICA do sistema, em
+ * `src/lib/paid-status.ts`. Este arquivo continua existindo só para não quebrar
+ * os importes dos KPIs.
  */
-export const PAID_STATUS_NAMES = [
-  "PAGO",
-  "PAID",
-  "PAGA",
-  "REALIZADO",
-  "QUITADO",
-] as const
-
-export function paidStatusFilter() {
-  return {
-    OR: PAID_STATUS_NAMES.map((name) => ({
-      statusLookup: {
-        is: { name: { equals: name, mode: "insensitive" as const } },
-      },
-    })),
-  }
-}
-
-export function unpaidStatusFilter() {
-  return { NOT: paidStatusFilter() }
-}
+export { PAID_STATUS_NAMES, paidStatusFilter, unpaidStatusFilter } from "@/lib/paid-status"

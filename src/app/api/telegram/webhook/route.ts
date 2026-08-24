@@ -3,6 +3,15 @@ import { getTelegramBotConfig } from "@/features/telegram/services/telegram-conf
 import { handleTelegramUpdate } from "@/features/telegram/services/message-handler.service"
 import type { TelegramWebhookUpdate } from "@/features/telegram/types/telegram.types"
 
+/**
+ * O agente pode dar até seis passos de ferramenta antes de responder, e cada
+ * passo é uma ida ao modelo. Com o teto padrão da hospedagem (poucos segundos)
+ * a função morreria no meio: o Telegram veria erro, REENVIARIA a mesma
+ * mensagem e a conta seria paga duas vezes. (A proteção contra reenvio está em
+ * `claimTelegramUpdate`; este limite evita que ela precise entrar em ação.)
+ */
+export const maxDuration = 120
+
 export async function POST(req: Request) {
   const config = await getTelegramBotConfig()
   if (!config) {

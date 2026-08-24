@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { paidStatusFilter } from "@/lib/paid-status"
 import { startOfMonth, endOfMonth, addMonths } from "date-fns"
 import type {
   BudgetItem,
@@ -139,12 +140,10 @@ export async function getBudgetData(
         userId,
         type: "EXPENSE",
         date: { gte: filterFrom, lte: filterTo },
-        OR: [
-          // i18n-ignore: nome de status gravado no banco (dado), não é texto de UI
-          { statusLookup: { name: { equals: "Pago", mode: "insensitive" } } },
-          // i18n-ignore: nome de status gravado no banco (dado), não é texto de UI
-          { statusLookup: { name: { equals: "Paid", mode: "insensitive" } } },
-        ],
+        // Critério único do sistema (src/lib/paid-status.ts). Antes, só "Pago" e
+        // "Paid" contavam aqui: um lançamento "Quitado" ou "Realizado" aparecia
+        // como pago nos insights e como agendado no orçamento.
+        ...paidStatusFilter(),
       },
     }),
   ])

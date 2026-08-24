@@ -21,6 +21,8 @@ export interface TelegramConversationMemoryState {
   }
   lastTransactionQuestion?: string
   updatedAt?: string
+  /** Última mensagem do Telegram já processada — barra reenvio duplicado. */
+  lastUpdateId?: number
 }
 
 const MAX_HISTORY = 8
@@ -76,6 +78,7 @@ function normalizeMemory(value: unknown): TelegramConversationMemoryState {
     lastTransactionQuestion:
       typeof value.lastTransactionQuestion === "string" ? value.lastTransactionQuestion : undefined,
     updatedAt: typeof value.updatedAt === "string" ? value.updatedAt : undefined,
+    lastUpdateId: typeof value.lastUpdateId === "number" ? value.lastUpdateId : undefined,
   }
 }
 
@@ -85,6 +88,16 @@ async function readMemoryRecord(input: {
 }): Promise<TelegramConversationMemoryState> {
   const chatId = BigInt(input.chatId)
   try {
+    // A linha é do CHAT, não da pessoa. Se este chat passou a ser de outro
+    // usuário (o anterior desconectou e outro vinculou), a conversa antiga NÃO
+    // pode acompanhar: o agente a repassaria ao modelo como contexto e poderia
+    // repetir as perguntas e os valores de quem usava antes.
+    const existing = await prisma.telegramConversationMemory.findUnique({
+      where: { telegramChatId: chatId },
+      select: { userId: true },
+    })
+    const belongsToSomeoneElse = Boolean(existing && existing.userId !== input.userId)
+
     const record = await prisma.telegramConversationMemory.upsert({
       where: { telegramChatId: chatId },
       create: {
@@ -92,9 +105,9 @@ async function readMemoryRecord(input: {
         telegramChatId: chatId,
         memoryJson: toInputJsonValue({ recentMessages: [] }),
       },
-      update: {
-        userId: input.userId,
-      },
+      update: belongsToSomeoneElse
+        ? { userId: input.userId, memoryJson: toInputJsonValue({ recentMessages: [] }) }
+        : { userId: input.userId },
       select: { memoryJson: true },
     })
 
@@ -102,6 +115,48 @@ async function readMemoryRecord(input: {
   } catch (error) {
     console.warn("Telegram memory read failed; continuing without persisted memory.", error)
     return { recentMessages: [] }
+  }
+}
+
+/**
+ * Marca uma mensagem do Telegram como "já processada" e devolve `false` se ela
+ * JÁ tinha sido. O Telegram reenvia a mesma mensagem quando não recebe resposta
+ * a tempo — sem isto, uma resposta lenta viraria duas execuções do agente e a
+ * conta em dobro. A marca vive no mesmo registro da conversa (nada de tabela
+ * nova). Falha ao gravar nunca barra a mensagem: no pior caso, volta ao que era.
+ */
+export async function claimTelegramUpdate(chatId: string, updateId: number): Promise<boolean> {
+  const key = BigInt(chatId)
+  try {
+    const record = await prisma.telegramConversationMemory.findUnique({
+      where: { telegramChatId: key },
+      select: { memoryJson: true },
+    })
+    // Chat sem registro ainda = primeira mensagem; não há o que duplicar, e
+    // criar a linha aqui não dá (ela pertence a um usuário, que só se conhece
+    // adiante). A linha nasce na primeira leitura da conversa.
+    if (!record) return true
+
+    const memory = normalizeMemory(record.memoryJson)
+    if (memory.lastUpdateId === updateId) return false
+
+    await prisma.telegramConversationMemory.update({
+      where: { telegramChatId: key },
+      data: { memoryJson: toInputJsonValue({ ...memory, lastUpdateId: updateId }) },
+    })
+    return true
+  } catch (error) {
+    console.warn("Telegram update dedup failed; processing anyway.", error)
+    return true
+  }
+}
+
+/** Esquece a conversa de um chat (ao desconectar: nada sobra para o próximo). */
+export async function forgetTelegramConversation(userId: string): Promise<void> {
+  try {
+    await prisma.telegramConversationMemory.deleteMany({ where: { userId } })
+  } catch (error) {
+    console.warn("Telegram memory cleanup failed.", error)
   }
 }
 

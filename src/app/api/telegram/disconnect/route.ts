@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id"
+import { forgetTelegramConversation } from "@/features/telegram/services/conversation-history.service"
 
 export async function DELETE() {
   const userId = await getSettingsUserId()
@@ -11,6 +12,10 @@ export async function DELETE() {
   await prisma.telegramConnection.deleteMany({
     where: { userId },
   })
+
+  // A conversa vai junto: o mesmo chat pode ser vinculado por outra pessoa
+  // depois, e o histórico é contexto que o agente repassa ao modelo.
+  await forgetTelegramConversation(userId)
 
   return NextResponse.json({ success: true })
 }

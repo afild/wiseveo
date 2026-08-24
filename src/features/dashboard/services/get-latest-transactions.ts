@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { paidStatusFilter } from "@/lib/paid-status"
 
 export interface LatestTransactionItem {
   id: string
@@ -32,13 +33,6 @@ function pickTitle(input: {
   return preferred.toUpperCase()
 }
 
-const paidStatusFilters = [
-  { statusLookup: { is: { name: { equals: "PAGO", mode: "insensitive" as const } } } },
-  { statusLookup: { is: { name: { equals: "PAID", mode: "insensitive" as const } } } },
-  { statusLookup: { is: { name: { equals: "PAGA", mode: "insensitive" as const } } } },
-  { statusLookup: { is: { name: { equals: "REALIZADO", mode: "insensitive" as const } } } },
-  { statusLookup: { is: { name: { equals: "QUITADO", mode: "insensitive" as const } } } },
-]
 
 export async function getLatestTransactions(
   userId: string,
@@ -50,7 +44,7 @@ export async function getLatestTransactions(
     where: {
       userId,
       date: { gte: from, lte: to },
-      OR: paidStatusFilters,
+      ...paidStatusFilter(),
     },
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     take,

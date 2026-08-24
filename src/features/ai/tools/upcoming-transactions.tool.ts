@@ -2,9 +2,9 @@ import { tool } from "ai"
 import { z } from "zod"
 import { getUpcomingTransactions } from "@/features/dashboard/services/get-upcoming-transactions"
 import { clampToolLimit, resolveUpcomingRange } from "./tool-utils"
-import type { TelegramToolContext } from "../types/telegram.types"
+import type { AgentToolContext } from "@/features/ai/types/agent.types"
 
-export function createUpcomingTransactionsTool(userId: string, ctx: TelegramToolContext) {
+export function createUpcomingTransactionsTool(userId: string, ctx: AgentToolContext) {
   return tool({
     // Tool metadata below (description/describe) is an LLM function-calling
     // definition, not UI copy — kept in Portuguese and i18n-ignored throughout.

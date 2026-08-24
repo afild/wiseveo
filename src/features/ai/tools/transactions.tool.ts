@@ -7,12 +7,12 @@ import {
   pickTransactionTitle,
   resolveToolRange,
 } from "./tool-utils"
-import type { TelegramToolContext } from "../types/telegram.types"
+import type { AgentToolContext } from "@/features/ai/types/agent.types"
 
 const transactionTypeSchema = z.enum(["INCOME", "EXPENSE", "TRANSFER"])
 const transactionStatusSchema = z.enum(["PAID", "PENDING", "OVERDUE", "SCHEDULED"])
 
-export function createTransactionsTool(userId: string, ctx: TelegramToolContext) {
+export function createTransactionsTool(userId: string, ctx: AgentToolContext) {
   return tool({
     // Tool metadata below (description/describe) is an LLM function-calling
     // definition, not UI copy — kept in Portuguese and i18n-ignored throughout.

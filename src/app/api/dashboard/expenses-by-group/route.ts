@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { getTranslations } from "next-intl/server"
 
 import { prisma } from "@/lib/prisma"
+import { isPaidStatusName } from "@/lib/paid-status"
 import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
 import { resolveGroupLabel } from "@/i18n/chart-labels"
 
@@ -131,8 +132,8 @@ export async function GET(request: NextRequest) {
     }
 
     const absAmount = Math.abs(Number(tx.amount ?? 0))
-    const statusName = tx.statusLookup?.name?.toLowerCase()
-    const isPaid = statusName === "pago" || statusName === "paid"
+    // Critério único do sistema (src/lib/paid-status.ts).
+    const isPaid = isPaidStatusName(tx.statusLookup?.name)
 
     const existing = groupMap.get(code)
     if (existing) {

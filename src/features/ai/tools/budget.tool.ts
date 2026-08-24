@@ -2,9 +2,9 @@ import { tool } from "ai"
 import { z } from "zod"
 import { getBudgetData } from "@/features/budget/services/get-budget-data"
 import { clampToolLimit, parseToolDate } from "./tool-utils"
-import type { TelegramToolContext } from "../types/telegram.types"
+import type { AgentToolContext } from "@/features/ai/types/agent.types"
 
-export function createBudgetTool(userId: string, ctx: TelegramToolContext) {
+export function createBudgetTool(userId: string, ctx: AgentToolContext) {
   return tool({
     // Tool metadata below (description/describe) is an LLM function-calling
     // definition, not UI copy — kept in Portuguese and i18n-ignored throughout.

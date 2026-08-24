@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 
 import { periodFromDate } from "@/lib/financial"
+import { PAID_STATUS_NAMES } from "@/lib/paid-status"
 import type {
   FormCategory,
   FormCategoryGroup,
@@ -58,7 +59,11 @@ function getInitialFormData(): FormData {
 function getLegacyStatusCandidates(
   status: SerializedTransaction["status"]
 ): string[] {
-  if (status === "PAID") return ["PAGO", "REALIZADO", "PAID"]
+  // "Pago" vem do critério único do sistema (src/lib/paid-status.ts). Sem isso,
+  // um lançamento cujo status se chama "Paga" ou "Quitado" não encontrava
+  // candidato aqui e o formulário caía no primeiro status da lista — ou seja,
+  // reabrir e salvar TROCAVA o status do lançamento sem avisar.
+  if (status === "PAID") return [...PAID_STATUS_NAMES]
   if (status === "PENDING") return ["PENDENTE", "PENDING"]
   if (status === "OVERDUE") return ["VENCIDO", "OVERDUE"]
   return ["ABERTO", "AGENDADO", "SCHEDULED"]

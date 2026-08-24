@@ -2,7 +2,7 @@ import { tool } from "ai"
 import { z } from "zod"
 import { getDreData } from "@/features/analysis/services/get-dre-data"
 import { resolveToolRange } from "./tool-utils"
-import type { TelegramToolContext } from "../types/telegram.types"
+import type { AgentToolContext } from "@/features/ai/types/agent.types"
 import type { MonetaryFormatter } from "@/lib/monetary"
 
 function formatLineItem(
@@ -16,7 +16,7 @@ function formatLineItem(
   }
 }
 
-export function createDreTool(userId: string, ctx: TelegramToolContext) {
+export function createDreTool(userId: string, ctx: AgentToolContext) {
   return tool({
     // Tool metadata below (description/describe) is an LLM function-calling
     // definition, not UI copy — kept in Portuguese and i18n-ignored throughout.

@@ -1,5 +1,5 @@
 import type { ToolExecutionOptions } from "ai"
-import { getTools } from "../tools"
+import { getTools } from "@/features/ai/tools"
 import type { TelegramToolContext } from "../types/telegram.types"
 
 interface ExecutableTelegramTool {

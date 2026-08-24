@@ -20,6 +20,13 @@ export type QueryIntent =
 
 export interface ClassifiedQuery {
   intent: QueryIntent
+  /**
+   * `true` quando o intent é "unknown" porque o CLASSIFICADOR FALHOU (provedor
+   * fora do ar, resposta fora do formato) — e não porque a pergunta não se
+   * encaixou. Quem chama usa isso para não escalar uma falha técnica ao agente
+   * caro: o modelo que falhou é justamente o que o agente também usaria.
+   */
+  classifierFailed?: boolean
   period?: { from: string; to: string }
   groupName?: string
   categoryName?: string
@@ -253,6 +260,6 @@ Regras de busca literal:
     // ninguém descobrir que falta a chave. O resto degrada como antes.
     if (e instanceof AiBudgetExceededError || e instanceof AiNotConfiguredError) throw e
     console.error("Query classifier failed:", e)
-    return { intent: "unknown" }
+    return { intent: "unknown", classifierFailed: true }
   }
 }

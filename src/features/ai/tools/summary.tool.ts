@@ -2,9 +2,9 @@ import { tool } from "ai";
 import { z } from "zod";
 import { getFinancialSummary } from "@/features/shared/services/get-financial-summary";
 import { resolveToolRange } from "./tool-utils";
-import type { TelegramToolContext } from "../types/telegram.types";
+import type { AgentToolContext } from "@/features/ai/types/agent.types";
 
-export const createSummaryTool = (userId: string, ctx: TelegramToolContext) => tool({
+export const createSummaryTool = (userId: string, ctx: AgentToolContext) => tool({
   // Tool metadata below is an LLM function-calling definition, not UI copy —
   // kept in Portuguese and i18n-ignored.
   description: "Obtem um resumo financeiro (entradas, saidas, saldo/economia) para um periodo especifico. Use para perguntas como 'como foi meu mes', 'resumo de gastos', 'qual meu saldo'.", // i18n-ignore

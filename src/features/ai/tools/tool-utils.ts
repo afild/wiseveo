@@ -1,6 +1,6 @@
 import { addDays } from "date-fns"
 import { endOfUTCDay, startOfUTCDay } from "@/lib/financial"
-import type { TelegramTranslator } from "../types/telegram.types"
+import type { AgentTranslator } from "@/features/ai/types/agent.types"
 
 export const DEFAULT_TOOL_LIMIT = 5
 export const MAX_TOOL_LIMIT = 20
@@ -89,7 +89,7 @@ export function pickTransactionTitle(
     payeeName?: string | null
     categoryName?: string | null
   },
-  t: TelegramTranslator,
+  t: AgentTranslator,
 ): string {
   return (
     input.description?.trim() ||

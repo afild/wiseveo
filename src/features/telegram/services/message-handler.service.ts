@@ -14,13 +14,17 @@ import {
   sendTelegramMessage,
   sendTelegramPhoto,
 } from "./bot.service"
-import { getConversationMemory, recordTelegramInteraction } from "./conversation-history.service"
+import {
+  claimTelegramUpdate,
+  getConversationMemory,
+  recordTelegramInteraction,
+} from "./conversation-history.service"
 import { AiBudgetExceededError } from "@/features/ai/services/ai-usage.service"
 import { AiNotConfiguredError } from "@/features/ai/services/llm.service"
 import { classifyQuery } from "./query-classifier.service"
 import { dispatchQuery } from "./tool-dispatcher.service"
 import { formatCard } from "./card-formatter.service"
-import { generateAnalystResponse } from "./analyst-response.service"
+import { runFinancialAgent } from "@/features/ai/services/financial-agent.service"
 import { buildStaticResponse } from "./static-response.service"
 import { buildTelegramUserContext } from "./user-context.service"
 import type { TelegramChatId, TelegramToolContext, TelegramWebhookUpdate } from "../types/telegram.types"
@@ -142,8 +146,34 @@ async function handleFinancialQuestion(chatId: TelegramChatId, text: string) {
 
   const classified = await classifyQuery(text, history, memory, locale)
 
-  if (classified.intent === "unknown") {
+  // Classificador fora do ar não é pergunta difícil: mandar ao agente gastaria
+  // o modelo caro para provavelmente falhar de novo (é o mesmo provedor).
+  if (classified.classifierFailed) {
     const response = t("bot.unknownIntent")
+    await sendTelegramMessage(chatId, response)
+    await recordTelegramInteraction({
+      chatId: chatKey,
+      userId: connection.userId,
+      userText: text,
+      assistantText: response,
+    })
+    return
+  }
+
+  // Dois caminhos, de propósito:
+  // - BARATO: a pergunta cabe numa das consultas prontas → card, como sempre.
+  // - AGENTE: análise de verdade, ou pergunta que o classificador não encaixou.
+  //   Antes, "não encaixou" virava "não entendi" e a conversa morria ali; agora
+  //   o agente vai atrás dos dados com as próprias ferramentas.
+  if (classified.intent === "financial_analysis" || classified.intent === "unknown") {
+    await sendTelegramChatAction(chatId, "typing")
+    const { text: answer } = await runFinancialAgent({
+      dataOwnerId,
+      question: text,
+      history,
+      ctx,
+    })
+    const response = answer || t("bot.unknownIntent")
     await sendTelegramMessage(chatId, response)
     await recordTelegramInteraction({
       chatId: chatKey,
@@ -156,20 +186,6 @@ async function handleFinancialQuestion(chatId: TelegramChatId, text: string) {
   }
 
   const dispatched = await dispatchQuery(dataOwnerId, classified, ctx)
-
-  if (classified.intent === "financial_analysis") {
-    await sendTelegramChatAction(chatId, "typing")
-    const analysisText = await generateAnalystResponse(text, classified, dispatched, locale)
-    await sendTelegramMessage(chatId, analysisText)
-    await recordTelegramInteraction({
-      chatId: chatKey,
-      userId: connection.userId,
-      userText: text,
-      assistantText: analysisText,
-      classified,
-    })
-    return
-  }
 
   const cardData = await formatCard(text, classified, dispatched, t, locale)
 
@@ -205,6 +221,14 @@ export async function handleTelegramUpdate(update: TelegramWebhookUpdate) {
 
   const text = message.text.trim()
   const chatId = message.chat.id
+
+  // Resposta demorada faz o Telegram reenviar a MESMA mensagem. Sem esta trava,
+  // o agente rodaria de novo — e a conta viria duplicada.
+  if (typeof update.update_id === "number") {
+    const isNew = await claimTelegramUpdate(String(chatId), update.update_id)
+    if (!isNew) return
+  }
+
   const startToken = getStartToken(text)
 
   if (startToken) {
