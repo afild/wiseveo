@@ -354,3 +354,17 @@ model TelegramPendingToken {
 
   @@map("telegram_pending_tokens")
 }
+
+/// Segredos da instalação, CIFRADOS (src/lib/secret-cipher.ts): token do bot do
+/// Telegram; adiante, chaves de IA. Instalação nova ganha a tabela na migração
+/// inicial; banco existente, só pelo "Preparar meu banco" (Configurações →
+/// Integrações). Todo acesso passa por app-settings-service.ts, que tolera a
+/// tabela ausente (P2021 → "não configurado") — nunca acessar prisma.appSetting
+/// direto sem essa proteção.
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}

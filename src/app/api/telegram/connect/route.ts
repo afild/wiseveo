@@ -1,42 +1,43 @@
-import { NextResponse } from "next/server";
-import { getTranslations } from "next-intl/server";
-import { prisma } from "@/lib/prisma";
-import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id";
-import crypto from "crypto";
+import { NextResponse } from "next/server"
+import { getTranslations } from "next-intl/server"
+import crypto from "crypto"
+import { prisma } from "@/lib/prisma"
+import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id"
+import { getTelegramBotConfig } from "@/features/telegram/services/telegram-config.service"
 
 export async function POST() {
-  const t = await getTranslations("api");
+  const t = await getTranslations("api")
 
-  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_BOT_USERNAME) {
-    return NextResponse.json({ error: t("telegram.notConfigured") }, { status: 503 });
+  const config = await getTelegramBotConfig()
+  if (!config) {
+    return NextResponse.json({ error: t("telegram.notConfigured") }, { status: 503 })
   }
 
   try {
-    const userId = await getSettingsUserId();
+    const userId = await getSettingsUserId()
     if (!userId) {
-      console.error("[Telegram Connect] No userId found");
-      return NextResponse.json({ error: "Unauthorized - no user session" }, { status: 401 });
+      return NextResponse.json({ error: t("errors.notAuthenticated") }, { status: 401 })
     }
 
-    console.log("[Telegram Connect] Creating token for userId:", userId);
+    // Expurgo oportunista: tokens vencidos ou já usados não servem para nada e a
+    // tabela crescia sem limite. Barato — roda junto de cada novo pedido de vínculo.
+    await prisma.telegramPendingToken.deleteMany({
+      where: { OR: [{ expiresAt: { lt: new Date() } }, { used: true }] },
+    })
 
-    const token = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+    const token = crypto.randomUUID()
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 min
 
     await prisma.telegramPendingToken.create({
       data: { token, userId, expiresAt },
-    });
+    })
 
-    const botUsername = process.env.TELEGRAM_BOT_USERNAME || "WiseVeoBot";
-    const deepLink = `https://t.me/${botUsername}?start=${token}`;
+    // O deepLink carrega o token de vínculo: nunca vai para log.
+    const deepLink = `https://t.me/${config.botUsername}?start=${token}`
 
-    console.log("[Telegram Connect] Success - deepLink:", deepLink);
-    return NextResponse.json({ token, deepLink });
+    return NextResponse.json({ token, deepLink })
   } catch (error) {
-    console.error("[Telegram Connect] Error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : t("errors.internalError") },
-      { status: 500 }
-    );
+    console.error("[Telegram Connect] Error:", error)
+    return NextResponse.json({ error: t("errors.internalError") }, { status: 500 })
   }
 }

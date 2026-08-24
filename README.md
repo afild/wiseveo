@@ -143,6 +143,11 @@ GOOGLE_CLIENT_SECRET="your-client-secret"
 
 **Telegram assistant**
 
+Connect the bot from the app: Settings → Integrations → paste the BotFather token.
+WISEVEO validates it, stores it encrypted, and registers the webhook automatically.
+
+Legacy env-based setup is still honored as a fallback:
+
 ```env
 TELEGRAM_BOT_TOKEN="token-from-botfather"
 TELEGRAM_BOT_USERNAME="your-bot-username"
@@ -150,10 +155,11 @@ TELEGRAM_WEBHOOK_SECRET="a-random-string"
 OPENAI_API_KEY="your-openai-key"
 ```
 
-Register the webhook once the app is running:
+For env-based installs, re-register the webhook manually if needed (the secret goes
+in the header, never in the URL):
 
 ```bash
-curl "http://localhost:3000/api/telegram/register-webhook?secret=YOUR_TELEGRAM_WEBHOOK_SECRET"
+curl -H "Authorization: Bearer YOUR_TELEGRAM_WEBHOOK_SECRET" "https://your-app.example.com/api/telegram/register-webhook"
 ```
 
 ---

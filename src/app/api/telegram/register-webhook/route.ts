@@ -1,59 +1,53 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server"
+import {
+  getTelegramBotConfig,
+  registerTelegramWebhook,
+  resolveWebhookBaseUrl,
+} from "@/features/telegram/services/telegram-config.service"
 
+/**
+ * Rota de operação (linha de comando/diagnóstico): re-registra o webhook usando a
+ * configuração vigente. A tela de Configurações → Integrações faz isso sozinha ao
+ * conectar — esta rota fica como ferramenta manual para instalações que ainda usam
+ * as envs TELEGRAM_* (na configuração pelo banco, o segredo é gerado e nunca
+ * exibido, então só a tela re-registra).
+ *
+ * O segredo vem no CABEÇALHO `Authorization: Bearer` — nunca na URL: query string
+ * cai em log de acesso da hospedagem, e este é o segredo que autentica o webhook.
+ */
 export async function GET(request: NextRequest) {
-  const secret = request.nextUrl.searchParams.get('secret');
+  const config = await getTelegramBotConfig()
+  const authorization = request.headers.get("authorization")
+  const secret = authorization?.startsWith("Bearer ") ? authorization.slice("Bearer ".length) : null
 
-  // Verify secret token (dev/admin protection)
-  if (secret !== process.env.TELEGRAM_WEBHOOK_SECRET) {
-    return new NextResponse('Forbidden', { status: 403 });
+  // 403 primeiro e sempre — inclusive sem configuração: quem não tem o segredo
+  // não descobre nem SE o bot está configurado.
+  if (!config?.webhookSecret || !secret || secret !== config.webhookSecret) {
+    // i18n-ignore: endpoint de ops — resposta para quem chama sem o segredo
+    return new NextResponse("Forbidden", { status: 403 })
   }
 
-  if (!process.env.TELEGRAM_BOT_TOKEN) {
-    return NextResponse.json({ error: 'TELEGRAM_BOT_TOKEN not configured' }, { status: 500 });
+  const baseUrl = resolveWebhookBaseUrl(request)
+  if (!baseUrl || !baseUrl.startsWith("https://")) {
+    // i18n-ignore: endpoint de ops — o Telegram só aceita webhook HTTPS
+    return NextResponse.json({ error: "Webhook base URL must be HTTPS" }, { status: 500 })
   }
 
-  if (!process.env.NEXT_PUBLIC_APP_URL) {
-    return NextResponse.json({ error: 'NEXT_PUBLIC_APP_URL not configured' }, { status: 500 });
+  const result = await registerTelegramWebhook({
+    token: config.botToken,
+    webhookSecret: config.webhookSecret,
+    baseUrl,
+  })
+
+  if (!result.ok) {
+    // i18n-ignore: endpoint de ops — repassa a descrição do Telegram (não contém o token)
+    return NextResponse.json({ error: "Failed to register webhook", details: result.description }, { status: 502 })
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  const webhookUrl = `${appUrl}/api/telegram/webhook`;
-
-  try {
-    const response = await fetch(
-      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/setWebhook`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: webhookUrl,
-          secret_token: process.env.TELEGRAM_WEBHOOK_SECRET,
-          allowed_updates: ['message', 'callback_query'],
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
-    }
-
-    return NextResponse.json({
-      ok: true,
-      // i18n-ignore: endpoint de ops/deploy (protegido por secret), chamado manualmente por um dev — nunca renderizado em UI
-      message: 'Webhook registered successfully',
-      webhook_url: webhookUrl,
-      telegram_response: data,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        // i18n-ignore: endpoint de ops/deploy (protegido por secret), chamado manualmente por um dev — nunca renderizado em UI
-        error: 'Failed to register webhook',
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({
+    ok: true,
+    // i18n-ignore: endpoint de ops/deploy, chamado manualmente por um dev — nunca renderizado em UI
+    message: "Webhook registered successfully",
+    webhook_url: `${baseUrl}/api/telegram/webhook`,
+  })
 }

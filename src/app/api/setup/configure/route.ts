@@ -17,6 +17,14 @@ import { cookies } from "next/headers"
 import { canAccessSetup } from "@/lib/setup-access"
 import { clearSetupIdentityCookie, decodeSetupIdentity, SETUP_IDENTITY_COOKIE } from "@/lib/setup-identity"
 import { redactConnectionUrl } from "@/features/setup/lib/connection-url"
+import { encryptSecret, futureSecretsSource } from "@/lib/secret-cipher"
+import {
+  fetchBotIdentity,
+  isValidBotTokenFormat,
+  registerTelegramWebhook,
+  resolveWebhookBaseUrl,
+  TELEGRAM_SETTING_KEYS,
+} from "@/features/telegram/services/telegram-config.service"
 import { applyPrismaMigrations, loadMigrationFiles } from "@/features/setup/services/prisma-migrations.service"
 import { detectHostingProvider, detectSetupPersistence } from "@/features/setup/services/setup-environment"
 import { checkUsersSchema } from "@/features/setup/lib/schema-check"
@@ -64,6 +72,10 @@ export async function POST(req: Request) {
     console.log(`[SETUP] Applying database migrations (mode=${mode})...`)
     const migrationClient = new Client({ connectionString: databaseUrl, connectionTimeoutMillis: 10000 })
     let migrationsSummary: { applied: number; alreadyApplied: number }
+    // Banco com dados: as migrações são puladas e a estrutura fica intocada — o
+    // Telegram então NÃO pode ser gravado agora (a tabela `app_settings` só entra
+    // pelo "Preparar meu banco", com confirmação). A tela final explica.
+    let existingSchema = false
     try {
       await migrationClient.connect()
       const result = await applyPrismaMigrations(migrationClient, loadMigrationFiles())
@@ -84,6 +96,8 @@ export async function POST(req: Request) {
           ? "[SETUP] Existing WISEVEO schema detected: migrations skipped"
           : `[SETUP] Migrations: ${result.applied.length} applied, ${result.alreadyApplied} already there`,
       )
+
+      existingSchema = result.skippedExistingSchema === true
 
       if (result.skippedExistingSchema) {
         // Banco com dados: ou ele na íntegra, ou nada. O modelo padrão renomearia e
@@ -136,6 +150,10 @@ export async function POST(req: Request) {
     console.log("[SETUP] Connecting to database to create admin user...")
     // Guardado fora do bloco: é com ele que a sessão do administrador é assinada no fim.
     let adminUserId: string | null = null
+    // Telegram no wizard: "connected" quando o token virou configuração cifrada e o
+    // webhook foi registrado; "deferred" quando ficou para Configurações → Integrações
+    // (banco existente sem `app_settings`, URL sem HTTPS, ou o Telegram recusou).
+    let telegramResult: { connected: boolean; deferred: boolean } | undefined
     const pool = new Pool({ connectionString: databaseUrl })
     const adapter = new PrismaPg(pool)
     const client = new PrismaClient({ adapter })
@@ -184,6 +202,21 @@ export async function POST(req: Request) {
         console.log("[SETUP] Initializing default chart of accounts...")
         await initializeUserData(client, userId)
       }
+
+      // Telegram "cole só o token": só em banco NOVO (a migração inicial acabou de
+      // criar `app_settings`). Falha aqui nunca derruba o setup — vira "conecte
+      // depois em Configurações". Cifrado com a chave que valerá após o redeploy
+      // (a URL recém-conectada), como a sessão do administrador logo abaixo.
+      const botToken = typeof integrations?.telegram?.botToken === "string" ? integrations.telegram.botToken.trim() : ""
+      if (integrations?.telegram?.enabled) {
+        if (!botToken || existingSchema) {
+          // Ligado sem token (ou banco existente): também merece o aviso na tela
+          // final — silêncio pareceria "deu certo".
+          telegramResult = { connected: false, deferred: true }
+        } else {
+          telegramResult = await connectTelegramDuringSetup(client, botToken, databaseUrl, req)
+        }
+      }
     } catch (e: any) {
       console.error("[SETUP] Error creating user/data:", redact(e?.message ?? e))
       return NextResponse.json(
@@ -211,11 +244,8 @@ export async function POST(req: Request) {
       envVars.push({ key: "GOOGLE_CLIENT_ID", value: String(integrations.google.clientId ?? "") })
       envVars.push({ key: "GOOGLE_CLIENT_SECRET", value: String(integrations.google.clientSecret ?? "") })
     }
-    if (integrations?.telegram?.enabled) {
-      envVars.push({ key: "TELEGRAM_BOT_TOKEN", value: String(integrations.telegram.botToken ?? "") })
-      envVars.push({ key: "TELEGRAM_BOT_USERNAME", value: String(integrations.telegram.botUsername ?? "") })
-      envVars.push({ key: "TELEGRAM_WEBHOOK_SECRET", value: String(integrations.telegram.webhookSecret ?? "") })
-    }
+    // Telegram não entra mais nas variáveis: o token vive cifrado no banco
+    // (`app_settings`), gravado acima — nada novo para colar no painel.
     if (integrations?.openai?.enabled) {
       envVars.push({ key: "OPENAI_API_KEY", value: String(integrations.openai.apiKey ?? "") })
     }
@@ -255,6 +285,7 @@ export async function POST(req: Request) {
         hosting: detectHostingProvider(),
         envVars,
         migrations: migrationsSummary,
+        telegram: telegramResult,
       })
     }
 
@@ -293,7 +324,7 @@ export async function POST(req: Request) {
     console.log(`[SETUP] Setup completed successfully (mode=${mode})`)
 
     // Set a cookie so the login page knows to redirect to settings onboarding
-    const response = finishResponse({ success: true, mode, migrations: migrationsSummary })
+    const response = finishResponse({ success: true, mode, migrations: migrationsSummary, telegram: telegramResult })
     response.cookies.set("wiseveo-new-setup", "true", {
       path: "/",
       maxAge: 60 * 60, // 1 hour
@@ -306,5 +337,57 @@ export async function POST(req: Request) {
       { success: false, message: redact(error?.message) || t("unknownError") },
       { status: 500 }
     )
+  }
+}
+
+/**
+ * Conecta o bot durante o Finalizar (banco novo): valida o token (getMe), grava o
+ * trio cifrado em `app_settings` e registra o webhook. Qualquer tropeço devolve
+ * `deferred` — a pessoa conecta depois em Configurações → Integrações, e o setup
+ * segue em frente. O token nunca entra em log.
+ */
+async function connectTelegramDuringSetup(
+  client: PrismaClient,
+  botToken: string,
+  databaseUrl: string,
+  req: Request,
+): Promise<{ connected: boolean; deferred: boolean }> {
+  const deferred = { connected: false, deferred: true }
+  try {
+    if (!isValidBotTokenFormat(botToken)) return deferred
+
+    const identity = await fetchBotIdentity(botToken)
+    if (!identity.ok) return deferred
+
+    const baseUrl = resolveWebhookBaseUrl(req)
+    if (!baseUrl || !baseUrl.startsWith("https://")) return deferred
+
+    const cipherSource = futureSecretsSource(databaseUrl)
+    const webhookSecret = crypto.randomBytes(32).toString("base64url")
+    const entries: Record<string, string> = {
+      [TELEGRAM_SETTING_KEYS.botToken]: botToken,
+      [TELEGRAM_SETTING_KEYS.botUsername]: identity.botUsername,
+      [TELEGRAM_SETTING_KEYS.webhookSecret]: webhookSecret,
+    }
+    for (const [key, plain] of Object.entries(entries)) {
+      const value = encryptSecret(plain, cipherSource)
+      await client.appSetting.upsert({ where: { key }, create: { key, value }, update: { value } })
+    }
+
+    const registration = await registerTelegramWebhook({ token: botToken, webhookSecret, baseUrl })
+    if (!registration.ok) {
+      // Nada pela metade: sem webhook, os segredos gravados saem também.
+      await client.appSetting
+        .deleteMany({ where: { key: { in: Object.keys(entries) } } })
+        .catch(() => {})
+      console.error("[SETUP] Telegram setWebhook failed:", registration.description)
+      return deferred
+    }
+
+    console.log("[SETUP] Telegram bot connected")
+    return { connected: true, deferred: false }
+  } catch (e) {
+    console.error("[SETUP] Telegram connection skipped:", e instanceof Error ? e.message : String(e))
+    return deferred
   }
 }

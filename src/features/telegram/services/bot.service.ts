@@ -1,28 +1,31 @@
 import TelegramBot from "node-telegram-bot-api"
 import type { TelegramChatId } from "../types/telegram.types"
+import { getTelegramBotConfig } from "./telegram-config.service"
 
-let cachedBot: TelegramBot | null = null
+// Cache preso ao token: se o dono trocar o bot em Configurações, a instância
+// antiga é descartada em vez de continuar mandando mensagem pelo bot errado.
+let cached: { token: string; bot: TelegramBot } | null = null
 
-export function getTelegramBot() {
-  if (cachedBot) return cachedBot
-
-  const token = process.env.TELEGRAM_BOT_TOKEN
-  if (!token) {
-    throw new Error("TELEGRAM_BOT_TOKEN not configured")
+export async function getTelegramBot(): Promise<TelegramBot> {
+  const config = await getTelegramBotConfig()
+  if (!config) {
+    // i18n-ignore: erro interno de servidor (log/exceção), nunca renderizado em UI
+    throw new Error("Telegram bot not configured")
   }
-
-  cachedBot = new TelegramBot(token, { polling: false })
-  return cachedBot
+  if (cached?.token !== config.botToken) {
+    cached = { token: config.botToken, bot: new TelegramBot(config.botToken, { polling: false }) }
+  }
+  return cached.bot
 }
 
 export async function sendTelegramMessage(chatId: TelegramChatId, text: string) {
-  await getTelegramBot().sendMessage(chatId, text)
+  await (await getTelegramBot()).sendMessage(chatId, text)
 }
 
 export async function sendTelegramPhoto(chatId: TelegramChatId, image: Buffer, caption?: string) {
-  await getTelegramBot().sendPhoto(chatId, image, caption ? { caption } : undefined)
+  await (await getTelegramBot()).sendPhoto(chatId, image, caption ? { caption } : undefined)
 }
 
 export async function sendTelegramChatAction(chatId: TelegramChatId, action: "typing" | "upload_photo") {
-  await getTelegramBot().sendChatAction(chatId, action)
+  await (await getTelegramBot()).sendChatAction(chatId, action)
 }

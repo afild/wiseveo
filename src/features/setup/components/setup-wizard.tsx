@@ -52,7 +52,9 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
   })
   const [integrations, setIntegrations] = useState({
     google: { enabled: false, clientId: "", clientSecret: "" },
-    telegram: { enabled: false, botToken: "", botUsername: "", webhookSecret: "" },
+    // Telegram: só o token — o app descobre o resto (getMe, segredo, webhook).
+    // botUsername é preenchido pela validação, nunca digitado.
+    telegram: { enabled: false, botToken: "", botUsername: "" },
     openai: { enabled: false, apiKey: "" },
   })
   
@@ -110,13 +112,14 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
         setAdmin((prev) => ({ ...prev, password: "", confirmPassword: "" }))
         setIntegrations({
           google: { enabled: false, clientId: "", clientSecret: "" },
-          telegram: { enabled: false, botToken: "", botUsername: "", webhookSecret: "" },
+          telegram: { enabled: false, botToken: "", botUsername: "" },
           openai: { enabled: false, apiKey: "" },
         })
         setFinishState({
           mode: data.mode ?? "auto-reload",
           hosting: data.hosting,
           envVars: Array.isArray(data.envVars) ? data.envVars : undefined,
+          telegram: data.telegram,
         })
         toast.success(t("wizard.success"))
       } else {

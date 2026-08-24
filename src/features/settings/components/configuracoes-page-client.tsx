@@ -17,16 +17,23 @@ import { MonetaryFormatForm } from "./monetary-format-form"
 import { ProfileForm } from "./profile-form"
 import { AccountForm } from "./account-form"
 import { AdminUsersForm } from "./admin-users-form"
+import { IntegrationsForm, type TelegramBotSummary } from "./integrations-form"
+import type { AppSettingsStructure } from "../lib/app-settings-structure"
 import { PartyPopper } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 interface ConfiguracoesPageClientProps {
-  initialTab?: "general" | "appearance" | "monetary" | "profile" | "account" | "admin"
+  initialTab?: "general" | "appearance" | "monetary" | "profile" | "account" | "integrations" | "admin"
   isAdmin: boolean
   initialQuickPaymentSettings: QuickPaymentSettings
   quickPaymentOptions: QuickPaymentOptions
   initialMonetarySettings: MonetarySettings
   initialAdminUsers: AdminUserSummary[]
+  /** Aba Integrações (só SUPERADMIN, fora da demo): bot do Telegram + preparo do banco. */
+  integrationsContext?: {
+    structure: AppSettingsStructure | null
+    bot: TelegramBotSummary
+  }
   /** Contexto da aba Usuários (só quando isAdmin). */
   adminContext?: {
     currentUserId: string
@@ -45,6 +52,7 @@ export function ConfiguracoesPageClient({
   quickPaymentOptions,
   initialMonetarySettings,
   initialAdminUsers,
+  integrationsContext,
   adminContext,
 }: ConfiguracoesPageClientProps) {
   const searchParams = useSearchParams()
@@ -67,12 +75,23 @@ export function ConfiguracoesPageClient({
       )}
 
       <Tabs defaultValue={initialTab} className="space-y-6">
-        <TabsList className={`grid w-full grid-cols-2 gap-2 sm:grid-cols-3 ${isAdmin ? "lg:w-[840px] lg:grid-cols-6" : "lg:w-[720px] lg:grid-cols-5"}`}>
+        <TabsList
+          className={`grid w-full grid-cols-2 gap-2 sm:grid-cols-3 ${
+            {
+              5: "lg:w-[720px] lg:grid-cols-5",
+              6: "lg:w-[840px] lg:grid-cols-6",
+              7: "lg:w-[960px] lg:grid-cols-7",
+            }[5 + (integrationsContext ? 1 : 0) + (isAdmin ? 1 : 0)]
+          }`}
+        >
           <TabsTrigger value="general" className="cursor-pointer">{t("tabs.general")}</TabsTrigger>
           <TabsTrigger value="appearance" className="cursor-pointer">{t("tabs.appearance")}</TabsTrigger>
           <TabsTrigger value="monetary" className="cursor-pointer">{t("tabs.monetary")}</TabsTrigger>
           <TabsTrigger value="profile" className="cursor-pointer">{t("tabs.profile")}</TabsTrigger>
           <TabsTrigger value="account" className="cursor-pointer">{t("tabs.account")}</TabsTrigger>
+          {integrationsContext && (
+            <TabsTrigger value="integrations" className="cursor-pointer">{t("tabs.integrations")}</TabsTrigger>
+          )}
           {isAdmin && <TabsTrigger value="admin" className="cursor-pointer">{t("tabs.admin")}</TabsTrigger>}
         </TabsList>
 
@@ -108,6 +127,17 @@ export function ConfiguracoesPageClient({
             <AccountForm />
           </div>
         </TabsContent>
+
+        {integrationsContext && (
+          <TabsContent value="integrations" className="border-none p-0 mt-6 outline-none">
+            <div className="max-w-3xl">
+              <IntegrationsForm
+                initialStructure={integrationsContext.structure}
+                initialBot={integrationsContext.bot}
+              />
+            </div>
+          </TabsContent>
+        )}
 
         {isAdmin && (
           <TabsContent value="admin" className="border-none p-0 mt-6 outline-none">

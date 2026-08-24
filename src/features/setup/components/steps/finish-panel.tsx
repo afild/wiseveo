@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, Copy, Eye, EyeOff, ExternalLink, Loader2, RefreshCw, ShieldAlert } from "lucide-react"
+import { CheckCircle2, Copy, Eye, EyeOff, ExternalLink, Loader2, RefreshCw, Send, ShieldAlert } from "lucide-react"
 
 export type SetupFinishMode = "auto-reload" | "restart-required" | "manual-env"
 
@@ -11,6 +11,8 @@ export interface SetupFinishState {
   mode: SetupFinishMode
   hosting?: "vercel" | "netlify" | "other"
   envVars?: Array<{ key: string; value: string }>
+  /** Resultado do Telegram no Finalizar: conectado agora, ou fica para Configurações. */
+  telegram?: { connected: boolean; deferred: boolean }
 }
 
 interface FinishPanelProps {
@@ -76,6 +78,13 @@ export function FinishPanel({ state, checkSetupComplete, onComplete }: FinishPan
     }
   }
 
+  const telegramNote = state.telegram ? (
+    <p className="text-xs text-muted-foreground flex items-start gap-1.5 text-left">
+      <Send className="size-3.5 mt-0.5 shrink-0 text-info" />
+      <span>{state.telegram.connected ? t("telegramConnected") : t("telegramDeferred")}</span>
+    </p>
+  ) : null
+
   if (state.mode !== "manual-env") {
     return (
       <div className="flex flex-col items-center justify-center gap-4 text-center animate-in fade-in duration-500 max-w-md w-full bg-background/80 backdrop-blur-md p-8 rounded-3xl border shadow-xl">
@@ -89,6 +98,7 @@ export function FinishPanel({ state, checkSetupComplete, onComplete }: FinishPan
         {state.mode === "restart-required" && (
           <code className="text-xs bg-muted px-2 py-1 rounded font-mono">{t("restartHintCommands")}</code>
         )}
+        {telegramNote}
       </div>
     )
   }
@@ -151,6 +161,8 @@ export function FinishPanel({ state, checkSetupComplete, onComplete }: FinishPan
         <ShieldAlert className="size-3.5 mt-0.5 shrink-0 text-warning" />
         <span>{t("secretsWarning")}</span>
       </p>
+
+      {telegramNote}
 
       {polling ? (
         <div className="rounded-xl border bg-muted/20 p-4 flex items-center gap-3">

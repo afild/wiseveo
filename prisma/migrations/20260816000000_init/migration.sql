@@ -265,6 +265,15 @@ CREATE TABLE "telegram_pending_tokens" (
     CONSTRAINT "telegram_pending_tokens_pkey" PRIMARY KEY ("token")
 );
 
+-- CreateTable
+CREATE TABLE "app_settings" (
+    "key" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "app_settings_pkey" PRIMARY KEY ("key")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 

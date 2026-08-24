@@ -11,12 +11,14 @@ import {
   listUsersForAdmin,
 } from "@/features/settings/services/admin-users-service"
 import { readSharedAccountStructure } from "@/features/settings/services/shared-account-service"
+import { readAppSettingsStructure } from "@/features/settings/services/app-settings-service"
+import { getTelegramBotStatus } from "@/features/telegram/services/telegram-config.service"
 import { getAccountOwnership } from "@/features/settings/services/admin-users-service"
 import { listPendingInvitations } from "@/features/settings/services/invitations-service"
 import { defaultMonetarySettings } from "@/lib/monetary"
 
 const baseTabs = ["general", "appearance", "monetary", "profile", "account"] as const
-type SettingsTab = (typeof baseTabs)[number] | "admin"
+type SettingsTab = (typeof baseTabs)[number] | "integrations" | "admin"
 
 export default async function ConfiguracoesPage({
   searchParams,
@@ -27,11 +29,6 @@ export default async function ConfiguracoesPage({
   const resolvedSearchParams = await searchParams
   const requestedTab = resolvedSearchParams?.tab
   const { isAdmin } = await getUserAdminAccess(userId)
-  const validTabs = isAdmin ? [...baseTabs, "admin"] : [...baseTabs]
-  const initialTab: SettingsTab =
-    requestedTab && (validTabs as readonly string[]).includes(requestedTab)
-    ? (requestedTab as SettingsTab)
-    : "general"
 
   if (!userId) {
     const t = await getTranslations("common")
@@ -59,10 +56,37 @@ export default async function ConfiguracoesPage({
     sharedAccount?.ready && isAdmin ? await listPendingInvitations(userId).catch(() => []) : []
   const currentUser = adminUsers.find((u) => u.id === userId)
 
+  // Integrações (bot do Telegram; adiante, IA): o bot é da INSTALAÇÃO — só o
+  // SUPERADMIN vê a aba; na demo ela não existe, como os convites.
+  const showIntegrations =
+    currentUser?.role === "SUPERADMIN" && process.env.NEXT_PUBLIC_DEMO_MODE !== "true"
+  const [appSettings, telegramBot] = showIntegrations
+    ? await Promise.all([
+        readAppSettingsStructure().catch(() => null),
+        getTelegramBotStatus().catch(() => null),
+      ])
+    : [null, null]
+
+  const validTabs: string[] = [
+    ...baseTabs,
+    ...(showIntegrations ? ["integrations"] : []),
+    ...(isAdmin ? ["admin"] : []),
+  ]
+  const initialTab: SettingsTab =
+    requestedTab && validTabs.includes(requestedTab) ? (requestedTab as SettingsTab) : "general"
+
   return (
     <ConfiguracoesPageClient
       initialTab={initialTab}
       isAdmin={isAdmin}
+      integrationsContext={
+        showIntegrations
+          ? {
+              structure: appSettings,
+              bot: telegramBot ?? { configured: false, source: null, botUsername: null },
+            }
+          : undefined
+      }
       initialQuickPaymentSettings={
         settings?.general.quickPayment ?? defaultQuickPaymentSettings
       }

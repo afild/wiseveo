@@ -272,6 +272,14 @@
     "telegram": {
       "notConfigured": "Telegram Bot integration not configured"
     },
+    "telegramBot": {
+      "envConfigured": "This bot is defined in the hosting environment variables — remove the TELEGRAM_* variables there to manage it from here.",
+      "invalidToken": "Invalid token. Copy the full token that @BotFather sent you and paste it again.",
+      "network": "Could not reach Telegram right now. Try again in a moment.",
+      "notPrepared": "Before connecting the bot, prepare your database here in Integrations.",
+      "webhookFailed": "Telegram refused the bot registration. Try again in a moment.",
+      "webhookNeedsHttps": "This address does not use HTTPS — Telegram requires it. Connect the bot from the published installation (https://…)."
+    },
     "transactions": {
       "attachmentNotFound": "Attachment not found",
       "copyFailed": "Failed to copy transaction",
@@ -1530,7 +1538,7 @@
       },
       "sharedAccount": {
         "confirm": "Yes, go ahead",
-        "confirmDesc": "WISEVEO will add the column and the table above to your database. It is the only structural change it makes, and it only happens now because you asked.",
+        "confirmDesc": "WISEVEO will add the column and the table above to your database. Nothing that exists is changed, and it only happens now because you asked.",
         "confirmTitle": "Prepare the database for invites?",
         "desc": "To invite someone to record transactions with you, your database needs to keep two things it does not have yet.",
         "error": "Could not prepare the database.",
@@ -1587,6 +1595,44 @@
       "success": "General settings updated successfully!",
       "title": "General",
       "unavailableFeatures": "Register at least one active bank and one status in the database to enable this global feature."
+    },
+    "integrations": {
+      "bot": {
+        "autoNote": "When connecting, WISEVEO checks the token with Telegram and does the rest of the setup on its own.",
+        "connect": "Connect bot",
+        "connectSuccess": "Bot @{username} connected.",
+        "connectedAs": "Bot connected:",
+        "connecting": "Connecting…",
+        "desc": "The bot answers questions for everyone in this installation — each person only sees their own data.",
+        "disconnect": "Disconnect bot",
+        "disconnectConfirm": "Yes, disconnect",
+        "disconnectConfirmDesc": "The token stored here is removed and the bot stops answering — unless the hosting still has the TELEGRAM_* variables, which take over again. No data is deleted.",
+        "disconnectConfirmTitle": "Disconnect the Telegram bot?",
+        "disconnectEnvFallback": "Token removed — the bot from the hosting variables took over again.",
+        "disconnectSuccess": "Bot disconnected.",
+        "error": "Could not complete. Try again.",
+        "howTo1": "1. In Telegram, open",
+        "howTo2": "2. Send /newbot, pick a name, and copy the token it replies with.",
+        "needsPrepare": "Prepare the database above so the token can be stored safely.",
+        "personalHint": "Each person's link with the bot still lives in Account → Telegram.",
+        "replaceLabel": "Switch bots (paste the new token)",
+        "sourceEnv": "defined in the hosting environment variables",
+        "title": "Telegram Bot",
+        "tokenLabel": "Bot token"
+      },
+      "prepare": {
+        "confirm": "Yes, go ahead",
+        "confirmDesc": "WISEVEO will add the table above to your database. Nothing that exists is changed, and it only happens now because you asked.",
+        "confirmTitle": "Prepare the database for integrations?",
+        "desc": "To store the bot token (and, later on, AI keys) safely, your database needs one piece it does not have yet.",
+        "error": "Could not prepare the database.",
+        "pieceTable": "an “app_settings” table, holding the integration secrets — stored encrypted",
+        "prepare": "Prepare my database",
+        "preparing": "Preparing…",
+        "readyTitle": "Database ready for integrations",
+        "safety": "It only adds. None of your data is changed, moved, or deleted, and the system stays up during the change.",
+        "title": "Store secrets safely"
+      }
     },
     "monetary": {
       "brl": "Brazilian Real (BRL)",
@@ -1670,6 +1716,7 @@
       "admin": "Admin",
       "appearance": "Appearance",
       "general": "General",
+      "integrations": "Integrations",
       "monetary": "Currency",
       "profile": "Profile"
     }
@@ -1846,6 +1893,8 @@
       "restartTitle": "Settings saved — restart the server",
       "secretsWarning": "These values include the database URL and the keys of the integrations you enabled. They are shown only now — do not close this page before copying them.",
       "showValues": "Show values",
+      "telegramConnected": "Telegram bot connected — after signing in, each person activates theirs in Settings → Account.",
+      "telegramDeferred": "The Telegram bot is left for later: enter the dashboard and connect it in Settings → Integrations — just paste the token.",
       "waitingRedeployDesc": "As soon as the redeploy finishes, you land straight in the dashboard. It may take 1–2 minutes.",
       "waitingRedeployTitle": "Waiting for the app to come back configured…"
     },
@@ -1870,16 +1919,17 @@
       "optional": "Optional",
       "subtitle": "Enable extra modules to expand the system's features.",
       "telegram": {
-        "botToken": "Bot Token (BotFather)",
-        "botTokenLabel": "Bot Token",
-        "botUsername": "Bot Username (@your_bot)",
-        "botUsernameLabel": "Bot Username",
+        "autoNote": "Secret and webhook are configured on their own when you finish — nothing beyond the token.",
+        "checkFailed": "Could not validate right now. You can move on — Finish tries again.",
         "desc": "Get notifications, budget alerts, and log transactions via chat.",
+        "howTo1": "1. In Telegram, open",
+        "howTo2": "2. Send /newbot, pick a name, and copy the token it replies with.",
         "shortDesc": "Record transactions via text or voice message",
         "title": "Telegram Bot",
-        "webhookSecret": "Webhook Secret (Your choice)",
-        "webhookSecretLabel": "Webhook Secret",
-        "webhookSecretPlaceholder": "Random key to validate webhooks"
+        "tokenLabel": "Bot token (BotFather)",
+        "validate": "Validate token",
+        "validated": "Bot found: @{username}",
+        "validating": "Validating…"
       },
       "title": "Optional Integrations"
     },
@@ -2124,7 +2174,7 @@
       "description": "Connect your Telegram account to receive financial summaries directly in your chat by asking questions naturally.",
       "disconnect": "Disconnect Telegram",
       "noDeepLink": "Error: connection link was not generated",
-      "notConfigured": "Telegram integration is not enabled on the server. To use this feature, configure the <code>TELEGRAM_BOT_TOKEN</code> and <code>TELEGRAM_BOT_USERNAME</code> variables in your <code>.env</code> file.",
+      "notConfigured": "Telegram integration is not active in this installation yet. Ask whoever administers it to connect the bot in Settings → Integrations.",
       "title": "Telegram Integration"
     },
     "greetings": {

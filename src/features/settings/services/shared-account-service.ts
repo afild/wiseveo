@@ -12,9 +12,10 @@ import {
 } from "../lib/shared-account-structure"
 
 /**
- * Prepara o banco para os convites — a ÚNICA mudança de estrutura que o WISEVEO
- * faz no banco do dono, e só quando ele confirma na tela (regra de ouro: o banco
- * é a fonte da verdade; nada é migrado por conta própria).
+ * Prepara o banco para os convites — mudança de estrutura só assim: aditiva, pelo
+ * app, com o dono confirmando na tela (regra de ouro: o banco é a fonte da
+ * verdade; nada é migrado por conta própria). O mesmo padrão vale para a tabela
+ * de segredos das integrações (`app-settings-service.ts`).
  *
  * O SQL vive aqui, e não num arquivo lido em tempo de execução, porque em
  * hospedagem serverless o repositório pode não acompanhar a função. O arquivo

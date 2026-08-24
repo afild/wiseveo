@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,6 +12,8 @@ import {
   ChevronUp,
   Bot,
   Brain,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react"
 
 function GoogleIcon() {
@@ -27,7 +29,8 @@ function GoogleIcon() {
 
 interface IntegrationConfig {
   google: { enabled: boolean; clientId: string; clientSecret: string }
-  telegram: { enabled: boolean; botToken: string; botUsername: string; webhookSecret: string }
+  /** Só o token: username vem da validação (getMe); segredo e webhook são automáticos. */
+  telegram: { enabled: boolean; botToken: string; botUsername: string }
   openai: { enabled: boolean; apiKey: string }
 }
 
@@ -107,9 +110,43 @@ export function IntegrationsStep({
     telegram: false,
     openai: false,
   })
+  // Validação do token do Telegram (getMe via /api/setup/telegram-check). É opcional:
+  // sem clicar, o Finalizar valida do mesmo jeito — aqui é só a confirmação na hora.
+  const [telegramCheck, setTelegramCheck] = useState<
+    | { state: "idle" }
+    | { state: "checking" }
+    | { state: "ok"; username: string }
+    | { state: "error"; message: string }
+  >({ state: "idle" })
+  // O que está no campo AGORA: uma resposta atrasada do Telegram não pode marcar
+  // como validado um token que a pessoa já corrigiu.
+  const telegramTokenRef = useRef(integrations.telegram.botToken)
 
   const toggleExpand = (key: string) => {
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  const validateTelegramToken = async () => {
+    const tokenAtRequest = integrations.telegram.botToken.trim()
+    setTelegramCheck({ state: "checking" })
+    try {
+      const res = await fetch("/api/setup/telegram-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: tokenAtRequest }),
+      })
+      const data = await res.json().catch(() => null)
+      if (telegramTokenRef.current.trim() !== tokenAtRequest) return
+      if (res.ok && data?.success && data.data?.botUsername) {
+        onIntegrationChange("telegram", "botUsername", data.data.botUsername)
+        setTelegramCheck({ state: "ok", username: data.data.botUsername })
+      } else {
+        setTelegramCheck({ state: "error", message: data?.message || t("telegram.checkFailed") })
+      }
+    } catch {
+      if (telegramTokenRef.current.trim() !== tokenAtRequest) return
+      setTelegramCheck({ state: "error", message: t("telegram.checkFailed") })
+    }
   }
 
   return (
@@ -156,7 +193,7 @@ export function IntegrationsStep({
           </div>
         </IntegrationCard>
 
-        {/* Telegram */}
+        {/* Telegram — só o token: o app valida (getMe), gera o segredo e registra o webhook */}
         <IntegrationCard
           icon={<Bot className="w-6 h-6 text-info" />}
           title={t("telegram.title")}
@@ -166,34 +203,62 @@ export function IntegrationsStep({
           expanded={expanded.telegram}
           onToggleExpand={() => toggleExpand("telegram")}
         >
+          <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+            <p>
+              {t("telegram.howTo1")}{" "}
+              <a
+                href="https://t.me/BotFather"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                {/* i18n-ignore: @BotFather é o nome próprio do bot oficial do Telegram, igual nos 3 idiomas */}
+                @BotFather
+              </a>
+            </p>
+            <p>{t("telegram.howTo2")}</p>
+          </div>
           <div className="space-y-2">
-            <Label className="text-xs">{t("telegram.botTokenLabel")}</Label>
+            <Label className="text-xs">{t("telegram.tokenLabel")}</Label>
             <Input
+              type="password"
               value={integrations.telegram.botToken}
-              onChange={(e) => onIntegrationChange("telegram", "botToken", e.target.value)}
+              onChange={(e) => {
+                telegramTokenRef.current = e.target.value
+                onIntegrationChange("telegram", "botToken", e.target.value)
+                // Token mudou → a validação anterior não vale mais.
+                if (integrations.telegram.botUsername) onIntegrationChange("telegram", "botUsername", "")
+                setTelegramCheck({ state: "idle" })
+              }}
               placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
               className="text-xs font-mono"
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs">{t("telegram.botUsernameLabel")}</Label>
-            <Input
-              value={integrations.telegram.botUsername}
-              onChange={(e) => onIntegrationChange("telegram", "botUsername", e.target.value)}
-              placeholder="meu_bot"
-              className="text-xs"
-            />
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={!integrations.telegram.botToken.trim() || telegramCheck.state === "checking"}
+              onClick={validateTelegramToken}
+            >
+              {telegramCheck.state === "checking" ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              )}
+              {telegramCheck.state === "checking" ? t("telegram.validating") : t("telegram.validate")}
+            </Button>
+            {telegramCheck.state === "ok" && (
+              <span className="text-xs text-positive">
+                {t("telegram.validated", { username: telegramCheck.username })}
+              </span>
+            )}
+            {telegramCheck.state === "error" && (
+              <span className="text-xs text-destructive">{telegramCheck.message}</span>
+            )}
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs">{t("telegram.webhookSecretLabel")}</Label>
-            <Input
-              type="password"
-              value={integrations.telegram.webhookSecret}
-              onChange={(e) => onIntegrationChange("telegram", "webhookSecret", e.target.value)}
-              placeholder={t("telegram.webhookSecretPlaceholder")}
-              className="text-xs"
-            />
-          </div>
+          <p className="text-xs text-muted-foreground">{t("telegram.autoNote")}</p>
         </IntegrationCard>
 
         {/* OpenAI */}
