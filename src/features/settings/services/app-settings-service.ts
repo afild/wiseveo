@@ -13,12 +13,14 @@ import {
 } from "../lib/app-settings-structure"
 
 /**
- * As duas tabelas das integrações: `app_settings` (segredos cifrados —
- * src/lib/secret-cipher.ts — token do bot do Telegram e chaves de IA) e
- * `ai_usage` (consumo de IA por mês, para o teto de gasto). Nascem em instalação
- * nova pela migração inicial; em banco existente, SÓ pelo "Preparar meu banco" da
- * aba Integrações — aditivo, aplicado pelo app, com a confirmação do dono (o
- * mesmo padrão dos convites, `shared-account-service.ts`).
+ * As tabelas das integrações: `app_settings` (segredos cifrados —
+ * src/lib/secret-cipher.ts — token do bot do Telegram e chaves de IA),
+ * `ai_usage` (consumo de IA por mês, para o teto de gasto), `advisor_messages`
+ * (conversas do Advisor), `notification_deliveries` (o que já foi enviado, para
+ * o boletim sair uma vez só) e `kpi_snapshots` (a foto mensal dos indicadores).
+ * Nascem em instalação nova pela migração inicial; em banco existente, SÓ pelo
+ * "Preparar meu banco" da aba Integrações — aditivo, aplicado pelo app, com a
+ * confirmação do dono (o mesmo padrão dos convites, `shared-account-service.ts`).
  *
  * O SQL vive aqui, e não num arquivo lido em tempo de execução, porque em
  * hospedagem serverless o repositório pode não acompanhar a função. O arquivo
@@ -66,6 +68,46 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'advisor_messages_user_id_fkey') THEN
     ALTER TABLE "advisor_messages" ADD CONSTRAINT "advisor_messages_user_id_fkey"
+      FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS "notification_deliveries" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "occurrence_key" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'claimed',
+    "detail" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notification_deliveries_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX IF NOT EXISTS "notification_deliveries_user_id_created_at_idx" ON "notification_deliveries"("user_id", "created_at");
+
+CREATE UNIQUE INDEX IF NOT EXISTS "notification_deliveries_user_id_kind_occurrence_key_key" ON "notification_deliveries"("user_id", "kind", "occurrence_key");
+
+CREATE TABLE IF NOT EXISTS "kpi_snapshots" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "period" CHAR(6) NOT NULL,
+    "payload" JSONB NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "kpi_snapshots_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "kpi_snapshots_user_id_period_key" ON "kpi_snapshots"("user_id", "period");
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'notification_deliveries_user_id_fkey') THEN
+    ALTER TABLE "notification_deliveries" ADD CONSTRAINT "notification_deliveries_user_id_fkey"
+      FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'kpi_snapshots_user_id_fkey') THEN
+    ALTER TABLE "kpi_snapshots" ADD CONSTRAINT "kpi_snapshots_user_id_fkey"
       FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
   END IF;
 END $$;

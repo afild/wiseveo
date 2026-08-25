@@ -300,6 +300,30 @@ CREATE TABLE "ai_usage" (
     CONSTRAINT "ai_usage_pkey" PRIMARY KEY ("period","provider","model")
 );
 
+-- CreateTable
+CREATE TABLE "notification_deliveries" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "occurrence_key" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'claimed',
+    "detail" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notification_deliveries_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "kpi_snapshots" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "period" CHAR(6) NOT NULL,
+    "payload" JSONB NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "kpi_snapshots_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
@@ -365,6 +389,15 @@ CREATE INDEX "telegram_conversation_memories_user_id_idx" ON "telegram_conversat
 
 -- CreateIndex
 CREATE INDEX "advisor_messages_user_id_conversation_id_created_at_idx" ON "advisor_messages"("user_id", "conversation_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX "notification_deliveries_user_id_created_at_idx" ON "notification_deliveries"("user_id", "created_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "notification_deliveries_user_id_kind_occurrence_key_key" ON "notification_deliveries"("user_id", "kind", "occurrence_key");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "kpi_snapshots_user_id_period_key" ON "kpi_snapshots"("user_id", "period");
 
 -- AddForeignKey
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_invited_by_id_fkey" FOREIGN KEY ("invited_by_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -461,3 +494,9 @@ ALTER TABLE "telegram_pending_tokens" ADD CONSTRAINT "telegram_pending_tokens_us
 
 -- AddForeignKey
 ALTER TABLE "advisor_messages" ADD CONSTRAINT "advisor_messages_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notification_deliveries" ADD CONSTRAINT "notification_deliveries_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "kpi_snapshots" ADD CONSTRAINT "kpi_snapshots_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

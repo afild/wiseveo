@@ -1343,6 +1343,36 @@
   "metadata": {
     "description": "Aceleración Financiera"
   },
+  "notifications": {
+    "bills": {
+      "line": "• {title} — {amount} ({date})",
+      "more": "• y {count} más.",
+      "title": "Por vencer: {days, plural, one {# día} other {# días}} por delante",
+      "total": "{count, plural, one {# cuenta} other {# cuentas}}, sumando {total}."
+    },
+    "bulletin": {
+      "dueAhead": "{count, plural, one {# cuenta vence} other {# cuentas vencen}} en los próximos días, sumando {total}.",
+      "dueToday": "{count, plural, one {# cuenta vence hoy} other {# cuentas vencen hoy}}, sumando {total}.",
+      "expense": "Salidas",
+      "headlineDaily": "Tu día",
+      "headlineMonthly": "Tu mes",
+      "headlineWeekly": "Tu semana",
+      "income": "Entradas",
+      "net": "Sobrante",
+      "nothingDueAhead": "Nada por vencer en los próximos días.",
+      "nothingDueToday": "Nada vence hoy.",
+      "upcoming": "Por vencer",
+      "vsAverage": "Promedio del sobrante de los {months} meses registrados: {average}."
+    },
+    "sentinel": {
+      "anomaly": "• {name}: {amount} este mes, contra {usual} de costumbre.",
+      "budget": "• Presupuesto: {spent} de {limit} ya usados ({percent}).",
+      "cash": "• {account} queda en negativo en {days, plural, one {# día} other {# días}}.",
+      "overdue": "• {count, plural, one {# cuenta vencida} other {# cuentas vencidas}}, sumando {total}.",
+      "runway": "• A este ritmo, tu dinero dura cerca de {count, plural, one {{months} mes} other {{months} meses}}.",
+      "title": "Algo se salió de lo normal"
+    }
+  },
   "pricing": {
     "faqDescription": "Obtén respuestas a las preguntas más comunes sobre nuestros precios y planes",
     "faqTitle": "Preguntas Frecuentes",
@@ -1703,9 +1733,11 @@
         "confirm": "Sí, adelante",
         "confirmDesc": "WISEVEO va a agregar a tu base de datos las tablas de arriba. Nada de lo existente se modifica, y ocurre ahora solo porque tú lo pediste.",
         "confirmTitle": "¿Preparar la base de datos para las integraciones?",
-        "desc": "Para guardar el token del bot y las claves de IA con seguridad — y medir el gasto de IA —, tu base de datos necesita piezas que aún no tiene.",
+        "desc": "Para guardar el token del bot y las claves de IA con seguridad, medir el gasto de IA y enviar los avisos sin repetirlos, tu base de datos necesita piezas que aún no tiene.",
         "error": "No se pudo preparar la base de datos.",
         "pieceAdvisor": "una tabla “advisor_messages”, con las conversaciones de la página Advisor",
+        "pieceDeliveries": "una tabla “notification_deliveries”, con lo que ya se envió — es la que impide que el mismo boletín llegue dos veces",
+        "pieceSnapshots": "una tabla “kpi_snapshots”, con la foto mensual de los indicadores — para comparar el mes con tu promedio",
         "pieceTable": "una tabla “app_settings”, con los secretos de las integraciones — guardados cifrados",
         "pieceUsage": "una tabla “ai_usage”, con el consumo de IA por mes — para el tope de gasto",
         "prepare": "Preparar mi base de datos",
@@ -1713,6 +1745,25 @@
         "readyTitle": "Base de datos lista para las integraciones",
         "safety": "Solo agrega. Ninguno de tus datos se modifica, se mueve ni se borra, y el sistema sigue funcionando durante el cambio.",
         "title": "Guardar secretos con seguridad"
+      },
+      "tick": {
+        "configured": "Despertador configurado",
+        "copied": "Dirección copiada",
+        "copy": "Copiar",
+        "copyFailed": "No se pudo copiar. Selecciona la dirección y cópiala a mano.",
+        "desc": "Los avisos necesitan que alguien toque la puerta cada 15 minutos. Genera la dirección y pégala en un servicio gratuito de agendamiento.",
+        "error": "No se pudo hablar con el despertador.",
+        "generate": "Generar dirección",
+        "generated": "Dirección generada",
+        "howTo1": "Registra la dirección en un servicio gratuito de agendamiento (cron-job.org, por ejemplo) para que la llame cada 15 minutos.",
+        "howTo2": "Cada llamada solo revisa quién tiene un aviso venciendo en ese momento. Fuera de los horarios que elegiste, no se envía nada.",
+        "needsPrepare": "Prepara la base de datos de arriba antes de generar la dirección.",
+        "regenerate": "Generar una dirección nueva",
+        "remove": "Quitar",
+        "removed": "Dirección quitada",
+        "showOnce": "Guarda esta dirección ahora: lleva el secreto y no vuelve a aparecer. Si la pierdes, genera otra — la anterior deja de funcionar de inmediato.",
+        "sourceEnv": "viene de las variables del servidor",
+        "title": "Despertador de los avisos"
       }
     },
     "monetary": {
@@ -1745,6 +1796,43 @@
       "symbol": "Símbolo monetario",
       "title": "Formato Monetario",
       "usd": "Dólar estadounidense (USD)"
+    },
+    "notifications": {
+      "at": "Horario",
+      "bills": {
+        "daysAhead": "Días de anticipación",
+        "desc": "Te recuerda lo que vence pronto y sigue abierto.",
+        "title": "Cuentas por vencer"
+      },
+      "daily": {
+        "desc": "Una tarjeta con el mes hasta hoy y lo que vence hoy.",
+        "title": "Boletín diario"
+      },
+      "databaseMissing": "La base de datos todavía no guarda el registro de envíos, así que no se envía nada. Pídele a quien cuida la instalación que prepare la base en Configuración → Integraciones.",
+      "desc": "Elige qué llega a tu Telegram y a qué hora. Todo empieza apagado.",
+      "error": "No se pudieron guardar tus preferencias.",
+      "monthly": {
+        "day": "Día del mes",
+        "desc": "El mes cerrado, comparado con tu promedio.",
+        "title": "Boletín mensual"
+      },
+      "saved": "Preferencias guardadas",
+      "saving": "Guardando…",
+      "sentinel": {
+        "desc": "Solo habla cuando algo se sale de lo normal: gasto atípico, presupuesto desbordado, cuenta vencida.",
+        "title": "Centinela"
+      },
+      "telegramMissing": "Tu Telegram todavía no está conectado. Conéctalo en la pestaña Cuenta para empezar a recibir.",
+      "timezone": "Zona horaria",
+      "timezoneConfirm": "Confirma tu zona: los horarios de abajo la siguen.",
+      "timezoneHelp": "Los horarios de abajo siguen esta zona.",
+      "title": "Avisos automáticos",
+      "useDeviceZone": "Usar la de este dispositivo",
+      "weekly": {
+        "desc": "Los últimos siete días cerrados y la semana que viene.",
+        "title": "Boletín semanal",
+        "weekday": "Día de la semana"
+      }
     },
     "onboardingDesc": "Bienvenido a WISEVEO. Su base de datos y usuario administrador han sido configurados. Recomendamos revisar las pestañas a continuación (como <strong>Moneda</strong> y <strong>General</strong>) y luego navegar por el menú lateral para configurar el Plan de Cuentas definitivo (Categorías y Cuentas).",
     "onboardingSuccess": "¡Configuración completada con éxito! 🎉",
@@ -1799,6 +1887,7 @@
       "general": "General",
       "integrations": "Integraciones",
       "monetary": "Moneda",
+      "notifications": "Avisos",
       "profile": "Perfil"
     }
   },

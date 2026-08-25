@@ -1343,6 +1343,36 @@
   "metadata": {
     "description": "Financial Acceleration"
   },
+  "notifications": {
+    "bills": {
+      "line": "• {title} — {amount} ({date})",
+      "more": "• and {count} more.",
+      "title": "Coming due: {days, plural, one {# day} other {# days}} ahead",
+      "total": "{count, plural, one {# bill} other {# bills}}, adding up to {total}."
+    },
+    "bulletin": {
+      "dueAhead": "{count, plural, one {# bill is due} other {# bills are due}} in the coming days, adding up to {total}.",
+      "dueToday": "{count, plural, one {# bill is due today} other {# bills are due today}}, adding up to {total}.",
+      "expense": "Money out",
+      "headlineDaily": "Your day",
+      "headlineMonthly": "Your month",
+      "headlineWeekly": "Your week",
+      "income": "Money in",
+      "net": "Left over",
+      "nothingDueAhead": "Nothing due in the coming days.",
+      "nothingDueToday": "Nothing due today.",
+      "upcoming": "Coming up",
+      "vsAverage": "Average left over across the {months} months on record: {average}."
+    },
+    "sentinel": {
+      "anomaly": "• {name}: {amount} this month, against {usual} as usual.",
+      "budget": "• Budget: {spent} of {limit} already used ({percent}).",
+      "cash": "• {account} goes negative in {days, plural, one {# day} other {# days}}.",
+      "overdue": "• {count, plural, one {# overdue bill} other {# overdue bills}}, adding up to {total}.",
+      "runway": "• At this pace, your money lasts about {count, plural, one {{months} month} other {{months} months}}.",
+      "title": "Something is off"
+    }
+  },
   "pricing": {
     "faqDescription": "Get answers to the most common questions about our pricing and plans",
     "faqTitle": "Frequently Asked Questions",
@@ -1703,9 +1733,11 @@
         "confirm": "Yes, go ahead",
         "confirmDesc": "WISEVEO will add the tables above to your database. Nothing that exists is changed, and it only happens now because you asked.",
         "confirmTitle": "Prepare the database for integrations?",
-        "desc": "To store the bot token and the AI keys safely — and to meter AI spending — your database needs pieces it does not have yet.",
+        "desc": "To store the bot token and the AI keys safely, meter AI spending, and send alerts without repeating them, your database needs pieces it does not have yet.",
         "error": "Could not prepare the database.",
         "pieceAdvisor": "an “advisor_messages” table, holding the Advisor page conversations",
+        "pieceDeliveries": "a “notification_deliveries” table, holding what has already been sent — it is what keeps the same briefing from arriving twice",
+        "pieceSnapshots": "a “kpi_snapshots” table, holding the monthly indicator snapshot — to compare the month with your average",
         "pieceTable": "an “app_settings” table, holding the integration secrets — stored encrypted",
         "pieceUsage": "an “ai_usage” table, holding monthly AI consumption — for the spending cap",
         "prepare": "Prepare my database",
@@ -1713,6 +1745,25 @@
         "readyTitle": "Database ready for integrations",
         "safety": "It only adds. None of your data is changed, moved, or deleted, and the system stays up during the change.",
         "title": "Store secrets safely"
+      },
+      "tick": {
+        "configured": "Alarm configured",
+        "copied": "Address copied",
+        "copy": "Copy",
+        "copyFailed": "Could not copy. Select the address and copy it by hand.",
+        "desc": "Alerts need someone knocking every 15 minutes. Generate the address and paste it into a free scheduling service.",
+        "error": "Could not reach the alarm.",
+        "generate": "Generate address",
+        "generated": "Address generated",
+        "howTo1": "Register the address with a free scheduling service (cron-job.org, for example) to be called every 15 minutes.",
+        "howTo2": "Each call only checks who has an alert due at that moment. Outside the times you picked, nothing is sent.",
+        "needsPrepare": "Prepare the database above before generating the address.",
+        "regenerate": "Generate a new address",
+        "remove": "Remove",
+        "removed": "Address removed",
+        "showOnce": "Save this address now: it carries the secret and will not be shown again. If you lose it, generate another — the previous one stops working right away.",
+        "sourceEnv": "coming from server variables",
+        "title": "Alert alarm"
       }
     },
     "monetary": {
@@ -1745,6 +1796,43 @@
       "symbol": "Monetary symbol",
       "title": "Monetary Formatting",
       "usd": "US Dollar (USD)"
+    },
+    "notifications": {
+      "at": "Time",
+      "bills": {
+        "daysAhead": "Days ahead",
+        "desc": "Reminds you of what is due soon and still open.",
+        "title": "Bills coming due"
+      },
+      "daily": {
+        "desc": "A card with the month so far and what is due today.",
+        "title": "Daily briefing"
+      },
+      "databaseMissing": "Your database does not keep the delivery record yet, so nothing is sent. Ask whoever runs this installation to prepare the database in Settings → Integrations.",
+      "desc": "Choose what reaches your Telegram and when. Everything starts off.",
+      "error": "Could not save your preferences.",
+      "monthly": {
+        "day": "Day of the month",
+        "desc": "The closed month, compared with your average.",
+        "title": "Monthly briefing"
+      },
+      "saved": "Preferences saved",
+      "saving": "Saving…",
+      "sentinel": {
+        "desc": "Speaks up only when something is off: unusual spending, budget running out, overdue bill.",
+        "title": "Watchdog"
+      },
+      "telegramMissing": "Your Telegram is not connected yet. Connect it on the Account tab to start receiving.",
+      "timezone": "Time zone",
+      "timezoneConfirm": "Confirm your zone: the times below follow it.",
+      "timezoneHelp": "The times below follow this zone.",
+      "title": "Automatic alerts",
+      "useDeviceZone": "Use this device’s",
+      "weekly": {
+        "desc": "The last seven closed days and the week ahead.",
+        "title": "Weekly briefing",
+        "weekday": "Day of the week"
+      }
     },
     "onboardingDesc": "Welcome to WISEVEO. Your database and admin user have been configured. We recommend reviewing the tabs below (such as <strong>Currency</strong> and <strong>General</strong>) and then navigating through the sidebar to configure your final Chart of Accounts (Categories and Accounts).",
     "onboardingSuccess": "Setup completed successfully! 🎉",
@@ -1799,6 +1887,7 @@
       "general": "General",
       "integrations": "Integrations",
       "monetary": "Currency",
+      "notifications": "Alerts",
       "profile": "Profile"
     }
   },

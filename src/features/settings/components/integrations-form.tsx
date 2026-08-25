@@ -29,10 +29,13 @@ import {
   AI_USAGE_TABLE,
   APP_SETTINGS_TABLE,
   INTEGRATION_TABLES,
+  KPI_SNAPSHOTS_TABLE,
+  NOTIFICATION_DELIVERIES_TABLE,
   type AppSettingsStructure,
   type IntegrationTable,
 } from "../lib/app-settings-structure"
 import { AiSettingsCard, type AiSettingsSnapshot } from "./ai-settings-card"
+import { TickSettingsCard, type TickSecretView } from "./tick-settings-card"
 
 /**
  * Cada tabela tem a SUA explicação na lista do que falta. Mapa explícito para
@@ -43,6 +46,8 @@ const PIECE_LABEL_KEYS = {
   [APP_SETTINGS_TABLE]: "prepare.pieceTable",
   [AI_USAGE_TABLE]: "prepare.pieceUsage",
   [ADVISOR_MESSAGES_TABLE]: "prepare.pieceAdvisor",
+  [NOTIFICATION_DELIVERIES_TABLE]: "prepare.pieceDeliveries",
+  [KPI_SNAPSHOTS_TABLE]: "prepare.pieceSnapshots",
 } as const satisfies Record<IntegrationTable, string>
 
 export interface TelegramBotSummary {
@@ -57,6 +62,8 @@ interface IntegrationsFormProps {
   initialBot: TelegramBotSummary
   /** null = leitura falhou; o cartão de IA fica de fora nesta visita. */
   initialAi: AiSettingsSnapshot | null
+  /** null = leitura falhou; o cartão do despertador fica de fora nesta visita. */
+  initialTick: TickSecretView | null
 }
 
 /**
@@ -66,7 +73,12 @@ interface IntegrationsFormProps {
  * token": o app valida, gera o segredo e registra o webhook sozinho).
  * O VÍNCULO de cada pessoa continua em Conta → Telegram — aqui é o bot da casa.
  */
-export function IntegrationsForm({ initialStructure, initialBot, initialAi }: IntegrationsFormProps) {
+export function IntegrationsForm({
+  initialStructure,
+  initialBot,
+  initialAi,
+  initialTick,
+}: IntegrationsFormProps) {
   const t = useTranslations("settings.integrations")
   const tCommon = useTranslations("common")
   const [structure, setStructure] = React.useState(initialStructure)
@@ -268,6 +280,8 @@ export function IntegrationsForm({ initialStructure, initialBot, initialAi }: In
       </Card>
 
       {initialAi && <AiSettingsCard structureReady={secretsReady} initial={initialAi} />}
+
+      {initialTick && <TickSettingsCard structureReady={secretsReady} initial={initialTick} />}
 
       <AlertDialog open={confirmPrepare} onOpenChange={(open) => !open && setConfirmPrepare(false)}>
         <AlertDialogContent>

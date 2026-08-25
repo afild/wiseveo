@@ -125,6 +125,26 @@ export type AdvisorMessage = $Result.DefaultSelection<Prisma.$AdvisorMessagePayl
  * bloqueia). Custo em MICRO-dólares (inteiro) para somar sem erro de vírgula.
  */
 export type AiUsage = $Result.DefaultSelection<Prisma.$AiUsagePayload>
+/**
+ * Model NotificationDelivery
+ * Registro do que JÁ foi enviado — o que garante que um boletim saia UMA vez só.
+ * O despertador externo bate a cada 15 min e a janela de tolerância é larga (uma
+ * batida perdida ainda entrega), então a garantia não pode vir do horário: vem
+ * da chave única (usuário + tipo + ocorrência), com INSERT que ignora conflito.
+ * Nasce junto com `app_settings` (mesmo "Preparar meu banco"); todo acesso passa
+ * por delivery-ledger.service.ts, que tolera a tabela ausente (P2021 → nada é
+ * enviado, em vez de enviar repetido).
+ */
+export type NotificationDelivery = $Result.DefaultSelection<Prisma.$NotificationDeliveryPayload>
+/**
+ * Model KpiSnapshot
+ * Foto mensal dos indicadores, tirada no primeiro tique de cada mês e referente
+ * ao mês FECHADO anterior. Serve para o "este mês vs a sua média" sair na hora,
+ * sem recalcular treze meses de histórico a cada boletim. Só acumula daqui para
+ * frente — não há como reconstruir o passado dos indicadores que dependem de
+ * saldo do dia. Nasce junto com `app_settings` (mesmo "Preparar meu banco").
+ */
+export type KpiSnapshot = $Result.DefaultSelection<Prisma.$KpiSnapshotPayload>
 
 /**
  * Enums
@@ -507,6 +527,26 @@ export class PrismaClient<
     * ```
     */
   get aiUsage(): Prisma.AiUsageDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.notificationDelivery`: Exposes CRUD operations for the **NotificationDelivery** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more NotificationDeliveries
+    * const notificationDeliveries = await prisma.notificationDelivery.findMany()
+    * ```
+    */
+  get notificationDelivery(): Prisma.NotificationDeliveryDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.kpiSnapshot`: Exposes CRUD operations for the **KpiSnapshot** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more KpiSnapshots
+    * const kpiSnapshots = await prisma.kpiSnapshot.findMany()
+    * ```
+    */
+  get kpiSnapshot(): Prisma.KpiSnapshotDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -959,7 +999,9 @@ export namespace Prisma {
     TelegramPendingToken: 'TelegramPendingToken',
     AppSetting: 'AppSetting',
     AdvisorMessage: 'AdvisorMessage',
-    AiUsage: 'AiUsage'
+    AiUsage: 'AiUsage',
+    NotificationDelivery: 'NotificationDelivery',
+    KpiSnapshot: 'KpiSnapshot'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -975,7 +1017,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "invitation" | "account" | "categoryGroup" | "category" | "payee" | "transactionStatusLookup" | "transaction" | "transactionAttachment" | "transactionMessage" | "excludedTransaction" | "recurringTransaction" | "budget" | "telegramConnection" | "telegramConversationMemory" | "telegramPendingToken" | "appSetting" | "advisorMessage" | "aiUsage"
+      modelProps: "user" | "invitation" | "account" | "categoryGroup" | "category" | "payee" | "transactionStatusLookup" | "transaction" | "transactionAttachment" | "transactionMessage" | "excludedTransaction" | "recurringTransaction" | "budget" | "telegramConnection" | "telegramConversationMemory" | "telegramPendingToken" | "appSetting" | "advisorMessage" | "aiUsage" | "notificationDelivery" | "kpiSnapshot"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2385,6 +2427,154 @@ export namespace Prisma {
           }
         }
       }
+      NotificationDelivery: {
+        payload: Prisma.$NotificationDeliveryPayload<ExtArgs>
+        fields: Prisma.NotificationDeliveryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.NotificationDeliveryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.NotificationDeliveryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          findFirst: {
+            args: Prisma.NotificationDeliveryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.NotificationDeliveryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          findMany: {
+            args: Prisma.NotificationDeliveryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>[]
+          }
+          create: {
+            args: Prisma.NotificationDeliveryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          createMany: {
+            args: Prisma.NotificationDeliveryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.NotificationDeliveryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>[]
+          }
+          delete: {
+            args: Prisma.NotificationDeliveryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          update: {
+            args: Prisma.NotificationDeliveryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          deleteMany: {
+            args: Prisma.NotificationDeliveryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.NotificationDeliveryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.NotificationDeliveryUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>[]
+          }
+          upsert: {
+            args: Prisma.NotificationDeliveryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          aggregate: {
+            args: Prisma.NotificationDeliveryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateNotificationDelivery>
+          }
+          groupBy: {
+            args: Prisma.NotificationDeliveryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<NotificationDeliveryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.NotificationDeliveryCountArgs<ExtArgs>
+            result: $Utils.Optional<NotificationDeliveryCountAggregateOutputType> | number
+          }
+        }
+      }
+      KpiSnapshot: {
+        payload: Prisma.$KpiSnapshotPayload<ExtArgs>
+        fields: Prisma.KpiSnapshotFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.KpiSnapshotFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.KpiSnapshotFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload>
+          }
+          findFirst: {
+            args: Prisma.KpiSnapshotFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.KpiSnapshotFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload>
+          }
+          findMany: {
+            args: Prisma.KpiSnapshotFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload>[]
+          }
+          create: {
+            args: Prisma.KpiSnapshotCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload>
+          }
+          createMany: {
+            args: Prisma.KpiSnapshotCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.KpiSnapshotCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload>[]
+          }
+          delete: {
+            args: Prisma.KpiSnapshotDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload>
+          }
+          update: {
+            args: Prisma.KpiSnapshotUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload>
+          }
+          deleteMany: {
+            args: Prisma.KpiSnapshotDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.KpiSnapshotUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.KpiSnapshotUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload>[]
+          }
+          upsert: {
+            args: Prisma.KpiSnapshotUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KpiSnapshotPayload>
+          }
+          aggregate: {
+            args: Prisma.KpiSnapshotAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateKpiSnapshot>
+          }
+          groupBy: {
+            args: Prisma.KpiSnapshotGroupByArgs<ExtArgs>
+            result: $Utils.Optional<KpiSnapshotGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.KpiSnapshotCountArgs<ExtArgs>
+            result: $Utils.Optional<KpiSnapshotCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2512,6 +2702,8 @@ export namespace Prisma {
     appSetting?: AppSettingOmit
     advisorMessage?: AdvisorMessageOmit
     aiUsage?: AiUsageOmit
+    notificationDelivery?: NotificationDeliveryOmit
+    kpiSnapshot?: KpiSnapshotOmit
   }
 
   /* Types for Logging */
@@ -2605,6 +2797,8 @@ export namespace Prisma {
     telegramConversationMemories: number
     telegramPendingTokens: number
     advisorMessages: number
+    notificationDeliveries: number
+    kpiSnapshots: number
     invitationsSent: number
     invitationsAccepted: number
   }
@@ -2623,6 +2817,8 @@ export namespace Prisma {
     telegramConversationMemories?: boolean | UserCountOutputTypeCountTelegramConversationMemoriesArgs
     telegramPendingTokens?: boolean | UserCountOutputTypeCountTelegramPendingTokensArgs
     advisorMessages?: boolean | UserCountOutputTypeCountAdvisorMessagesArgs
+    notificationDeliveries?: boolean | UserCountOutputTypeCountNotificationDeliveriesArgs
+    kpiSnapshots?: boolean | UserCountOutputTypeCountKpiSnapshotsArgs
     invitationsSent?: boolean | UserCountOutputTypeCountInvitationsSentArgs
     invitationsAccepted?: boolean | UserCountOutputTypeCountInvitationsAcceptedArgs
   }
@@ -2727,6 +2923,20 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountAdvisorMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AdvisorMessageWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountNotificationDeliveriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: NotificationDeliveryWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountKpiSnapshotsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KpiSnapshotWhereInput
   }
 
   /**
@@ -3282,6 +3492,8 @@ export namespace Prisma {
     telegramConversationMemories?: boolean | User$telegramConversationMemoriesArgs<ExtArgs>
     telegramPendingTokens?: boolean | User$telegramPendingTokensArgs<ExtArgs>
     advisorMessages?: boolean | User$advisorMessagesArgs<ExtArgs>
+    notificationDeliveries?: boolean | User$notificationDeliveriesArgs<ExtArgs>
+    kpiSnapshots?: boolean | User$kpiSnapshotsArgs<ExtArgs>
     invitationsSent?: boolean | User$invitationsSentArgs<ExtArgs>
     invitationsAccepted?: boolean | User$invitationsAcceptedArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -3360,6 +3572,8 @@ export namespace Prisma {
     telegramConversationMemories?: boolean | User$telegramConversationMemoriesArgs<ExtArgs>
     telegramPendingTokens?: boolean | User$telegramPendingTokensArgs<ExtArgs>
     advisorMessages?: boolean | User$advisorMessagesArgs<ExtArgs>
+    notificationDeliveries?: boolean | User$notificationDeliveriesArgs<ExtArgs>
+    kpiSnapshots?: boolean | User$kpiSnapshotsArgs<ExtArgs>
     invitationsSent?: boolean | User$invitationsSentArgs<ExtArgs>
     invitationsAccepted?: boolean | User$invitationsAcceptedArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -3384,6 +3598,8 @@ export namespace Prisma {
       telegramConversationMemories: Prisma.$TelegramConversationMemoryPayload<ExtArgs>[]
       telegramPendingTokens: Prisma.$TelegramPendingTokenPayload<ExtArgs>[]
       advisorMessages: Prisma.$AdvisorMessagePayload<ExtArgs>[]
+      notificationDeliveries: Prisma.$NotificationDeliveryPayload<ExtArgs>[]
+      kpiSnapshots: Prisma.$KpiSnapshotPayload<ExtArgs>[]
       invitationsSent: Prisma.$InvitationPayload<ExtArgs>[]
       invitationsAccepted: Prisma.$InvitationPayload<ExtArgs>[]
     }
@@ -3812,6 +4028,8 @@ export namespace Prisma {
     telegramConversationMemories<T extends User$telegramConversationMemoriesArgs<ExtArgs> = {}>(args?: Subset<T, User$telegramConversationMemoriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TelegramConversationMemoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     telegramPendingTokens<T extends User$telegramPendingTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$telegramPendingTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TelegramPendingTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     advisorMessages<T extends User$advisorMessagesArgs<ExtArgs> = {}>(args?: Subset<T, User$advisorMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    notificationDeliveries<T extends User$notificationDeliveriesArgs<ExtArgs> = {}>(args?: Subset<T, User$notificationDeliveriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    kpiSnapshots<T extends User$kpiSnapshotsArgs<ExtArgs> = {}>(args?: Subset<T, User$kpiSnapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     invitationsSent<T extends User$invitationsSentArgs<ExtArgs> = {}>(args?: Subset<T, User$invitationsSentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     invitationsAccepted<T extends User$invitationsAcceptedArgs<ExtArgs> = {}>(args?: Subset<T, User$invitationsAcceptedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -4580,6 +4798,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AdvisorMessageScalarFieldEnum | AdvisorMessageScalarFieldEnum[]
+  }
+
+  /**
+   * User.notificationDeliveries
+   */
+  export type User$notificationDeliveriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    where?: NotificationDeliveryWhereInput
+    orderBy?: NotificationDeliveryOrderByWithRelationInput | NotificationDeliveryOrderByWithRelationInput[]
+    cursor?: NotificationDeliveryWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: NotificationDeliveryScalarFieldEnum | NotificationDeliveryScalarFieldEnum[]
+  }
+
+  /**
+   * User.kpiSnapshots
+   */
+  export type User$kpiSnapshotsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+    where?: KpiSnapshotWhereInput
+    orderBy?: KpiSnapshotOrderByWithRelationInput | KpiSnapshotOrderByWithRelationInput[]
+    cursor?: KpiSnapshotWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: KpiSnapshotScalarFieldEnum | KpiSnapshotScalarFieldEnum[]
   }
 
   /**
@@ -25692,6 +25958,2154 @@ export namespace Prisma {
 
 
   /**
+   * Model NotificationDelivery
+   */
+
+  export type AggregateNotificationDelivery = {
+    _count: NotificationDeliveryCountAggregateOutputType | null
+    _min: NotificationDeliveryMinAggregateOutputType | null
+    _max: NotificationDeliveryMaxAggregateOutputType | null
+  }
+
+  export type NotificationDeliveryMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    kind: string | null
+    occurrenceKey: string | null
+    status: string | null
+    detail: string | null
+    createdAt: Date | null
+  }
+
+  export type NotificationDeliveryMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    kind: string | null
+    occurrenceKey: string | null
+    status: string | null
+    detail: string | null
+    createdAt: Date | null
+  }
+
+  export type NotificationDeliveryCountAggregateOutputType = {
+    id: number
+    userId: number
+    kind: number
+    occurrenceKey: number
+    status: number
+    detail: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type NotificationDeliveryMinAggregateInputType = {
+    id?: true
+    userId?: true
+    kind?: true
+    occurrenceKey?: true
+    status?: true
+    detail?: true
+    createdAt?: true
+  }
+
+  export type NotificationDeliveryMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    kind?: true
+    occurrenceKey?: true
+    status?: true
+    detail?: true
+    createdAt?: true
+  }
+
+  export type NotificationDeliveryCountAggregateInputType = {
+    id?: true
+    userId?: true
+    kind?: true
+    occurrenceKey?: true
+    status?: true
+    detail?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type NotificationDeliveryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which NotificationDelivery to aggregate.
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NotificationDeliveries to fetch.
+     */
+    orderBy?: NotificationDeliveryOrderByWithRelationInput | NotificationDeliveryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: NotificationDeliveryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NotificationDeliveries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NotificationDeliveries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned NotificationDeliveries
+    **/
+    _count?: true | NotificationDeliveryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: NotificationDeliveryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: NotificationDeliveryMaxAggregateInputType
+  }
+
+  export type GetNotificationDeliveryAggregateType<T extends NotificationDeliveryAggregateArgs> = {
+        [P in keyof T & keyof AggregateNotificationDelivery]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateNotificationDelivery[P]>
+      : GetScalarType<T[P], AggregateNotificationDelivery[P]>
+  }
+
+
+
+
+  export type NotificationDeliveryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: NotificationDeliveryWhereInput
+    orderBy?: NotificationDeliveryOrderByWithAggregationInput | NotificationDeliveryOrderByWithAggregationInput[]
+    by: NotificationDeliveryScalarFieldEnum[] | NotificationDeliveryScalarFieldEnum
+    having?: NotificationDeliveryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: NotificationDeliveryCountAggregateInputType | true
+    _min?: NotificationDeliveryMinAggregateInputType
+    _max?: NotificationDeliveryMaxAggregateInputType
+  }
+
+  export type NotificationDeliveryGroupByOutputType = {
+    id: string
+    userId: string
+    kind: string
+    occurrenceKey: string
+    status: string
+    detail: string | null
+    createdAt: Date
+    _count: NotificationDeliveryCountAggregateOutputType | null
+    _min: NotificationDeliveryMinAggregateOutputType | null
+    _max: NotificationDeliveryMaxAggregateOutputType | null
+  }
+
+  type GetNotificationDeliveryGroupByPayload<T extends NotificationDeliveryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<NotificationDeliveryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof NotificationDeliveryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], NotificationDeliveryGroupByOutputType[P]>
+            : GetScalarType<T[P], NotificationDeliveryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type NotificationDeliverySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    kind?: boolean
+    occurrenceKey?: boolean
+    status?: boolean
+    detail?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["notificationDelivery"]>
+
+  export type NotificationDeliverySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    kind?: boolean
+    occurrenceKey?: boolean
+    status?: boolean
+    detail?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["notificationDelivery"]>
+
+  export type NotificationDeliverySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    kind?: boolean
+    occurrenceKey?: boolean
+    status?: boolean
+    detail?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["notificationDelivery"]>
+
+  export type NotificationDeliverySelectScalar = {
+    id?: boolean
+    userId?: boolean
+    kind?: boolean
+    occurrenceKey?: boolean
+    status?: boolean
+    detail?: boolean
+    createdAt?: boolean
+  }
+
+  export type NotificationDeliveryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "kind" | "occurrenceKey" | "status" | "detail" | "createdAt", ExtArgs["result"]["notificationDelivery"]>
+  export type NotificationDeliveryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type NotificationDeliveryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type NotificationDeliveryIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $NotificationDeliveryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "NotificationDelivery"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      kind: string
+      occurrenceKey: string
+      status: string
+      detail: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["notificationDelivery"]>
+    composites: {}
+  }
+
+  type NotificationDeliveryGetPayload<S extends boolean | null | undefined | NotificationDeliveryDefaultArgs> = $Result.GetResult<Prisma.$NotificationDeliveryPayload, S>
+
+  type NotificationDeliveryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<NotificationDeliveryFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: NotificationDeliveryCountAggregateInputType | true
+    }
+
+  export interface NotificationDeliveryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['NotificationDelivery'], meta: { name: 'NotificationDelivery' } }
+    /**
+     * Find zero or one NotificationDelivery that matches the filter.
+     * @param {NotificationDeliveryFindUniqueArgs} args - Arguments to find a NotificationDelivery
+     * @example
+     * // Get one NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends NotificationDeliveryFindUniqueArgs>(args: SelectSubset<T, NotificationDeliveryFindUniqueArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one NotificationDelivery that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {NotificationDeliveryFindUniqueOrThrowArgs} args - Arguments to find a NotificationDelivery
+     * @example
+     * // Get one NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends NotificationDeliveryFindUniqueOrThrowArgs>(args: SelectSubset<T, NotificationDeliveryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first NotificationDelivery that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryFindFirstArgs} args - Arguments to find a NotificationDelivery
+     * @example
+     * // Get one NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends NotificationDeliveryFindFirstArgs>(args?: SelectSubset<T, NotificationDeliveryFindFirstArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first NotificationDelivery that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryFindFirstOrThrowArgs} args - Arguments to find a NotificationDelivery
+     * @example
+     * // Get one NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends NotificationDeliveryFindFirstOrThrowArgs>(args?: SelectSubset<T, NotificationDeliveryFindFirstOrThrowArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more NotificationDeliveries that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all NotificationDeliveries
+     * const notificationDeliveries = await prisma.notificationDelivery.findMany()
+     * 
+     * // Get first 10 NotificationDeliveries
+     * const notificationDeliveries = await prisma.notificationDelivery.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const notificationDeliveryWithIdOnly = await prisma.notificationDelivery.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends NotificationDeliveryFindManyArgs>(args?: SelectSubset<T, NotificationDeliveryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a NotificationDelivery.
+     * @param {NotificationDeliveryCreateArgs} args - Arguments to create a NotificationDelivery.
+     * @example
+     * // Create one NotificationDelivery
+     * const NotificationDelivery = await prisma.notificationDelivery.create({
+     *   data: {
+     *     // ... data to create a NotificationDelivery
+     *   }
+     * })
+     * 
+     */
+    create<T extends NotificationDeliveryCreateArgs>(args: SelectSubset<T, NotificationDeliveryCreateArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many NotificationDeliveries.
+     * @param {NotificationDeliveryCreateManyArgs} args - Arguments to create many NotificationDeliveries.
+     * @example
+     * // Create many NotificationDeliveries
+     * const notificationDelivery = await prisma.notificationDelivery.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends NotificationDeliveryCreateManyArgs>(args?: SelectSubset<T, NotificationDeliveryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many NotificationDeliveries and returns the data saved in the database.
+     * @param {NotificationDeliveryCreateManyAndReturnArgs} args - Arguments to create many NotificationDeliveries.
+     * @example
+     * // Create many NotificationDeliveries
+     * const notificationDelivery = await prisma.notificationDelivery.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many NotificationDeliveries and only return the `id`
+     * const notificationDeliveryWithIdOnly = await prisma.notificationDelivery.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends NotificationDeliveryCreateManyAndReturnArgs>(args?: SelectSubset<T, NotificationDeliveryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a NotificationDelivery.
+     * @param {NotificationDeliveryDeleteArgs} args - Arguments to delete one NotificationDelivery.
+     * @example
+     * // Delete one NotificationDelivery
+     * const NotificationDelivery = await prisma.notificationDelivery.delete({
+     *   where: {
+     *     // ... filter to delete one NotificationDelivery
+     *   }
+     * })
+     * 
+     */
+    delete<T extends NotificationDeliveryDeleteArgs>(args: SelectSubset<T, NotificationDeliveryDeleteArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one NotificationDelivery.
+     * @param {NotificationDeliveryUpdateArgs} args - Arguments to update one NotificationDelivery.
+     * @example
+     * // Update one NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends NotificationDeliveryUpdateArgs>(args: SelectSubset<T, NotificationDeliveryUpdateArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more NotificationDeliveries.
+     * @param {NotificationDeliveryDeleteManyArgs} args - Arguments to filter NotificationDeliveries to delete.
+     * @example
+     * // Delete a few NotificationDeliveries
+     * const { count } = await prisma.notificationDelivery.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends NotificationDeliveryDeleteManyArgs>(args?: SelectSubset<T, NotificationDeliveryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more NotificationDeliveries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many NotificationDeliveries
+     * const notificationDelivery = await prisma.notificationDelivery.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends NotificationDeliveryUpdateManyArgs>(args: SelectSubset<T, NotificationDeliveryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more NotificationDeliveries and returns the data updated in the database.
+     * @param {NotificationDeliveryUpdateManyAndReturnArgs} args - Arguments to update many NotificationDeliveries.
+     * @example
+     * // Update many NotificationDeliveries
+     * const notificationDelivery = await prisma.notificationDelivery.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more NotificationDeliveries and only return the `id`
+     * const notificationDeliveryWithIdOnly = await prisma.notificationDelivery.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends NotificationDeliveryUpdateManyAndReturnArgs>(args: SelectSubset<T, NotificationDeliveryUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one NotificationDelivery.
+     * @param {NotificationDeliveryUpsertArgs} args - Arguments to update or create a NotificationDelivery.
+     * @example
+     * // Update or create a NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.upsert({
+     *   create: {
+     *     // ... data to create a NotificationDelivery
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the NotificationDelivery we want to update
+     *   }
+     * })
+     */
+    upsert<T extends NotificationDeliveryUpsertArgs>(args: SelectSubset<T, NotificationDeliveryUpsertArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of NotificationDeliveries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryCountArgs} args - Arguments to filter NotificationDeliveries to count.
+     * @example
+     * // Count the number of NotificationDeliveries
+     * const count = await prisma.notificationDelivery.count({
+     *   where: {
+     *     // ... the filter for the NotificationDeliveries we want to count
+     *   }
+     * })
+    **/
+    count<T extends NotificationDeliveryCountArgs>(
+      args?: Subset<T, NotificationDeliveryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], NotificationDeliveryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a NotificationDelivery.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends NotificationDeliveryAggregateArgs>(args: Subset<T, NotificationDeliveryAggregateArgs>): Prisma.PrismaPromise<GetNotificationDeliveryAggregateType<T>>
+
+    /**
+     * Group by NotificationDelivery.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends NotificationDeliveryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: NotificationDeliveryGroupByArgs['orderBy'] }
+        : { orderBy?: NotificationDeliveryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, NotificationDeliveryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetNotificationDeliveryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the NotificationDelivery model
+   */
+  readonly fields: NotificationDeliveryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for NotificationDelivery.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__NotificationDeliveryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the NotificationDelivery model
+   */
+  interface NotificationDeliveryFieldRefs {
+    readonly id: FieldRef<"NotificationDelivery", 'String'>
+    readonly userId: FieldRef<"NotificationDelivery", 'String'>
+    readonly kind: FieldRef<"NotificationDelivery", 'String'>
+    readonly occurrenceKey: FieldRef<"NotificationDelivery", 'String'>
+    readonly status: FieldRef<"NotificationDelivery", 'String'>
+    readonly detail: FieldRef<"NotificationDelivery", 'String'>
+    readonly createdAt: FieldRef<"NotificationDelivery", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * NotificationDelivery findUnique
+   */
+  export type NotificationDeliveryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter, which NotificationDelivery to fetch.
+     */
+    where: NotificationDeliveryWhereUniqueInput
+  }
+
+  /**
+   * NotificationDelivery findUniqueOrThrow
+   */
+  export type NotificationDeliveryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter, which NotificationDelivery to fetch.
+     */
+    where: NotificationDeliveryWhereUniqueInput
+  }
+
+  /**
+   * NotificationDelivery findFirst
+   */
+  export type NotificationDeliveryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter, which NotificationDelivery to fetch.
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NotificationDeliveries to fetch.
+     */
+    orderBy?: NotificationDeliveryOrderByWithRelationInput | NotificationDeliveryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for NotificationDeliveries.
+     */
+    cursor?: NotificationDeliveryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NotificationDeliveries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NotificationDeliveries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of NotificationDeliveries.
+     */
+    distinct?: NotificationDeliveryScalarFieldEnum | NotificationDeliveryScalarFieldEnum[]
+  }
+
+  /**
+   * NotificationDelivery findFirstOrThrow
+   */
+  export type NotificationDeliveryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter, which NotificationDelivery to fetch.
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NotificationDeliveries to fetch.
+     */
+    orderBy?: NotificationDeliveryOrderByWithRelationInput | NotificationDeliveryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for NotificationDeliveries.
+     */
+    cursor?: NotificationDeliveryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NotificationDeliveries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NotificationDeliveries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of NotificationDeliveries.
+     */
+    distinct?: NotificationDeliveryScalarFieldEnum | NotificationDeliveryScalarFieldEnum[]
+  }
+
+  /**
+   * NotificationDelivery findMany
+   */
+  export type NotificationDeliveryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter, which NotificationDeliveries to fetch.
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NotificationDeliveries to fetch.
+     */
+    orderBy?: NotificationDeliveryOrderByWithRelationInput | NotificationDeliveryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing NotificationDeliveries.
+     */
+    cursor?: NotificationDeliveryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NotificationDeliveries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NotificationDeliveries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of NotificationDeliveries.
+     */
+    distinct?: NotificationDeliveryScalarFieldEnum | NotificationDeliveryScalarFieldEnum[]
+  }
+
+  /**
+   * NotificationDelivery create
+   */
+  export type NotificationDeliveryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * The data needed to create a NotificationDelivery.
+     */
+    data: XOR<NotificationDeliveryCreateInput, NotificationDeliveryUncheckedCreateInput>
+  }
+
+  /**
+   * NotificationDelivery createMany
+   */
+  export type NotificationDeliveryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many NotificationDeliveries.
+     */
+    data: NotificationDeliveryCreateManyInput | NotificationDeliveryCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * NotificationDelivery createManyAndReturn
+   */
+  export type NotificationDeliveryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * The data used to create many NotificationDeliveries.
+     */
+    data: NotificationDeliveryCreateManyInput | NotificationDeliveryCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * NotificationDelivery update
+   */
+  export type NotificationDeliveryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * The data needed to update a NotificationDelivery.
+     */
+    data: XOR<NotificationDeliveryUpdateInput, NotificationDeliveryUncheckedUpdateInput>
+    /**
+     * Choose, which NotificationDelivery to update.
+     */
+    where: NotificationDeliveryWhereUniqueInput
+  }
+
+  /**
+   * NotificationDelivery updateMany
+   */
+  export type NotificationDeliveryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update NotificationDeliveries.
+     */
+    data: XOR<NotificationDeliveryUpdateManyMutationInput, NotificationDeliveryUncheckedUpdateManyInput>
+    /**
+     * Filter which NotificationDeliveries to update
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * Limit how many NotificationDeliveries to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * NotificationDelivery updateManyAndReturn
+   */
+  export type NotificationDeliveryUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * The data used to update NotificationDeliveries.
+     */
+    data: XOR<NotificationDeliveryUpdateManyMutationInput, NotificationDeliveryUncheckedUpdateManyInput>
+    /**
+     * Filter which NotificationDeliveries to update
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * Limit how many NotificationDeliveries to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * NotificationDelivery upsert
+   */
+  export type NotificationDeliveryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * The filter to search for the NotificationDelivery to update in case it exists.
+     */
+    where: NotificationDeliveryWhereUniqueInput
+    /**
+     * In case the NotificationDelivery found by the `where` argument doesn't exist, create a new NotificationDelivery with this data.
+     */
+    create: XOR<NotificationDeliveryCreateInput, NotificationDeliveryUncheckedCreateInput>
+    /**
+     * In case the NotificationDelivery was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<NotificationDeliveryUpdateInput, NotificationDeliveryUncheckedUpdateInput>
+  }
+
+  /**
+   * NotificationDelivery delete
+   */
+  export type NotificationDeliveryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter which NotificationDelivery to delete.
+     */
+    where: NotificationDeliveryWhereUniqueInput
+  }
+
+  /**
+   * NotificationDelivery deleteMany
+   */
+  export type NotificationDeliveryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which NotificationDeliveries to delete
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * Limit how many NotificationDeliveries to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * NotificationDelivery without action
+   */
+  export type NotificationDeliveryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model KpiSnapshot
+   */
+
+  export type AggregateKpiSnapshot = {
+    _count: KpiSnapshotCountAggregateOutputType | null
+    _min: KpiSnapshotMinAggregateOutputType | null
+    _max: KpiSnapshotMaxAggregateOutputType | null
+  }
+
+  export type KpiSnapshotMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    period: string | null
+    createdAt: Date | null
+  }
+
+  export type KpiSnapshotMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    period: string | null
+    createdAt: Date | null
+  }
+
+  export type KpiSnapshotCountAggregateOutputType = {
+    id: number
+    userId: number
+    period: number
+    payload: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type KpiSnapshotMinAggregateInputType = {
+    id?: true
+    userId?: true
+    period?: true
+    createdAt?: true
+  }
+
+  export type KpiSnapshotMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    period?: true
+    createdAt?: true
+  }
+
+  export type KpiSnapshotCountAggregateInputType = {
+    id?: true
+    userId?: true
+    period?: true
+    payload?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type KpiSnapshotAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KpiSnapshot to aggregate.
+     */
+    where?: KpiSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KpiSnapshots to fetch.
+     */
+    orderBy?: KpiSnapshotOrderByWithRelationInput | KpiSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: KpiSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KpiSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KpiSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned KpiSnapshots
+    **/
+    _count?: true | KpiSnapshotCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: KpiSnapshotMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: KpiSnapshotMaxAggregateInputType
+  }
+
+  export type GetKpiSnapshotAggregateType<T extends KpiSnapshotAggregateArgs> = {
+        [P in keyof T & keyof AggregateKpiSnapshot]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateKpiSnapshot[P]>
+      : GetScalarType<T[P], AggregateKpiSnapshot[P]>
+  }
+
+
+
+
+  export type KpiSnapshotGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KpiSnapshotWhereInput
+    orderBy?: KpiSnapshotOrderByWithAggregationInput | KpiSnapshotOrderByWithAggregationInput[]
+    by: KpiSnapshotScalarFieldEnum[] | KpiSnapshotScalarFieldEnum
+    having?: KpiSnapshotScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: KpiSnapshotCountAggregateInputType | true
+    _min?: KpiSnapshotMinAggregateInputType
+    _max?: KpiSnapshotMaxAggregateInputType
+  }
+
+  export type KpiSnapshotGroupByOutputType = {
+    id: string
+    userId: string
+    period: string
+    payload: JsonValue
+    createdAt: Date
+    _count: KpiSnapshotCountAggregateOutputType | null
+    _min: KpiSnapshotMinAggregateOutputType | null
+    _max: KpiSnapshotMaxAggregateOutputType | null
+  }
+
+  type GetKpiSnapshotGroupByPayload<T extends KpiSnapshotGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<KpiSnapshotGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof KpiSnapshotGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], KpiSnapshotGroupByOutputType[P]>
+            : GetScalarType<T[P], KpiSnapshotGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type KpiSnapshotSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    period?: boolean
+    payload?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kpiSnapshot"]>
+
+  export type KpiSnapshotSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    period?: boolean
+    payload?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kpiSnapshot"]>
+
+  export type KpiSnapshotSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    period?: boolean
+    payload?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kpiSnapshot"]>
+
+  export type KpiSnapshotSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    period?: boolean
+    payload?: boolean
+    createdAt?: boolean
+  }
+
+  export type KpiSnapshotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "period" | "payload" | "createdAt", ExtArgs["result"]["kpiSnapshot"]>
+  export type KpiSnapshotInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type KpiSnapshotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type KpiSnapshotIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $KpiSnapshotPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "KpiSnapshot"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      period: string
+      payload: Prisma.JsonValue
+      createdAt: Date
+    }, ExtArgs["result"]["kpiSnapshot"]>
+    composites: {}
+  }
+
+  type KpiSnapshotGetPayload<S extends boolean | null | undefined | KpiSnapshotDefaultArgs> = $Result.GetResult<Prisma.$KpiSnapshotPayload, S>
+
+  type KpiSnapshotCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<KpiSnapshotFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: KpiSnapshotCountAggregateInputType | true
+    }
+
+  export interface KpiSnapshotDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['KpiSnapshot'], meta: { name: 'KpiSnapshot' } }
+    /**
+     * Find zero or one KpiSnapshot that matches the filter.
+     * @param {KpiSnapshotFindUniqueArgs} args - Arguments to find a KpiSnapshot
+     * @example
+     * // Get one KpiSnapshot
+     * const kpiSnapshot = await prisma.kpiSnapshot.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends KpiSnapshotFindUniqueArgs>(args: SelectSubset<T, KpiSnapshotFindUniqueArgs<ExtArgs>>): Prisma__KpiSnapshotClient<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one KpiSnapshot that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {KpiSnapshotFindUniqueOrThrowArgs} args - Arguments to find a KpiSnapshot
+     * @example
+     * // Get one KpiSnapshot
+     * const kpiSnapshot = await prisma.kpiSnapshot.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends KpiSnapshotFindUniqueOrThrowArgs>(args: SelectSubset<T, KpiSnapshotFindUniqueOrThrowArgs<ExtArgs>>): Prisma__KpiSnapshotClient<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KpiSnapshot that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KpiSnapshotFindFirstArgs} args - Arguments to find a KpiSnapshot
+     * @example
+     * // Get one KpiSnapshot
+     * const kpiSnapshot = await prisma.kpiSnapshot.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends KpiSnapshotFindFirstArgs>(args?: SelectSubset<T, KpiSnapshotFindFirstArgs<ExtArgs>>): Prisma__KpiSnapshotClient<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KpiSnapshot that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KpiSnapshotFindFirstOrThrowArgs} args - Arguments to find a KpiSnapshot
+     * @example
+     * // Get one KpiSnapshot
+     * const kpiSnapshot = await prisma.kpiSnapshot.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends KpiSnapshotFindFirstOrThrowArgs>(args?: SelectSubset<T, KpiSnapshotFindFirstOrThrowArgs<ExtArgs>>): Prisma__KpiSnapshotClient<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more KpiSnapshots that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KpiSnapshotFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all KpiSnapshots
+     * const kpiSnapshots = await prisma.kpiSnapshot.findMany()
+     * 
+     * // Get first 10 KpiSnapshots
+     * const kpiSnapshots = await prisma.kpiSnapshot.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const kpiSnapshotWithIdOnly = await prisma.kpiSnapshot.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends KpiSnapshotFindManyArgs>(args?: SelectSubset<T, KpiSnapshotFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a KpiSnapshot.
+     * @param {KpiSnapshotCreateArgs} args - Arguments to create a KpiSnapshot.
+     * @example
+     * // Create one KpiSnapshot
+     * const KpiSnapshot = await prisma.kpiSnapshot.create({
+     *   data: {
+     *     // ... data to create a KpiSnapshot
+     *   }
+     * })
+     * 
+     */
+    create<T extends KpiSnapshotCreateArgs>(args: SelectSubset<T, KpiSnapshotCreateArgs<ExtArgs>>): Prisma__KpiSnapshotClient<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many KpiSnapshots.
+     * @param {KpiSnapshotCreateManyArgs} args - Arguments to create many KpiSnapshots.
+     * @example
+     * // Create many KpiSnapshots
+     * const kpiSnapshot = await prisma.kpiSnapshot.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends KpiSnapshotCreateManyArgs>(args?: SelectSubset<T, KpiSnapshotCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many KpiSnapshots and returns the data saved in the database.
+     * @param {KpiSnapshotCreateManyAndReturnArgs} args - Arguments to create many KpiSnapshots.
+     * @example
+     * // Create many KpiSnapshots
+     * const kpiSnapshot = await prisma.kpiSnapshot.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many KpiSnapshots and only return the `id`
+     * const kpiSnapshotWithIdOnly = await prisma.kpiSnapshot.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends KpiSnapshotCreateManyAndReturnArgs>(args?: SelectSubset<T, KpiSnapshotCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a KpiSnapshot.
+     * @param {KpiSnapshotDeleteArgs} args - Arguments to delete one KpiSnapshot.
+     * @example
+     * // Delete one KpiSnapshot
+     * const KpiSnapshot = await prisma.kpiSnapshot.delete({
+     *   where: {
+     *     // ... filter to delete one KpiSnapshot
+     *   }
+     * })
+     * 
+     */
+    delete<T extends KpiSnapshotDeleteArgs>(args: SelectSubset<T, KpiSnapshotDeleteArgs<ExtArgs>>): Prisma__KpiSnapshotClient<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one KpiSnapshot.
+     * @param {KpiSnapshotUpdateArgs} args - Arguments to update one KpiSnapshot.
+     * @example
+     * // Update one KpiSnapshot
+     * const kpiSnapshot = await prisma.kpiSnapshot.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends KpiSnapshotUpdateArgs>(args: SelectSubset<T, KpiSnapshotUpdateArgs<ExtArgs>>): Prisma__KpiSnapshotClient<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more KpiSnapshots.
+     * @param {KpiSnapshotDeleteManyArgs} args - Arguments to filter KpiSnapshots to delete.
+     * @example
+     * // Delete a few KpiSnapshots
+     * const { count } = await prisma.kpiSnapshot.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends KpiSnapshotDeleteManyArgs>(args?: SelectSubset<T, KpiSnapshotDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KpiSnapshots.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KpiSnapshotUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many KpiSnapshots
+     * const kpiSnapshot = await prisma.kpiSnapshot.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends KpiSnapshotUpdateManyArgs>(args: SelectSubset<T, KpiSnapshotUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KpiSnapshots and returns the data updated in the database.
+     * @param {KpiSnapshotUpdateManyAndReturnArgs} args - Arguments to update many KpiSnapshots.
+     * @example
+     * // Update many KpiSnapshots
+     * const kpiSnapshot = await prisma.kpiSnapshot.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more KpiSnapshots and only return the `id`
+     * const kpiSnapshotWithIdOnly = await prisma.kpiSnapshot.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends KpiSnapshotUpdateManyAndReturnArgs>(args: SelectSubset<T, KpiSnapshotUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one KpiSnapshot.
+     * @param {KpiSnapshotUpsertArgs} args - Arguments to update or create a KpiSnapshot.
+     * @example
+     * // Update or create a KpiSnapshot
+     * const kpiSnapshot = await prisma.kpiSnapshot.upsert({
+     *   create: {
+     *     // ... data to create a KpiSnapshot
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the KpiSnapshot we want to update
+     *   }
+     * })
+     */
+    upsert<T extends KpiSnapshotUpsertArgs>(args: SelectSubset<T, KpiSnapshotUpsertArgs<ExtArgs>>): Prisma__KpiSnapshotClient<$Result.GetResult<Prisma.$KpiSnapshotPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of KpiSnapshots.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KpiSnapshotCountArgs} args - Arguments to filter KpiSnapshots to count.
+     * @example
+     * // Count the number of KpiSnapshots
+     * const count = await prisma.kpiSnapshot.count({
+     *   where: {
+     *     // ... the filter for the KpiSnapshots we want to count
+     *   }
+     * })
+    **/
+    count<T extends KpiSnapshotCountArgs>(
+      args?: Subset<T, KpiSnapshotCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], KpiSnapshotCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a KpiSnapshot.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KpiSnapshotAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends KpiSnapshotAggregateArgs>(args: Subset<T, KpiSnapshotAggregateArgs>): Prisma.PrismaPromise<GetKpiSnapshotAggregateType<T>>
+
+    /**
+     * Group by KpiSnapshot.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KpiSnapshotGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends KpiSnapshotGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: KpiSnapshotGroupByArgs['orderBy'] }
+        : { orderBy?: KpiSnapshotGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, KpiSnapshotGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetKpiSnapshotGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the KpiSnapshot model
+   */
+  readonly fields: KpiSnapshotFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for KpiSnapshot.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__KpiSnapshotClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the KpiSnapshot model
+   */
+  interface KpiSnapshotFieldRefs {
+    readonly id: FieldRef<"KpiSnapshot", 'String'>
+    readonly userId: FieldRef<"KpiSnapshot", 'String'>
+    readonly period: FieldRef<"KpiSnapshot", 'String'>
+    readonly payload: FieldRef<"KpiSnapshot", 'Json'>
+    readonly createdAt: FieldRef<"KpiSnapshot", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * KpiSnapshot findUnique
+   */
+  export type KpiSnapshotFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which KpiSnapshot to fetch.
+     */
+    where: KpiSnapshotWhereUniqueInput
+  }
+
+  /**
+   * KpiSnapshot findUniqueOrThrow
+   */
+  export type KpiSnapshotFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which KpiSnapshot to fetch.
+     */
+    where: KpiSnapshotWhereUniqueInput
+  }
+
+  /**
+   * KpiSnapshot findFirst
+   */
+  export type KpiSnapshotFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which KpiSnapshot to fetch.
+     */
+    where?: KpiSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KpiSnapshots to fetch.
+     */
+    orderBy?: KpiSnapshotOrderByWithRelationInput | KpiSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KpiSnapshots.
+     */
+    cursor?: KpiSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KpiSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KpiSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KpiSnapshots.
+     */
+    distinct?: KpiSnapshotScalarFieldEnum | KpiSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * KpiSnapshot findFirstOrThrow
+   */
+  export type KpiSnapshotFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which KpiSnapshot to fetch.
+     */
+    where?: KpiSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KpiSnapshots to fetch.
+     */
+    orderBy?: KpiSnapshotOrderByWithRelationInput | KpiSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KpiSnapshots.
+     */
+    cursor?: KpiSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KpiSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KpiSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KpiSnapshots.
+     */
+    distinct?: KpiSnapshotScalarFieldEnum | KpiSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * KpiSnapshot findMany
+   */
+  export type KpiSnapshotFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which KpiSnapshots to fetch.
+     */
+    where?: KpiSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KpiSnapshots to fetch.
+     */
+    orderBy?: KpiSnapshotOrderByWithRelationInput | KpiSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing KpiSnapshots.
+     */
+    cursor?: KpiSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KpiSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KpiSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KpiSnapshots.
+     */
+    distinct?: KpiSnapshotScalarFieldEnum | KpiSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * KpiSnapshot create
+   */
+  export type KpiSnapshotCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+    /**
+     * The data needed to create a KpiSnapshot.
+     */
+    data: XOR<KpiSnapshotCreateInput, KpiSnapshotUncheckedCreateInput>
+  }
+
+  /**
+   * KpiSnapshot createMany
+   */
+  export type KpiSnapshotCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many KpiSnapshots.
+     */
+    data: KpiSnapshotCreateManyInput | KpiSnapshotCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * KpiSnapshot createManyAndReturn
+   */
+  export type KpiSnapshotCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * The data used to create many KpiSnapshots.
+     */
+    data: KpiSnapshotCreateManyInput | KpiSnapshotCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * KpiSnapshot update
+   */
+  export type KpiSnapshotUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+    /**
+     * The data needed to update a KpiSnapshot.
+     */
+    data: XOR<KpiSnapshotUpdateInput, KpiSnapshotUncheckedUpdateInput>
+    /**
+     * Choose, which KpiSnapshot to update.
+     */
+    where: KpiSnapshotWhereUniqueInput
+  }
+
+  /**
+   * KpiSnapshot updateMany
+   */
+  export type KpiSnapshotUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update KpiSnapshots.
+     */
+    data: XOR<KpiSnapshotUpdateManyMutationInput, KpiSnapshotUncheckedUpdateManyInput>
+    /**
+     * Filter which KpiSnapshots to update
+     */
+    where?: KpiSnapshotWhereInput
+    /**
+     * Limit how many KpiSnapshots to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * KpiSnapshot updateManyAndReturn
+   */
+  export type KpiSnapshotUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * The data used to update KpiSnapshots.
+     */
+    data: XOR<KpiSnapshotUpdateManyMutationInput, KpiSnapshotUncheckedUpdateManyInput>
+    /**
+     * Filter which KpiSnapshots to update
+     */
+    where?: KpiSnapshotWhereInput
+    /**
+     * Limit how many KpiSnapshots to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * KpiSnapshot upsert
+   */
+  export type KpiSnapshotUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+    /**
+     * The filter to search for the KpiSnapshot to update in case it exists.
+     */
+    where: KpiSnapshotWhereUniqueInput
+    /**
+     * In case the KpiSnapshot found by the `where` argument doesn't exist, create a new KpiSnapshot with this data.
+     */
+    create: XOR<KpiSnapshotCreateInput, KpiSnapshotUncheckedCreateInput>
+    /**
+     * In case the KpiSnapshot was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<KpiSnapshotUpdateInput, KpiSnapshotUncheckedUpdateInput>
+  }
+
+  /**
+   * KpiSnapshot delete
+   */
+  export type KpiSnapshotDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter which KpiSnapshot to delete.
+     */
+    where: KpiSnapshotWhereUniqueInput
+  }
+
+  /**
+   * KpiSnapshot deleteMany
+   */
+  export type KpiSnapshotDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KpiSnapshots to delete
+     */
+    where?: KpiSnapshotWhereInput
+    /**
+     * Limit how many KpiSnapshots to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * KpiSnapshot without action
+   */
+  export type KpiSnapshotDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KpiSnapshot
+     */
+    select?: KpiSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KpiSnapshot
+     */
+    omit?: KpiSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KpiSnapshotInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -25989,6 +28403,30 @@ export namespace Prisma {
   export type AiUsageScalarFieldEnum = (typeof AiUsageScalarFieldEnum)[keyof typeof AiUsageScalarFieldEnum]
 
 
+  export const NotificationDeliveryScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    kind: 'kind',
+    occurrenceKey: 'occurrenceKey',
+    status: 'status',
+    detail: 'detail',
+    createdAt: 'createdAt'
+  };
+
+  export type NotificationDeliveryScalarFieldEnum = (typeof NotificationDeliveryScalarFieldEnum)[keyof typeof NotificationDeliveryScalarFieldEnum]
+
+
+  export const KpiSnapshotScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    period: 'period',
+    payload: 'payload',
+    createdAt: 'createdAt'
+  };
+
+  export type KpiSnapshotScalarFieldEnum = (typeof KpiSnapshotScalarFieldEnum)[keyof typeof KpiSnapshotScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -26240,6 +28678,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryListRelationFilter
     telegramPendingTokens?: TelegramPendingTokenListRelationFilter
     advisorMessages?: AdvisorMessageListRelationFilter
+    notificationDeliveries?: NotificationDeliveryListRelationFilter
+    kpiSnapshots?: KpiSnapshotListRelationFilter
     invitationsSent?: InvitationListRelationFilter
     invitationsAccepted?: InvitationListRelationFilter
   }
@@ -26275,6 +28715,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryOrderByRelationAggregateInput
     telegramPendingTokens?: TelegramPendingTokenOrderByRelationAggregateInput
     advisorMessages?: AdvisorMessageOrderByRelationAggregateInput
+    notificationDeliveries?: NotificationDeliveryOrderByRelationAggregateInput
+    kpiSnapshots?: KpiSnapshotOrderByRelationAggregateInput
     invitationsSent?: InvitationOrderByRelationAggregateInput
     invitationsAccepted?: InvitationOrderByRelationAggregateInput
   }
@@ -26313,6 +28755,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryListRelationFilter
     telegramPendingTokens?: TelegramPendingTokenListRelationFilter
     advisorMessages?: AdvisorMessageListRelationFilter
+    notificationDeliveries?: NotificationDeliveryListRelationFilter
+    kpiSnapshots?: KpiSnapshotListRelationFilter
     invitationsSent?: InvitationListRelationFilter
     invitationsAccepted?: InvitationListRelationFilter
   }, "id" | "email" | "googleId">
@@ -27786,6 +30230,128 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"AiUsage"> | Date | string
   }
 
+  export type NotificationDeliveryWhereInput = {
+    AND?: NotificationDeliveryWhereInput | NotificationDeliveryWhereInput[]
+    OR?: NotificationDeliveryWhereInput[]
+    NOT?: NotificationDeliveryWhereInput | NotificationDeliveryWhereInput[]
+    id?: StringFilter<"NotificationDelivery"> | string
+    userId?: StringFilter<"NotificationDelivery"> | string
+    kind?: StringFilter<"NotificationDelivery"> | string
+    occurrenceKey?: StringFilter<"NotificationDelivery"> | string
+    status?: StringFilter<"NotificationDelivery"> | string
+    detail?: StringNullableFilter<"NotificationDelivery"> | string | null
+    createdAt?: DateTimeFilter<"NotificationDelivery"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type NotificationDeliveryOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    occurrenceKey?: SortOrder
+    status?: SortOrder
+    detail?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type NotificationDeliveryWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId_kind_occurrenceKey?: NotificationDeliveryUserIdKindOccurrenceKeyCompoundUniqueInput
+    AND?: NotificationDeliveryWhereInput | NotificationDeliveryWhereInput[]
+    OR?: NotificationDeliveryWhereInput[]
+    NOT?: NotificationDeliveryWhereInput | NotificationDeliveryWhereInput[]
+    userId?: StringFilter<"NotificationDelivery"> | string
+    kind?: StringFilter<"NotificationDelivery"> | string
+    occurrenceKey?: StringFilter<"NotificationDelivery"> | string
+    status?: StringFilter<"NotificationDelivery"> | string
+    detail?: StringNullableFilter<"NotificationDelivery"> | string | null
+    createdAt?: DateTimeFilter<"NotificationDelivery"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "userId_kind_occurrenceKey">
+
+  export type NotificationDeliveryOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    occurrenceKey?: SortOrder
+    status?: SortOrder
+    detail?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: NotificationDeliveryCountOrderByAggregateInput
+    _max?: NotificationDeliveryMaxOrderByAggregateInput
+    _min?: NotificationDeliveryMinOrderByAggregateInput
+  }
+
+  export type NotificationDeliveryScalarWhereWithAggregatesInput = {
+    AND?: NotificationDeliveryScalarWhereWithAggregatesInput | NotificationDeliveryScalarWhereWithAggregatesInput[]
+    OR?: NotificationDeliveryScalarWhereWithAggregatesInput[]
+    NOT?: NotificationDeliveryScalarWhereWithAggregatesInput | NotificationDeliveryScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    userId?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    kind?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    occurrenceKey?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    status?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    detail?: StringNullableWithAggregatesFilter<"NotificationDelivery"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"NotificationDelivery"> | Date | string
+  }
+
+  export type KpiSnapshotWhereInput = {
+    AND?: KpiSnapshotWhereInput | KpiSnapshotWhereInput[]
+    OR?: KpiSnapshotWhereInput[]
+    NOT?: KpiSnapshotWhereInput | KpiSnapshotWhereInput[]
+    id?: StringFilter<"KpiSnapshot"> | string
+    userId?: StringFilter<"KpiSnapshot"> | string
+    period?: StringFilter<"KpiSnapshot"> | string
+    payload?: JsonFilter<"KpiSnapshot">
+    createdAt?: DateTimeFilter<"KpiSnapshot"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type KpiSnapshotOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    period?: SortOrder
+    payload?: SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type KpiSnapshotWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId_period?: KpiSnapshotUserIdPeriodCompoundUniqueInput
+    AND?: KpiSnapshotWhereInput | KpiSnapshotWhereInput[]
+    OR?: KpiSnapshotWhereInput[]
+    NOT?: KpiSnapshotWhereInput | KpiSnapshotWhereInput[]
+    userId?: StringFilter<"KpiSnapshot"> | string
+    period?: StringFilter<"KpiSnapshot"> | string
+    payload?: JsonFilter<"KpiSnapshot">
+    createdAt?: DateTimeFilter<"KpiSnapshot"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "userId_period">
+
+  export type KpiSnapshotOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    period?: SortOrder
+    payload?: SortOrder
+    createdAt?: SortOrder
+    _count?: KpiSnapshotCountOrderByAggregateInput
+    _max?: KpiSnapshotMaxOrderByAggregateInput
+    _min?: KpiSnapshotMinOrderByAggregateInput
+  }
+
+  export type KpiSnapshotScalarWhereWithAggregatesInput = {
+    AND?: KpiSnapshotScalarWhereWithAggregatesInput | KpiSnapshotScalarWhereWithAggregatesInput[]
+    OR?: KpiSnapshotScalarWhereWithAggregatesInput[]
+    NOT?: KpiSnapshotScalarWhereWithAggregatesInput | KpiSnapshotScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"KpiSnapshot"> | string
+    userId?: StringWithAggregatesFilter<"KpiSnapshot"> | string
+    period?: StringWithAggregatesFilter<"KpiSnapshot"> | string
+    payload?: JsonWithAggregatesFilter<"KpiSnapshot">
+    createdAt?: DateTimeWithAggregatesFilter<"KpiSnapshot"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     name: string
@@ -27817,6 +30383,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -27852,6 +30420,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -27887,6 +30457,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -27922,6 +30494,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -29471,6 +32045,130 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type NotificationDeliveryCreateInput = {
+    id?: string
+    kind: string
+    occurrenceKey: string
+    status?: string
+    detail?: string | null
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutNotificationDeliveriesInput
+  }
+
+  export type NotificationDeliveryUncheckedCreateInput = {
+    id?: string
+    userId: string
+    kind: string
+    occurrenceKey: string
+    status?: string
+    detail?: string | null
+    createdAt?: Date | string
+  }
+
+  export type NotificationDeliveryUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    occurrenceKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutNotificationDeliveriesNestedInput
+  }
+
+  export type NotificationDeliveryUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    occurrenceKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryCreateManyInput = {
+    id?: string
+    userId: string
+    kind: string
+    occurrenceKey: string
+    status?: string
+    detail?: string | null
+    createdAt?: Date | string
+  }
+
+  export type NotificationDeliveryUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    occurrenceKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    occurrenceKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KpiSnapshotCreateInput = {
+    id?: string
+    period: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutKpiSnapshotsInput
+  }
+
+  export type KpiSnapshotUncheckedCreateInput = {
+    id?: string
+    userId: string
+    period: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type KpiSnapshotUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    period?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutKpiSnapshotsNestedInput
+  }
+
+  export type KpiSnapshotUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    period?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KpiSnapshotCreateManyInput = {
+    id?: string
+    userId: string
+    period: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type KpiSnapshotUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    period?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KpiSnapshotUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    period?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -29643,6 +32341,18 @@ export namespace Prisma {
     none?: AdvisorMessageWhereInput
   }
 
+  export type NotificationDeliveryListRelationFilter = {
+    every?: NotificationDeliveryWhereInput
+    some?: NotificationDeliveryWhereInput
+    none?: NotificationDeliveryWhereInput
+  }
+
+  export type KpiSnapshotListRelationFilter = {
+    every?: KpiSnapshotWhereInput
+    some?: KpiSnapshotWhereInput
+    none?: KpiSnapshotWhereInput
+  }
+
   export type InvitationListRelationFilter = {
     every?: InvitationWhereInput
     some?: InvitationWhereInput
@@ -29703,6 +32413,14 @@ export namespace Prisma {
   }
 
   export type AdvisorMessageOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type NotificationDeliveryOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type KpiSnapshotOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -30929,6 +33647,69 @@ export namespace Prisma {
     costMicroUsd?: SortOrder
   }
 
+  export type NotificationDeliveryUserIdKindOccurrenceKeyCompoundUniqueInput = {
+    userId: string
+    kind: string
+    occurrenceKey: string
+  }
+
+  export type NotificationDeliveryCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    occurrenceKey?: SortOrder
+    status?: SortOrder
+    detail?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type NotificationDeliveryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    occurrenceKey?: SortOrder
+    status?: SortOrder
+    detail?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type NotificationDeliveryMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    occurrenceKey?: SortOrder
+    status?: SortOrder
+    detail?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type KpiSnapshotUserIdPeriodCompoundUniqueInput = {
+    userId: string
+    period: string
+  }
+
+  export type KpiSnapshotCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    period?: SortOrder
+    payload?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type KpiSnapshotMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    period?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type KpiSnapshotMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    period?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type AccountCreateNestedManyWithoutUserInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -31024,6 +33805,20 @@ export namespace Prisma {
     connectOrCreate?: AdvisorMessageCreateOrConnectWithoutUserInput | AdvisorMessageCreateOrConnectWithoutUserInput[]
     createMany?: AdvisorMessageCreateManyUserInputEnvelope
     connect?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+  }
+
+  export type NotificationDeliveryCreateNestedManyWithoutUserInput = {
+    create?: XOR<NotificationDeliveryCreateWithoutUserInput, NotificationDeliveryUncheckedCreateWithoutUserInput> | NotificationDeliveryCreateWithoutUserInput[] | NotificationDeliveryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: NotificationDeliveryCreateOrConnectWithoutUserInput | NotificationDeliveryCreateOrConnectWithoutUserInput[]
+    createMany?: NotificationDeliveryCreateManyUserInputEnvelope
+    connect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+  }
+
+  export type KpiSnapshotCreateNestedManyWithoutUserInput = {
+    create?: XOR<KpiSnapshotCreateWithoutUserInput, KpiSnapshotUncheckedCreateWithoutUserInput> | KpiSnapshotCreateWithoutUserInput[] | KpiSnapshotUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: KpiSnapshotCreateOrConnectWithoutUserInput | KpiSnapshotCreateOrConnectWithoutUserInput[]
+    createMany?: KpiSnapshotCreateManyUserInputEnvelope
+    connect?: KpiSnapshotWhereUniqueInput | KpiSnapshotWhereUniqueInput[]
   }
 
   export type InvitationCreateNestedManyWithoutInvitedByInput = {
@@ -31135,6 +33930,20 @@ export namespace Prisma {
     connectOrCreate?: AdvisorMessageCreateOrConnectWithoutUserInput | AdvisorMessageCreateOrConnectWithoutUserInput[]
     createMany?: AdvisorMessageCreateManyUserInputEnvelope
     connect?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+  }
+
+  export type NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<NotificationDeliveryCreateWithoutUserInput, NotificationDeliveryUncheckedCreateWithoutUserInput> | NotificationDeliveryCreateWithoutUserInput[] | NotificationDeliveryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: NotificationDeliveryCreateOrConnectWithoutUserInput | NotificationDeliveryCreateOrConnectWithoutUserInput[]
+    createMany?: NotificationDeliveryCreateManyUserInputEnvelope
+    connect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+  }
+
+  export type KpiSnapshotUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<KpiSnapshotCreateWithoutUserInput, KpiSnapshotUncheckedCreateWithoutUserInput> | KpiSnapshotCreateWithoutUserInput[] | KpiSnapshotUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: KpiSnapshotCreateOrConnectWithoutUserInput | KpiSnapshotCreateOrConnectWithoutUserInput[]
+    createMany?: KpiSnapshotCreateManyUserInputEnvelope
+    connect?: KpiSnapshotWhereUniqueInput | KpiSnapshotWhereUniqueInput[]
   }
 
   export type InvitationUncheckedCreateNestedManyWithoutInvitedByInput = {
@@ -31367,6 +34176,34 @@ export namespace Prisma {
     deleteMany?: AdvisorMessageScalarWhereInput | AdvisorMessageScalarWhereInput[]
   }
 
+  export type NotificationDeliveryUpdateManyWithoutUserNestedInput = {
+    create?: XOR<NotificationDeliveryCreateWithoutUserInput, NotificationDeliveryUncheckedCreateWithoutUserInput> | NotificationDeliveryCreateWithoutUserInput[] | NotificationDeliveryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: NotificationDeliveryCreateOrConnectWithoutUserInput | NotificationDeliveryCreateOrConnectWithoutUserInput[]
+    upsert?: NotificationDeliveryUpsertWithWhereUniqueWithoutUserInput | NotificationDeliveryUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: NotificationDeliveryCreateManyUserInputEnvelope
+    set?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    disconnect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    delete?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    connect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    update?: NotificationDeliveryUpdateWithWhereUniqueWithoutUserInput | NotificationDeliveryUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: NotificationDeliveryUpdateManyWithWhereWithoutUserInput | NotificationDeliveryUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: NotificationDeliveryScalarWhereInput | NotificationDeliveryScalarWhereInput[]
+  }
+
+  export type KpiSnapshotUpdateManyWithoutUserNestedInput = {
+    create?: XOR<KpiSnapshotCreateWithoutUserInput, KpiSnapshotUncheckedCreateWithoutUserInput> | KpiSnapshotCreateWithoutUserInput[] | KpiSnapshotUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: KpiSnapshotCreateOrConnectWithoutUserInput | KpiSnapshotCreateOrConnectWithoutUserInput[]
+    upsert?: KpiSnapshotUpsertWithWhereUniqueWithoutUserInput | KpiSnapshotUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: KpiSnapshotCreateManyUserInputEnvelope
+    set?: KpiSnapshotWhereUniqueInput | KpiSnapshotWhereUniqueInput[]
+    disconnect?: KpiSnapshotWhereUniqueInput | KpiSnapshotWhereUniqueInput[]
+    delete?: KpiSnapshotWhereUniqueInput | KpiSnapshotWhereUniqueInput[]
+    connect?: KpiSnapshotWhereUniqueInput | KpiSnapshotWhereUniqueInput[]
+    update?: KpiSnapshotUpdateWithWhereUniqueWithoutUserInput | KpiSnapshotUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: KpiSnapshotUpdateManyWithWhereWithoutUserInput | KpiSnapshotUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: KpiSnapshotScalarWhereInput | KpiSnapshotScalarWhereInput[]
+  }
+
   export type InvitationUpdateManyWithoutInvitedByNestedInput = {
     create?: XOR<InvitationCreateWithoutInvitedByInput, InvitationUncheckedCreateWithoutInvitedByInput> | InvitationCreateWithoutInvitedByInput[] | InvitationUncheckedCreateWithoutInvitedByInput[]
     connectOrCreate?: InvitationCreateOrConnectWithoutInvitedByInput | InvitationCreateOrConnectWithoutInvitedByInput[]
@@ -31585,6 +34422,34 @@ export namespace Prisma {
     update?: AdvisorMessageUpdateWithWhereUniqueWithoutUserInput | AdvisorMessageUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: AdvisorMessageUpdateManyWithWhereWithoutUserInput | AdvisorMessageUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: AdvisorMessageScalarWhereInput | AdvisorMessageScalarWhereInput[]
+  }
+
+  export type NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<NotificationDeliveryCreateWithoutUserInput, NotificationDeliveryUncheckedCreateWithoutUserInput> | NotificationDeliveryCreateWithoutUserInput[] | NotificationDeliveryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: NotificationDeliveryCreateOrConnectWithoutUserInput | NotificationDeliveryCreateOrConnectWithoutUserInput[]
+    upsert?: NotificationDeliveryUpsertWithWhereUniqueWithoutUserInput | NotificationDeliveryUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: NotificationDeliveryCreateManyUserInputEnvelope
+    set?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    disconnect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    delete?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    connect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    update?: NotificationDeliveryUpdateWithWhereUniqueWithoutUserInput | NotificationDeliveryUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: NotificationDeliveryUpdateManyWithWhereWithoutUserInput | NotificationDeliveryUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: NotificationDeliveryScalarWhereInput | NotificationDeliveryScalarWhereInput[]
+  }
+
+  export type KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<KpiSnapshotCreateWithoutUserInput, KpiSnapshotUncheckedCreateWithoutUserInput> | KpiSnapshotCreateWithoutUserInput[] | KpiSnapshotUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: KpiSnapshotCreateOrConnectWithoutUserInput | KpiSnapshotCreateOrConnectWithoutUserInput[]
+    upsert?: KpiSnapshotUpsertWithWhereUniqueWithoutUserInput | KpiSnapshotUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: KpiSnapshotCreateManyUserInputEnvelope
+    set?: KpiSnapshotWhereUniqueInput | KpiSnapshotWhereUniqueInput[]
+    disconnect?: KpiSnapshotWhereUniqueInput | KpiSnapshotWhereUniqueInput[]
+    delete?: KpiSnapshotWhereUniqueInput | KpiSnapshotWhereUniqueInput[]
+    connect?: KpiSnapshotWhereUniqueInput | KpiSnapshotWhereUniqueInput[]
+    update?: KpiSnapshotUpdateWithWhereUniqueWithoutUserInput | KpiSnapshotUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: KpiSnapshotUpdateManyWithWhereWithoutUserInput | KpiSnapshotUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: KpiSnapshotScalarWhereInput | KpiSnapshotScalarWhereInput[]
   }
 
   export type InvitationUncheckedUpdateManyWithoutInvitedByNestedInput = {
@@ -32795,6 +35660,34 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAdvisorMessagesInput, UserUpdateWithoutAdvisorMessagesInput>, UserUncheckedUpdateWithoutAdvisorMessagesInput>
   }
 
+  export type UserCreateNestedOneWithoutNotificationDeliveriesInput = {
+    create?: XOR<UserCreateWithoutNotificationDeliveriesInput, UserUncheckedCreateWithoutNotificationDeliveriesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutNotificationDeliveriesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutNotificationDeliveriesNestedInput = {
+    create?: XOR<UserCreateWithoutNotificationDeliveriesInput, UserUncheckedCreateWithoutNotificationDeliveriesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutNotificationDeliveriesInput
+    upsert?: UserUpsertWithoutNotificationDeliveriesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutNotificationDeliveriesInput, UserUpdateWithoutNotificationDeliveriesInput>, UserUncheckedUpdateWithoutNotificationDeliveriesInput>
+  }
+
+  export type UserCreateNestedOneWithoutKpiSnapshotsInput = {
+    create?: XOR<UserCreateWithoutKpiSnapshotsInput, UserUncheckedCreateWithoutKpiSnapshotsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutKpiSnapshotsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutKpiSnapshotsNestedInput = {
+    create?: XOR<UserCreateWithoutKpiSnapshotsInput, UserUncheckedCreateWithoutKpiSnapshotsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutKpiSnapshotsInput
+    upsert?: UserUpsertWithoutKpiSnapshotsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutKpiSnapshotsInput, UserUpdateWithoutKpiSnapshotsInput>, UserUncheckedUpdateWithoutKpiSnapshotsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -33645,6 +36538,58 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type NotificationDeliveryCreateWithoutUserInput = {
+    id?: string
+    kind: string
+    occurrenceKey: string
+    status?: string
+    detail?: string | null
+    createdAt?: Date | string
+  }
+
+  export type NotificationDeliveryUncheckedCreateWithoutUserInput = {
+    id?: string
+    kind: string
+    occurrenceKey: string
+    status?: string
+    detail?: string | null
+    createdAt?: Date | string
+  }
+
+  export type NotificationDeliveryCreateOrConnectWithoutUserInput = {
+    where: NotificationDeliveryWhereUniqueInput
+    create: XOR<NotificationDeliveryCreateWithoutUserInput, NotificationDeliveryUncheckedCreateWithoutUserInput>
+  }
+
+  export type NotificationDeliveryCreateManyUserInputEnvelope = {
+    data: NotificationDeliveryCreateManyUserInput | NotificationDeliveryCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type KpiSnapshotCreateWithoutUserInput = {
+    id?: string
+    period: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type KpiSnapshotUncheckedCreateWithoutUserInput = {
+    id?: string
+    period: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type KpiSnapshotCreateOrConnectWithoutUserInput = {
+    where: KpiSnapshotWhereUniqueInput
+    create: XOR<KpiSnapshotCreateWithoutUserInput, KpiSnapshotUncheckedCreateWithoutUserInput>
+  }
+
+  export type KpiSnapshotCreateManyUserInputEnvelope = {
+    data: KpiSnapshotCreateManyUserInput | KpiSnapshotCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type InvitationCreateWithoutInvitedByInput = {
     id?: string
     token: string
@@ -34146,6 +37091,62 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"AdvisorMessage"> | Date | string
   }
 
+  export type NotificationDeliveryUpsertWithWhereUniqueWithoutUserInput = {
+    where: NotificationDeliveryWhereUniqueInput
+    update: XOR<NotificationDeliveryUpdateWithoutUserInput, NotificationDeliveryUncheckedUpdateWithoutUserInput>
+    create: XOR<NotificationDeliveryCreateWithoutUserInput, NotificationDeliveryUncheckedCreateWithoutUserInput>
+  }
+
+  export type NotificationDeliveryUpdateWithWhereUniqueWithoutUserInput = {
+    where: NotificationDeliveryWhereUniqueInput
+    data: XOR<NotificationDeliveryUpdateWithoutUserInput, NotificationDeliveryUncheckedUpdateWithoutUserInput>
+  }
+
+  export type NotificationDeliveryUpdateManyWithWhereWithoutUserInput = {
+    where: NotificationDeliveryScalarWhereInput
+    data: XOR<NotificationDeliveryUpdateManyMutationInput, NotificationDeliveryUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type NotificationDeliveryScalarWhereInput = {
+    AND?: NotificationDeliveryScalarWhereInput | NotificationDeliveryScalarWhereInput[]
+    OR?: NotificationDeliveryScalarWhereInput[]
+    NOT?: NotificationDeliveryScalarWhereInput | NotificationDeliveryScalarWhereInput[]
+    id?: StringFilter<"NotificationDelivery"> | string
+    userId?: StringFilter<"NotificationDelivery"> | string
+    kind?: StringFilter<"NotificationDelivery"> | string
+    occurrenceKey?: StringFilter<"NotificationDelivery"> | string
+    status?: StringFilter<"NotificationDelivery"> | string
+    detail?: StringNullableFilter<"NotificationDelivery"> | string | null
+    createdAt?: DateTimeFilter<"NotificationDelivery"> | Date | string
+  }
+
+  export type KpiSnapshotUpsertWithWhereUniqueWithoutUserInput = {
+    where: KpiSnapshotWhereUniqueInput
+    update: XOR<KpiSnapshotUpdateWithoutUserInput, KpiSnapshotUncheckedUpdateWithoutUserInput>
+    create: XOR<KpiSnapshotCreateWithoutUserInput, KpiSnapshotUncheckedCreateWithoutUserInput>
+  }
+
+  export type KpiSnapshotUpdateWithWhereUniqueWithoutUserInput = {
+    where: KpiSnapshotWhereUniqueInput
+    data: XOR<KpiSnapshotUpdateWithoutUserInput, KpiSnapshotUncheckedUpdateWithoutUserInput>
+  }
+
+  export type KpiSnapshotUpdateManyWithWhereWithoutUserInput = {
+    where: KpiSnapshotScalarWhereInput
+    data: XOR<KpiSnapshotUpdateManyMutationInput, KpiSnapshotUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type KpiSnapshotScalarWhereInput = {
+    AND?: KpiSnapshotScalarWhereInput | KpiSnapshotScalarWhereInput[]
+    OR?: KpiSnapshotScalarWhereInput[]
+    NOT?: KpiSnapshotScalarWhereInput | KpiSnapshotScalarWhereInput[]
+    id?: StringFilter<"KpiSnapshot"> | string
+    userId?: StringFilter<"KpiSnapshot"> | string
+    period?: StringFilter<"KpiSnapshot"> | string
+    payload?: JsonFilter<"KpiSnapshot">
+    createdAt?: DateTimeFilter<"KpiSnapshot"> | Date | string
+  }
+
   export type InvitationUpsertWithWhereUniqueWithoutInvitedByInput = {
     where: InvitationWhereUniqueInput
     update: XOR<InvitationUpdateWithoutInvitedByInput, InvitationUncheckedUpdateWithoutInvitedByInput>
@@ -34225,6 +37226,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
 
@@ -34259,6 +37262,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
 
@@ -34298,6 +37303,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
   }
 
@@ -34332,6 +37339,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
   }
 
@@ -34382,6 +37391,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
 
@@ -34416,6 +37427,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
 
@@ -34461,6 +37474,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
   }
 
@@ -34495,6 +37510,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   }
 
@@ -34528,6 +37545,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -34562,6 +37581,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -34766,6 +37787,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -34800,6 +37823,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -34956,6 +37981,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -34990,6 +38017,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -35172,6 +38201,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -35206,6 +38237,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -35341,6 +38374,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -35375,6 +38410,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -35578,6 +38615,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -35612,6 +38651,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -35678,6 +38719,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -35712,6 +38755,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -35862,6 +38907,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -35896,6 +38943,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36008,6 +39057,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -36042,6 +39093,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -36162,6 +39215,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36196,6 +39251,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36476,6 +39533,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -36510,6 +39569,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -36817,6 +39878,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36851,6 +39914,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -37038,6 +40103,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -37072,6 +40139,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -37177,6 +40246,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -37211,6 +40282,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -37245,6 +40318,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -37279,6 +40354,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -37329,6 +40406,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -37363,6 +40442,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -37540,6 +40621,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -37574,6 +40657,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -37797,6 +40882,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -37831,6 +40918,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -37927,6 +41016,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -37961,6 +41052,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -38085,6 +41178,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -38119,6 +41214,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -38153,6 +41250,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -38187,6 +41286,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -38237,6 +41338,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -38271,6 +41374,8 @@ export namespace Prisma {
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -38305,6 +41410,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -38339,6 +41446,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -38389,6 +41498,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -38423,6 +41534,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -38457,6 +41570,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -38491,6 +41606,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -38541,6 +41658,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -38575,6 +41694,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -38609,6 +41730,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -38643,6 +41766,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -38693,6 +41818,8 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -38727,6 +41854,328 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
+  }
+
+  export type UserCreateWithoutNotificationDeliveriesInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    budgets?: BudgetCreateNestedManyWithoutUserInput
+    categories?: CategoryCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionCreateNestedManyWithoutUserInput
+    payees?: PayeeCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupCreateNestedManyWithoutUserInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotCreateNestedManyWithoutUserInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
+  }
+
+  export type UserUncheckedCreateWithoutNotificationDeliveriesInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
+    categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupUncheckedCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionUncheckedCreateNestedManyWithoutUserInput
+    payees?: PayeeUncheckedCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionUncheckedCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageUncheckedCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupUncheckedCreateNestedManyWithoutUserInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    kpiSnapshots?: KpiSnapshotUncheckedCreateNestedManyWithoutUserInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
+  }
+
+  export type UserCreateOrConnectWithoutNotificationDeliveriesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutNotificationDeliveriesInput, UserUncheckedCreateWithoutNotificationDeliveriesInput>
+  }
+
+  export type UserUpsertWithoutNotificationDeliveriesInput = {
+    update: XOR<UserUpdateWithoutNotificationDeliveriesInput, UserUncheckedUpdateWithoutNotificationDeliveriesInput>
+    create: XOR<UserCreateWithoutNotificationDeliveriesInput, UserUncheckedCreateWithoutNotificationDeliveriesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutNotificationDeliveriesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutNotificationDeliveriesInput, UserUncheckedUpdateWithoutNotificationDeliveriesInput>
+  }
+
+  export type UserUpdateWithoutNotificationDeliveriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUpdateManyWithoutUserNestedInput
+    categories?: CategoryUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUpdateManyWithoutUserNestedInput
+    payees?: PayeeUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUpdateManyWithoutUserNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutNotificationDeliveriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
+    categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUncheckedUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUncheckedUpdateManyWithoutUserNestedInput
+    payees?: PayeeUncheckedUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUncheckedUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUncheckedUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUncheckedUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    kpiSnapshots?: KpiSnapshotUncheckedUpdateManyWithoutUserNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
+  }
+
+  export type UserCreateWithoutKpiSnapshotsInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    budgets?: BudgetCreateNestedManyWithoutUserInput
+    categories?: CategoryCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionCreateNestedManyWithoutUserInput
+    payees?: PayeeCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupCreateNestedManyWithoutUserInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutUserInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
+  }
+
+  export type UserUncheckedCreateWithoutKpiSnapshotsInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
+    categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupUncheckedCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionUncheckedCreateNestedManyWithoutUserInput
+    payees?: PayeeUncheckedCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionUncheckedCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageUncheckedCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupUncheckedCreateNestedManyWithoutUserInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutUserInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
+  }
+
+  export type UserCreateOrConnectWithoutKpiSnapshotsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutKpiSnapshotsInput, UserUncheckedCreateWithoutKpiSnapshotsInput>
+  }
+
+  export type UserUpsertWithoutKpiSnapshotsInput = {
+    update: XOR<UserUpdateWithoutKpiSnapshotsInput, UserUncheckedUpdateWithoutKpiSnapshotsInput>
+    create: XOR<UserCreateWithoutKpiSnapshotsInput, UserUncheckedCreateWithoutKpiSnapshotsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutKpiSnapshotsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutKpiSnapshotsInput, UserUncheckedUpdateWithoutKpiSnapshotsInput>
+  }
+
+  export type UserUpdateWithoutKpiSnapshotsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUpdateManyWithoutUserNestedInput
+    categories?: CategoryUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUpdateManyWithoutUserNestedInput
+    payees?: PayeeUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutUserNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutKpiSnapshotsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
+    categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUncheckedUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUncheckedUpdateManyWithoutUserNestedInput
+    payees?: PayeeUncheckedUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUncheckedUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUncheckedUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUncheckedUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -38874,6 +42323,22 @@ export namespace Prisma {
     conversationId: string
     role: string
     content: string
+    createdAt?: Date | string
+  }
+
+  export type NotificationDeliveryCreateManyUserInput = {
+    id?: string
+    kind: string
+    occurrenceKey: string
+    status?: string
+    detail?: string | null
+    createdAt?: Date | string
+  }
+
+  export type KpiSnapshotCreateManyUserInput = {
+    id?: string
+    period: string
+    payload: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
   }
 
@@ -39368,6 +42833,54 @@ export namespace Prisma {
     conversationId?: StringFieldUpdateOperationsInput | string
     role?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    occurrenceKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    occurrenceKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    occurrenceKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KpiSnapshotUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    period?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KpiSnapshotUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    period?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KpiSnapshotUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    period?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

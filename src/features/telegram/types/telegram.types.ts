@@ -38,6 +38,8 @@ export interface CardData {
   headline: string;
   eyebrow?: string;
   value?: string;
+  /** Rótulo do número grande. Ausente = "Resultado Total" (o padrão das consultas). */
+  valueLabel?: string;
   trend?: string;
   insight?: string;
   items?: CardItem[];

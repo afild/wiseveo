@@ -6,6 +6,8 @@ import {
   AI_USAGE_TABLE,
   APP_SETTINGS_TABLE,
   INTEGRATION_TABLES,
+  KPI_SNAPSHOTS_TABLE,
+  NOTIFICATION_DELIVERIES_TABLE,
   checkAppSettingsStructure,
 } from "../src/features/settings/lib/app-settings-structure"
 import { APP_SETTINGS_SQL } from "../src/features/settings/services/app-settings-service"
@@ -22,6 +24,8 @@ describe("checkAppSettingsStructure", () => {
       ready: true,
       secretsReady: true,
       advisorReady: true,
+      notificationsReady: true,
+      kpiHistoryReady: true,
       missing: [],
     })
   })
@@ -31,18 +35,34 @@ describe("checkAppSettingsStructure", () => {
       ready: false,
       secretsReady: true,
       advisorReady: false,
-      missing: [AI_USAGE_TABLE, ADVISOR_MESSAGES_TABLE],
+      notificationsReady: false,
+      kpiHistoryReady: false,
+      missing: [
+        AI_USAGE_TABLE,
+        ADVISOR_MESSAGES_TABLE,
+        NOTIFICATION_DELIVERIES_TABLE,
+        KPI_SNAPSHOTS_TABLE,
+      ],
     })
     expect(checkAppSettingsStructure({ existingTables: [AI_USAGE_TABLE] })).toEqual({
       ready: false,
       secretsReady: false,
       advisorReady: false,
-      missing: [APP_SETTINGS_TABLE, ADVISOR_MESSAGES_TABLE],
+      notificationsReady: false,
+      kpiHistoryReady: false,
+      missing: [
+        APP_SETTINGS_TABLE,
+        ADVISOR_MESSAGES_TABLE,
+        NOTIFICATION_DELIVERIES_TABLE,
+        KPI_SNAPSHOTS_TABLE,
+      ],
     })
     expect(checkAppSettingsStructure({ existingTables: [] })).toEqual({
       ready: false,
       secretsReady: false,
       advisorReady: false,
+      notificationsReady: false,
+      kpiHistoryReady: false,
       missing: [...INTEGRATION_TABLES],
     })
   })
@@ -60,6 +80,15 @@ describe("checkAppSettingsStructure", () => {
     const soMedidor = checkAppSettingsStructure({ existingTables: [AI_USAGE_TABLE] })
     expect(soMedidor.secretsReady).toBe(false)
     expect(soMedidor.advisorReady).toBe(false)
+
+    // O relógio depende SÓ do caderno de envios; a foto dos indicadores é um
+    // extra do boletim e não pode ser condição para enviar aviso nenhum.
+    const soCaderno = checkAppSettingsStructure({
+      existingTables: [APP_SETTINGS_TABLE, NOTIFICATION_DELIVERIES_TABLE],
+    })
+    expect(soCaderno.notificationsReady).toBe(true)
+    expect(soCaderno.kpiHistoryReady).toBe(false)
+    expect(soCaderno.ready).toBe(false)
   })
 })
 

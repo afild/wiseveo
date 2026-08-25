@@ -18,23 +18,41 @@ import { ProfileForm } from "./profile-form"
 import { AccountForm } from "./account-form"
 import { AdminUsersForm } from "./admin-users-form"
 import { IntegrationsForm, type TelegramBotSummary } from "./integrations-form"
+import { NotificationsForm } from "./notifications-form"
+import type { NotificationPreferences } from "@/features/notifications/lib/preferences"
 import type { AiSettingsSnapshot } from "./ai-settings-card"
+import type { TickSecretView } from "./tick-settings-card"
 import type { AppSettingsStructure } from "../lib/app-settings-structure"
 import { PartyPopper } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 interface ConfiguracoesPageClientProps {
-  initialTab?: "general" | "appearance" | "monetary" | "profile" | "account" | "integrations" | "admin"
+  initialTab?:
+    | "general"
+    | "appearance"
+    | "monetary"
+    | "profile"
+    | "account"
+    | "notifications"
+    | "integrations"
+    | "admin"
   isAdmin: boolean
   initialQuickPaymentSettings: QuickPaymentSettings
   quickPaymentOptions: QuickPaymentOptions
   initialMonetarySettings: MonetarySettings
   initialAdminUsers: AdminUserSummary[]
+  /** Aba Avisos (todo mundo, fora da demo): boletins, sentinela e lembrete. */
+  notificationsContext?: {
+    preferences: NotificationPreferences
+    telegramConnected: boolean
+    ledgerReady: boolean
+  }
   /** Aba Integrações (só SUPERADMIN, fora da demo): preparo do banco + bot + IA. */
   integrationsContext?: {
     structure: AppSettingsStructure | null
     bot: TelegramBotSummary
     ai: AiSettingsSnapshot | null
+    tick: TickSecretView | null
   }
   /** Contexto da aba Usuários (só quando isAdmin). */
   adminContext?: {
@@ -54,6 +72,7 @@ export function ConfiguracoesPageClient({
   quickPaymentOptions,
   initialMonetarySettings,
   initialAdminUsers,
+  notificationsContext,
   integrationsContext,
   adminContext,
 }: ConfiguracoesPageClientProps) {
@@ -83,7 +102,13 @@ export function ConfiguracoesPageClient({
               5: "lg:w-[720px] lg:grid-cols-5",
               6: "lg:w-[840px] lg:grid-cols-6",
               7: "lg:w-[960px] lg:grid-cols-7",
-            }[5 + (integrationsContext ? 1 : 0) + (isAdmin ? 1 : 0)]
+              8: "lg:w-[1080px] lg:grid-cols-8",
+            }[
+              5 +
+                (notificationsContext ? 1 : 0) +
+                (integrationsContext ? 1 : 0) +
+                (isAdmin ? 1 : 0)
+            ]
           }`}
         >
           <TabsTrigger value="general" className="cursor-pointer">{t("tabs.general")}</TabsTrigger>
@@ -91,6 +116,9 @@ export function ConfiguracoesPageClient({
           <TabsTrigger value="monetary" className="cursor-pointer">{t("tabs.monetary")}</TabsTrigger>
           <TabsTrigger value="profile" className="cursor-pointer">{t("tabs.profile")}</TabsTrigger>
           <TabsTrigger value="account" className="cursor-pointer">{t("tabs.account")}</TabsTrigger>
+          {notificationsContext && (
+            <TabsTrigger value="notifications" className="cursor-pointer">{t("tabs.notifications")}</TabsTrigger>
+          )}
           {integrationsContext && (
             <TabsTrigger value="integrations" className="cursor-pointer">{t("tabs.integrations")}</TabsTrigger>
           )}
@@ -130,6 +158,18 @@ export function ConfiguracoesPageClient({
           </div>
         </TabsContent>
 
+        {notificationsContext && (
+          <TabsContent value="notifications" className="border-none p-0 mt-6 outline-none">
+            <div className="max-w-3xl">
+              <NotificationsForm
+                initialPreferences={notificationsContext.preferences}
+                initialTelegramConnected={notificationsContext.telegramConnected}
+                initialLedgerReady={notificationsContext.ledgerReady}
+              />
+            </div>
+          </TabsContent>
+        )}
+
         {integrationsContext && (
           <TabsContent value="integrations" className="border-none p-0 mt-6 outline-none">
             <div className="max-w-3xl">
@@ -137,6 +177,7 @@ export function ConfiguracoesPageClient({
                 initialStructure={integrationsContext.structure}
                 initialBot={integrationsContext.bot}
                 initialAi={integrationsContext.ai}
+                initialTick={integrationsContext.tick}
               />
             </div>
           </TabsContent>

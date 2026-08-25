@@ -40,14 +40,28 @@ function startOfTodayUtc(): Date {
   )
 }
 
+export interface UpcomingTransactionOptions {
+  /**
+   * Recortar o início pelo dia de HOJE no relógio do servidor (padrão).
+   *
+   * É o certo para as telas, que perguntam "o que vem pela frente". NÃO serve a
+   * quem já sabe o dia de calendário que quer: quem está a oeste de Greenwich à
+   * noite ainda está no dia 25, enquanto o servidor em UTC já virou para o 26 —
+   * o recorte empurraria o início para depois do fim e a resposta viria vazia,
+   * dizendo "nada vence hoje" para quem tem cinco contas vencendo hoje.
+   */
+  clampToToday?: boolean
+}
+
 export async function getUpcomingTransactions(
   userId: string,
   from: Date,
   to: Date,
   take = 60,
+  options: UpcomingTransactionOptions = {},
 ): Promise<UpcomingTransactionItem[]> {
   const todayUtc = startOfTodayUtc()
-  const start = from > todayUtc ? from : todayUtc
+  const start = options.clampToToday === false ? from : from > todayUtc ? from : todayUtc
   if (start > to) return []
 
   const transactions = await prisma.transaction.findMany({

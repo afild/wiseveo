@@ -12,15 +12,18 @@ import {
 } from "@/features/settings/services/admin-users-service"
 import { readSharedAccountStructure } from "@/features/settings/services/shared-account-service"
 import { readAppSettingsStructure } from "@/features/settings/services/app-settings-service"
+import { getUserNotificationSettings } from "@/features/settings/services/user-settings-service"
+import { prisma } from "@/lib/prisma"
 import { getTelegramBotStatus } from "@/features/telegram/services/telegram-config.service"
 import { getAiStatusSummary } from "@/features/ai/services/ai-config.service"
 import { getMonthUsage } from "@/features/ai/services/ai-usage.service"
+import { getTickSecretStatus } from "@/features/notifications/services/tick-secret.service"
 import { getAccountOwnership } from "@/features/settings/services/admin-users-service"
 import { listPendingInvitations } from "@/features/settings/services/invitations-service"
 import { defaultMonetarySettings } from "@/lib/monetary"
 
 const baseTabs = ["general", "appearance", "monetary", "profile", "account"] as const
-type SettingsTab = (typeof baseTabs)[number] | "integrations" | "admin"
+type SettingsTab = (typeof baseTabs)[number] | "notifications" | "integrations" | "admin"
 
 export default async function ConfiguracoesPage({
   searchParams,
@@ -62,17 +65,37 @@ export default async function ConfiguracoesPage({
   // SUPERADMIN vê a aba; na demo ela não existe, como os convites.
   const showIntegrations =
     currentUser?.role === "SUPERADMIN" && process.env.NEXT_PUBLIC_DEMO_MODE !== "true"
-  const [appSettings, telegramBot, aiSummary, aiUsage] = showIntegrations
+  const [telegramBot, aiSummary, aiUsage, tickStatus] = showIntegrations
     ? await Promise.all([
-        readAppSettingsStructure().catch(() => null),
         getTelegramBotStatus().catch(() => null),
         getAiStatusSummary().catch(() => null),
         getMonthUsage().catch(() => null),
+        getTickSecretStatus().catch(() => null),
       ])
     : [null, null, null, null]
 
+  // Avisos automáticos são de CADA PESSOA (o bot é da casa, o boletim é de quem
+  // pediu). Na demo, como tudo que depende do Telegram, a aba não existe.
+  const showNotifications = process.env.NEXT_PUBLIC_DEMO_MODE !== "true"
+  // A estrutura do banco é lida uma vez e serve às DUAS abas: quem não é
+  // SUPERADMIN não vê o cartão de preparo, mas precisa saber se os avisos já
+  // têm onde ser registrados — senão ligaria tudo e não receberia nada.
+  const [appSettings, notificationPreferences, telegramConnection] =
+    showNotifications || showIntegrations
+      ? await Promise.all([
+          readAppSettingsStructure().catch(() => null),
+          showNotifications ? getUserNotificationSettings(userId) : Promise.resolve(null),
+          showNotifications
+            ? prisma.telegramConnection
+                .findUnique({ where: { userId }, select: { isActive: true } })
+                .catch(() => null)
+            : Promise.resolve(null),
+        ])
+      : [null, null, null]
+
   const validTabs: string[] = [
     ...baseTabs,
+    ...(showNotifications ? ["notifications"] : []),
     ...(showIntegrations ? ["integrations"] : []),
     ...(isAdmin ? ["admin"] : []),
   ]
@@ -83,6 +106,17 @@ export default async function ConfiguracoesPage({
     <ConfiguracoesPageClient
       initialTab={initialTab}
       isAdmin={isAdmin}
+      notificationsContext={
+        showNotifications && notificationPreferences
+          ? {
+              preferences: notificationPreferences,
+              telegramConnected: Boolean(telegramConnection?.isActive),
+              // O cartão do preparo é do SUPERADMIN; aqui só interessa se o
+              // caderno de envios já existe — sem ele o relógio não manda nada.
+              ledgerReady: appSettings?.notificationsReady ?? false,
+            }
+          : undefined
+      }
       integrationsContext={
         showIntegrations
           ? {
@@ -98,6 +132,7 @@ export default async function ConfiguracoesPage({
                       usage: { period: aiUsage.period, calls: aiUsage.calls, costUsd: aiUsage.costUsd },
                     }
                   : null,
+              tick: tickStatus,
             }
           : undefined
       }

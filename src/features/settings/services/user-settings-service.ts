@@ -12,6 +12,10 @@ import {
   normalizeThemePreferences,
   type ThemePreferences,
 } from "@/lib/theme-preferences"
+import {
+  resolveNotificationPreferences,
+  type NotificationPreferences,
+} from "@/features/notifications/lib/preferences"
 import bcrypt from "bcryptjs"
 
 export type AppearanceSettings = ThemePreferences
@@ -223,6 +227,38 @@ export async function setUserLocale(userId: string, locale: string): Promise<voi
       }),
     },
   })
+}
+
+/**
+ * Avisos automáticos (boletins, sentinela, lembrete de contas) da PESSOA — não
+ * da instalação. Vive em `preferencesJson.notifications`, como todo o resto:
+ * nenhuma coluna nova em `users`.
+ */
+export async function getUserNotificationSettings(
+  userId: string,
+): Promise<NotificationPreferences> {
+  const prefs = await getUserPreferences(userId)
+  return resolveNotificationPreferences(prefs.notifications)
+}
+
+export async function updateUserNotificationSettings(
+  userId: string,
+  settings: unknown,
+): Promise<NotificationPreferences> {
+  const next = resolveNotificationPreferences(settings)
+  const currentPreferences = await getUserPreferences(userId)
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      preferencesJson: toInputJsonValue({
+        ...currentPreferences,
+        notifications: next,
+      }),
+    },
+  })
+
+  return next
 }
 
 export async function getQuickPaymentOptions(

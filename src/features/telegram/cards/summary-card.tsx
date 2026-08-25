@@ -17,7 +17,7 @@ export function SummaryCard({ data, t }: { data: CardData; t: TelegramTranslator
             minWidth: 0,
           }}
         >
-          <div style={{ color: cardTheme.muted, fontSize: 16, fontWeight: 600, marginBottom: 8, letterSpacing: "0.05em", textTransform: "uppercase" }}>{t("cards.totalResult")}</div>
+          <div style={{ color: cardTheme.muted, fontSize: 16, fontWeight: 600, marginBottom: 8, letterSpacing: "0.05em", textTransform: "uppercase" }}>{data.valueLabel ?? t("cards.totalResult")}</div>
           <div
             style={{
               color: data.value?.startsWith("(") ? cardTheme.negative : cardTheme.foreground,

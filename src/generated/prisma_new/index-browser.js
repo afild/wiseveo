@@ -347,6 +347,24 @@ exports.Prisma.AiUsageScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.NotificationDeliveryScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  kind: 'kind',
+  occurrenceKey: 'occurrenceKey',
+  status: 'status',
+  detail: 'detail',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.KpiSnapshotScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  period: 'period',
+  payload: 'payload',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -419,7 +437,9 @@ exports.Prisma.ModelName = {
   TelegramPendingToken: 'TelegramPendingToken',
   AppSetting: 'AppSetting',
   AdvisorMessage: 'AdvisorMessage',
-  AiUsage: 'AiUsage'
+  AiUsage: 'AiUsage',
+  NotificationDelivery: 'NotificationDelivery',
+  KpiSnapshot: 'KpiSnapshot'
 };
 
 /**

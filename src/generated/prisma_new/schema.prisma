@@ -38,6 +38,8 @@ model User {
   telegramConversationMemories TelegramConversationMemory[]
   telegramPendingTokens        TelegramPendingToken[]
   advisorMessages              AdvisorMessage[]
+  notificationDeliveries       NotificationDelivery[]
+  kpiSnapshots                 KpiSnapshot[]
   invitationsSent              Invitation[]                 @relation("InvitationInviter")
   invitationsAccepted          Invitation[]                 @relation("InvitationAcceptedBy")
 
@@ -404,4 +406,43 @@ model AiUsage {
 
   @@id([period, provider, model])
   @@map("ai_usage")
+}
+
+/// Registro do que JÁ foi enviado — o que garante que um boletim saia UMA vez só.
+/// O despertador externo bate a cada 15 min e a janela de tolerância é larga (uma
+/// batida perdida ainda entrega), então a garantia não pode vir do horário: vem
+/// da chave única (usuário + tipo + ocorrência), com INSERT que ignora conflito.
+/// Nasce junto com `app_settings` (mesmo "Preparar meu banco"); todo acesso passa
+/// por delivery-ledger.service.ts, que tolera a tabela ausente (P2021 → nada é
+/// enviado, em vez de enviar repetido).
+model NotificationDelivery {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind          String
+  occurrenceKey String   @map("occurrence_key")
+  status        String   @default("claimed")
+  detail        String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, kind, occurrenceKey])
+  @@index([userId, createdAt])
+  @@map("notification_deliveries")
+}
+
+/// Foto mensal dos indicadores, tirada no primeiro tique de cada mês e referente
+/// ao mês FECHADO anterior. Serve para o "este mês vs a sua média" sair na hora,
+/// sem recalcular treze meses de histórico a cada boletim. Só acumula daqui para
+/// frente — não há como reconstruir o passado dos indicadores que dependem de
+/// saldo do dia. Nasce junto com `app_settings` (mesmo "Preparar meu banco").
+model KpiSnapshot {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  period    String   @db.Char(6)
+  payload   Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, period])
+  @@map("kpi_snapshots")
 }
