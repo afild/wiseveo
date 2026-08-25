@@ -1,5 +1,9 @@
 {
   "Routes": {
+    "advisor": {
+      "description": "Converse com o seu analista financeiro",
+      "title": "Advisor"
+    },
     "analysis": {
       "description": "Relatórios e métricas de desempenho",
       "title": "Análise"
@@ -97,6 +101,27 @@
       "optionsAriaLabel": "Opções da conta"
     }
   },
+  "advisor": {
+    "emptyState": "Pergunte qualquer coisa sobre o seu dinheiro. Eu consulto os seus dados antes de responder.",
+    "error": "Não consegui responder agora. Tente de novo.",
+    "notPersisted": "As conversas ainda não estão sendo guardadas. Para isso, prepare o seu banco em Configurações → Integrações.",
+    "opening": {
+      "expense": "Saídas do mês",
+      "income": "Entradas do mês",
+      "savings": "Sobra do mês",
+      "upcoming": "{count, plural, one {# conta vence} other {# contas vencem}} nos próximos 7 dias, somando {total}.",
+      "upcomingNone": "Nada a vencer nos próximos 7 dias."
+    },
+    "placeholder": "Pergunte sobre as suas finanças…",
+    "send": "Enviar pergunta",
+    "suggestions": {
+      "month": "Como foi o meu mês?",
+      "status": "Como estão as minhas finanças?",
+      "upcoming": "O que vence esta semana?"
+    },
+    "thinking": "Consultando os seus dados…",
+    "title": "Advisor"
+  },
   "analysis": {
     "client": {
       "fetchError": "Falha ao carregar a DRE do período",
@@ -183,6 +208,13 @@
       "roleUpdated": "Papel atualizado.",
       "userApproved": "Usuário aprovado com sucesso.",
       "userRemoved": "Usuário removido."
+    },
+    "advisor": {
+      "budgetExceeded": "O limite mensal de gasto com IA foi atingido. Ajuste o teto em Configurações → Integrações.",
+      "emptyAnswer": "Não consegui montar uma resposta com os dados que encontrei. Tente perguntar de outro jeito.",
+      "invalidQuestion": "Escreva a sua pergunta.",
+      "notConfigured": "A inteligência artificial ainda não foi configurada. Cadastre uma chave em Configurações → Integrações.",
+      "questionTooLong": "Pergunta muito longa. Resuma em até 1000 caracteres."
     },
     "aiSettings": {
       "invalidBudget": "Teto inválido. Use um número maior ou igual a zero, ou deixe vazio para sem teto.",
@@ -499,8 +531,8 @@
       "descriptions": {
         "active_avg": "Média apenas dos meses em que houve gasto — ideal para despesas esporádicas",
         "banded_avg": "Média dos últimos meses, limitada por um piso e um teto que você define",
-        "envelope_rollover": "O que você não gasta num mês aumenta o limite dos próximos",
         "declining_target": "Reduz o limite gradualmente todo mês para ajudar a cortar um gasto",
+        "envelope_rollover": "O que você não gasta num mês aumenta o limite dos próximos",
         "fixed_target": "Valor fixo definido manualmente",
         "historical_max": "Máximo histórico com margem de segurança",
         "income_pct": "Percentual da receita média do período",
@@ -531,8 +563,8 @@
       "names": {
         "active_avg": "Média dos Meses Ativos",
         "banded_avg": "Média com Piso e Teto",
-        "envelope_rollover": "Envelope com Sobras",
         "declining_target": "Meta Decrescente",
+        "envelope_rollover": "Envelope com Sobras",
         "fixed_target": "Meta Fixa",
         "historical_max": "Limite Histórico",
         "income_pct": "% da Receita",
@@ -597,6 +629,8 @@
       "periodBarLabel": "Barra de período orçamentário"
     },
     "itemCard": {
+      "aboveLimit": "Acima do limite",
+      "available": "Disponível",
       "budgeted": "Orçado",
       "category": "Categoria",
       "configureFormula": "Configurar Fórmula",
@@ -604,22 +638,20 @@
       "customSuffix": "(personalizada)",
       "dragToReorder": "Arraste para reordenar",
       "editCard": "Editar Cartão",
-      "manualLimit": "Limite manual",
+      "formulaDetails": "Detalhes do cálculo",
       "group": "Grupo",
+      "historyWindow": "{months, plural, one {# mês} other {# meses}} de histórico",
+      "manualLimit": "Limite manual",
       "mayExceed": "Pode estourar",
+      "moveDown": "Mover para baixo",
+      "moveUp": "Mover para cima",
       "multiple": "Múltiplos",
       "noData": "Sem dados",
+      "noLimit": "Sem limite",
       "paid": "Pago",
       "projected": "Projetado",
       "scheduled": "Agendado",
       "used": "utilizado",
-      "aboveLimit": "Acima do limite",
-      "available": "Disponível",
-      "formulaDetails": "Detalhes do cálculo",
-      "historyWindow": "{months, plural, one {# mês} other {# meses}} de histórico",
-      "moveDown": "Mover para baixo",
-      "moveUp": "Mover para cima",
-      "noLimit": "Sem limite",
       "viaFormula": "via {formula}"
     },
     "newBudget": "Novo Orçamento",
@@ -926,6 +958,7 @@
     },
     "mobileMoreSheet": {
       "descriptions": {
+        "advisor": "Converse com o seu analista",
         "analysis": "DRE e relatórios de período",
         "banks": "Contas e saldos",
         "forecasting": "Projeções financeiras",
@@ -1672,6 +1705,7 @@
         "confirmTitle": "Preparar o banco para as integrações?",
         "desc": "Para guardar o token do bot e as chaves de IA com segurança — e medir o gasto com IA —, o seu banco precisa de peças que ele ainda não tem.",
         "error": "Não foi possível preparar o banco.",
+        "pieceAdvisor": "uma tabela “advisor_messages”, com as conversas da página Advisor",
         "pieceTable": "uma tabela “app_settings”, com os segredos das integrações — gravados cifrados",
         "pieceUsage": "uma tabela “ai_usage”, com o consumo de IA por mês — para o teto de gasto",
         "prepare": "Preparar meu banco",
@@ -2034,6 +2068,7 @@
   "sidebar": {
     "accountsettings": "Configurações da Conta",
     "admin": "Administrador",
+    "advisor": "Advisor",
     "analise": "Análise",
     "appearance": "Aparência",
     "apps": "Apps",
@@ -2184,6 +2219,9 @@
   "telegram": {
     "bot": {
       "aiNotConfigured": "A inteligência artificial ainda não foi configurada nesta instalação, então não consigo entender perguntas. Peça a quem administra para cadastrar uma chave em Configurações → Integrações.",
+      "audioEmpty": "Não consegui ouvir nada nesse áudio. Pode gravar de novo, ou escrever a pergunta?",
+      "audioFailed": "Não consegui entender esse áudio. Tente gravar de novo, ou escreva a pergunta.",
+      "audioNotSupported": "Ainda não consigo ouvir áudios nesta instalação. Escreva a pergunta — ou peça a quem administra para cadastrar uma chave da OpenAI ou do Google em Configurações → Integrações.",
       "budgetExceeded": "O limite mensal de gasto com IA desta instalação foi atingido. Volto a responder quando o mês virar — ou peça a quem administra para ajustar o teto em Configurações → Integrações.",
       "cardFormatError": "Desculpe, não consegui processar sua solicitação no momento.",
       "connected": "Conta WISEVEO conectada com sucesso. Você já pode me fazer perguntas sobre suas finanças.",

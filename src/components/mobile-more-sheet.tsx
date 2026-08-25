@@ -10,6 +10,7 @@ import {
   Calendar,
   Calculator,
   LayoutPanelLeft,
+  Sparkles,
   RotateCcw,
   Landmark,
   Settings,
@@ -17,6 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { isDemoDisabledRoute } from "@/lib/demo-routes"
 import {
   Sheet,
   SheetContent,
@@ -39,6 +41,12 @@ const SECONDARY_NAV: SecondaryNavItem[] = [
     href: "/insights",
     icon: LayoutPanelLeft,
     descriptionKey: "insights",
+  },
+  {
+    labelKey: "advisor",
+    href: "/advisor",
+    icon: Sparkles,
+    descriptionKey: "advisor",
   },
   {
     labelKey: "recorrentes",
@@ -106,7 +114,7 @@ export function MobileMoreSheet({ open, onOpenChange }: MobileMoreSheetProps) {
 
         <nav aria-label={t("secondaryNav")}>
           <ul className="flex flex-col gap-1" role="list">
-            {SECONDARY_NAV.map((item) => {
+            {SECONDARY_NAV.filter((item) => !isDemoDisabledRoute(item.href)).map((item) => {
               const active = isActive(item.href)
               return (
                 <li key={item.href}>

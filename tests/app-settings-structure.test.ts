@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import fs from "node:fs"
 import path from "node:path"
 import {
+  ADVISOR_MESSAGES_TABLE,
   AI_USAGE_TABLE,
   APP_SETTINGS_TABLE,
   INTEGRATION_TABLES,
@@ -16,10 +17,11 @@ import { isAdditiveOnly } from "../src/features/settings/services/shared-account
  * e a paridade com a migração inicial e o arquivo da linha de comando.
  */
 describe("checkAppSettingsStructure", () => {
-  it("as duas tabelas presentes → pronto", () => {
+  it("todas as tabelas presentes → pronto", () => {
     expect(checkAppSettingsStructure({ existingTables: [...INTEGRATION_TABLES] })).toEqual({
       ready: true,
       secretsReady: true,
+      advisorReady: true,
       missing: [],
     })
   })
@@ -28,26 +30,36 @@ describe("checkAppSettingsStructure", () => {
     expect(checkAppSettingsStructure({ existingTables: [APP_SETTINGS_TABLE] })).toEqual({
       ready: false,
       secretsReady: true,
-      missing: [AI_USAGE_TABLE],
+      advisorReady: false,
+      missing: [AI_USAGE_TABLE, ADVISOR_MESSAGES_TABLE],
     })
     expect(checkAppSettingsStructure({ existingTables: [AI_USAGE_TABLE] })).toEqual({
       ready: false,
       secretsReady: false,
-      missing: [APP_SETTINGS_TABLE],
+      advisorReady: false,
+      missing: [APP_SETTINGS_TABLE, ADVISOR_MESSAGES_TABLE],
     })
     expect(checkAppSettingsStructure({ existingTables: [] })).toEqual({
       ready: false,
       secretsReady: false,
-      missing: [APP_SETTINGS_TABLE, AI_USAGE_TABLE],
+      advisorReady: false,
+      missing: [...INTEGRATION_TABLES],
     })
   })
 
-  it("faltando só o medidor, os SEGREDOS continuam disponíveis (o bot não trava)", () => {
-    // A tabela do medidor de IA não pode derrubar a tela do bot do Telegram, que
-    // depende só de `app_settings`.
-    const structure = checkAppSettingsStructure({ existingTables: [APP_SETTINGS_TABLE] })
-    expect(structure.secretsReady).toBe(true)
-    expect(structure.ready).toBe(false)
+  it("cada recurso depende SÓ da sua tabela (uma faltando não derruba as outras)", () => {
+    // Acrescentar a tabela do medidor não pode derrubar a tela do bot, nem a do
+    // Advisor — foi o que quase aconteceu quando `ready` era um flag só.
+    const semMedidor = checkAppSettingsStructure({
+      existingTables: [APP_SETTINGS_TABLE, ADVISOR_MESSAGES_TABLE],
+    })
+    expect(semMedidor.secretsReady).toBe(true)
+    expect(semMedidor.advisorReady).toBe(true)
+    expect(semMedidor.ready).toBe(false)
+
+    const soMedidor = checkAppSettingsStructure({ existingTables: [AI_USAGE_TABLE] })
+    expect(soMedidor.secretsReady).toBe(false)
+    expect(soMedidor.advisorReady).toBe(false)
   })
 })
 
@@ -90,15 +102,36 @@ describe("APP_SETTINGS_SQL", () => {
     const migration = lf(
       fs.readFileSync(path.resolve(__dirname, "../prisma/migrations/20260816000000_init/migration.sql"), "utf8"),
     )
-    // A migração usa CREATE TABLE seco (com comentários entre os blocos); o aditivo,
-    // IF NOT EXISTS — comparar cada bloco CREATE TABLE individualmente.
-    const blocks = APP_SETTINGS_SQL.split(/\n\n(?=CREATE TABLE)/)
-      .map((chunk) => chunk.replace("BEGIN;", "").replace("COMMIT;", "").trim())
-      .filter((chunk) => chunk.startsWith("CREATE TABLE"))
-      .map((chunk) => chunk.replace("CREATE TABLE IF NOT EXISTS", "CREATE TABLE"))
-    expect(blocks).toHaveLength(INTEGRATION_TABLES.length)
-    for (const block of blocks) {
+    // A migração usa CREATE TABLE seco e agrupa os índices no fim; o aditivo usa
+    // IF NOT EXISTS e mantém cada índice junto da sua tabela. Comparar então
+    // cada COMANDO isoladamente, e não o arquivo inteiro.
+    const tableBlocks = [...APP_SETTINGS_SQL.matchAll(/CREATE TABLE IF NOT EXISTS[\s\S]*?\n\);/g)].map(
+      (match) => match[0].replace("CREATE TABLE IF NOT EXISTS", "CREATE TABLE"),
+    )
+    expect(tableBlocks).toHaveLength(INTEGRATION_TABLES.length)
+    for (const block of tableBlocks) {
       expect(migration).toContain(block)
     }
+
+    // Contar ANTES de comparar: sem isto, esquecer o índice no SQL aditivo
+    // deixaria o laço rodar zero vezes e o teste passaria — justamente a
+    // divergência que ele existe para pegar.
+    const indexStatements = [...APP_SETTINGS_SQL.matchAll(/CREATE (?:UNIQUE )?INDEX IF NOT EXISTS .*;/g)].map(
+      (match) => match[0].replace(" IF NOT EXISTS", ""),
+    )
+    const indexesInMigration = [...migration.matchAll(/CREATE (?:UNIQUE )?INDEX "([^"]+)"/g)]
+      .map((match) => match[1])
+      .filter((name) => INTEGRATION_TABLES.some((table) => name.startsWith(table)))
+    expect(indexStatements).toHaveLength(indexesInMigration.length)
+    for (const statement of indexStatements) {
+      expect(migration).toContain(statement)
+    }
+
+    // Mesma regra para as chaves estrangeiras das tabelas novas.
+    const fkInSql = [...APP_SETTINGS_SQL.matchAll(/ADD CONSTRAINT "([^"]+_fkey)"/g)].map((m) => m[1])
+    const fkInMigration = [...migration.matchAll(/ADD CONSTRAINT "([^"]+_fkey)"/g)]
+      .map((m) => m[1])
+      .filter((name) => INTEGRATION_TABLES.some((table) => name.startsWith(table)))
+    expect([...fkInSql].sort()).toEqual([...fkInMigration].sort())
   })
 })

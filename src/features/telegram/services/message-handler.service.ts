@@ -10,10 +10,16 @@ import {
 } from "@/features/settings/services/user-settings-service"
 import { generateCardImage } from "./card-renderer.service"
 import {
+  describeTelegramError,
+  downloadTelegramFile,
   sendTelegramChatAction,
   sendTelegramMessage,
   sendTelegramPhoto,
 } from "./bot.service"
+import {
+  AudioNotSupportedError,
+  transcribeAudio,
+} from "@/features/ai/services/transcription.service"
 import {
   claimTelegramUpdate,
   getConversationMemory,
@@ -27,7 +33,12 @@ import { formatCard } from "./card-formatter.service"
 import { runFinancialAgent } from "@/features/ai/services/financial-agent.service"
 import { buildStaticResponse } from "./static-response.service"
 import { buildTelegramUserContext } from "./user-context.service"
-import type { TelegramChatId, TelegramToolContext, TelegramWebhookUpdate } from "../types/telegram.types"
+import type {
+  TelegramChatId,
+  TelegramToolContext,
+  TelegramWebhookMessage,
+  TelegramWebhookUpdate,
+} from "../types/telegram.types"
 
 // Resolve o locale persistido do usuário para mensagens de erro fora do fluxo
 // normal (o caminho feliz resolve via ctx). Nunca lança: qualquer falha aqui
@@ -215,19 +226,93 @@ async function handleFinancialQuestion(chatId: TelegramChatId, text: string) {
   await sendTelegramPhoto(chatId, imageBuffer, cardData.insight)
 }
 
+/**
+ * Mensagem de voz vira pergunta escrita: baixa o áudio, transcreve e devolve o
+ * texto. A partir daí o fluxo é exatamente o de quem digitou.
+ */
+async function transcribeVoiceMessage(
+  chatId: TelegramChatId,
+  audio: NonNullable<TelegramWebhookMessage["voice"]>,
+): Promise<string | null> {
+  const t = await getTranslations({
+    locale: await resolveTelegramLocale(chatId),
+    namespace: "telegram",
+  })
+
+  try {
+    await sendTelegramChatAction(chatId, "typing")
+    const data = await downloadTelegramFile(audio.file_id)
+    const text = await transcribeAudio({
+      audio: data,
+      mimeType: audio.mime_type || "audio/ogg",
+      durationSeconds: audio.duration,
+    })
+    if (!text) {
+      await sendTelegramMessage(chatId, t("bot.audioEmpty"))
+      return null
+    }
+    return text
+  } catch (error) {
+    if (error instanceof AudioNotSupportedError) {
+      await sendTelegramMessage(chatId, t("bot.audioNotSupported"))
+      return null
+    }
+    if (error instanceof AiBudgetExceededError) {
+      await sendTelegramMessage(chatId, t("bot.budgetExceeded"))
+      return null
+    }
+    if (error instanceof AiNotConfiguredError) {
+      await sendTelegramMessage(chatId, t("bot.aiNotConfigured"))
+      return null
+    }
+    // Só nome e mensagem, com a URL raspada: o erro cru da biblioteca do
+    // Telegram carrega o token dentro do objeto de requisição.
+    console.error("Telegram audio transcription failed:", describeTelegramError(error))
+    await sendTelegramMessage(chatId, t("bot.audioFailed"))
+    return null
+  }
+}
+
 export async function handleTelegramUpdate(update: TelegramWebhookUpdate) {
   const message = update.message
-  if (!message?.text) return
+  if (!message) return
+  const voice = message.voice ?? message.audio
+  if (!message.text && !voice) return
 
-  const text = message.text.trim()
   const chatId = message.chat.id
 
   // Resposta demorada faz o Telegram reenviar a MESMA mensagem. Sem esta trava,
-  // o agente rodaria de novo — e a conta viria duplicada.
+  // o agente rodaria de novo — e a conta viria duplicada. Vale também para o
+  // áudio, cuja transcrição é paga.
   if (typeof update.update_id === "number") {
     const isNew = await claimTelegramUpdate(String(chatId), update.update_id)
     if (!isNew) return
   }
+
+  // Transcrever CUSTA. Antes de gastar, confirmar que este chat pertence a
+  // alguém desta instalação: sem isto, qualquer pessoa que descubra o nome do
+  // bot mandaria áudios e a conta seria do dono. (Mensagem escrita não gasta
+  // nada até o classificador, então o texto segue direto.)
+  if (voice) {
+    const linked = await prisma.telegramConnection.findUnique({
+      where: { telegramChatId: BigInt(chatId) },
+      select: { isActive: true },
+    })
+    if (!linked?.isActive) {
+      const t = await getTranslations({
+        locale: getInstallDefaultLocale(),
+        namespace: "telegram",
+      })
+      await sendTelegramMessage(chatId, t("bot.notConnected"))
+      return
+    }
+  }
+
+  // Voz vira texto; falha aqui já avisa a pessoa e encerra.
+  const text = voice
+    ? await transcribeVoiceMessage(chatId, voice)
+    : (message.text ?? "").trim()
+  if (!text) return
 
   const startToken = getStartToken(text)
 

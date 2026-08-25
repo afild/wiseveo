@@ -1,5 +1,9 @@
 {
   "Routes": {
+    "advisor": {
+      "description": "Talk to your financial analyst",
+      "title": "Advisor"
+    },
     "analysis": {
       "description": "Performance reports and metrics",
       "title": "Analysis"
@@ -97,6 +101,27 @@
       "optionsAriaLabel": "Account options"
     }
   },
+  "advisor": {
+    "emptyState": "Ask anything about your money. I look at your data before answering.",
+    "error": "I couldn't answer right now. Try again.",
+    "notPersisted": "Conversations are not being stored yet. To enable that, prepare your database in Settings → Integrations.",
+    "opening": {
+      "expense": "Expenses this month",
+      "income": "Income this month",
+      "savings": "Left this month",
+      "upcoming": "{count, plural, one {# bill is due} other {# bills are due}} in the next 7 days, totalling {total}.",
+      "upcomingNone": "Nothing due in the next 7 days."
+    },
+    "placeholder": "Ask about your finances…",
+    "send": "Send question",
+    "suggestions": {
+      "month": "How was my month?",
+      "status": "How are my finances?",
+      "upcoming": "What's due this week?"
+    },
+    "thinking": "Looking at your data…",
+    "title": "Advisor"
+  },
   "analysis": {
     "client": {
       "fetchError": "Failed to load the period income statement",
@@ -183,6 +208,13 @@
       "roleUpdated": "Role updated.",
       "userApproved": "User approved successfully.",
       "userRemoved": "User removed."
+    },
+    "advisor": {
+      "budgetExceeded": "The monthly AI spending limit was reached. Adjust the cap in Settings → Integrations.",
+      "emptyAnswer": "I couldn't put together an answer from what I found. Try asking a different way.",
+      "invalidQuestion": "Type your question.",
+      "notConfigured": "Artificial intelligence has not been set up yet. Add a key in Settings → Integrations.",
+      "questionTooLong": "That question is too long. Keep it under 1000 characters."
     },
     "aiSettings": {
       "invalidBudget": "Invalid cap. Use a number greater than or equal to zero, or leave it empty for no cap.",
@@ -499,8 +531,8 @@
       "descriptions": {
         "active_avg": "Average of months with spending only — ideal for irregular expenses",
         "banded_avg": "Average of recent months, bounded by a floor and ceiling you define",
-        "envelope_rollover": "What you don't spend one month raises your limit the next",
         "declining_target": "Gradually reduces the limit each month to help cut a recurring expense",
+        "envelope_rollover": "What you don't spend one month raises your limit the next",
         "fixed_target": "Fixed amount set manually",
         "historical_max": "Historical maximum with a safety margin",
         "income_pct": "Percentage of the period's average income",
@@ -597,6 +629,8 @@
       "periodBarLabel": "Budget period bar"
     },
     "itemCard": {
+      "aboveLimit": "Over limit",
+      "available": "Available",
       "budgeted": "Budgeted",
       "category": "Category",
       "configureFormula": "Configure Formula",
@@ -604,22 +638,20 @@
       "customSuffix": "(custom)",
       "dragToReorder": "Drag to reorder",
       "editCard": "Edit Card",
-      "manualLimit": "Manual limit",
+      "formulaDetails": "Formula details",
       "group": "Group",
+      "historyWindow": "{months, plural, one {# month} other {# months}} of history",
+      "manualLimit": "Manual limit",
       "mayExceed": "May exceed",
+      "moveDown": "Move down",
+      "moveUp": "Move up",
       "multiple": "Multiple",
       "noData": "No data",
+      "noLimit": "No limit",
       "paid": "Paid",
       "projected": "Projected",
       "scheduled": "Scheduled",
       "used": "used",
-      "aboveLimit": "Over limit",
-      "available": "Available",
-      "formulaDetails": "Formula details",
-      "historyWindow": "{months, plural, one {# month} other {# months}} of history",
-      "moveDown": "Move down",
-      "moveUp": "Move up",
-      "noLimit": "No limit",
       "viaFormula": "via {formula}"
     },
     "newBudget": "New Budget",
@@ -926,6 +958,7 @@
     },
     "mobileMoreSheet": {
       "descriptions": {
+        "advisor": "Talk to your analyst",
         "analysis": "P&L and period reports",
         "banks": "Accounts and balances",
         "forecasting": "Financial projections",
@@ -1672,6 +1705,7 @@
         "confirmTitle": "Prepare the database for integrations?",
         "desc": "To store the bot token and the AI keys safely — and to meter AI spending — your database needs pieces it does not have yet.",
         "error": "Could not prepare the database.",
+        "pieceAdvisor": "an “advisor_messages” table, holding the Advisor page conversations",
         "pieceTable": "an “app_settings” table, holding the integration secrets — stored encrypted",
         "pieceUsage": "an “ai_usage” table, holding monthly AI consumption — for the spending cap",
         "prepare": "Prepare my database",
@@ -2034,6 +2068,7 @@
   "sidebar": {
     "accountsettings": "Account Settings",
     "admin": "Admin",
+    "advisor": "Advisor",
     "analise": "Analysis",
     "appearance": "Appearance",
     "apps": "Apps",
@@ -2184,6 +2219,9 @@
   "telegram": {
     "bot": {
       "aiNotConfigured": "Artificial intelligence has not been set up in this installation yet, so I cannot understand questions. Ask whoever administers it to add a key in Settings → Integrations.",
+      "audioEmpty": "I couldn't hear anything in that recording. Could you record it again, or type the question?",
+      "audioFailed": "I couldn't make out that audio. Try recording again, or type the question.",
+      "audioNotSupported": "I can't listen to audio in this installation yet. Please type your question — or ask whoever administers it to add an OpenAI or Google key in Settings → Integrations.",
       "budgetExceeded": "This installation's monthly AI spending limit was reached. I'll answer again when the month turns — or ask whoever administers it to adjust the cap in Settings → Integrations.",
       "cardFormatError": "Sorry, I couldn't process your request right now.",
       "connected": "WISEVEO account connected successfully. You can now ask me questions about your finances.",

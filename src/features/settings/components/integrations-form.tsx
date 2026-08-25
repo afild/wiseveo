@@ -24,8 +24,26 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Bot, CheckCircle2, Database, Loader2, Unplug } from "lucide-react"
-import type { AppSettingsStructure } from "../lib/app-settings-structure"
+import {
+  ADVISOR_MESSAGES_TABLE,
+  AI_USAGE_TABLE,
+  APP_SETTINGS_TABLE,
+  INTEGRATION_TABLES,
+  type AppSettingsStructure,
+  type IntegrationTable,
+} from "../lib/app-settings-structure"
 import { AiSettingsCard, type AiSettingsSnapshot } from "./ai-settings-card"
+
+/**
+ * Cada tabela tem a SUA explicação na lista do que falta. Mapa explícito para
+ * que acrescentar uma tabela nova sem escrever o texto dela quebre no TypeScript
+ * — e não apareça em silêncio com a descrição de outra peça.
+ */
+const PIECE_LABEL_KEYS = {
+  [APP_SETTINGS_TABLE]: "prepare.pieceTable",
+  [AI_USAGE_TABLE]: "prepare.pieceUsage",
+  [ADVISOR_MESSAGES_TABLE]: "prepare.pieceAdvisor",
+} as const satisfies Record<IntegrationTable, string>
 
 export interface TelegramBotSummary {
   configured: boolean
@@ -134,10 +152,10 @@ export function IntegrationsForm({ initialStructure, initialBot, initialAi }: In
           </CardHeader>
           <CardContent className="space-y-3">
             <ul className="space-y-1.5 text-sm">
-              {(structure?.missing ?? ["app_settings", "ai_usage"]).map((table) => (
+              {(structure?.missing ?? [...INTEGRATION_TABLES]).map((table) => (
                 <li key={table} className="flex items-start gap-2">
                   <Database className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                  <span>{table === "ai_usage" ? t("prepare.pieceUsage") : t("prepare.pieceTable")}</span>
+                  <span>{t(PIECE_LABEL_KEYS[table])}</span>
                 </li>
               ))}
             </ul>

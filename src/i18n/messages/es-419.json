@@ -1,5 +1,9 @@
 {
   "Routes": {
+    "advisor": {
+      "description": "Conversa con tu analista financiero",
+      "title": "Advisor"
+    },
     "analysis": {
       "description": "Informes y métricas de rendimiento",
       "title": "Análisis"
@@ -97,6 +101,27 @@
       "optionsAriaLabel": "Opciones de la cuenta"
     }
   },
+  "advisor": {
+    "emptyState": "Pregunta lo que quieras sobre tu dinero. Consulto tus datos antes de responder.",
+    "error": "No pude responder ahora. Inténtalo de nuevo.",
+    "notPersisted": "Las conversaciones todavía no se están guardando. Para eso, prepara tu base de datos en Configuración → Integraciones.",
+    "opening": {
+      "expense": "Salidas del mes",
+      "income": "Entradas del mes",
+      "savings": "Sobra del mes",
+      "upcoming": "{count, plural, one {# cuenta vence} other {# cuentas vencen}} en los próximos 7 días, sumando {total}.",
+      "upcomingNone": "Nada por vencer en los próximos 7 días."
+    },
+    "placeholder": "Pregunta sobre tus finanzas…",
+    "send": "Enviar pregunta",
+    "suggestions": {
+      "month": "¿Cómo fue mi mes?",
+      "status": "¿Cómo están mis finanzas?",
+      "upcoming": "¿Qué vence esta semana?"
+    },
+    "thinking": "Consultando tus datos…",
+    "title": "Advisor"
+  },
   "analysis": {
     "client": {
       "fetchError": "Error al cargar el Estado de Resultados del período",
@@ -183,6 +208,13 @@
       "roleUpdated": "Rol actualizado.",
       "userApproved": "Usuario aprobado con éxito.",
       "userRemoved": "Usuario quitado."
+    },
+    "advisor": {
+      "budgetExceeded": "Se alcanzó el límite mensual de gasto de IA. Ajusta el tope en Configuración → Integraciones.",
+      "emptyAnswer": "No pude armar una respuesta con lo que encontré. Intenta preguntar de otra forma.",
+      "invalidQuestion": "Escribe tu pregunta.",
+      "notConfigured": "La inteligencia artificial todavía no está configurada. Registra una clave en Configuración → Integraciones.",
+      "questionTooLong": "La pregunta es muy larga. Resúmela en 1000 caracteres o menos."
     },
     "aiSettings": {
       "invalidBudget": "Tope inválido. Usa un número mayor o igual a cero, o déjalo vacío para sin tope.",
@@ -499,8 +531,8 @@
       "descriptions": {
         "active_avg": "Promedio solo de los meses con gasto — ideal para gastos esporádicos",
         "banded_avg": "Promedio de los últimos meses, limitado por un piso y un techo que defines",
-        "envelope_rollover": "Lo que no gastas un mes aumenta tu límite del siguiente",
         "declining_target": "Reduce el límite gradualmente cada mes para ayudar a recortar un gasto",
+        "envelope_rollover": "Lo que no gastas un mes aumenta tu límite del siguiente",
         "fixed_target": "Valor fijo definido manualmente",
         "historical_max": "Máximo histórico con margen de seguridad",
         "income_pct": "Porcentaje del ingreso promedio del período",
@@ -597,6 +629,8 @@
       "periodBarLabel": "Barra de período presupuestario"
     },
     "itemCard": {
+      "aboveLimit": "Por encima del límite",
+      "available": "Disponible",
       "budgeted": "Presupuestado",
       "category": "Categoría",
       "configureFormula": "Configurar Fórmula",
@@ -604,22 +638,20 @@
       "customSuffix": "(personalizada)",
       "dragToReorder": "Arrastra para reordenar",
       "editCard": "Editar Tarjeta",
-      "manualLimit": "Límite manual",
+      "formulaDetails": "Detalles del cálculo",
       "group": "Grupo",
+      "historyWindow": "{months, plural, one {# mes} other {# meses}} de historial",
+      "manualLimit": "Límite manual",
       "mayExceed": "Puede excederse",
+      "moveDown": "Bajar",
+      "moveUp": "Subir",
       "multiple": "Múltiples",
       "noData": "Sin datos",
+      "noLimit": "Sin límite",
       "paid": "Pagado",
       "projected": "Proyectado",
       "scheduled": "Programado",
       "used": "utilizado",
-      "aboveLimit": "Por encima del límite",
-      "available": "Disponible",
-      "formulaDetails": "Detalles del cálculo",
-      "historyWindow": "{months, plural, one {# mes} other {# meses}} de historial",
-      "moveDown": "Bajar",
-      "moveUp": "Subir",
-      "noLimit": "Sin límite",
       "viaFormula": "vía {formula}"
     },
     "newBudget": "Nuevo Presupuesto",
@@ -926,6 +958,7 @@
     },
     "mobileMoreSheet": {
       "descriptions": {
+        "advisor": "Conversa con tu analista",
         "analysis": "Estado de resultados e informes de período",
         "banks": "Cuentas y saldos",
         "forecasting": "Proyecciones financieras",
@@ -1672,6 +1705,7 @@
         "confirmTitle": "¿Preparar la base de datos para las integraciones?",
         "desc": "Para guardar el token del bot y las claves de IA con seguridad — y medir el gasto de IA —, tu base de datos necesita piezas que aún no tiene.",
         "error": "No se pudo preparar la base de datos.",
+        "pieceAdvisor": "una tabla “advisor_messages”, con las conversaciones de la página Advisor",
         "pieceTable": "una tabla “app_settings”, con los secretos de las integraciones — guardados cifrados",
         "pieceUsage": "una tabla “ai_usage”, con el consumo de IA por mes — para el tope de gasto",
         "prepare": "Preparar mi base de datos",
@@ -2034,6 +2068,7 @@
   "sidebar": {
     "accountsettings": "Configuración de Cuenta",
     "admin": "Administración",
+    "advisor": "Advisor",
     "analise": "Análisis",
     "appearance": "Apariencia",
     "apps": "Aplicaciones",
@@ -2184,6 +2219,9 @@
   "telegram": {
     "bot": {
       "aiNotConfigured": "La inteligencia artificial todavía no está configurada en esta instalación, así que no puedo entender preguntas. Pide a quien la administra que registre una clave en Configuración → Integraciones.",
+      "audioEmpty": "No pude escuchar nada en ese audio. ¿Puedes grabarlo de nuevo, o escribir la pregunta?",
+      "audioFailed": "No pude entender ese audio. Intenta grabarlo de nuevo, o escribe la pregunta.",
+      "audioNotSupported": "Todavía no puedo escuchar audios en esta instalación. Escribe tu pregunta — o pide a quien la administra que registre una clave de OpenAI o Google en Configuración → Integraciones.",
       "budgetExceeded": "Se alcanzó el límite mensual de gasto de IA de esta instalación. Volveré a responder cuando cambie el mes — o pide a quien la administra que ajuste el tope en Configuración → Integraciones.",
       "cardFormatError": "Lo siento, no pude procesar tu solicitud en este momento.",
       "connected": "Cuenta de WISEVEO conectada con éxito. Ya puedes hacerme preguntas sobre tus finanzas.",

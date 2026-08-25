@@ -29,3 +29,44 @@ export async function sendTelegramPhoto(chatId: TelegramChatId, image: Buffer, c
 export async function sendTelegramChatAction(chatId: TelegramChatId, action: "typing" | "upload_photo") {
   await (await getTelegramBot()).sendChatAction(chatId, action)
 }
+
+/** Tamanho máximo de áudio que aceitamos baixar (~10 min de voz do Telegram). */
+const MAX_AUDIO_BYTES = 20 * 1024 * 1024
+
+/**
+ * Erro do Telegram vira UMA LINHA, sem o token. A biblioteca guarda o pedido
+ * inteiro dentro do erro, e a URL do pedido carrega `/bot<token>/` — jogar esse
+ * objeto no console publicaria o token no log da hospedagem.
+ */
+export function describeTelegramError(error: unknown): string {
+  const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+  return message.replace(/\/bot[^/\s]+\//g, "/bot***/")
+}
+
+/**
+ * Baixa um arquivo do Telegram (usado para as mensagens de voz). O token entra
+ * na URL da chamada e nunca é registrado em log.
+ */
+export async function downloadTelegramFile(fileId: string): Promise<Uint8Array> {
+  const config = await getTelegramBotConfig()
+  // i18n-ignore: erro interno; o canal traduz o que a pessoa lê
+  if (!config) throw new Error("Telegram bot not configured")
+
+  const bot = await getTelegramBot()
+  const file = await bot.getFile(fileId)
+  // i18n-ignore: erro interno
+  if (!file.file_path) throw new Error("Telegram file has no path")
+  if (file.file_size && file.file_size > MAX_AUDIO_BYTES) {
+    // i18n-ignore: erro interno
+    throw new Error("Telegram file is too large")
+  }
+
+  const response = await fetch(
+    `https://api.telegram.org/file/bot${config.botToken}/${file.file_path}`,
+    { cache: "no-store" },
+  )
+  // i18n-ignore: erro interno
+  if (!response.ok) throw new Error(`Telegram file download failed: ${response.status}`)
+
+  return new Uint8Array(await response.arrayBuffer())
+}

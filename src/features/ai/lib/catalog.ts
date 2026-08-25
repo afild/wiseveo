@@ -116,3 +116,58 @@ export function estimateCostMicroUsd(model: string, inputTokens: number, outputT
 export function microUsdToUsd(micro: bigint): number {
   return Number(micro) / 1_000_000
 }
+
+/**
+ * Transcrição (áudio → texto) é cobrada por MINUTO, não por token. Preços em
+ * dólares por minuto; reserva conservadora para modelo desconhecido.
+ */
+/* i18n-ignore: dados de preço */
+const TRANSCRIPTION_PRICE_PER_MINUTE: Array<[prefix: string, usdPerMinute: number]> = [
+  ["gpt-4o-mini-transcribe", 0.003],
+  ["gpt-4o-transcribe", 0.006],
+  ["whisper", 0.006],
+]
+
+const FALLBACK_TRANSCRIPTION_PRICE = 0.01
+
+/**
+ * Duração mínima cobrada. Sem ela, um áudio cuja duração o provedor não informa
+ * entraria no medidor como GRÁTIS — e o teto do mês nunca chegaria.
+ */
+const MIN_BILLED_SECONDS = 5
+
+export function estimateTranscriptionCostMicroUsd(model: string, seconds: number): bigint {
+  const normalized = model.trim().toLowerCase()
+  const entry = TRANSCRIPTION_PRICE_PER_MINUTE.find(([prefix]) => normalized.startsWith(prefix))
+  const perMinute = entry?.[1] ?? FALLBACK_TRANSCRIPTION_PRICE
+  const billedSeconds = Math.max(MIN_BILLED_SECONDS, seconds || 0)
+  return BigInt(Math.round((billedSeconds / 60) * perMinute * 1_000_000))
+}
+
+/**
+ * Preço do token de ÁUDIO (USD por 1M) nos modelos que engolem som direto no
+ * pedido de texto — é várias vezes o preço do token escrito, então cobrar pela
+ * tabela normal subestimaria o gasto em quase 7 vezes no Gemini Flash.
+ */
+/* i18n-ignore: dados de preço */
+const AUDIO_INPUT_PRICE_PER_MILLION: Array<[prefix: string, usd: number]> = [
+  ["gemini-2.0-flash", 0.7],
+  ["gemini-2.5-flash", 1.0],
+  ["gemini-2.5-pro", 1.25],
+]
+
+const FALLBACK_AUDIO_INPUT_PRICE = 1.5
+
+/** Custo de uma chamada de texto cuja ENTRADA é áudio (caminho de reserva). */
+export function estimateAudioPromptCostMicroUsd(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+): bigint {
+  const normalized = model.trim().toLowerCase()
+  const audioIn =
+    AUDIO_INPUT_PRICE_PER_MILLION.find(([prefix]) => normalized.startsWith(prefix))?.[1] ??
+    FALLBACK_AUDIO_INPUT_PRICE
+  const textOut = getModelPricePerMillion(model).output
+  return BigInt(Math.round(Math.max(0, inputTokens) * audioIn + Math.max(0, outputTokens) * textOut))
+}

@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Wallet,
   LineChart,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
@@ -70,6 +71,11 @@ const data: { navGroups: SidebarNavGroup[] } = {
           icon: LayoutPanelLeft,
         },
         {
+          title: "Advisor",
+          url: "/advisor",
+          icon: Sparkles,
+        },
+        {
           title: "Transacoes",
           url: "/transactions",
           icon: ArrowLeftRight,
@@ -115,12 +121,24 @@ const data: { navGroups: SidebarNavGroup[] } = {
 }
 
 import { useTranslations } from "next-intl"
+import { DEMO_DISABLED_ROUTES } from "@/lib/demo-routes"
+
+/** Tira do menu o que a demo não tem. */
+function hideDemoOnlyRoutes(groups: SidebarNavGroup[]): SidebarNavGroup[] {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE !== "true") return groups
+  return groups.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !DEMO_DISABLED_ROUTES.includes(item.url)),
+  }))
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useCurrentUser()
   const t = useTranslations("sidebar")
   const userData = user ?? { name: "...", email: "", avatar: "" }
-  const navGroups = data.navGroups
+  // O Advisor não existe na demo (a página responde 404): o menu não pode
+  // oferecer um caminho que não leva a lugar nenhum.
+  const navGroups = React.useMemo(() => hideDemoOnlyRoutes(data.navGroups), [])
 
   return (
     <Sidebar {...props}>

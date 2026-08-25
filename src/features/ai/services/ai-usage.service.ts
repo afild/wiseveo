@@ -36,10 +36,20 @@ export interface AiUsageInput {
 }
 
 export async function recordAiUsage(usage: AiUsageInput): Promise<void> {
+  await recordAiUsageCost(usage)
+}
+
+/**
+ * Igual a `recordAiUsage`, mas aceita um custo já calculado — é o caso da
+ * transcrição, cobrada por MINUTO de áudio e não por token.
+ */
+export async function recordAiUsageCost(
+  usage: Partial<AiUsageInput> & { provider: string; model: string; costMicroUsd?: bigint },
+): Promise<void> {
   const period = currentPeriod()
   const inputTokens = Math.max(0, Math.round(usage.inputTokens || 0))
   const outputTokens = Math.max(0, Math.round(usage.outputTokens || 0))
-  const cost = estimateCostMicroUsd(usage.model, inputTokens, outputTokens)
+  const cost = usage.costMicroUsd ?? estimateCostMicroUsd(usage.model, inputTokens, outputTokens)
   try {
     await prisma.aiUsage.upsert({
       where: {

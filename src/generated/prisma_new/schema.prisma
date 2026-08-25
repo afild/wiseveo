@@ -37,6 +37,7 @@ model User {
   telegramConnection           TelegramConnection?
   telegramConversationMemories TelegramConversationMemory[]
   telegramPendingTokens        TelegramPendingToken[]
+  advisorMessages              AdvisorMessage[]
   invitationsSent              Invitation[]                 @relation("InvitationInviter")
   invitationsAccepted          Invitation[]                 @relation("InvitationAcceptedBy")
 
@@ -367,6 +368,24 @@ model AppSetting {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("app_settings")
+}
+
+/// Conversas da página Advisor. Uma linha por mensagem (pergunta ou resposta),
+/// agrupadas por `conversation_id`. Nasce junto com `app_settings`/`ai_usage`
+/// (mesmo "Preparar meu banco"); todo acesso passa por advisor-chat.service.ts,
+/// que tolera a tabela ausente (P2021 → conversa não é guardada, mas responde).
+/// Some junto com o usuário: são perguntas sobre o dinheiro dele.
+model AdvisorMessage {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId String   @map("conversation_id")
+  role           String
+  content        String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([userId, conversationId, createdAt])
+  @@map("advisor_messages")
 }
 
 /// Consumo de IA por mês/provedor/modelo — alimenta o teto mensal de gasto.

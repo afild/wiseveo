@@ -327,6 +327,15 @@ exports.Prisma.AppSettingScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.AdvisorMessageScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  conversationId: 'conversationId',
+  role: 'role',
+  content: 'content',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.AiUsageScalarFieldEnum = {
   period: 'period',
   provider: 'provider',
@@ -409,6 +418,7 @@ exports.Prisma.ModelName = {
   TelegramConversationMemory: 'TelegramConversationMemory',
   TelegramPendingToken: 'TelegramPendingToken',
   AppSetting: 'AppSetting',
+  AdvisorMessage: 'AdvisorMessage',
   AiUsage: 'AiUsage'
 };
 

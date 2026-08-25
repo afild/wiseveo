@@ -1,6 +1,6 @@
 -- Tabelas das integrações: `app_settings` (segredos cifrados da instalação — token
--- do bot do Telegram, chaves de IA) e `ai_usage` (consumo de IA por mês, para o
--- teto de gasto). Gêmeo do SQL inline em
+-- do bot do Telegram, chaves de IA), `ai_usage` (consumo de IA por mês, para o
+-- teto de gasto) e `advisor_messages` (conversas da página Advisor). Gêmeo do SQL inline em
 -- src/features/settings/services/app-settings-service.ts (paridade garantida por
 -- tests/app-settings-structure.test.ts). Aplicar numa transação, pela conexão DIRETA;
 -- só acrescenta (IF NOT EXISTS), nunca DROP/ALTER destrutivo — idempotente.
@@ -28,5 +28,26 @@ CREATE TABLE IF NOT EXISTS "ai_usage" (
 
     CONSTRAINT "ai_usage_pkey" PRIMARY KEY ("period","provider","model")
 );
+
+CREATE TABLE IF NOT EXISTS "advisor_messages" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "conversation_id" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "advisor_messages_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX IF NOT EXISTS "advisor_messages_user_id_conversation_id_created_at_idx" ON "advisor_messages"("user_id", "conversation_id", "created_at");
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'advisor_messages_user_id_fkey') THEN
+    ALTER TABLE "advisor_messages" ADD CONSTRAINT "advisor_messages_user_id_fkey"
+      FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
 
 COMMIT;

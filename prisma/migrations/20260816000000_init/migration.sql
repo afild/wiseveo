@@ -275,6 +275,18 @@ CREATE TABLE "app_settings" (
 );
 
 -- CreateTable
+CREATE TABLE "advisor_messages" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "conversation_id" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "advisor_messages_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "ai_usage" (
     "period" CHAR(6) NOT NULL,
     "provider" TEXT NOT NULL,
@@ -350,6 +362,9 @@ CREATE UNIQUE INDEX "telegram_conversation_memories_telegram_chat_id_key" ON "te
 
 -- CreateIndex
 CREATE INDEX "telegram_conversation_memories_user_id_idx" ON "telegram_conversation_memories"("user_id");
+
+-- CreateIndex
+CREATE INDEX "advisor_messages_user_id_conversation_id_created_at_idx" ON "advisor_messages"("user_id", "conversation_id", "created_at");
 
 -- AddForeignKey
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_invited_by_id_fkey" FOREIGN KEY ("invited_by_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -443,3 +458,6 @@ ALTER TABLE "telegram_conversation_memories" ADD CONSTRAINT "telegram_conversati
 
 -- AddForeignKey
 ALTER TABLE "telegram_pending_tokens" ADD CONSTRAINT "telegram_pending_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "advisor_messages" ADD CONSTRAINT "advisor_messages_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

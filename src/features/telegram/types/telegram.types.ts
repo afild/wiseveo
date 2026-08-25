@@ -46,9 +46,21 @@ export interface CardData {
 
 export type TelegramChatId = number | string;
 
+/** Mensagem de voz (o botão do microfone) ou arquivo de áudio anexado. */
+export interface TelegramWebhookAudio {
+  file_id: string;
+  duration?: number;
+  mime_type?: string;
+  file_size?: number;
+}
+
 export interface TelegramWebhookMessage {
   message_id?: number;
   text?: string;
+  /** Gravado na hora, pelo microfone do Telegram. */
+  voice?: TelegramWebhookAudio;
+  /** Arquivo de áudio enviado como anexo. */
+  audio?: TelegramWebhookAudio;
   chat: {
     id: TelegramChatId;
   };

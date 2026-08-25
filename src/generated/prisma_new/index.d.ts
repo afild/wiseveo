@@ -109,6 +109,15 @@ export type TelegramPendingToken = $Result.DefaultSelection<Prisma.$TelegramPend
  */
 export type AppSetting = $Result.DefaultSelection<Prisma.$AppSettingPayload>
 /**
+ * Model AdvisorMessage
+ * Conversas da página Advisor. Uma linha por mensagem (pergunta ou resposta),
+ * agrupadas por `conversation_id`. Nasce junto com `app_settings`/`ai_usage`
+ * (mesmo "Preparar meu banco"); todo acesso passa por advisor-chat.service.ts,
+ * que tolera a tabela ausente (P2021 → conversa não é guardada, mas responde).
+ * Some junto com o usuário: são perguntas sobre o dinheiro dele.
+ */
+export type AdvisorMessage = $Result.DefaultSelection<Prisma.$AdvisorMessagePayload>
+/**
  * Model AiUsage
  * Consumo de IA por mês/provedor/modelo — alimenta o teto mensal de gasto.
  * Nasce junto com `app_settings` (mesmo "Preparar meu banco"); todo acesso passa
@@ -478,6 +487,16 @@ export class PrismaClient<
     * ```
     */
   get appSetting(): Prisma.AppSettingDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.advisorMessage`: Exposes CRUD operations for the **AdvisorMessage** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AdvisorMessages
+    * const advisorMessages = await prisma.advisorMessage.findMany()
+    * ```
+    */
+  get advisorMessage(): Prisma.AdvisorMessageDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.aiUsage`: Exposes CRUD operations for the **AiUsage** model.
@@ -939,6 +958,7 @@ export namespace Prisma {
     TelegramConversationMemory: 'TelegramConversationMemory',
     TelegramPendingToken: 'TelegramPendingToken',
     AppSetting: 'AppSetting',
+    AdvisorMessage: 'AdvisorMessage',
     AiUsage: 'AiUsage'
   };
 
@@ -955,7 +975,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "invitation" | "account" | "categoryGroup" | "category" | "payee" | "transactionStatusLookup" | "transaction" | "transactionAttachment" | "transactionMessage" | "excludedTransaction" | "recurringTransaction" | "budget" | "telegramConnection" | "telegramConversationMemory" | "telegramPendingToken" | "appSetting" | "aiUsage"
+      modelProps: "user" | "invitation" | "account" | "categoryGroup" | "category" | "payee" | "transactionStatusLookup" | "transaction" | "transactionAttachment" | "transactionMessage" | "excludedTransaction" | "recurringTransaction" | "budget" | "telegramConnection" | "telegramConversationMemory" | "telegramPendingToken" | "appSetting" | "advisorMessage" | "aiUsage"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2217,6 +2237,80 @@ export namespace Prisma {
           }
         }
       }
+      AdvisorMessage: {
+        payload: Prisma.$AdvisorMessagePayload<ExtArgs>
+        fields: Prisma.AdvisorMessageFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AdvisorMessageFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AdvisorMessageFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload>
+          }
+          findFirst: {
+            args: Prisma.AdvisorMessageFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AdvisorMessageFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload>
+          }
+          findMany: {
+            args: Prisma.AdvisorMessageFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload>[]
+          }
+          create: {
+            args: Prisma.AdvisorMessageCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload>
+          }
+          createMany: {
+            args: Prisma.AdvisorMessageCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AdvisorMessageCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload>[]
+          }
+          delete: {
+            args: Prisma.AdvisorMessageDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload>
+          }
+          update: {
+            args: Prisma.AdvisorMessageUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload>
+          }
+          deleteMany: {
+            args: Prisma.AdvisorMessageDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AdvisorMessageUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AdvisorMessageUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload>[]
+          }
+          upsert: {
+            args: Prisma.AdvisorMessageUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvisorMessagePayload>
+          }
+          aggregate: {
+            args: Prisma.AdvisorMessageAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAdvisorMessage>
+          }
+          groupBy: {
+            args: Prisma.AdvisorMessageGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AdvisorMessageGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AdvisorMessageCountArgs<ExtArgs>
+            result: $Utils.Optional<AdvisorMessageCountAggregateOutputType> | number
+          }
+        }
+      }
       AiUsage: {
         payload: Prisma.$AiUsagePayload<ExtArgs>
         fields: Prisma.AiUsageFieldRefs
@@ -2416,6 +2510,7 @@ export namespace Prisma {
     telegramConversationMemory?: TelegramConversationMemoryOmit
     telegramPendingToken?: TelegramPendingTokenOmit
     appSetting?: AppSettingOmit
+    advisorMessage?: AdvisorMessageOmit
     aiUsage?: AiUsageOmit
   }
 
@@ -2509,6 +2604,7 @@ export namespace Prisma {
     transactions: number
     telegramConversationMemories: number
     telegramPendingTokens: number
+    advisorMessages: number
     invitationsSent: number
     invitationsAccepted: number
   }
@@ -2526,6 +2622,7 @@ export namespace Prisma {
     transactions?: boolean | UserCountOutputTypeCountTransactionsArgs
     telegramConversationMemories?: boolean | UserCountOutputTypeCountTelegramConversationMemoriesArgs
     telegramPendingTokens?: boolean | UserCountOutputTypeCountTelegramPendingTokensArgs
+    advisorMessages?: boolean | UserCountOutputTypeCountAdvisorMessagesArgs
     invitationsSent?: boolean | UserCountOutputTypeCountInvitationsSentArgs
     invitationsAccepted?: boolean | UserCountOutputTypeCountInvitationsAcceptedArgs
   }
@@ -2623,6 +2720,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountTelegramPendingTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TelegramPendingTokenWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountAdvisorMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AdvisorMessageWhereInput
   }
 
   /**
@@ -3177,6 +3281,7 @@ export namespace Prisma {
     telegramConnection?: boolean | User$telegramConnectionArgs<ExtArgs>
     telegramConversationMemories?: boolean | User$telegramConversationMemoriesArgs<ExtArgs>
     telegramPendingTokens?: boolean | User$telegramPendingTokensArgs<ExtArgs>
+    advisorMessages?: boolean | User$advisorMessagesArgs<ExtArgs>
     invitationsSent?: boolean | User$invitationsSentArgs<ExtArgs>
     invitationsAccepted?: boolean | User$invitationsAcceptedArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -3254,6 +3359,7 @@ export namespace Prisma {
     telegramConnection?: boolean | User$telegramConnectionArgs<ExtArgs>
     telegramConversationMemories?: boolean | User$telegramConversationMemoriesArgs<ExtArgs>
     telegramPendingTokens?: boolean | User$telegramPendingTokensArgs<ExtArgs>
+    advisorMessages?: boolean | User$advisorMessagesArgs<ExtArgs>
     invitationsSent?: boolean | User$invitationsSentArgs<ExtArgs>
     invitationsAccepted?: boolean | User$invitationsAcceptedArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -3277,6 +3383,7 @@ export namespace Prisma {
       telegramConnection: Prisma.$TelegramConnectionPayload<ExtArgs> | null
       telegramConversationMemories: Prisma.$TelegramConversationMemoryPayload<ExtArgs>[]
       telegramPendingTokens: Prisma.$TelegramPendingTokenPayload<ExtArgs>[]
+      advisorMessages: Prisma.$AdvisorMessagePayload<ExtArgs>[]
       invitationsSent: Prisma.$InvitationPayload<ExtArgs>[]
       invitationsAccepted: Prisma.$InvitationPayload<ExtArgs>[]
     }
@@ -3704,6 +3811,7 @@ export namespace Prisma {
     telegramConnection<T extends User$telegramConnectionArgs<ExtArgs> = {}>(args?: Subset<T, User$telegramConnectionArgs<ExtArgs>>): Prisma__TelegramConnectionClient<$Result.GetResult<Prisma.$TelegramConnectionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     telegramConversationMemories<T extends User$telegramConversationMemoriesArgs<ExtArgs> = {}>(args?: Subset<T, User$telegramConversationMemoriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TelegramConversationMemoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     telegramPendingTokens<T extends User$telegramPendingTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$telegramPendingTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TelegramPendingTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    advisorMessages<T extends User$advisorMessagesArgs<ExtArgs> = {}>(args?: Subset<T, User$advisorMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     invitationsSent<T extends User$invitationsSentArgs<ExtArgs> = {}>(args?: Subset<T, User$invitationsSentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     invitationsAccepted<T extends User$invitationsAcceptedArgs<ExtArgs> = {}>(args?: Subset<T, User$invitationsAcceptedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -4448,6 +4556,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TelegramPendingTokenScalarFieldEnum | TelegramPendingTokenScalarFieldEnum[]
+  }
+
+  /**
+   * User.advisorMessages
+   */
+  export type User$advisorMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+    where?: AdvisorMessageWhereInput
+    orderBy?: AdvisorMessageOrderByWithRelationInput | AdvisorMessageOrderByWithRelationInput[]
+    cursor?: AdvisorMessageWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AdvisorMessageScalarFieldEnum | AdvisorMessageScalarFieldEnum[]
   }
 
   /**
@@ -23399,6 +23531,1082 @@ export namespace Prisma {
 
 
   /**
+   * Model AdvisorMessage
+   */
+
+  export type AggregateAdvisorMessage = {
+    _count: AdvisorMessageCountAggregateOutputType | null
+    _min: AdvisorMessageMinAggregateOutputType | null
+    _max: AdvisorMessageMaxAggregateOutputType | null
+  }
+
+  export type AdvisorMessageMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    conversationId: string | null
+    role: string | null
+    content: string | null
+    createdAt: Date | null
+  }
+
+  export type AdvisorMessageMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    conversationId: string | null
+    role: string | null
+    content: string | null
+    createdAt: Date | null
+  }
+
+  export type AdvisorMessageCountAggregateOutputType = {
+    id: number
+    userId: number
+    conversationId: number
+    role: number
+    content: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type AdvisorMessageMinAggregateInputType = {
+    id?: true
+    userId?: true
+    conversationId?: true
+    role?: true
+    content?: true
+    createdAt?: true
+  }
+
+  export type AdvisorMessageMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    conversationId?: true
+    role?: true
+    content?: true
+    createdAt?: true
+  }
+
+  export type AdvisorMessageCountAggregateInputType = {
+    id?: true
+    userId?: true
+    conversationId?: true
+    role?: true
+    content?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type AdvisorMessageAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AdvisorMessage to aggregate.
+     */
+    where?: AdvisorMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdvisorMessages to fetch.
+     */
+    orderBy?: AdvisorMessageOrderByWithRelationInput | AdvisorMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AdvisorMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdvisorMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdvisorMessages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AdvisorMessages
+    **/
+    _count?: true | AdvisorMessageCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AdvisorMessageMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AdvisorMessageMaxAggregateInputType
+  }
+
+  export type GetAdvisorMessageAggregateType<T extends AdvisorMessageAggregateArgs> = {
+        [P in keyof T & keyof AggregateAdvisorMessage]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAdvisorMessage[P]>
+      : GetScalarType<T[P], AggregateAdvisorMessage[P]>
+  }
+
+
+
+
+  export type AdvisorMessageGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AdvisorMessageWhereInput
+    orderBy?: AdvisorMessageOrderByWithAggregationInput | AdvisorMessageOrderByWithAggregationInput[]
+    by: AdvisorMessageScalarFieldEnum[] | AdvisorMessageScalarFieldEnum
+    having?: AdvisorMessageScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AdvisorMessageCountAggregateInputType | true
+    _min?: AdvisorMessageMinAggregateInputType
+    _max?: AdvisorMessageMaxAggregateInputType
+  }
+
+  export type AdvisorMessageGroupByOutputType = {
+    id: string
+    userId: string
+    conversationId: string
+    role: string
+    content: string
+    createdAt: Date
+    _count: AdvisorMessageCountAggregateOutputType | null
+    _min: AdvisorMessageMinAggregateOutputType | null
+    _max: AdvisorMessageMaxAggregateOutputType | null
+  }
+
+  type GetAdvisorMessageGroupByPayload<T extends AdvisorMessageGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AdvisorMessageGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AdvisorMessageGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AdvisorMessageGroupByOutputType[P]>
+            : GetScalarType<T[P], AdvisorMessageGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AdvisorMessageSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    conversationId?: boolean
+    role?: boolean
+    content?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["advisorMessage"]>
+
+  export type AdvisorMessageSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    conversationId?: boolean
+    role?: boolean
+    content?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["advisorMessage"]>
+
+  export type AdvisorMessageSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    conversationId?: boolean
+    role?: boolean
+    content?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["advisorMessage"]>
+
+  export type AdvisorMessageSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    conversationId?: boolean
+    role?: boolean
+    content?: boolean
+    createdAt?: boolean
+  }
+
+  export type AdvisorMessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "conversationId" | "role" | "content" | "createdAt", ExtArgs["result"]["advisorMessage"]>
+  export type AdvisorMessageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type AdvisorMessageIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type AdvisorMessageIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $AdvisorMessagePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AdvisorMessage"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      conversationId: string
+      role: string
+      content: string
+      createdAt: Date
+    }, ExtArgs["result"]["advisorMessage"]>
+    composites: {}
+  }
+
+  type AdvisorMessageGetPayload<S extends boolean | null | undefined | AdvisorMessageDefaultArgs> = $Result.GetResult<Prisma.$AdvisorMessagePayload, S>
+
+  type AdvisorMessageCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AdvisorMessageFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AdvisorMessageCountAggregateInputType | true
+    }
+
+  export interface AdvisorMessageDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AdvisorMessage'], meta: { name: 'AdvisorMessage' } }
+    /**
+     * Find zero or one AdvisorMessage that matches the filter.
+     * @param {AdvisorMessageFindUniqueArgs} args - Arguments to find a AdvisorMessage
+     * @example
+     * // Get one AdvisorMessage
+     * const advisorMessage = await prisma.advisorMessage.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AdvisorMessageFindUniqueArgs>(args: SelectSubset<T, AdvisorMessageFindUniqueArgs<ExtArgs>>): Prisma__AdvisorMessageClient<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AdvisorMessage that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AdvisorMessageFindUniqueOrThrowArgs} args - Arguments to find a AdvisorMessage
+     * @example
+     * // Get one AdvisorMessage
+     * const advisorMessage = await prisma.advisorMessage.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AdvisorMessageFindUniqueOrThrowArgs>(args: SelectSubset<T, AdvisorMessageFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AdvisorMessageClient<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AdvisorMessage that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvisorMessageFindFirstArgs} args - Arguments to find a AdvisorMessage
+     * @example
+     * // Get one AdvisorMessage
+     * const advisorMessage = await prisma.advisorMessage.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AdvisorMessageFindFirstArgs>(args?: SelectSubset<T, AdvisorMessageFindFirstArgs<ExtArgs>>): Prisma__AdvisorMessageClient<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AdvisorMessage that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvisorMessageFindFirstOrThrowArgs} args - Arguments to find a AdvisorMessage
+     * @example
+     * // Get one AdvisorMessage
+     * const advisorMessage = await prisma.advisorMessage.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AdvisorMessageFindFirstOrThrowArgs>(args?: SelectSubset<T, AdvisorMessageFindFirstOrThrowArgs<ExtArgs>>): Prisma__AdvisorMessageClient<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AdvisorMessages that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvisorMessageFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AdvisorMessages
+     * const advisorMessages = await prisma.advisorMessage.findMany()
+     * 
+     * // Get first 10 AdvisorMessages
+     * const advisorMessages = await prisma.advisorMessage.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const advisorMessageWithIdOnly = await prisma.advisorMessage.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AdvisorMessageFindManyArgs>(args?: SelectSubset<T, AdvisorMessageFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AdvisorMessage.
+     * @param {AdvisorMessageCreateArgs} args - Arguments to create a AdvisorMessage.
+     * @example
+     * // Create one AdvisorMessage
+     * const AdvisorMessage = await prisma.advisorMessage.create({
+     *   data: {
+     *     // ... data to create a AdvisorMessage
+     *   }
+     * })
+     * 
+     */
+    create<T extends AdvisorMessageCreateArgs>(args: SelectSubset<T, AdvisorMessageCreateArgs<ExtArgs>>): Prisma__AdvisorMessageClient<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AdvisorMessages.
+     * @param {AdvisorMessageCreateManyArgs} args - Arguments to create many AdvisorMessages.
+     * @example
+     * // Create many AdvisorMessages
+     * const advisorMessage = await prisma.advisorMessage.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AdvisorMessageCreateManyArgs>(args?: SelectSubset<T, AdvisorMessageCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AdvisorMessages and returns the data saved in the database.
+     * @param {AdvisorMessageCreateManyAndReturnArgs} args - Arguments to create many AdvisorMessages.
+     * @example
+     * // Create many AdvisorMessages
+     * const advisorMessage = await prisma.advisorMessage.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AdvisorMessages and only return the `id`
+     * const advisorMessageWithIdOnly = await prisma.advisorMessage.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AdvisorMessageCreateManyAndReturnArgs>(args?: SelectSubset<T, AdvisorMessageCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AdvisorMessage.
+     * @param {AdvisorMessageDeleteArgs} args - Arguments to delete one AdvisorMessage.
+     * @example
+     * // Delete one AdvisorMessage
+     * const AdvisorMessage = await prisma.advisorMessage.delete({
+     *   where: {
+     *     // ... filter to delete one AdvisorMessage
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AdvisorMessageDeleteArgs>(args: SelectSubset<T, AdvisorMessageDeleteArgs<ExtArgs>>): Prisma__AdvisorMessageClient<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AdvisorMessage.
+     * @param {AdvisorMessageUpdateArgs} args - Arguments to update one AdvisorMessage.
+     * @example
+     * // Update one AdvisorMessage
+     * const advisorMessage = await prisma.advisorMessage.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AdvisorMessageUpdateArgs>(args: SelectSubset<T, AdvisorMessageUpdateArgs<ExtArgs>>): Prisma__AdvisorMessageClient<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AdvisorMessages.
+     * @param {AdvisorMessageDeleteManyArgs} args - Arguments to filter AdvisorMessages to delete.
+     * @example
+     * // Delete a few AdvisorMessages
+     * const { count } = await prisma.advisorMessage.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AdvisorMessageDeleteManyArgs>(args?: SelectSubset<T, AdvisorMessageDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AdvisorMessages.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvisorMessageUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AdvisorMessages
+     * const advisorMessage = await prisma.advisorMessage.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AdvisorMessageUpdateManyArgs>(args: SelectSubset<T, AdvisorMessageUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AdvisorMessages and returns the data updated in the database.
+     * @param {AdvisorMessageUpdateManyAndReturnArgs} args - Arguments to update many AdvisorMessages.
+     * @example
+     * // Update many AdvisorMessages
+     * const advisorMessage = await prisma.advisorMessage.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AdvisorMessages and only return the `id`
+     * const advisorMessageWithIdOnly = await prisma.advisorMessage.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AdvisorMessageUpdateManyAndReturnArgs>(args: SelectSubset<T, AdvisorMessageUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AdvisorMessage.
+     * @param {AdvisorMessageUpsertArgs} args - Arguments to update or create a AdvisorMessage.
+     * @example
+     * // Update or create a AdvisorMessage
+     * const advisorMessage = await prisma.advisorMessage.upsert({
+     *   create: {
+     *     // ... data to create a AdvisorMessage
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AdvisorMessage we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AdvisorMessageUpsertArgs>(args: SelectSubset<T, AdvisorMessageUpsertArgs<ExtArgs>>): Prisma__AdvisorMessageClient<$Result.GetResult<Prisma.$AdvisorMessagePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AdvisorMessages.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvisorMessageCountArgs} args - Arguments to filter AdvisorMessages to count.
+     * @example
+     * // Count the number of AdvisorMessages
+     * const count = await prisma.advisorMessage.count({
+     *   where: {
+     *     // ... the filter for the AdvisorMessages we want to count
+     *   }
+     * })
+    **/
+    count<T extends AdvisorMessageCountArgs>(
+      args?: Subset<T, AdvisorMessageCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AdvisorMessageCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AdvisorMessage.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvisorMessageAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AdvisorMessageAggregateArgs>(args: Subset<T, AdvisorMessageAggregateArgs>): Prisma.PrismaPromise<GetAdvisorMessageAggregateType<T>>
+
+    /**
+     * Group by AdvisorMessage.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvisorMessageGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AdvisorMessageGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AdvisorMessageGroupByArgs['orderBy'] }
+        : { orderBy?: AdvisorMessageGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AdvisorMessageGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAdvisorMessageGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AdvisorMessage model
+   */
+  readonly fields: AdvisorMessageFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AdvisorMessage.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AdvisorMessageClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AdvisorMessage model
+   */
+  interface AdvisorMessageFieldRefs {
+    readonly id: FieldRef<"AdvisorMessage", 'String'>
+    readonly userId: FieldRef<"AdvisorMessage", 'String'>
+    readonly conversationId: FieldRef<"AdvisorMessage", 'String'>
+    readonly role: FieldRef<"AdvisorMessage", 'String'>
+    readonly content: FieldRef<"AdvisorMessage", 'String'>
+    readonly createdAt: FieldRef<"AdvisorMessage", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AdvisorMessage findUnique
+   */
+  export type AdvisorMessageFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+    /**
+     * Filter, which AdvisorMessage to fetch.
+     */
+    where: AdvisorMessageWhereUniqueInput
+  }
+
+  /**
+   * AdvisorMessage findUniqueOrThrow
+   */
+  export type AdvisorMessageFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+    /**
+     * Filter, which AdvisorMessage to fetch.
+     */
+    where: AdvisorMessageWhereUniqueInput
+  }
+
+  /**
+   * AdvisorMessage findFirst
+   */
+  export type AdvisorMessageFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+    /**
+     * Filter, which AdvisorMessage to fetch.
+     */
+    where?: AdvisorMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdvisorMessages to fetch.
+     */
+    orderBy?: AdvisorMessageOrderByWithRelationInput | AdvisorMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AdvisorMessages.
+     */
+    cursor?: AdvisorMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdvisorMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdvisorMessages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AdvisorMessages.
+     */
+    distinct?: AdvisorMessageScalarFieldEnum | AdvisorMessageScalarFieldEnum[]
+  }
+
+  /**
+   * AdvisorMessage findFirstOrThrow
+   */
+  export type AdvisorMessageFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+    /**
+     * Filter, which AdvisorMessage to fetch.
+     */
+    where?: AdvisorMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdvisorMessages to fetch.
+     */
+    orderBy?: AdvisorMessageOrderByWithRelationInput | AdvisorMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AdvisorMessages.
+     */
+    cursor?: AdvisorMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdvisorMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdvisorMessages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AdvisorMessages.
+     */
+    distinct?: AdvisorMessageScalarFieldEnum | AdvisorMessageScalarFieldEnum[]
+  }
+
+  /**
+   * AdvisorMessage findMany
+   */
+  export type AdvisorMessageFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+    /**
+     * Filter, which AdvisorMessages to fetch.
+     */
+    where?: AdvisorMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdvisorMessages to fetch.
+     */
+    orderBy?: AdvisorMessageOrderByWithRelationInput | AdvisorMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AdvisorMessages.
+     */
+    cursor?: AdvisorMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdvisorMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdvisorMessages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AdvisorMessages.
+     */
+    distinct?: AdvisorMessageScalarFieldEnum | AdvisorMessageScalarFieldEnum[]
+  }
+
+  /**
+   * AdvisorMessage create
+   */
+  export type AdvisorMessageCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AdvisorMessage.
+     */
+    data: XOR<AdvisorMessageCreateInput, AdvisorMessageUncheckedCreateInput>
+  }
+
+  /**
+   * AdvisorMessage createMany
+   */
+  export type AdvisorMessageCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AdvisorMessages.
+     */
+    data: AdvisorMessageCreateManyInput | AdvisorMessageCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AdvisorMessage createManyAndReturn
+   */
+  export type AdvisorMessageCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * The data used to create many AdvisorMessages.
+     */
+    data: AdvisorMessageCreateManyInput | AdvisorMessageCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AdvisorMessage update
+   */
+  export type AdvisorMessageUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AdvisorMessage.
+     */
+    data: XOR<AdvisorMessageUpdateInput, AdvisorMessageUncheckedUpdateInput>
+    /**
+     * Choose, which AdvisorMessage to update.
+     */
+    where: AdvisorMessageWhereUniqueInput
+  }
+
+  /**
+   * AdvisorMessage updateMany
+   */
+  export type AdvisorMessageUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AdvisorMessages.
+     */
+    data: XOR<AdvisorMessageUpdateManyMutationInput, AdvisorMessageUncheckedUpdateManyInput>
+    /**
+     * Filter which AdvisorMessages to update
+     */
+    where?: AdvisorMessageWhereInput
+    /**
+     * Limit how many AdvisorMessages to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AdvisorMessage updateManyAndReturn
+   */
+  export type AdvisorMessageUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * The data used to update AdvisorMessages.
+     */
+    data: XOR<AdvisorMessageUpdateManyMutationInput, AdvisorMessageUncheckedUpdateManyInput>
+    /**
+     * Filter which AdvisorMessages to update
+     */
+    where?: AdvisorMessageWhereInput
+    /**
+     * Limit how many AdvisorMessages to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AdvisorMessage upsert
+   */
+  export type AdvisorMessageUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AdvisorMessage to update in case it exists.
+     */
+    where: AdvisorMessageWhereUniqueInput
+    /**
+     * In case the AdvisorMessage found by the `where` argument doesn't exist, create a new AdvisorMessage with this data.
+     */
+    create: XOR<AdvisorMessageCreateInput, AdvisorMessageUncheckedCreateInput>
+    /**
+     * In case the AdvisorMessage was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AdvisorMessageUpdateInput, AdvisorMessageUncheckedUpdateInput>
+  }
+
+  /**
+   * AdvisorMessage delete
+   */
+  export type AdvisorMessageDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+    /**
+     * Filter which AdvisorMessage to delete.
+     */
+    where: AdvisorMessageWhereUniqueInput
+  }
+
+  /**
+   * AdvisorMessage deleteMany
+   */
+  export type AdvisorMessageDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AdvisorMessages to delete
+     */
+    where?: AdvisorMessageWhereInput
+    /**
+     * Limit how many AdvisorMessages to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AdvisorMessage without action
+   */
+  export type AdvisorMessageDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvisorMessage
+     */
+    select?: AdvisorMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvisorMessage
+     */
+    omit?: AdvisorMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdvisorMessageInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model AiUsage
    */
 
@@ -24755,6 +25963,18 @@ export namespace Prisma {
   export type AppSettingScalarFieldEnum = (typeof AppSettingScalarFieldEnum)[keyof typeof AppSettingScalarFieldEnum]
 
 
+  export const AdvisorMessageScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    conversationId: 'conversationId',
+    role: 'role',
+    content: 'content',
+    createdAt: 'createdAt'
+  };
+
+  export type AdvisorMessageScalarFieldEnum = (typeof AdvisorMessageScalarFieldEnum)[keyof typeof AdvisorMessageScalarFieldEnum]
+
+
   export const AiUsageScalarFieldEnum: {
     period: 'period',
     provider: 'provider',
@@ -25019,6 +26239,7 @@ export namespace Prisma {
     telegramConnection?: XOR<TelegramConnectionNullableScalarRelationFilter, TelegramConnectionWhereInput> | null
     telegramConversationMemories?: TelegramConversationMemoryListRelationFilter
     telegramPendingTokens?: TelegramPendingTokenListRelationFilter
+    advisorMessages?: AdvisorMessageListRelationFilter
     invitationsSent?: InvitationListRelationFilter
     invitationsAccepted?: InvitationListRelationFilter
   }
@@ -25053,6 +26274,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionOrderByWithRelationInput
     telegramConversationMemories?: TelegramConversationMemoryOrderByRelationAggregateInput
     telegramPendingTokens?: TelegramPendingTokenOrderByRelationAggregateInput
+    advisorMessages?: AdvisorMessageOrderByRelationAggregateInput
     invitationsSent?: InvitationOrderByRelationAggregateInput
     invitationsAccepted?: InvitationOrderByRelationAggregateInput
   }
@@ -25090,6 +26312,7 @@ export namespace Prisma {
     telegramConnection?: XOR<TelegramConnectionNullableScalarRelationFilter, TelegramConnectionWhereInput> | null
     telegramConversationMemories?: TelegramConversationMemoryListRelationFilter
     telegramPendingTokens?: TelegramPendingTokenListRelationFilter
+    advisorMessages?: AdvisorMessageListRelationFilter
     invitationsSent?: InvitationListRelationFilter
     invitationsAccepted?: InvitationListRelationFilter
   }, "id" | "email" | "googleId">
@@ -26433,6 +27656,66 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"AppSetting"> | Date | string
   }
 
+  export type AdvisorMessageWhereInput = {
+    AND?: AdvisorMessageWhereInput | AdvisorMessageWhereInput[]
+    OR?: AdvisorMessageWhereInput[]
+    NOT?: AdvisorMessageWhereInput | AdvisorMessageWhereInput[]
+    id?: StringFilter<"AdvisorMessage"> | string
+    userId?: StringFilter<"AdvisorMessage"> | string
+    conversationId?: StringFilter<"AdvisorMessage"> | string
+    role?: StringFilter<"AdvisorMessage"> | string
+    content?: StringFilter<"AdvisorMessage"> | string
+    createdAt?: DateTimeFilter<"AdvisorMessage"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type AdvisorMessageOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    conversationId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type AdvisorMessageWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AdvisorMessageWhereInput | AdvisorMessageWhereInput[]
+    OR?: AdvisorMessageWhereInput[]
+    NOT?: AdvisorMessageWhereInput | AdvisorMessageWhereInput[]
+    userId?: StringFilter<"AdvisorMessage"> | string
+    conversationId?: StringFilter<"AdvisorMessage"> | string
+    role?: StringFilter<"AdvisorMessage"> | string
+    content?: StringFilter<"AdvisorMessage"> | string
+    createdAt?: DateTimeFilter<"AdvisorMessage"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type AdvisorMessageOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    conversationId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+    _count?: AdvisorMessageCountOrderByAggregateInput
+    _max?: AdvisorMessageMaxOrderByAggregateInput
+    _min?: AdvisorMessageMinOrderByAggregateInput
+  }
+
+  export type AdvisorMessageScalarWhereWithAggregatesInput = {
+    AND?: AdvisorMessageScalarWhereWithAggregatesInput | AdvisorMessageScalarWhereWithAggregatesInput[]
+    OR?: AdvisorMessageScalarWhereWithAggregatesInput[]
+    NOT?: AdvisorMessageScalarWhereWithAggregatesInput | AdvisorMessageScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AdvisorMessage"> | string
+    userId?: StringWithAggregatesFilter<"AdvisorMessage"> | string
+    conversationId?: StringWithAggregatesFilter<"AdvisorMessage"> | string
+    role?: StringWithAggregatesFilter<"AdvisorMessage"> | string
+    content?: StringWithAggregatesFilter<"AdvisorMessage"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"AdvisorMessage"> | Date | string
+  }
+
   export type AiUsageWhereInput = {
     AND?: AiUsageWhereInput | AiUsageWhereInput[]
     OR?: AiUsageWhereInput[]
@@ -26533,6 +27816,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -26567,6 +27851,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -26601,6 +27886,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -26635,6 +27921,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -28045,6 +29332,68 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AdvisorMessageCreateInput = {
+    id?: string
+    conversationId: string
+    role: string
+    content: string
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutAdvisorMessagesInput
+  }
+
+  export type AdvisorMessageUncheckedCreateInput = {
+    id?: string
+    userId: string
+    conversationId: string
+    role: string
+    content: string
+    createdAt?: Date | string
+  }
+
+  export type AdvisorMessageUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutAdvisorMessagesNestedInput
+  }
+
+  export type AdvisorMessageUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdvisorMessageCreateManyInput = {
+    id?: string
+    userId: string
+    conversationId: string
+    role: string
+    content: string
+    createdAt?: Date | string
+  }
+
+  export type AdvisorMessageUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdvisorMessageUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AiUsageCreateInput = {
     period: string
     provider: string
@@ -28288,6 +29637,12 @@ export namespace Prisma {
     none?: TelegramPendingTokenWhereInput
   }
 
+  export type AdvisorMessageListRelationFilter = {
+    every?: AdvisorMessageWhereInput
+    some?: AdvisorMessageWhereInput
+    none?: AdvisorMessageWhereInput
+  }
+
   export type InvitationListRelationFilter = {
     every?: InvitationWhereInput
     some?: InvitationWhereInput
@@ -28344,6 +29699,10 @@ export namespace Prisma {
   }
 
   export type TelegramPendingTokenOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type AdvisorMessageOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -29490,6 +30849,33 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type AdvisorMessageCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    conversationId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AdvisorMessageMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    conversationId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AdvisorMessageMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    conversationId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type AiUsagePeriodProviderModelCompoundUniqueInput = {
     period: string
     provider: string
@@ -29633,6 +31019,13 @@ export namespace Prisma {
     connect?: TelegramPendingTokenWhereUniqueInput | TelegramPendingTokenWhereUniqueInput[]
   }
 
+  export type AdvisorMessageCreateNestedManyWithoutUserInput = {
+    create?: XOR<AdvisorMessageCreateWithoutUserInput, AdvisorMessageUncheckedCreateWithoutUserInput> | AdvisorMessageCreateWithoutUserInput[] | AdvisorMessageUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AdvisorMessageCreateOrConnectWithoutUserInput | AdvisorMessageCreateOrConnectWithoutUserInput[]
+    createMany?: AdvisorMessageCreateManyUserInputEnvelope
+    connect?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+  }
+
   export type InvitationCreateNestedManyWithoutInvitedByInput = {
     create?: XOR<InvitationCreateWithoutInvitedByInput, InvitationUncheckedCreateWithoutInvitedByInput> | InvitationCreateWithoutInvitedByInput[] | InvitationUncheckedCreateWithoutInvitedByInput[]
     connectOrCreate?: InvitationCreateOrConnectWithoutInvitedByInput | InvitationCreateOrConnectWithoutInvitedByInput[]
@@ -29735,6 +31128,13 @@ export namespace Prisma {
     connectOrCreate?: TelegramPendingTokenCreateOrConnectWithoutUserInput | TelegramPendingTokenCreateOrConnectWithoutUserInput[]
     createMany?: TelegramPendingTokenCreateManyUserInputEnvelope
     connect?: TelegramPendingTokenWhereUniqueInput | TelegramPendingTokenWhereUniqueInput[]
+  }
+
+  export type AdvisorMessageUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<AdvisorMessageCreateWithoutUserInput, AdvisorMessageUncheckedCreateWithoutUserInput> | AdvisorMessageCreateWithoutUserInput[] | AdvisorMessageUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AdvisorMessageCreateOrConnectWithoutUserInput | AdvisorMessageCreateOrConnectWithoutUserInput[]
+    createMany?: AdvisorMessageCreateManyUserInputEnvelope
+    connect?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
   }
 
   export type InvitationUncheckedCreateNestedManyWithoutInvitedByInput = {
@@ -29953,6 +31353,20 @@ export namespace Prisma {
     deleteMany?: TelegramPendingTokenScalarWhereInput | TelegramPendingTokenScalarWhereInput[]
   }
 
+  export type AdvisorMessageUpdateManyWithoutUserNestedInput = {
+    create?: XOR<AdvisorMessageCreateWithoutUserInput, AdvisorMessageUncheckedCreateWithoutUserInput> | AdvisorMessageCreateWithoutUserInput[] | AdvisorMessageUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AdvisorMessageCreateOrConnectWithoutUserInput | AdvisorMessageCreateOrConnectWithoutUserInput[]
+    upsert?: AdvisorMessageUpsertWithWhereUniqueWithoutUserInput | AdvisorMessageUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: AdvisorMessageCreateManyUserInputEnvelope
+    set?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+    disconnect?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+    delete?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+    connect?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+    update?: AdvisorMessageUpdateWithWhereUniqueWithoutUserInput | AdvisorMessageUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: AdvisorMessageUpdateManyWithWhereWithoutUserInput | AdvisorMessageUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: AdvisorMessageScalarWhereInput | AdvisorMessageScalarWhereInput[]
+  }
+
   export type InvitationUpdateManyWithoutInvitedByNestedInput = {
     create?: XOR<InvitationCreateWithoutInvitedByInput, InvitationUncheckedCreateWithoutInvitedByInput> | InvitationCreateWithoutInvitedByInput[] | InvitationUncheckedCreateWithoutInvitedByInput[]
     connectOrCreate?: InvitationCreateOrConnectWithoutInvitedByInput | InvitationCreateOrConnectWithoutInvitedByInput[]
@@ -30157,6 +31571,20 @@ export namespace Prisma {
     update?: TelegramPendingTokenUpdateWithWhereUniqueWithoutUserInput | TelegramPendingTokenUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: TelegramPendingTokenUpdateManyWithWhereWithoutUserInput | TelegramPendingTokenUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: TelegramPendingTokenScalarWhereInput | TelegramPendingTokenScalarWhereInput[]
+  }
+
+  export type AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<AdvisorMessageCreateWithoutUserInput, AdvisorMessageUncheckedCreateWithoutUserInput> | AdvisorMessageCreateWithoutUserInput[] | AdvisorMessageUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AdvisorMessageCreateOrConnectWithoutUserInput | AdvisorMessageCreateOrConnectWithoutUserInput[]
+    upsert?: AdvisorMessageUpsertWithWhereUniqueWithoutUserInput | AdvisorMessageUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: AdvisorMessageCreateManyUserInputEnvelope
+    set?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+    disconnect?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+    delete?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+    connect?: AdvisorMessageWhereUniqueInput | AdvisorMessageWhereUniqueInput[]
+    update?: AdvisorMessageUpdateWithWhereUniqueWithoutUserInput | AdvisorMessageUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: AdvisorMessageUpdateManyWithWhereWithoutUserInput | AdvisorMessageUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: AdvisorMessageScalarWhereInput | AdvisorMessageScalarWhereInput[]
   }
 
   export type InvitationUncheckedUpdateManyWithoutInvitedByNestedInput = {
@@ -31353,6 +32781,20 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutTelegramPendingTokensInput, UserUpdateWithoutTelegramPendingTokensInput>, UserUncheckedUpdateWithoutTelegramPendingTokensInput>
   }
 
+  export type UserCreateNestedOneWithoutAdvisorMessagesInput = {
+    create?: XOR<UserCreateWithoutAdvisorMessagesInput, UserUncheckedCreateWithoutAdvisorMessagesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAdvisorMessagesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutAdvisorMessagesNestedInput = {
+    create?: XOR<UserCreateWithoutAdvisorMessagesInput, UserUncheckedCreateWithoutAdvisorMessagesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAdvisorMessagesInput
+    upsert?: UserUpsertWithoutAdvisorMessagesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAdvisorMessagesInput, UserUpdateWithoutAdvisorMessagesInput>, UserUncheckedUpdateWithoutAdvisorMessagesInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -32177,6 +33619,32 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type AdvisorMessageCreateWithoutUserInput = {
+    id?: string
+    conversationId: string
+    role: string
+    content: string
+    createdAt?: Date | string
+  }
+
+  export type AdvisorMessageUncheckedCreateWithoutUserInput = {
+    id?: string
+    conversationId: string
+    role: string
+    content: string
+    createdAt?: Date | string
+  }
+
+  export type AdvisorMessageCreateOrConnectWithoutUserInput = {
+    where: AdvisorMessageWhereUniqueInput
+    create: XOR<AdvisorMessageCreateWithoutUserInput, AdvisorMessageUncheckedCreateWithoutUserInput>
+  }
+
+  export type AdvisorMessageCreateManyUserInputEnvelope = {
+    data: AdvisorMessageCreateManyUserInput | AdvisorMessageCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type InvitationCreateWithoutInvitedByInput = {
     id?: string
     token: string
@@ -32650,6 +34118,34 @@ export namespace Prisma {
     used?: BoolFilter<"TelegramPendingToken"> | boolean
   }
 
+  export type AdvisorMessageUpsertWithWhereUniqueWithoutUserInput = {
+    where: AdvisorMessageWhereUniqueInput
+    update: XOR<AdvisorMessageUpdateWithoutUserInput, AdvisorMessageUncheckedUpdateWithoutUserInput>
+    create: XOR<AdvisorMessageCreateWithoutUserInput, AdvisorMessageUncheckedCreateWithoutUserInput>
+  }
+
+  export type AdvisorMessageUpdateWithWhereUniqueWithoutUserInput = {
+    where: AdvisorMessageWhereUniqueInput
+    data: XOR<AdvisorMessageUpdateWithoutUserInput, AdvisorMessageUncheckedUpdateWithoutUserInput>
+  }
+
+  export type AdvisorMessageUpdateManyWithWhereWithoutUserInput = {
+    where: AdvisorMessageScalarWhereInput
+    data: XOR<AdvisorMessageUpdateManyMutationInput, AdvisorMessageUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type AdvisorMessageScalarWhereInput = {
+    AND?: AdvisorMessageScalarWhereInput | AdvisorMessageScalarWhereInput[]
+    OR?: AdvisorMessageScalarWhereInput[]
+    NOT?: AdvisorMessageScalarWhereInput | AdvisorMessageScalarWhereInput[]
+    id?: StringFilter<"AdvisorMessage"> | string
+    userId?: StringFilter<"AdvisorMessage"> | string
+    conversationId?: StringFilter<"AdvisorMessage"> | string
+    role?: StringFilter<"AdvisorMessage"> | string
+    content?: StringFilter<"AdvisorMessage"> | string
+    createdAt?: DateTimeFilter<"AdvisorMessage"> | Date | string
+  }
+
   export type InvitationUpsertWithWhereUniqueWithoutInvitedByInput = {
     where: InvitationWhereUniqueInput
     update: XOR<InvitationUpdateWithoutInvitedByInput, InvitationUncheckedUpdateWithoutInvitedByInput>
@@ -32728,6 +34224,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
 
@@ -32761,6 +34258,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
 
@@ -32799,6 +34297,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
   }
 
@@ -32832,6 +34331,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
   }
 
@@ -32881,6 +34381,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
 
@@ -32914,6 +34415,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
 
@@ -32958,6 +34460,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
   }
 
@@ -32991,6 +34494,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   }
 
@@ -33023,6 +34527,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -33056,6 +34561,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -33259,6 +34765,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -33292,6 +34799,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -33447,6 +34955,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -33480,6 +34989,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -33661,6 +35171,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -33694,6 +35205,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -33828,6 +35340,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -33861,6 +35374,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -34063,6 +35577,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -34096,6 +35611,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -34161,6 +35677,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -34194,6 +35711,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -34343,6 +35861,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -34376,6 +35895,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -34487,6 +36007,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -34520,6 +36041,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -34639,6 +36161,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -34672,6 +36195,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -34951,6 +36475,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -34984,6 +36509,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -35290,6 +36816,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -35323,6 +36850,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -35509,6 +37037,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -35542,6 +37071,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -35646,6 +37176,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -35679,6 +37210,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -35712,6 +37244,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -35745,6 +37278,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -35794,6 +37328,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -35827,6 +37362,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36003,6 +37539,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -36036,6 +37573,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -36258,6 +37796,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36291,6 +37830,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36386,6 +37926,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -36419,6 +37960,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -36542,6 +38084,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36575,6 +38118,7 @@ export namespace Prisma {
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36608,6 +38152,7 @@ export namespace Prisma {
     transactions?: TransactionCreateNestedManyWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -36641,6 +38186,7 @@ export namespace Prisma {
     transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -36690,6 +38236,7 @@ export namespace Prisma {
     transactions?: TransactionUpdateManyWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36723,6 +38270,7 @@ export namespace Prisma {
     transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36756,6 +38304,7 @@ export namespace Prisma {
     transactions?: TransactionCreateNestedManyWithoutUserInput
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -36789,6 +38338,7 @@ export namespace Prisma {
     transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -36838,6 +38388,7 @@ export namespace Prisma {
     transactions?: TransactionUpdateManyWithoutUserNestedInput
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36871,6 +38422,7 @@ export namespace Prisma {
     transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -36904,6 +38456,7 @@ export namespace Prisma {
     transactions?: TransactionCreateNestedManyWithoutUserInput
     telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
   }
@@ -36937,6 +38490,7 @@ export namespace Prisma {
     transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
     telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
+    advisorMessages?: AdvisorMessageUncheckedCreateNestedManyWithoutUserInput
     invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
     invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
   }
@@ -36986,6 +38540,7 @@ export namespace Prisma {
     transactions?: TransactionUpdateManyWithoutUserNestedInput
     telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
   }
@@ -37019,6 +38574,159 @@ export namespace Prisma {
     transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
     telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
     telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
+    advisorMessages?: AdvisorMessageUncheckedUpdateManyWithoutUserNestedInput
+    invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
+  }
+
+  export type UserCreateWithoutAdvisorMessagesInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    budgets?: BudgetCreateNestedManyWithoutUserInput
+    categories?: CategoryCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionCreateNestedManyWithoutUserInput
+    payees?: PayeeCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupCreateNestedManyWithoutUserInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenCreateNestedManyWithoutUserInput
+    invitationsSent?: InvitationCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationCreateNestedManyWithoutAcceptedByInput
+  }
+
+  export type UserUncheckedCreateWithoutAdvisorMessagesInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash?: string | null
+    googleId?: string | null
+    phone?: string | null
+    photo?: string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: $Enums.Role
+    status?: $Enums.UserStatus
+    googleAccessToken?: string | null
+    googleRefreshToken?: string | null
+    googleTokenExpiresAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    budgets?: BudgetUncheckedCreateNestedManyWithoutUserInput
+    categories?: CategoryUncheckedCreateNestedManyWithoutUserInput
+    categoryGroups?: CategoryGroupUncheckedCreateNestedManyWithoutUserInput
+    excludedTransactions?: ExcludedTransactionUncheckedCreateNestedManyWithoutUserInput
+    payees?: PayeeUncheckedCreateNestedManyWithoutUserInput
+    recurringTransactions?: RecurringTransactionUncheckedCreateNestedManyWithoutUserInput
+    transactionMessages?: TransactionMessageUncheckedCreateNestedManyWithoutUserInput
+    transactionStatuses?: TransactionStatusLookupUncheckedCreateNestedManyWithoutUserInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+    telegramConnection?: TelegramConnectionUncheckedCreateNestedOneWithoutUserInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedCreateNestedManyWithoutUserInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedCreateNestedManyWithoutUserInput
+    invitationsSent?: InvitationUncheckedCreateNestedManyWithoutInvitedByInput
+    invitationsAccepted?: InvitationUncheckedCreateNestedManyWithoutAcceptedByInput
+  }
+
+  export type UserCreateOrConnectWithoutAdvisorMessagesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutAdvisorMessagesInput, UserUncheckedCreateWithoutAdvisorMessagesInput>
+  }
+
+  export type UserUpsertWithoutAdvisorMessagesInput = {
+    update: XOR<UserUpdateWithoutAdvisorMessagesInput, UserUncheckedUpdateWithoutAdvisorMessagesInput>
+    create: XOR<UserCreateWithoutAdvisorMessagesInput, UserUncheckedCreateWithoutAdvisorMessagesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutAdvisorMessagesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutAdvisorMessagesInput, UserUncheckedUpdateWithoutAdvisorMessagesInput>
+  }
+
+  export type UserUpdateWithoutAdvisorMessagesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUpdateManyWithoutUserNestedInput
+    categories?: CategoryUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUpdateManyWithoutUserNestedInput
+    payees?: PayeeUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUpdateManyWithoutUserNestedInput
+    invitationsSent?: InvitationUpdateManyWithoutInvitedByNestedInput
+    invitationsAccepted?: InvitationUpdateManyWithoutAcceptedByNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutAdvisorMessagesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    photo?: NullableStringFieldUpdateOperationsInput | string | null
+    preferencesJson?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    themePreferences?: NullableJsonNullValueInput | InputJsonValue
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    googleAccessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleRefreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    googleTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    budgets?: BudgetUncheckedUpdateManyWithoutUserNestedInput
+    categories?: CategoryUncheckedUpdateManyWithoutUserNestedInput
+    categoryGroups?: CategoryGroupUncheckedUpdateManyWithoutUserNestedInput
+    excludedTransactions?: ExcludedTransactionUncheckedUpdateManyWithoutUserNestedInput
+    payees?: PayeeUncheckedUpdateManyWithoutUserNestedInput
+    recurringTransactions?: RecurringTransactionUncheckedUpdateManyWithoutUserNestedInput
+    transactionMessages?: TransactionMessageUncheckedUpdateManyWithoutUserNestedInput
+    transactionStatuses?: TransactionStatusLookupUncheckedUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+    telegramConnection?: TelegramConnectionUncheckedUpdateOneWithoutUserNestedInput
+    telegramConversationMemories?: TelegramConversationMemoryUncheckedUpdateManyWithoutUserNestedInput
+    telegramPendingTokens?: TelegramPendingTokenUncheckedUpdateManyWithoutUserNestedInput
     invitationsSent?: InvitationUncheckedUpdateManyWithoutInvitedByNestedInput
     invitationsAccepted?: InvitationUncheckedUpdateManyWithoutAcceptedByNestedInput
   }
@@ -37159,6 +38867,14 @@ export namespace Prisma {
     token?: string
     expiresAt: Date | string
     used?: boolean
+  }
+
+  export type AdvisorMessageCreateManyUserInput = {
+    id?: string
+    conversationId: string
+    role: string
+    content: string
+    createdAt?: Date | string
   }
 
   export type InvitationCreateManyInvitedByInput = {
@@ -37629,6 +39345,30 @@ export namespace Prisma {
     token?: StringFieldUpdateOperationsInput | string
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     used?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type AdvisorMessageUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdvisorMessageUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdvisorMessageUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type InvitationUpdateWithoutInvitedByInput = {

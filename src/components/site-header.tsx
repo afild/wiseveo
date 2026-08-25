@@ -70,7 +70,7 @@ export function SiteHeader({ onOpenThemeCustomizer }: SiteHeaderProps) {
   const tCommon = useTranslations("common")
 
   const routeKeys = [
-    "/dashboard", "/insights", "/transactions", "/recurring", "/budget",
+    "/dashboard", "/insights", "/advisor", "/transactions", "/recurring", "/budget",
     "/analysis", "/forecasting", "/banks", "/calendar", "/configuracoes",
   ];
 

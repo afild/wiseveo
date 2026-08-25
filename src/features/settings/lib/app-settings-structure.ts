@@ -1,12 +1,14 @@
 /**
- * As peças que "Preparar meu banco" (aba Integrações) acrescenta: a tabela
- * `app_settings` (segredos cifrados — token do bot, chaves de IA) e a tabela
- * `ai_usage` (consumo de IA por mês, para o teto de gasto). Módulo puro — o
- * serviço, a tela e os testes leem daqui para nunca divergirem.
+ * As peças que "Preparar meu banco" (aba Integrações) acrescenta, numa
+ * confirmação só: `app_settings` (segredos cifrados — token do bot, chaves de
+ * IA), `ai_usage` (consumo de IA por mês, para o teto de gasto) e
+ * `advisor_messages` (as conversas da página Advisor). Módulo puro — o serviço,
+ * a tela e os testes leem daqui para nunca divergirem.
  */
 export const APP_SETTINGS_TABLE = "app_settings"
 export const AI_USAGE_TABLE = "ai_usage"
-export const INTEGRATION_TABLES = [APP_SETTINGS_TABLE, AI_USAGE_TABLE] as const
+export const ADVISOR_MESSAGES_TABLE = "advisor_messages"
+export const INTEGRATION_TABLES = [APP_SETTINGS_TABLE, AI_USAGE_TABLE, ADVISOR_MESSAGES_TABLE] as const
 
 export type IntegrationTable = (typeof INTEGRATION_TABLES)[number]
 
@@ -19,6 +21,8 @@ export interface AppSettingsStructure {
    * derrubaria a tela do bot numa instalação que já estava preparada.
    */
   secretsReady: boolean
+  /** Só a tabela de conversas — é dela que a página Advisor depende. */
+  advisorReady: boolean
   missing: IntegrationTable[]
 }
 
@@ -27,6 +31,7 @@ export function checkAppSettingsStructure(input: { existingTables: string[] }): 
   return {
     ready: missing.length === 0,
     secretsReady: input.existingTables.includes(APP_SETTINGS_TABLE),
+    advisorReady: input.existingTables.includes(ADVISOR_MESSAGES_TABLE),
     missing: [...missing],
   }
 }
