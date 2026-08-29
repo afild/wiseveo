@@ -269,6 +269,15 @@ export type AiTestResult =
   | { ok: false; code: "needsModel" }
   | { ok: false; code: "providerError"; detail: string }
 
+/**
+ * O teste só quer saber se a chave abre a porta, então pede a resposta mais
+ * curta possível. Mas a OpenAI RECUSA o pedido abaixo de 16 (`Invalid
+ * 'max_output_tokens': ... Expected a value >= 16`) — com 8, o botão "Testar"
+ * acusava chave inválida em chave perfeitamente boa. 16 é o piso do provedor
+ * mais exigente; um punhado de tokens não muda a conta de ninguém.
+ */
+const TEST_MAX_OUTPUT_TOKENS = 16
+
 export async function testAiProvider(input: {
   provider: AiProviderId
   model?: string
@@ -292,7 +301,7 @@ export async function testAiProvider(input: {
       model: buildLanguageModel(choice, config, apiKey, input.baseUrl?.trim() || undefined),
       // i18n-ignore: prompt técnico de teste, não é texto de UI
       prompt: "ping",
-      maxOutputTokens: 8,
+      maxOutputTokens: TEST_MAX_OUTPUT_TOKENS,
     })
     await recordResultUsage(choice, result)
     return { ok: true, model, latencyMs: Date.now() - startedAt }
