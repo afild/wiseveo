@@ -65,6 +65,15 @@ export function AiSettingsCard({ structureReady, initial }: AiSettingsCardProps)
   const [savingKey, setSavingKey] = React.useState(false)
   const [removing, setRemoving] = React.useState<AiProviderId | null>(null)
   const [savingSettings, setSavingSettings] = React.useState(false)
+  // A lista que o PROVEDOR devolveu, por provedor. `undefined` = ainda não
+  // perguntamos; `[]` = perguntamos e não veio nada (aí a tela deixa digitar).
+  const [providerModels, setProviderModels] = React.useState<
+    Partial<Record<AiProviderId, string[]>>
+  >({})
+  const [loadingModels, setLoadingModels] = React.useState<AiProviderId | null>(null)
+  // Níveis que a pessoa colocou em "digitar à mão" — self-host e modelo
+  // recém-lançado precisam desse caminho, senão a lista viraria uma prisão.
+  const [manualTiers, setManualTiers] = React.useState<Record<string, boolean>>({})
 
   const money = createNumberFormatter(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   // Duas listas, de propósito:
@@ -90,6 +99,53 @@ export function AiSettingsCard({ structureReady, initial }: AiSettingsCardProps)
     const payload = await response.json().catch(() => null)
     if (!response.ok || !payload?.success) throw new Error(payload?.message ?? t("error"))
     return payload.data
+  }
+
+  /**
+   * Pergunta ao provedor quais modelos a chave tem. `silent` para a carga
+   * automática da abertura: falhar ali não pode encher a tela de aviso vermelho
+   * antes de a pessoa ter pedido qualquer coisa.
+   */
+  const loadModels = React.useCallback(
+    async (id: AiProviderId, options: { silent?: boolean; apiKey?: string; baseUrl?: string } = {}) => {
+      setLoadingModels(id)
+      try {
+        const response = await fetch("/api/admin/ai-settings/models", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: id,
+            apiKey: options.apiKey?.trim() || undefined,
+            baseUrl: id === "compatible" ? options.baseUrl?.trim() || undefined : undefined,
+          }),
+        })
+        const payload = await response.json().catch(() => null)
+        if (!response.ok || !payload?.success) throw new Error(payload?.message ?? t("error"))
+        setProviderModels((current) => ({ ...current, [id]: payload.data.models as string[] }))
+        if (!options.silent) {
+          const count = (payload.data.models as string[]).length
+          if (count > 0) toast.success(t("modelsLoaded", { count }))
+          else toast.warning(t("modelsEmpty"))
+        }
+      } catch (error) {
+        if (!options.silent) toast.error(error instanceof Error ? error.message : t("error"))
+      } finally {
+        setLoadingModels(null)
+      }
+    },
+    [t],
+  )
+
+  /**
+   * A lista é buscada quando a pessoa ABRE o campo de modelo, e não ao carregar
+   * a tela: quem entra em Integrações para mexer no bot não deveria disparar uma
+   * chamada a cada provedor configurado. Sem alarde — falhar aqui só deixa as
+   * sugestões do catálogo no lugar, como era antes.
+   */
+  function loadModelsOnOpen(id: AiProviderId, open: boolean) {
+    if (open && providerModels[id] === undefined && loadingModels !== id) {
+      void loadModels(id, { silent: true, baseUrl })
+    }
   }
 
   async function testProvider() {
@@ -125,6 +181,8 @@ export function AiSettingsCard({ structureReady, initial }: AiSettingsCardProps)
       setData(next)
       setApiKey("")
       toast.success(t("keySaved"))
+      // Chave nova, catálogo novo: a lista de modelos daquela conta muda com ela.
+      void loadModels(provider, { silent: true })
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("error"))
     } finally {
@@ -185,7 +243,17 @@ export function AiSettingsCard({ structureReady, initial }: AiSettingsCardProps)
     onChange: (next: AiModelChoiceView) => void,
     idPrefix: string,
   ) {
+    const fetched = providerModels[value.provider]
     const suggestions = AI_PROVIDERS[value.provider].suggestedModels
+    // O que veio do provedor manda; sem isso, as sugestões do catálogo seguram a
+    // tela. O modelo já salvo entra sempre — senão o campo abriria vazio se o
+    // provedor tiver aposentado aquele id.
+    const options = Array.from(
+      new Set([...(fetched ?? suggestions), ...(value.model ? [value.model] : [])]),
+    ).sort((a, b) => a.localeCompare(b))
+    const manual = manualTiers[idPrefix] || options.length === 0
+    const loading = loadingModels === value.provider
+
     return (
       <div className="space-y-2 rounded-lg border p-3">
         <p id={`${idPrefix}-label`} className="text-sm font-medium">
@@ -214,20 +282,70 @@ export function AiSettingsCard({ structureReady, initial }: AiSettingsCardProps)
               ))}
             </SelectContent>
           </Select>
-          <Input
-            id={`${idPrefix}-model`}
-            aria-label={`${label} — ${t("modelPlaceholder")}`}
-            list={`${idPrefix}-models`}
-            value={value.model}
-            onChange={(e) => onChange({ ...value, model: e.target.value })}
-            placeholder={t("modelPlaceholder")}
-            className="font-mono text-xs"
-          />
+
+          {manual ? (
+            <Input
+              id={`${idPrefix}-model`}
+              aria-label={`${label} — ${t("modelPlaceholder")}`}
+              list={`${idPrefix}-models`}
+              value={value.model}
+              onChange={(e) => onChange({ ...value, model: e.target.value })}
+              placeholder={t("modelPlaceholder")}
+              className="font-mono text-xs"
+            />
+          ) : (
+            <Select
+              value={value.model}
+              onValueChange={(model) => onChange({ ...value, model })}
+              onOpenChange={(open) => loadModelsOnOpen(value.provider, open)}
+            >
+              <SelectTrigger
+                className="flex-1 cursor-pointer font-mono text-xs"
+                aria-label={`${label} — ${t("modelPlaceholder")}`}
+              >
+                <SelectValue placeholder={t("modelPlaceholder")} />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {options.map((model) => (
+                  <SelectItem key={model} value={model} className="cursor-pointer font-mono text-xs">
+                    {model}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <datalist id={`${idPrefix}-models`}>
-            {suggestions.map((model) => (
+            {options.map((model) => (
               <option key={model} value={model} />
             ))}
           </datalist>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            className="cursor-pointer text-xs text-primary hover:underline disabled:opacity-50"
+            disabled={loading}
+            onClick={() => loadModels(value.provider, { baseUrl })}
+          >
+            {loading ? t("modelsLoading") : t("modelsRefresh")}
+          </button>
+          {options.length > 0 && (
+            <button
+              type="button"
+              className="cursor-pointer text-xs text-muted-foreground hover:underline"
+              onClick={() =>
+                setManualTiers((current) => ({ ...current, [idPrefix]: !current[idPrefix] }))
+              }
+            >
+              {manual ? t("modelsFromList") : t("modelsTypeOther")}
+            </button>
+          )}
+          {fetched && (
+            <span className="text-xs text-muted-foreground">
+              {t("modelsCount", { count: fetched.length })}
+            </span>
+          )}
         </div>
       </div>
     )

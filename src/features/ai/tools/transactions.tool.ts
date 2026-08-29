@@ -58,11 +58,33 @@ export function createTransactionsTool(userId: string, ctx: AgentToolContext) {
       const total = allFiltered.reduce((sum, transaction) => sum + transaction.amount, 0)
       const items = allFiltered.slice(0, take)
 
+      // Busca por NOME que não achou nada não é prova de que não houve gasto: os
+      // nomes de categoria, grupo e conta são os que o dono escreveu no banco
+      // dele — podem estar em outro idioma ou com outra palavra ("Lazer" contra
+      // "Entretenimento", "Leisure"). O modelo respondia "você não teve gastos
+      // com lazer" com toda a confiança; o aviso vai DENTRO do resultado porque
+      // regra em resultado de ferramenta é obedecida, regra em prompt é esquecida.
+      const usedNameFilters = [
+        input.accountName && "accountName",
+        input.categoryName && "categoryName",
+        input.groupName && "groupName",
+        input.search && "search",
+      ].filter((value): value is string => Boolean(value))
+      const noMatch =
+        allFiltered.length === 0 && usedNameFilters.length > 0
+          ? {
+              filters: usedNameFilters,
+              // i18n-ignore: instrução lida pelo MODELO, não é texto de UI
+              hint: "Nenhum lançamento casou com esses nomes — isso NÃO significa que não houve gastos. Os nomes de conta, grupo e categoria são os que o dono cadastrou e podem estar em outro idioma ou com outra palavra. Chame get_chart_of_accounts, ache o nome REAL mais próximo e refaça esta busca antes de afirmar qualquer ausência.",
+            }
+          : null
+
       return {
         period: {
           from: range.from.toISOString(),
           to: range.to.toISOString(),
         },
+        ...(noMatch ? { noMatch } : {}),
         totalCount: allFiltered.length,
         shownCount: items.length,
         total,

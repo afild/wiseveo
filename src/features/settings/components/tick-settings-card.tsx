@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
-import { AlarmClock, CheckCircle2, Copy, Loader2, Trash2 } from "lucide-react"
+import { AlarmClock, CheckCircle2, ChevronDown, Copy, Loader2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -13,6 +13,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 /**
  * O despertador (Configurações → Integrações, só SUPERADMIN).
@@ -42,6 +47,7 @@ export function TickSettingsCard({ structureReady, initial }: TickSettingsCardPr
   const [status, setStatus] = React.useState(initial)
   const [url, setUrl] = React.useState<string | null>(null)
   const [working, setWorking] = React.useState(false)
+  const [showSteps, setShowSteps] = React.useState(false)
 
   async function generate() {
     setWorking(true)
@@ -133,6 +139,39 @@ export function TickSettingsCard({ structureReady, initial }: TickSettingsCardPr
               <p>{t("howTo1")}</p>
               <p>{t("howTo2")}</p>
             </div>
+
+            {/* Passo a passo aberto por clique, e não uma dica de passar o mouse:
+                são cinco passos com nomes de botão de outro site — não cabem numa
+                tooltip, e no celular não existe "passar o mouse". */}
+            <Collapsible open={showSteps} onOpenChange={setShowSteps}>
+              <CollapsibleTrigger className="flex cursor-pointer items-center gap-1.5 text-sm text-primary hover:underline">
+                <ChevronDown
+                  className={`size-4 transition-transform ${showSteps ? "rotate-180" : ""}`}
+                />
+                {t("stepsToggle")}
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-3">
+                <ol className="list-decimal space-y-2 rounded-lg border bg-muted/20 p-4 pl-8 text-sm">
+                  <li>{t("step1")}</li>
+                  <li>
+                    {t("step2")}{" "}
+                    <a
+                      href="https://cron-job.org"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {/* i18n-ignore: cron-job.org é o endereço do serviço, igual nos 3 idiomas */}
+                      cron-job.org
+                    </a>
+                  </li>
+                  <li>{t("step3")}</li>
+                  <li>{t("step4")}</li>
+                  <li>{t("step5")}</li>
+                </ol>
+                <p className="pt-2 text-xs text-muted-foreground">{t("stepsNote")}</p>
+              </CollapsibleContent>
+            </Collapsible>
 
             <div className="flex flex-wrap gap-2">
               <Button type="button" className="cursor-pointer" disabled={working} onClick={generate}>
