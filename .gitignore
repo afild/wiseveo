@@ -53,3 +53,7 @@ src/labs/
 
 # Catalogo local de commits (descricoes reais; publico so ve mensagem generica)
 docs/commit-catalog.local.md
+
+# Registro local da faxina manual da demo (scripts/clean-demo-visitors.ts)
+clean-demo-visitors.log
+progresso-demo.log
