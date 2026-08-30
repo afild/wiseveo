@@ -16,8 +16,14 @@ export const maxDuration = 60
  * era do tamanho errado e a frequência também.
  *
  * O QUE MUDOU:
- * 1. Apaga em BLOCO (`deleteMany` por lista de ids), não um a um. A cascata do
- *    banco continua fazendo o trabalho pesado, mas numa ida só por tabela.
+ * 1. Apaga as TRANSAÇÕES primeiro, e só depois os usuários. Esta é a mudança que
+ *    mais importa, e custou uma madrugada para ser descoberta: `categories` e
+ *    `recurring_transactions` NÃO têm índice por `user_id`, então a cascata de
+ *    cada categoria apagada varria a tabela inteira de transações — 23 minutos
+ *    sem conseguir apagar 25 visitantes. Removendo as transações antes, pelo
+ *    índice `(user_id, DATA)` que existe, o mesmo trabalho leva ~6 segundos por
+ *    100 mil linhas. Depois disso a cascata do usuário fica barata, porque já
+ *    não há o que varrer.
  * 2. Trabalha por TEMPO, não por contagem fixa: enquanto houver folga no minuto
  *    de execução, pega o próximo lote. Uma execução limpa o que couber e diz
  *    quanto sobrou.
@@ -29,7 +35,7 @@ export const maxDuration = 60
  */
 
 /** Quantos visitantes por lote. Cada um arrasta ~2.650 linhas em cascata. */
-const BATCH_SIZE = 25
+const BATCH_SIZE = 40
 /** Para de começar lote novo aqui, para terminar o que começou dentro do minuto. */
 const TIME_BUDGET_MS = 45_000
 /** Visitante mais velho que isto já não interessa a ninguém. */
@@ -66,12 +72,15 @@ export async function GET(request: Request) {
         take: BATCH_SIZE,
       })
       if (stale.length === 0) break
+      const ids = stale.map((user) => user.id)
 
-      // Em bloco: a cascata do banco apaga transações, recorrentes, orçamentos e
-      // o resto. Um a um, cada visitante custava uma ida ao banco por tabela.
-      const result = await prisma.user.deleteMany({
-        where: { id: { in: stale.map((user) => user.id) } },
-      })
+      // 1) As transações, pelo índice. É o grosso do volume e o que torna toda
+      //    a cascata seguinte cara enquanto estiver lá.
+      await prisma.transaction.deleteMany({ where: { userId: { in: ids } } })
+
+      // 2) Agora o usuário: o resto (recorrentes, orçamentos, categorias,
+      //    contas, favorecidos) sai pela cascata do banco, já barata.
+      const result = await prisma.user.deleteMany({ where: { id: { in: ids } } })
       deleted += result.count
       batches += 1
     }
