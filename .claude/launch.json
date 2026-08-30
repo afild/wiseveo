@@ -4,8 +4,26 @@
     {
       "name": "wiseveo-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "wiseveo-demo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "cross-env",
+        "NEXT_PUBLIC_DEMO_MODE=true",
+        "DEV_AUTOLOGIN=0",
+        "next",
+        "dev",
+        "--port",
+        "3007"
+      ],
+      "port": 3007,
       "autoPort": true
     }
   ]

@@ -4,6 +4,7 @@ import { verifySessionToken, COOKIE_NAME } from "@/lib/auth"
 import createMiddleware from "next-intl/middleware"
 import { routing } from "./i18n/routing"
 import { isSetupComplete } from "@/lib/setup-check"
+import { DEMO_UNAVAILABLE_PATH } from "@/lib/demo-routes"
 
 const publicRoutes = ["/login", "/signup", "/cadastro-pendente"]
 // Página de aceite de convite (/convite/<token>) é pública por prefixo: quem foi
@@ -40,6 +41,14 @@ export async function middleware(request: NextRequest) {
   // Convite: quem já está logado vai para o dashboard; quem não está vê a página.
   if (publicPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     if (isDemoMode) return NextResponse.redirect(new URL("/dashboard", request.url))
+    return session ? NextResponse.redirect(new URL("/dashboard", request.url)) : NextResponse.next()
+  }
+
+  // Página de "demo indisponível", para onde o provisionamento manda quando
+  // falha. Precisa ser alcançável SEM sessão, e a decisão tem de vir antes das
+  // duas regras abaixo: a do provisionamento (que devolveria o visitante ao erro
+  // que acabou de acontecer, em laço) e a que manda anônimo para o login.
+  if (isDemoMode && pathname === DEMO_UNAVAILABLE_PATH) {
     return session ? NextResponse.redirect(new URL("/dashboard", request.url)) : NextResponse.next()
   }
 

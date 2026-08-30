@@ -1101,6 +1101,13 @@
     "title": "Dashboard",
     "upcomingTransactions": "Próximos Vencimientos"
   },
+  "demo": {
+    "unavailable": {
+      "description": "Estamos preparando un entorno nuevo para que lo explores. Vuelve en unos minutos.",
+      "retry": "Intentar de nuevo",
+      "title": "La demostración está en mantenimiento"
+    }
+  },
   "faqs": {
     "allCategoryLabel": "Todas",
     "allFaqsHeading": "Todas las FAQs",

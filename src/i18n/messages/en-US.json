@@ -1101,6 +1101,13 @@
     "title": "Dashboard",
     "upcomingTransactions": "Upcoming Due Dates"
   },
+  "demo": {
+    "unavailable": {
+      "description": "We're preparing a fresh environment for you to explore. Check back in a few minutes.",
+      "retry": "Try again",
+      "title": "The demo is under maintenance"
+    }
+  },
   "faqs": {
     "allCategoryLabel": "All",
     "allFaqsHeading": "All FAQs",

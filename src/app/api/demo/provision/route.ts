@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import crypto from "crypto"
-import { getTranslations } from "next-intl/server"
 import { prisma } from "@/lib/prisma"
 import { initializeUserData } from "@/lib/user-init"
 import { createSessionToken, COOKIE_NAME } from "@/lib/auth"
@@ -9,14 +8,13 @@ import { materializeDataset } from "@/lib/demo-data/materialize"
 import { DEMO_DEFAULT_LOCALE, LOCALE_COOKIE_NAME } from "@/i18n/config"
 import { demoMonetarySettings } from "@/lib/monetary"
 import { FRESH_SESSION_COOKIE } from "@/lib/client-session-reset"
+import { DEMO_UNAVAILABLE_PATH } from "@/lib/demo-routes"
 
 export const dynamic = 'force-dynamic'
 // Increase max duration for provisioning (Vercel Hobby allows up to 60s on API routes)
 export const maxDuration = 60
 
 export async function GET(request: Request) {
-  const t = await getTranslations("api.errors")
-
   if (process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
     // i18n-ignore: guarda interna (rota só existe com demo mode ligado), nunca chega a um usuário real
     return NextResponse.json({ error: "Demo mode is disabled" }, { status: 403 })
@@ -150,6 +148,9 @@ export async function GET(request: Request) {
     return response
   } catch (error) {
     console.error("Error provisioning demo user:", error)
-    return NextResponse.json({ error: t("internalError") }, { status: 500 })
+    // Visitante anônimo não deve receber JSON cru: quando o provisionamento falha
+    // (banco fora do ar, sem espaço, em manutenção) ele vai para uma página que
+    // explica e oferece tentar de novo. O middleware deixa esse caminho passar.
+    return NextResponse.redirect(new URL(DEMO_UNAVAILABLE_PATH, request.url))
   }
 }
