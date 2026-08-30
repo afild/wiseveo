@@ -2,6 +2,7 @@ import { LOCALE_META, type AppLocale } from "@/i18n/config"
 import { aiGenerateObject } from "./llm.service"
 import { runFinancialAgent, type FinancialAgentMessage } from "./financial-agent.service"
 import {
+  clampBlocks,
   composedResponseSchema,
   isRenderableBlock,
   type ComposedResponse,
@@ -66,7 +67,9 @@ REGRAS QUE NÃO SE NEGOCIAM:
 }
 
 function sanitize(response: ComposedResponse): ResponseBlock[] {
-  return response.blocks.filter(isRenderableBlock)
+  // Corta ANTES de filtrar: o corte pode esvaziar um bloco (uma tabela sem
+  // linhas depois do limite), e bloco vazio não deve chegar ao desenho.
+  return clampBlocks(response.blocks).filter(isRenderableBlock)
 }
 
 /**

@@ -15,9 +15,17 @@ import { z } from "zod"
  * receberia nada. Com blocos, o pior caso é um bloco feio, nunca uma mensagem
  * perdida.
  *
- * `.nullable()` em vez de `.optional()` em TODO campo que pode faltar: o modo
- * estrito da OpenAI recusa esquema com opcional e devolve 400 — a lição cara da
- * Etapa 1, guardada por `tests/ai-structured-schemas.test.ts`.
+ * DUAS REGRAS DO MODO ESTRITO DA OPENAI, e as duas custaram caro:
+ *
+ * 1. `.nullable()` em vez de `.optional()` em TODO campo que pode faltar — toda
+ *    chave é obrigatória, e o "não informado" é nulo (lição da Etapa 1).
+ * 2. NENHUM limite de tamanho no esquema. `min`/`max` viram `minItems`,
+ *    `maxItems` e `minimum` no JSON Schema, e o modo estrito RECUSA essas
+ *    chaves: o provedor devolve 400 antes de ler a pergunta, e todo canal para
+ *    de responder de uma vez. Os limites viraram texto na descrição (o modelo
+ *    lê) e corte em `clampBlocks` (nós garantimos).
+ *
+ * Ambas guardadas por `tests/ai-structured-schemas.test.ts`.
  */
 
 const toneSchema = z.enum(["default", "positive", "negative", "warning"])
@@ -52,9 +60,8 @@ const cardBlockSchema = z.object({
         tone: toneSchema,
       }),
     )
-    .max(30)
     // i18n-ignore: dado/instrução para o MODELO, não é texto de tela
-    .describe("Linhas do card. Use quantas precisar: cabem todas, o card cresce."),
+    .describe("Linhas do card, no máximo 30. Use quantas precisar: o card cresce para caber."),
   // i18n-ignore: dado/instrução para o MODELO, não é texto de tela
   footnote: z.string().nullable().describe("Uma linha de leitura do quadro."),
 })
@@ -65,25 +72,25 @@ const tableBlockSchema = z.object({
   title: z.string().nullable(),
   columns: z
     .array(z.string())
-    .min(2)
-    .max(4)
     // i18n-ignore: dado/instrução para o MODELO, não é texto de tela
-    .describe("No máximo 4 colunas: mais que isso não cabe na tela de um celular."),
-  rows: z.array(z.array(z.string()).max(4)).max(40),
+    .describe("Entre 2 e 4 colunas: mais que isso não cabe na tela de um celular. A coluna de valor deve ser a ÚLTIMA."),
+  // i18n-ignore: dado/instrução para o MODELO, não é texto de tela
+  rows: z.array(z.array(z.string())).describe("Linhas da tabela, no máximo 40."),
 })
 
 /* i18n-ignore */
 const textBlockSchema = z.object({
   kind: z.literal("text"),
   // i18n-ignore: dado/instrução para o MODELO, não é texto de tela
-  paragraphs: z.array(z.string()).max(6).describe("Texto corrido. Sem markdown, sem HTML."),
+  paragraphs: z.array(z.string()).describe("Parágrafos de texto corrido, no máximo 6. Sem markdown, sem HTML."),
 })
 
 /* i18n-ignore */
 const bulletsBlockSchema = z.object({
   kind: z.literal("bullets"),
   title: z.string().nullable(),
-  items: z.array(z.string()).max(10),
+  // i18n-ignore: dado/instrução para o MODELO, não é texto de tela
+  items: z.array(z.string()).describe("Pontos curtos, no máximo 10."),
 })
 
 /* i18n-ignore */
@@ -98,7 +105,6 @@ const chartBlockSchema = z.object({
         value: z.string().describe("O valor JÁ FORMATADO, que aparece escrito ao lado da barra."),
         weight: z
           .number()
-          .min(0)
           .describe(
             // i18n-ignore: dado/instrução para o MODELO, não é texto de tela
             "Tamanho relativo da barra (qualquer número positivo na mesma escala das outras). Serve SÓ para desenhar; o que a pessoa lê é o campo value.",
@@ -106,8 +112,8 @@ const chartBlockSchema = z.object({
         tone: toneSchema,
       }),
     )
-    .min(2)
-    .max(12),
+    // i18n-ignore: dado/instrução para o MODELO, não é texto de tela
+    .describe("De 2 a 12 barras. Menos de 2 não é comparação; mais de 12 não se lê no celular."),
   footnote: z.string().nullable(),
 })
 
@@ -122,10 +128,8 @@ export const responseBlockSchema = z.discriminatedUnion("kind", [
 export const composedResponseSchema = z.object({
   blocks: z
     .array(responseBlockSchema)
-    .min(1)
-    .max(6)
     // i18n-ignore: descrição lida pelo MODELO
-    .describe("Os blocos da resposta, na ordem em que a pessoa vai ler."),
+    .describe("Os blocos da resposta, no máximo 6, na ordem em que a pessoa vai ler."),
 })
 
 export type ResponseBlock = z.infer<typeof responseBlockSchema>
@@ -136,11 +140,58 @@ export type BulletsBlock = Extract<ResponseBlock, { kind: "bullets" }>
 export type ChartBlock = Extract<ResponseBlock, { kind: "chart" }>
 export type ComposedResponse = z.infer<typeof composedResponseSchema>
 
+const LIMITS = {
+  blocks: 6,
+  cardRows: 30,
+  tableColumns: 4,
+  tableRows: 40,
+  paragraphs: 6,
+  bullets: 10,
+  bars: 12,
+} as const
+
+/**
+ * Os limites que o esquema NÃO pode mais exigir.
+ *
+ * O modo estrito da OpenAI recusa `maxItems` — pedir o limite no esquema fazia o
+ * provedor devolver 400 e nenhum canal responder. Então o limite é pedido em
+ * texto (o modelo quase sempre respeita) e GARANTIDO aqui: uma tabela de 200
+ * linhas não derruba nada, ela chega cortada.
+ */
+export function clampBlocks(blocks: ResponseBlock[]): ResponseBlock[] {
+  return blocks.slice(0, LIMITS.blocks).map((block) => {
+    if (block.kind === "card") {
+      return { ...block, rows: block.rows.slice(0, LIMITS.cardRows) }
+    }
+    if (block.kind === "table") {
+      const columns = block.columns.slice(0, LIMITS.tableColumns)
+      return {
+        ...block,
+        columns,
+        rows: block.rows.slice(0, LIMITS.tableRows).map((row) => row.slice(0, columns.length)),
+      }
+    }
+    if (block.kind === "text") {
+      return { ...block, paragraphs: block.paragraphs.slice(0, LIMITS.paragraphs) }
+    }
+    if (block.kind === "chart") {
+      // Peso negativo desenharia barra ao contrário; o esquema já não pode
+      // exigir `minimum`, então a régua fica aqui.
+      const bars = block.bars
+        .slice(0, LIMITS.bars)
+        .map((bar) => ({ ...bar, weight: Number.isFinite(bar.weight) ? Math.max(0, bar.weight) : 0 }))
+      return { ...block, bars }
+    }
+    return { ...block, items: block.items.slice(0, LIMITS.bullets) }
+  })
+}
+
 /** Um card sem linha nenhuma e sem destaque não é card — é ruído. */
 export function isRenderableBlock(block: ResponseBlock): boolean {
   if (block.kind === "card") return Boolean(block.highlight) || block.rows.length > 0
   if (block.kind === "table") return block.rows.length > 0
   if (block.kind === "text") return block.paragraphs.some((line) => line.trim() !== "")
+  // Menos de duas barras não é comparação: vira uma tarja solta na tela.
   if (block.kind === "chart") return block.bars.length >= 2
   return block.items.some((line) => line.trim() !== "")
 }

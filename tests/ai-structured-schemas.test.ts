@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { classificationSchema } from "../src/features/telegram/services/query-classifier.service"
 import { cardSchema } from "../src/features/telegram/services/card-formatter.service"
+import { composedResponseSchema, clampBlocks } from "../src/features/ai/types/response.types"
 import { AI_PROVIDER_IDS, AI_PROVIDERS } from "../src/features/ai/lib/catalog"
 import { extractJsonObject } from "../src/features/ai/services/llm.service"
 
@@ -29,7 +30,75 @@ function assertEveryKeyRequired(schema: z.ZodTypeAny, name: string) {
   expect([...(json.required ?? [])].sort(), name).toEqual([...properties].sort())
 }
 
+/**
+ * O modo estrito recusa MAIS do que o `.optional()`: qualquer limite de tamanho
+ * (`min`/`max` no zod) vira `minItems`/`maxItems`/`minimum` no JSON Schema, e
+ * essas chaves não são permitidas. Foi o segundo 400 desta família — e derrubou
+ * o Telegram E o Advisor ao mesmo tempo, porque os dois passam pelo compositor.
+ */
+const CHAVES_PROIBIDAS = [
+  "minItems",
+  "maxItems",
+  "minimum",
+  "maximum",
+  "minLength",
+  "maxLength",
+  "pattern",
+  "format",
+  "multipleOf",
+  "uniqueItems",
+]
+
+function assertSemLimitesDeTamanho(schema: z.ZodTypeAny, name: string) {
+  const json = JSON.stringify(z.toJSONSchema(schema))
+  for (const chave of CHAVES_PROIBIDAS) {
+    expect(json.includes(`"${chave}"`), `${name} não pode declarar ${chave}`).toBe(false)
+  }
+}
+
 describe("esquemas de saída estruturada", () => {
+  it("nenhum esquema declara limite de tamanho (o modo estrito devolve 400)", () => {
+    assertSemLimitesDeTamanho(composedResponseSchema, "composedResponseSchema")
+    assertSemLimitesDeTamanho(classificationSchema, "classificationSchema")
+    assertSemLimitesDeTamanho(cardSchema, "cardSchema")
+  })
+
+  it("os limites continuam existindo — garantidos por código, não pelo esquema", () => {
+    const blocks = clampBlocks([
+      {
+        kind: "table",
+        title: null,
+        columns: ["a", "b", "c", "d", "e", "f"],
+        rows: Array.from({ length: 90 }, () => ["1", "2", "3", "4", "5", "6"]),
+      },
+      { kind: "text", paragraphs: Array.from({ length: 20 }, (_, i) => `p${i}`) },
+      {
+        kind: "chart",
+        title: null,
+        footnote: null,
+        bars: Array.from({ length: 30 }, () => ({
+          label: "x",
+          value: "1",
+          weight: -5,
+          tone: "default" as const,
+        })),
+      },
+    ])
+
+    const table = blocks[0] as Extract<(typeof blocks)[number], { kind: "table" }>
+    expect(table.columns).toHaveLength(4)
+    expect(table.rows).toHaveLength(40)
+    expect(table.rows[0]).toHaveLength(4)
+
+    const text = blocks[1] as Extract<(typeof blocks)[number], { kind: "text" }>
+    expect(text.paragraphs).toHaveLength(6)
+
+    const chart = blocks[2] as Extract<(typeof blocks)[number], { kind: "chart" }>
+    expect(chart.bars).toHaveLength(12)
+    // Peso negativo desenharia a barra ao contrário.
+    expect(chart.bars.every((bar) => bar.weight >= 0)).toBe(true)
+  })
+
   it("classificador: toda chave é obrigatória (modo estrito da OpenAI)", () => {
     assertEveryKeyRequired(classificationSchema, "classificationSchema")
   })

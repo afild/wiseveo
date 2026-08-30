@@ -237,15 +237,33 @@ export async function aiGenerateObject<SCHEMA extends z.ZodTypeAny>(
         const viaText = await generateObjectViaText(model, choice, params)
         return viaText.object
       }
-      const result = await generateObject({
-        model,
-        schema: params.schema,
-        system: params.system,
-        prompt: params.prompt,
-        ...(params.maxOutputTokens !== undefined ? { maxOutputTokens: params.maxOutputTokens } : {}),
-      })
-      await recordResultUsage(choice, result)
-      return result.object as z.infer<SCHEMA>
+      try {
+        const result = await generateObject({
+          model,
+          schema: params.schema,
+          system: params.system,
+          prompt: params.prompt,
+          ...(params.maxOutputTokens !== undefined ? { maxOutputTokens: params.maxOutputTokens } : {}),
+        })
+        await recordResultUsage(choice, result)
+        return result.object as z.infer<SCHEMA>
+      } catch (strictError) {
+        // O modo estrito da OpenAI é exigente com o FORMATO do esquema, não com
+        // o conteúdo: um `.optional()` ou um limite de tamanho fazem o provedor
+        // devolver 400 antes de ler a pergunta — e, como o compositor serve o
+        // Telegram e o Advisor, os dois emudecem ao mesmo tempo. Já aconteceu
+        // duas vezes. Antes de desistir do provedor, tenta o mesmo modelo pelo
+        // caminho de reserva, que pede o JSON no texto e valida com o MESMO
+        // esquema: a resposta sai um pouco mais lenta, mas sai.
+        const billedStrict = usageFromError(strictError)
+        if (billedStrict) await recordResultUsage(choice, billedStrict)
+        console.warn(
+          // i18n-ignore: linha de log do servidor, nunca renderizada em UI
+          `[AI] ${choice.provider}/${choice.model} refused structured output, falling back to text`,
+        )
+        const viaText = await generateObjectViaText(model, choice, params)
+        return viaText.object
+      }
     } catch (error) {
       // Erro que carrega consumo = o provedor cobrou e a resposta é que não
       // prestou: entra no medidor mesmo assim.
