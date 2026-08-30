@@ -1,38 +1,60 @@
 import type { ReactNode } from "react"
-import { cardTheme } from "./card-theme"
+import { CARD_FAMILY, CARD_SIZE, cardTheme, type CardTheme } from "./card-theme"
+import { CardLogo } from "./card-logo"
 
 interface BaseCardProps {
   eyebrow?: string
   headline: string
+  /** Primeiro nome de quem pediu — o card é para uma pessoa, não para "o usuário". */
+  audience?: string
+  theme?: CardTheme
   children: ReactNode
   footer?: ReactNode
 }
 
-export function BaseCard({ eyebrow = "WISEVEO", headline, children, footer }: BaseCardProps) {
+/**
+ * O envelope de todo card.
+ *
+ * Duas coisas saíram daqui e valem o registro: a caixinha com a letra "A" no
+ * canto (um "avatar" decorativo que não era inicial de ninguém nem marca — a
+ * marca começa com W) e a altura fixa, que cortava conteúdo em silêncio.
+ *
+ * O `eyebrow` é CONTEXTO (período, conta, categoria) e o `headline` é o
+ * ASSUNTO. Quando quem chama põe a data nos dois, o card fica dizendo a mesma
+ * coisa duas vezes, uma embaixo da outra.
+ */
+export function BaseCard({
+  eyebrow,
+  headline,
+  audience,
+  theme = cardTheme,
+  children,
+  footer,
+}: BaseCardProps) {
   return (
     <div
       style={{
         width: "100%",
-        height: "100%",
+        minHeight: CARD_SIZE.minHeight,
         display: "flex",
         flexDirection: "column",
-        background: `linear-gradient(135deg, ${cardTheme.gradientStart} 0%, ${cardTheme.gradientEnd} 100%)`,
-        color: cardTheme.foreground,
-        fontFamily: "Noto Sans", // i18n-ignore: font family identifier, not UI copy
-        padding: 35,
+        background: `linear-gradient(135deg, ${theme.gradientStart} 0%, ${theme.gradientEnd} 100%)`,
+        color: theme.foreground,
+        fontFamily: CARD_FAMILY, // i18n-ignore: identificador de fonte, não é texto de UI
+        padding: 38,
         position: "relative",
       }}
     >
-      {/* Decorative light effect */}
+      {/* Brilho decorativo do canto. */}
       <div
         style={{
           position: "absolute",
-          top: -100,
-          right: -100,
-          width: 300,
-          height: 300,
+          top: -120,
+          right: -120,
+          width: 340,
+          height: 340,
           borderRadius: "100%",
-          background: `radial-gradient(circle, ${cardTheme.accent}33 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${theme.accent}${theme.glow} 0%, transparent 70%)`,
           display: "flex",
         }}
       />
@@ -40,47 +62,52 @@ export function BaseCard({ eyebrow = "WISEVEO", headline, children, footer }: Ba
       <div
         style={{
           display: "flex",
-          alignItems: "flex-start",
+          alignItems: "flex-end",
           justifyContent: "space-between",
-          marginBottom: 24,
+          gap: 24,
+          marginBottom: 26,
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
+          {eyebrow ? (
+            <div
+              style={{
+                color: theme.accent,
+                fontSize: 15,
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              {eyebrow}
+            </div>
+          ) : null}
           <div
             style={{
-              color: cardTheme.accent,
-              fontSize: 14,
-              fontWeight: 800,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              opacity: 0.9,
+              color: theme.foreground,
+              fontSize: 34,
+              fontWeight: 700,
+              lineHeight: 1.1,
+              letterSpacing: "-0.02em",
             }}
           >
-            {eyebrow}
-          </div>
-          <div style={{ color: cardTheme.foreground, fontSize: 32, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
             {headline}
           </div>
         </div>
+
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 48,
-            height: 48,
+            flexDirection: "column",
+            alignItems: "flex-end",
             flexShrink: 0,
-            marginLeft: 22,
-            borderRadius: 12,
-            background: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)",
-            border: `1px solid ${cardTheme.border}`,
-            color: cardTheme.foreground,
-            fontSize: 20,
-            fontWeight: 800,
+            gap: 6,
           }}
         >
-          {/* Decorative avatar initial — fixed brand mark, not translatable UI copy. i18n-ignore */}
-          A
+          <CardLogo theme={theme} />
+          {audience ? (
+            <div style={{ color: theme.muted, fontSize: 14, fontWeight: 600 }}>{audience}</div>
+          ) : null}
         </div>
       </div>
 
@@ -90,12 +117,12 @@ export function BaseCard({ eyebrow = "WISEVEO", headline, children, footer }: Ba
         <div
           style={{
             display: "flex",
-            marginTop: 14,
-            paddingTop: 13,
-            borderTop: `1px solid ${cardTheme.border}`,
-            color: cardTheme.muted,
+            marginTop: 18,
+            paddingTop: 16,
+            borderTop: `1px solid ${theme.border}`,
+            color: theme.muted,
             fontSize: 17,
-            lineHeight: 1.35,
+            lineHeight: 1.4,
           }}
         >
           {footer}

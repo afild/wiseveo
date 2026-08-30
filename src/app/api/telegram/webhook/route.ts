@@ -1,14 +1,20 @@
-import { NextResponse } from "next/server"
+import { NextResponse, after } from "next/server"
 import { getTelegramBotConfig } from "@/features/telegram/services/telegram-config.service"
 import { handleTelegramUpdate } from "@/features/telegram/services/message-handler.service"
 import type { TelegramWebhookUpdate } from "@/features/telegram/types/telegram.types"
 
 /**
- * O agente pode dar até seis passos de ferramenta antes de responder, e cada
- * passo é uma ida ao modelo. Com o teto padrão da hospedagem (poucos segundos)
- * a função morreria no meio: o Telegram veria erro, REENVIARIA a mesma
- * mensagem e a conta seria paga duas vezes. (A proteção contra reenvio está em
- * `claimTelegramUpdate`; este limite evita que ela precise entrar em ação.)
+ * O trabalho pesado roda DEPOIS da resposta.
+ *
+ * Desde que toda pergunta passou a ir ao modelo forte, uma resposta leva dez,
+ * vinte, às vezes quarenta segundos: pesquisa com ferramentas, composição,
+ * desenho do card e envio. O Telegram, porém, espera o 200 em poucos segundos —
+ * e, sem ele, REENVIA a mesma mensagem. A trava por `update_id` reconhece o
+ * reenvio e o descarta, o que era o comportamento certo mas produzia o pior
+ * resultado possível: a pessoa não recebia NADA e nada explicava por quê.
+ *
+ * Com `after`, o 200 sai na hora e o processamento continua com a função viva.
+ * `maxDuration` continua alto porque é ele que sustenta esse trabalho de fundo.
  */
 export const maxDuration = 120
 
@@ -35,7 +41,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
   }
 
-  await handleTelegramUpdate(update)
+  // Confirma o recebimento AGORA e processa em seguida. Erro aqui não pode
+  // derrubar nada: o Telegram já foi respondido, e o canal já avisa a pessoa
+  // quando o problema é de IA ou de teto.
+  after(async () => {
+    try {
+      await handleTelegramUpdate(update)
+    } catch (error) {
+      console.error("[TELEGRAM] background processing failed:", error)
+    }
+  })
 
   return NextResponse.json({ ok: true })
 }

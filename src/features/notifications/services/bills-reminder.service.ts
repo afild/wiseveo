@@ -46,13 +46,17 @@ export async function buildBillsReminder(input: {
 
   // Sem o recorte por "hoje do servidor": a janela já começa amanhã no
   // calendário da pessoa, que pode ser hoje ou depois de amanhã em UTC.
-  const items = await getUpcomingTransactions(
+  const upcoming = await getUpcomingTransactions(
     input.dataOwnerId,
     range.from,
     range.to,
     FETCH_LIMIT,
     { clampToToday: false },
   )
+  // SÓ o que se paga. A consulta devolve entradas e saídas juntas, e somar as
+  // duas fazia o lembrete anunciar o salário que vai cair dentro do total de
+  // "contas a vencer" — um número que não quer dizer nada.
+  const items = upcoming.filter((item) => item.type === "EXPENSE")
   const total = items.reduce((sum, item) => sum + Math.abs(item.amount), 0)
   const shown = items.slice(0, MAX_ITEMS)
 

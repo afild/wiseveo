@@ -1353,9 +1353,11 @@
       "total": "{count, plural, one {# bill} other {# bills}}, adding up to {total}."
     },
     "bulletin": {
+      "balance": "Account balance",
       "dueAhead": "{count, plural, one {# bill is due} other {# bills are due}} in the coming days, adding up to {total}.",
       "dueToday": "{count, plural, one {# bill is due today} other {# bills are due today}}, adding up to {total}.",
       "expense": "Money out",
+      "fallbackHeadline": "Your summary",
       "headlineDaily": "Your day",
       "headlineMonthly": "Your month",
       "headlineWeekly": "Your week",

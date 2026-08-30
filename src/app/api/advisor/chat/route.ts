@@ -4,7 +4,9 @@ import { getSettingsUserId } from "@/features/settings/services/get-settings-use
 import { getUserLocale, getUserMonetarySettings } from "@/features/settings/services/user-settings-service"
 import { resolveDataOwnerId } from "@/lib/data-owner"
 import { createMonetaryFormatter } from "@/lib/monetary"
-import { runFinancialAgent } from "@/features/ai/services/financial-agent.service"
+import { composeAnswer } from "@/features/ai/services/response-composer.service"
+import { blocksToPlainText } from "@/features/ai/types/response.types"
+import { prisma } from "@/lib/prisma"
 import { AiNotConfiguredError } from "@/features/ai/services/llm.service"
 import { AiBudgetExceededError } from "@/features/ai/services/ai-usage.service"
 import {
@@ -57,17 +59,26 @@ export async function POST(req: Request) {
       getConversation(userId, conversationId),
     ])
 
-    const { text } = await runFinancialAgent({
+    // Mesmo motor e mesmo compositor do Telegram: quem pergunta na página tem
+    // direito à mesma profundidade de quem pergunta no celular.
+    const person = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } })
+    const blocks = await composeAnswer({
       dataOwnerId,
       question,
       history: toAgentHistory(previous),
-      ctx: { t: tAgent, locale, monetary: createMonetaryFormatter(monetarySettings) },
+      ctx: {
+        t: tAgent,
+        locale,
+        monetary: createMonetaryFormatter(monetarySettings),
+        viewerId: userId,
+        audience: (person?.name ?? "").trim().split(/\s+/)[0] ?? "",
+      },
     })
 
-    const answer = text || t("emptyAnswer")
+    const answer = blocksToPlainText(blocks) || t("emptyAnswer")
     await appendToConversation({ userId, conversationId, question, answer })
 
-    return NextResponse.json({ success: true, data: { answer } })
+    return NextResponse.json({ success: true, data: { answer, blocks } })
   } catch (error) {
     if (error instanceof AiBudgetExceededError) {
       return NextResponse.json({ success: false, message: t("budgetExceeded") }, { status: 429 })

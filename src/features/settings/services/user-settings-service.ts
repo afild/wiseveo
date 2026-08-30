@@ -16,6 +16,10 @@ import {
   resolveNotificationPreferences,
   type NotificationPreferences,
 } from "@/features/notifications/lib/preferences"
+import {
+  resolveCardThemeMode,
+  type CardThemeMode,
+} from "@/features/telegram/cards/card-theme"
 import bcrypt from "bcryptjs"
 
 export type AppearanceSettings = ThemePreferences
@@ -259,6 +263,29 @@ export async function updateUserNotificationSettings(
   })
 
   return next
+}
+
+/**
+ * Tema dos cards que a pessoa recebe no Telegram (claro ou escuro).
+ *
+ * Fica junto das outras preferências dela, e quem muda é ela mesma — por
+ * mensagem, no meio da conversa ("manda no tema claro"). É a única preferência
+ * que a IA pode escrever, e de propósito: não toca em dinheiro nem em dado
+ * financeiro, só na cor do quadro.
+ */
+export async function getUserCardTheme(userId: string): Promise<CardThemeMode> {
+  const prefs = await getUserPreferences(userId)
+  return resolveCardThemeMode(prefs.cardTheme)
+}
+
+export async function setUserCardTheme(userId: string, mode: CardThemeMode): Promise<void> {
+  const currentPreferences = await getUserPreferences(userId)
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      preferencesJson: toInputJsonValue({ ...currentPreferences, cardTheme: mode }),
+    },
+  })
 }
 
 export async function getQuickPaymentOptions(

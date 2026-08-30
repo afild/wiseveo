@@ -17,4 +17,10 @@ export interface AgentToolContext {
   t: AgentTranslator
   locale: AppLocale
   monetary: MonetaryFormatter
+  /**
+   * QUEM está lendo — diferente do dono dos dados em conta compartilhada.
+   * As ferramentas de leitura financeira usam o dono; as poucas que mexem em
+   * PREFERÊNCIA (o tema do card) usam este, porque a preferência é da pessoa.
+   */
+  viewerId?: string
 }

@@ -8,7 +8,12 @@ import { aiGenerateText } from "./llm.service"
 
 /**
  * O agente financeiro: recebe a pergunta em linguagem natural e decide SOZINHO
- * quais dados buscar, em até seis passos, usando as ferramentas de leitura.
+ * quais dados buscar, usando as ferramentas de leitura.
+ *
+ * Ele é o MOTOR DE PESQUISA da resposta — o levantamento. Quem transforma isso
+ * no que a pessoa lê é `response-composer.service.ts`, que escolhe entre card,
+ * tabela, gráfico e texto. Foi assim que a resposta deixou de ser "2 a 5
+ * frases": o limite de tamanho vivia aqui e estrangulava a análise.
  *
  * É o motor — não conhece canal nenhum. O Telegram o chama hoje; a página
  * Advisor e os boletins chamam o mesmo daqui a pouco. Quem chama passa o
@@ -35,6 +40,8 @@ export interface FinancialAgentInput {
 }
 
 const DEFAULT_MAX_STEPS = 6
+/** Teto do fecho de emergência: é para concluir com o que já se sabe. */
+const WRAP_UP_MAX_TOKENS = 1200
 
 /** Pedido final quando os passos acabaram sem resposta escrita. */
 const WRAP_UP_INSTRUCTION =
@@ -66,12 +73,13 @@ O QUE NUNCA FAZER
 - Nos indicadores, cada item traz "state": se não for "ok", os dados são insuficientes — diga isso em vez de afirmar.
 - Não dê conselho de investimento nem recomende produtos financeiros. Você analisa o que já aconteceu e o que está agendado.
 
-COMO ESCREVER
-- Direto e curto: 2 a 5 frases, ou uma lista de até 5 itens. É uma conversa de mensagem, não um relatório.
-- Comece pela resposta. O contexto vem depois, e só se ajudar.
-- Nada de tabelas, títulos ou markdown pesado — texto corrido e, quando ajudar, itens com "•".
-- Quando um número surpreender (gasto fora do normal, orçamento estourando, conta vencida), aponte em uma frase.
-- Responda SEMPRE em ${LOCALE_META[locale].label}.`
+O QUE ENTREGAR
+Você é o LEVANTAMENTO, não a resposta final: quem escreve o que a pessoa lê é outro passo, e ele só terá o que você trouxer.
+- Traga TODOS os números que apurou, com os valores EXATAMENTE como as ferramentas devolveram (os campos "formatted"). Não resuma "foram 12 lançamentos": liste os 12.
+- Traga também o que você concluiu: comparações, o que puxou o resultado, o que está fora do padrão e por quê.
+- Diga o que NÃO conseguiu apurar, e por quê. Silêncio vira invenção no passo seguinte.
+- Sem preocupação com tamanho ou beleza: é material de trabalho, não a mensagem.
+- Escreva em ${LOCALE_META[locale].label}.`
 }
 
 export interface FinancialAgentResult {
@@ -108,9 +116,18 @@ export async function runFinancialAgent(input: FinancialAgentInput): Promise<Fin
   // Sem isto, a pessoa receberia "não entendi" depois da consulta mais cara do
   // sistema. Uma última ida ao modelo, agora SEM ferramentas, obriga a concluir
   // com o que já foi levantado.
+  // As `tools` vão JUNTO mesmo sem intenção de usá-las: a transcrição reenviada
+  // contém chamadas de ferramenta, e provedor que recebe histórico de ferramenta
+  // sem a declaração correspondente recusa o pedido inteiro — a pessoa ficaria
+  // sem resposta logo depois da consulta mais cara do sistema. O `stepCountIs(1)`
+  // impede que este passo comece uma nova rodada de buscas, e o teto de saída
+  // existe porque aqui é para concluir, não para recomeçar.
   const wrapUp = await aiGenerateText({
     tier: "smart",
     system,
+    tools,
+    stopWhen: stepCountIs(1),
+    maxOutputTokens: WRAP_UP_MAX_TOKENS,
     messages: [...messages, ...result.response.messages, { role: "user", content: WRAP_UP_INSTRUCTION }],
   })
 

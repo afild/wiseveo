@@ -3,6 +3,12 @@ import { unpaidStatusFilter } from "@/lib/paid-status"
 
 export interface UpcomingTransactionItem {
   id: string
+  /**
+   * ENTRADA ou SAÍDA. Sem isto, quem soma a lista mistura o salário que vai
+   * cair com a conta que vai vencer e anuncia um total que não quer dizer nada
+   * — foi o que aconteceu no lembrete de contas e no boletim.
+   */
+  type: "INCOME" | "EXPENSE"
   title: string
   categoryName: string
   groupName: string
@@ -75,6 +81,7 @@ export async function getUpcomingTransactions(
     take,
     select: {
       id: true,
+      type: true,
       date: true,
       amount: true,
       description: true,
@@ -93,6 +100,7 @@ export async function getUpcomingTransactions(
 
   return transactions.map((tx) => ({
     id: tx.id,
+    type: tx.type === "INCOME" ? ("INCOME" as const) : ("EXPENSE" as const),
     title: pickTitle({
       description: tx.description,
       note: tx.note,

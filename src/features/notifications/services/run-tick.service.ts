@@ -26,11 +26,11 @@ import { buildBulletin, type BulletinKind } from "./bulletin.service"
 import { buildSentinel, formatSentinelMessage } from "./sentinel.service"
 import { buildBillsReminder, formatBillsReminderMessage } from "./bills-reminder.service"
 import { captureKpiSnapshot, findOwnersMissingSnapshot } from "./kpi-snapshot.service"
-import {
-  renderNotificationCard,
-  sendCardNotification,
-  sendTextNotification,
-} from "./notification-channel.service"
+import { sendTextNotification } from "./notification-channel.service"
+import { sendComposedBlocks } from "@/features/telegram/services/block-sender.service"
+import type { ResponseBlock } from "@/features/ai/types/response.types"
+import { getUserCardTheme } from "@/features/settings/services/user-settings-service"
+import type { CardThemeMode } from "@/features/telegram/cards/card-theme"
 
 /**
  * O tique: o que roda a cada batida do despertador externo.
@@ -51,7 +51,26 @@ import {
  * não consome o teto: a fila anda sozinha nas batidas seguintes.
  */
 
-const MAX_JOBS_PER_TICK = 6
+/**
+ * Quantos avisos uma batida constrói. Era 6, dimensionado para o boletim antigo
+ * — cinco números e uma frase. Hoje cada boletim faz cinco consultas ao banco,
+ * uma composição no modelo forte com até 4000 tokens de saída, o desenho de um
+ * PNG e o envio: seis desses não cabem no minuto que a hospedagem dá.
+ *
+ * O teto de TEMPO abaixo é a proteção que importa; este número só evita começar
+ * uma fila que já se sabe grande demais.
+ */
+const MAX_JOBS_PER_TICK = 3
+/**
+ * A partir daqui a batida não COMEÇA outro aviso.
+ *
+ * Sem isto, a função era morta no meio de um envio: a reserva ficava presa, a
+ * retomada por idade a reassumia meia hora depois e o boletim saía de novo —
+ * pagando a IA duas vezes e, no pior caso, chegando repetido. Terminar o que
+ * começou e deixar o resto para a próxima batida (a janela de tolerância é de
+ * 90 minutos) é o comportamento certo.
+ */
+const TICK_TIME_BUDGET_MS = 40_000
 const MAX_SNAPSHOTS_PER_TICK = 2
 /** A foto do mês anterior só é tirada no começo do mês; fora disso, nem se procura. */
 const SNAPSHOT_WINDOW_DAYS = 3
@@ -82,11 +101,13 @@ interface QueuedJob {
   parts: ZonedParts
   /** Preferências completas da pessoa, já lidas na consulta da fila. */
   rawPreferences: Record<string, unknown>
+  /** Primeiro nome de quem recebe — o boletim fala com uma pessoa. */
+  audience: string
 }
 
 /** Pronto para sair: nada aqui depende mais de banco, de IA nem de desenho. */
 type BuiltNotification =
-  | { send: "card"; image: Buffer; text: string | null; detail?: string }
+  | { send: "blocks"; blocks: ResponseBlock[]; detail?: string }
   | { send: "text"; text: string; detail?: string }
   | { send: "nothing"; reason: string }
 
@@ -117,18 +138,16 @@ async function buildBulletinJob(
   job: QueuedJob,
   dataOwnerId: string,
   ctx: NotificationContext,
+  audience: string,
 ): Promise<BuiltNotification> {
-  const bulletin = await buildBulletin({
+  const blocks = await buildBulletin({
     dataOwnerId,
     kind: job.kind as BulletinKind,
     parts: job.parts,
     ctx,
+    audience,
   })
-  return {
-    send: "card",
-    image: await renderNotificationCard(bulletin.card, ctx),
-    text: bulletin.analysis,
-  }
+  return { send: "blocks", blocks }
 }
 
 async function buildSentinelJob(
@@ -196,7 +215,7 @@ async function runJob(job: QueuedJob, now: Date): Promise<"sent" | "skipped" | "
         ? await buildSentinelJob(job, dataOwnerId, ctx, now)
         : job.kind === "billsReminder"
           ? await buildBillsJob(job, dataOwnerId, ctx)
-          : await buildBulletinJob(job, dataOwnerId, ctx)
+          : await buildBulletinJob(job, dataOwnerId, ctx, job.audience)
 
     if (built.send === "nothing") {
       await markSkipped(ref, built.reason)
@@ -212,8 +231,16 @@ async function runJob(job: QueuedJob, now: Date): Promise<"sent" | "skipped" | "
   }
 
   try {
-    if (built.send === "card") {
-      await sendCardNotification({ chatId: job.chatId, image: built.image, text: built.text })
+    if (built.send === "blocks") {
+      // O tema é da PESSOA e ela troca por mensagem no Telegram; ler aqui, na
+      // hora de desenhar, é o que faz a escolha valer também nos boletins.
+      const mode: CardThemeMode = await getUserCardTheme(job.userId).catch(() => "dark")
+      await sendComposedBlocks({
+        chatId: job.chatId,
+        blocks: built.blocks,
+        audience: job.audience,
+        mode,
+      })
     } else {
       await sendTextNotification(job.chatId, built.text)
     }
@@ -260,7 +287,7 @@ export async function runNotificationTick(now: Date = new Date()): Promise<TickR
     select: {
       userId: true,
       telegramChatId: true,
-      user: { select: { preferencesJson: true } },
+      user: { select: { preferencesJson: true, name: true } },
     },
     orderBy: { userId: "asc" },
   })
@@ -276,9 +303,11 @@ export async function runNotificationTick(now: Date = new Date()): Promise<TickR
     enabledUserIds.add(connection.userId)
 
     const parts = getZonedParts(now, preferences.timezone)
+    const audience = connection.user.name.trim().split(/\s+/)[0] ?? ""
     for (const job of listDueJobs(preferences, now)) {
       queue.push({
         userId: connection.userId,
+        audience,
         // O chat vem como BigInt do banco; a API do Telegram aceita o número em texto.
         chatId: connection.telegramChatId.toString(),
         kind: job.kind,
@@ -303,8 +332,11 @@ export async function runNotificationTick(now: Date = new Date()): Promise<TickR
   // itens, senão o teto viraria uma loteria em que alguém nunca é atendido.
   queue.sort((a, b) => a.userId.localeCompare(b.userId) || a.kind.localeCompare(b.kind))
 
+  const startedAt = now.getTime()
   for (const job of queue) {
-    if (result.sent + result.skipped + result.failed >= MAX_JOBS_PER_TICK) {
+    const done = result.sent + result.skipped + result.failed
+    const outOfTime = Date.now() - startedAt >= TICK_TIME_BUDGET_MS
+    if (done >= MAX_JOBS_PER_TICK || outOfTime) {
       result.deferred += 1
       continue
     }

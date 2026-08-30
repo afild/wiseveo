@@ -32,9 +32,15 @@ describe("instruções do agente", () => {
     expect(prompt).toMatch(/investimento/i)
   })
 
-  it("pede resposta curta — é conversa de mensagem, não relatório", () => {
+  it("pede LEVANTAMENTO completo, não a resposta final", () => {
+    // A regra antiga era "2 a 5 frases, é conversa de mensagem". Ela vivia aqui
+    // e estrangulava a análise: o agente virou o motor de PESQUISA, e quem
+    // escreve o que a pessoa lê é o compositor (response-composer.service.ts).
+    // Se alguém reintroduzir limite de tamanho aqui, a resposta volta a ser rasa.
     const prompt = buildFinancialAgentSystemPrompt("pt-BR", new Date(Date.UTC(2026, 7, 24)))
-    expect(prompt).toMatch(/curt|frases/i)
+    expect(prompt).toMatch(/levantamento/i)
+    expect(prompt).toMatch(/liste/i)
+    expect(prompt).not.toMatch(/2 a 5 frases/i)
   })
 })
 
@@ -69,8 +75,13 @@ describe("ferramenta de lançar transação (desligada até a Etapa 5)", () => {
       locale: "pt-BR" as const,
       monetary: { formatNumberValue: (v: number) => String(v) } as never,
     }
-    // Nome de ferramenta é contrato com o modelo: toda uma começa com "get_".
+    // Toda ferramenta de DADO começa com "get_" — é leitura, e é contrato com o
+    // modelo. A exceção é nominal e única: `set_card_theme` grava a cor dos
+    // quadros de quem lê. Não toca em dinheiro, e está aqui escrita para que
+    // acrescentar uma segunda escrita exija passar por este teste.
+    const escritasPermitidas = ["set_card_theme"]
     for (const name of Object.keys(getAgentTools("user-de-teste", ctx))) {
+      if (escritasPermitidas.includes(name)) continue
       expect(name, name).toMatch(/^get_/)
     }
   })

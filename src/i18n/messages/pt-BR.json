@@ -1353,9 +1353,11 @@
       "total": "{count, plural, one {# conta} other {# contas}}, somando {total}."
     },
     "bulletin": {
+      "balance": "Saldo em conta",
       "dueAhead": "{count, plural, one {# conta vence} other {# contas vencem}} nos próximos dias, somando {total}.",
       "dueToday": "{count, plural, one {# conta vence hoje} other {# contas vencem hoje}}, somando {total}.",
       "expense": "Saídas",
+      "fallbackHeadline": "O seu resumo",
       "headlineDaily": "O seu dia",
       "headlineMonthly": "O seu mês",
       "headlineWeekly": "A sua semana",

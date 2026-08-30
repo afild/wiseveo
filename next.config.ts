@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
   // função na Vercel e o wizard não teria o que aplicar.
   outputFileTracingIncludes: {
     "/api/setup/configure": ["./prisma/migrations/**/*"],
+    // As fontes do card são lidas do disco em runtime (satori não aceita
+    // import de binário). Sem estas linhas os arquivos não vão no pacote da
+    // função na Vercel e o card sairia sem negrito — ou nem sairia.
+    "/api/telegram/webhook": ["./src/assets/card-fonts/**/*"],
+    "/api/cron/tick": ["./src/assets/card-fonts/**/*"],
+    "/api/advisor/chat": ["./src/assets/card-fonts/**/*"],
   },
 };
 

@@ -5,16 +5,15 @@ import { getInstallDefaultLocale } from "@/i18n/install-locale"
 import { resolveDataOwnerId } from "@/lib/data-owner"
 import { createMonetaryFormatter } from "@/lib/monetary"
 import {
+  getUserCardTheme,
   getUserLocale,
   getUserMonetarySettings,
 } from "@/features/settings/services/user-settings-service"
-import { generateCardImage } from "./card-renderer.service"
 import {
   describeTelegramError,
   downloadTelegramFile,
   sendTelegramChatAction,
   sendTelegramMessage,
-  sendTelegramPhoto,
 } from "./bot.service"
 import {
   AudioNotSupportedError,
@@ -27,10 +26,9 @@ import {
 } from "./conversation-history.service"
 import { AiBudgetExceededError } from "@/features/ai/services/ai-usage.service"
 import { AiNotConfiguredError } from "@/features/ai/services/llm.service"
-import { classifyQuery } from "./query-classifier.service"
-import { dispatchQuery } from "./tool-dispatcher.service"
-import { formatCard } from "./card-formatter.service"
-import { runFinancialAgent } from "@/features/ai/services/financial-agent.service"
+import { composeAnswer } from "@/features/ai/services/response-composer.service"
+import { sendComposedBlocks } from "./block-sender.service"
+import { blocksToPlainText } from "@/features/ai/types/response.types"
 import { buildStaticResponse } from "./static-response.service"
 import { buildTelegramUserContext } from "./user-context.service"
 import type {
@@ -152,14 +150,21 @@ async function handleFinancialQuestion(chatId: TelegramChatId, text: string) {
 
   await sendTelegramChatAction(chatId, "typing")
 
+  // TODA pergunta passa pelo agente agora. Antes existia um caminho barato:
+  // um classificador escolhia entre onze consultas prontas e devolvia um card
+  // com uma linha de legenda escrita pelo modelo ECONÔMICO — nove das onze
+  // intenções nunca chegavam ao modelo forte, e a resposta saía rasa por
+  // desenho. O dono preferiu pagar o modelo forte em toda mensagem a receber
+  // "papagaio". O teto mensal continua sendo o freio do gasto.
   const memory = await getConversationMemory({ chatId: chatKey, userId: connection.userId })
-  const history = memory.recentMessages
+  const blocks = await composeAnswer({
+    dataOwnerId,
+    question: text,
+    history: memory.recentMessages,
+    ctx: { ...ctx, viewerId: connection.userId, audience: userContext.firstName },
+  })
 
-  const classified = await classifyQuery(text, history, memory, locale)
-
-  // Classificador fora do ar não é pergunta difícil: mandar ao agente gastaria
-  // o modelo caro para provavelmente falhar de novo (é o mesmo provedor).
-  if (classified.classifierFailed) {
+  if (blocks.length === 0) {
     const response = t("bot.unknownIntent")
     await sendTelegramMessage(chatId, response)
     await recordTelegramInteraction({
@@ -171,59 +176,24 @@ async function handleFinancialQuestion(chatId: TelegramChatId, text: string) {
     return
   }
 
-  // Dois caminhos, de propósito:
-  // - BARATO: a pergunta cabe numa das consultas prontas → card, como sempre.
-  // - AGENTE: análise de verdade, ou pergunta que o classificador não encaixou.
-  //   Antes, "não encaixou" virava "não entendi" e a conversa morria ali; agora
-  //   o agente vai atrás dos dados com as próprias ferramentas.
-  if (classified.intent === "financial_analysis" || classified.intent === "unknown") {
-    await sendTelegramChatAction(chatId, "typing")
-    const { text: answer } = await runFinancialAgent({
-      dataOwnerId,
-      question: text,
-      history,
-      ctx,
-    })
-    const response = answer || t("bot.unknownIntent")
-    await sendTelegramMessage(chatId, response)
-    await recordTelegramInteraction({
-      chatId: chatKey,
-      userId: connection.userId,
-      userText: text,
-      assistantText: response,
-      classified,
-    })
-    return
-  }
+  // O tema é lido DEPOIS da composição: se a pessoa acabou de pedir "manda no
+  // claro", a própria resposta já sai no tema novo — a ferramenta gravou a
+  // preferência durante a pesquisa.
+  const mode = await getUserCardTheme(connection.userId)
 
-  const dispatched = await dispatchQuery(dataOwnerId, classified, ctx)
-
-  const cardData = await formatCard(text, classified, dispatched, t, locale)
-
-  if (cardData.type === "error") {
-    const response = cardData.insight ?? t("bot.cardFormatError")
-    await sendTelegramMessage(chatId, response)
-    await recordTelegramInteraction({
-      chatId: chatKey,
-      userId: connection.userId,
-      userText: text,
-      assistantText: response,
-      classified,
-    })
-    return
-  }
+  await sendComposedBlocks({
+    chatId,
+    blocks,
+    audience: userContext.firstName,
+    mode,
+  })
 
   await recordTelegramInteraction({
     chatId: chatKey,
     userId: connection.userId,
     userText: text,
-    assistantText: cardData.insight ?? `${cardData.headline}: ${cardData.value ?? ""}`.trim(),
-    classified,
+    assistantText: blocksToPlainText(blocks),
   })
-
-  await sendTelegramChatAction(chatId, "upload_photo")
-  const imageBuffer = await generateCardImage(cardData, t)
-  await sendTelegramPhoto(chatId, imageBuffer, cardData.insight)
 }
 
 /**

@@ -22,8 +22,33 @@ export async function sendTelegramMessage(chatId: TelegramChatId, text: string) 
   await (await getTelegramBot()).sendMessage(chatId, text)
 }
 
-export async function sendTelegramPhoto(chatId: TelegramChatId, image: Buffer, caption?: string) {
-  await (await getTelegramBot()).sendPhoto(chatId, image, caption ? { caption } : undefined)
+/**
+ * Mensagem FORMATADA (negrito, monoespaçado, citação).
+ *
+ * O texto tem de chegar aqui já montado por `src/features/telegram/lib/telegram-html.ts`,
+ * que escapa cada pedaço no momento em que ele entra. Não escape aqui: escapar
+ * duas vezes transformaria `<b>` em texto visível.
+ */
+export async function sendTelegramHtml(chatId: TelegramChatId, html: string) {
+  await (await getTelegramBot()).sendMessage(chatId, html, {
+    parse_mode: "HTML",
+    // A resposta é sobre o dinheiro da pessoa; um cartão de pré-visualização de
+    // link não tem o que fazer aqui.
+    disable_web_page_preview: true,
+  })
+}
+
+export async function sendTelegramPhoto(
+  chatId: TelegramChatId,
+  image: Buffer,
+  caption?: string,
+  options: { html?: boolean } = {},
+) {
+  await (await getTelegramBot()).sendPhoto(
+    chatId,
+    image,
+    caption ? { caption, ...(options.html ? { parse_mode: "HTML" as const } : {}) } : undefined,
+  )
 }
 
 export async function sendTelegramChatAction(chatId: TelegramChatId, action: "typing" | "upload_photo") {
