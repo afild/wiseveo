@@ -1,77 +1,92 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-export const dynamic = 'force-dynamic'
-// Cada phantom agora arrasta ~2.650 linhas em cascata (eram ~350 antes do dataset
-// realista). Sem um teto de duração explícito, uma execução longa é cortada no meio
-// e — como cada delete é try/catch — o corte passa despercebido: o cron "sucede"
-// tendo apagado menos usuários do que o dia criou, e a base cresce sem parar.
+export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
+/**
+ * A faxina dos visitantes da demo.
+ *
+ * POR QUE ELA FOI REESCRITA: a versão anterior apagava UM usuário por vez, com
+ * `prisma.user.delete`, no máximo 40 por execução — e o cron da Vercel gratuita
+ * roda uma vez por dia. Cada visitante arrasta ~2.650 linhas em cascata. Com
+ * mais de 40 visitantes por dia a fila só crescia, e cresceu: 1.198 visitantes
+ * vencidos, 3,07 milhões de transações, 1,5 GB — até o banco entrar em modo
+ * somente leitura e a demo parar de provisionar. A conta nunca fechou: o teto
+ * era do tamanho errado e a frequência também.
+ *
+ * O QUE MUDOU:
+ * 1. Apaga em BLOCO (`deleteMany` por lista de ids), não um a um. A cascata do
+ *    banco continua fazendo o trabalho pesado, mas numa ida só por tabela.
+ * 2. Trabalha por TEMPO, não por contagem fixa: enquanto houver folga no minuto
+ *    de execução, pega o próximo lote. Uma execução limpa o que couber e diz
+ *    quanto sobrou.
+ * 3. Pode ser chamada de 15 em 15 minutos por um despertador externo — o mesmo
+ *    truque dos boletins. Sem isso, uma vez por dia nunca alcança a fila.
+ *
+ * Continua com as duas travas de sempre: só roda com a demo ligada, e o filtro
+ * exige e-mail começando com "demo_" — nunca encosta num usuário real.
+ */
+
+/** Quantos visitantes por lote. Cada um arrasta ~2.650 linhas em cascata. */
+const BATCH_SIZE = 25
+/** Para de começar lote novo aqui, para terminar o que começou dentro do minuto. */
+const TIME_BUDGET_MS = 45_000
+/** Visitante mais velho que isto já não interessa a ninguém. */
+const STALE_HOURS = 25
+
 export async function GET(request: Request) {
-  // Guard: only run in demo environment — no-op in the real app project
   if (process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
-    // i18n-ignore: endpoint de cron interno (Vercel Cron), resposta nunca é renderizada em UI
+    // i18n-ignore: endpoint de cron interno, resposta nunca renderizada em UI
     return NextResponse.json({ skipped: true, reason: "Demo mode is disabled" }, { status: 200 })
   }
 
-  // Security: Vercel Cron sends Authorization header with CRON_SECRET
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const authHeader = request.headers.get("authorization")
+  const queryKey = new URL(request.url).searchParams.get("key")
+  const secret = process.env.CRON_SECRET
+  const authorized =
+    Boolean(secret) && (authHeader === `Bearer ${secret}` || queryKey === secret)
+  if (!authorized && process.env.NODE_ENV === "production") {
+    // i18n-ignore: resposta de máquina para máquina
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
 
+  const startedAt = Date.now()
+  const cutoff = new Date(Date.now() - STALE_HOURS * 60 * 60 * 1000)
+  let deleted = 0
+  let batches = 0
+
   try {
-    // Delete phantom users created more than 25 hours ago.
-    // Window is 25h to ensure users are cleaned up on the daily cron cycle
-    // (Vercel Hobby only allows daily cron jobs).
-    // Safety double-guard: email MUST start with "demo_" — never touches real users.
-    const twentyFiveHoursAgo = new Date(Date.now() - 25 * 60 * 60 * 1000)
+    while (Date.now() - startedAt < TIME_BUDGET_MS) {
+      const stale = await prisma.user.findMany({
+        // Trava dupla: o prefixo do e-mail é a garantia de que nenhum usuário
+        // real entra na lista, mesmo que a data diga outra coisa.
+        where: { email: { startsWith: "demo_" }, createdAt: { lt: cutoff } },
+        select: { id: true },
+        take: BATCH_SIZE,
+      })
+      if (stale.length === 0) break
 
-    // Individual delete + try/catch per user (not a single deleteMany): one user
-    // whose delete fails (e.g. FK Restrict on a shared lookup row) must never
-    // abort the whole batch — that bug is why the cron never deleted anything.
-    const stale = await prisma.user.findMany({
-      where: {
-        email: {
-          startsWith: 'demo_'
-        },
-        createdAt: {
-          lt: twentyFiveHoursAgo
-        }
-      },
-      select: { id: true },
-      // ~2.650 linhas em cascata por usuário: 40 é o que cabe com folga em 60s.
-      // O cron roda diariamente; se a fila crescer além disso, é sinal de que a
-      // limpeza precisa de mais de uma execução por dia, não de um lote maior.
-      take: 40
-    })
-
-    let deletedCount = 0
-    let failedCount = 0
-    const errors: string[] = []
-
-    for (const u of stale) {
-      try {
-        await prisma.user.delete({ where: { id: u.id } })
-        deletedCount++
-      } catch (error) {
-        failedCount++
-        if (errors.length < 5) {
-          errors.push((error as Error).message)
-        }
-      }
+      // Em bloco: a cascata do banco apaga transações, recorrentes, orçamentos e
+      // o resto. Um a um, cada visitante custava uma ida ao banco por tabela.
+      const result = await prisma.user.deleteMany({
+        where: { id: { in: stale.map((user) => user.id) } },
+      })
+      deleted += result.count
+      batches += 1
     }
 
-    return NextResponse.json({
-      success: true,
-      deletedCount,
-      failedCount,
-      errors
+    const remaining = await prisma.user.count({
+      where: { email: { startsWith: "demo_" }, createdAt: { lt: cutoff } },
     })
+
+    // O que sobrou vai no relatório: fila encolhendo em silêncio é o que
+    // escondeu o problema por semanas.
+    // i18n-ignore: relatório interno do cron
+    return NextResponse.json({ success: true, deleted, batches, remaining })
   } catch (error) {
     console.error("Cron Cleanup Error:", error)
-    // i18n-ignore: endpoint de cron interno (Vercel Cron), resposta nunca é renderizada em UI
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+    // i18n-ignore: resposta de máquina para máquina
+    return NextResponse.json({ error: "internalError", deleted }, { status: 500 })
   }
 }
