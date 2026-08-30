@@ -102,6 +102,8 @@
     }
   },
   "advisor": {
+    "clear": "Clear conversation",
+    "cleared": "Conversation cleared",
     "emptyState": "Ask anything about your money. I look at your data before answering.",
     "error": "I couldn't answer right now. Try again.",
     "notPersisted": "Conversations are not being stored yet. To enable that, prepare your database in Settings → Integrations.",

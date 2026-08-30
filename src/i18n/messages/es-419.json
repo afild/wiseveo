@@ -102,6 +102,8 @@
     }
   },
   "advisor": {
+    "clear": "Limpiar conversación",
+    "cleared": "Conversación borrada",
     "emptyState": "Pregunta lo que quieras sobre tu dinero. Consulto tus datos antes de responder.",
     "error": "No pude responder ahora. Inténtalo de nuevo.",
     "notPersisted": "Las conversaciones todavía no se están guardando. Para eso, prepara tu base de datos en Configuración → Integraciones.",

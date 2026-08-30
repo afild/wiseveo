@@ -102,6 +102,8 @@
     }
   },
   "advisor": {
+    "clear": "Limpar conversa",
+    "cleared": "Conversa apagada",
     "emptyState": "Pergunte qualquer coisa sobre o seu dinheiro. Eu consulto os seus dados antes de responder.",
     "error": "Não consegui responder agora. Tente de novo.",
     "notPersisted": "As conversas ainda não estão sendo guardadas. Para isso, prepare o seu banco em Configurações → Integrações.",

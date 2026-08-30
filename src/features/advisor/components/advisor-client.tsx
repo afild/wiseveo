@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowUp, Loader2, Sparkles, TrendingDown, TrendingUp, Wallet } from "lucide-react"
+import { ArrowUp, Eraser, Loader2, Sparkles, TrendingDown, TrendingUp, Wallet } from "lucide-react"
 import type { AdvisorOpening } from "../services/advisor-opening.service"
 import type { AdvisorStoredMessage } from "../services/advisor-chat.service"
 
@@ -39,7 +39,33 @@ export function AdvisorClient({
   )
   const [question, setQuestion] = React.useState("")
   const [asking, setAsking] = React.useState(false)
+  const [clearing, setClearing] = React.useState(false)
   const endRef = React.useRef<HTMLDivElement | null>(null)
+
+  /**
+   * Começar do zero. A conversa é guardada para o "e em dezembro?" fazer
+   * sentido — e é por isso mesmo que precisa haver saída: assunto de ontem não
+   * deve contaminar a pergunta de hoje. Some do banco também, não só da tela.
+   */
+  async function clearConversation() {
+    if (clearing || asking) return
+    setClearing(true)
+    try {
+      const response = await fetch("/api/advisor/conversation", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId }),
+      })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok || !payload?.success) throw new Error(payload?.message ?? t("error"))
+      setMessages([])
+      toast.success(t("cleared"))
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("error"))
+    } finally {
+      setClearing(false)
+    }
+  }
 
   React.useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
@@ -118,6 +144,22 @@ export function AdvisorClient({
         <p className="rounded-lg border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
           {t("notPersisted")}
         </p>
+      )}
+
+      {messages.length > 0 && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="cursor-pointer text-muted-foreground"
+            disabled={clearing || asking}
+            onClick={clearConversation}
+          >
+            {clearing ? <Loader2 className="size-4 animate-spin" /> : <Eraser className="size-4" />}
+            {t("clear")}
+          </Button>
+        </div>
       )}
 
       {/* Conversa */}
