@@ -349,10 +349,19 @@ CREATE INDEX "category_groups_user_id_type_idx" ON "category_groups"("user_id", 
 CREATE UNIQUE INDEX "categories_COD_CAT_key" ON "categories"("COD_CAT");
 
 -- CreateIndex
+CREATE INDEX "categories_user_id_idx" ON "categories"("user_id");
+
+-- CreateIndex
+CREATE INDEX "categories_group_id_idx" ON "categories"("group_id");
+
+-- CreateIndex
 CREATE INDEX "payees_user_id_idx" ON "payees"("user_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "transaction_statuses_COD_ST_key" ON "transaction_statuses"("COD_ST");
+
+-- CreateIndex
+CREATE INDEX "transaction_statuses_user_id_idx" ON "transaction_statuses"("user_id");
 
 -- CreateIndex
 CREATE INDEX "transactions_user_id_DATA_idx" ON "transactions"("user_id", "DATA");
@@ -371,6 +380,12 @@ CREATE INDEX "transaction_messages_transaction_id_idx" ON "transaction_messages"
 
 -- CreateIndex
 CREATE INDEX "transaction_messages_user_id_idx" ON "transaction_messages"("user_id");
+
+-- CreateIndex
+CREATE INDEX "excluded_transactions_user_id_idx" ON "excluded_transactions"("user_id");
+
+-- CreateIndex
+CREATE INDEX "recurring_transactions_user_id_idx" ON "recurring_transactions"("user_id");
 
 -- CreateIndex
 CREATE INDEX "budgets_user_id_month_year_idx" ON "budgets"("user_id", "month", "year");

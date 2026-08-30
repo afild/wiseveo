@@ -124,6 +124,16 @@ model Category {
   recurringTransactions RecurringTransaction[] @relation("RecurringTransactionCategory")
   transactions          Transaction[]          @relation("TransactionCategory")
 
+  // Sem estes dois, a cascata de apagar um usuário (ou um grupo) varre esta
+  // tabela inteira em vez de ir direto às linhas dele. Eles NÃO fecham sozinhos
+  // o caso da faxina de 25/08/2026 (23 min para 25 visitantes): o custo grande
+  // lá era o Postgres varrer transactions a cada status/conta/grupo/favorecido
+  // apagado, porque os FKs COD_ST/COD_ACC/COD_ACC_DEST/COD_GRU/COD_BEN de
+  // transactions seguem SEM índice — é por isso que a faxina apaga as
+  // transações PRIMEIRO, pelo índice (user_id, DATA). Indexar esses FKs
+  // fecharia a classe, mas engorda a maior tabela — decisão em aberto.
+  @@index([userId])
+  @@index([groupId])
   @@map("categories")
 }
 
@@ -152,6 +162,7 @@ model TransactionStatusLookup {
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions          Transaction[]          @relation("TransactionStatus")
 
+  @@index([userId])
   @@map("transaction_statuses")
 }
 
@@ -239,6 +250,7 @@ model ExcludedTransaction {
   excludedAt    DateTime        @default(now()) @map("excluded_at")
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("excluded_transactions")
 }
 
@@ -266,6 +278,7 @@ model RecurringTransaction {
   statusLookup TransactionStatusLookup @relation("RecurringTransactionStatus", fields: [statusCode], references: [code])
   user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("recurring_transactions")
 }
 
