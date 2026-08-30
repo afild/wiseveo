@@ -57,3 +57,4 @@ docs/commit-catalog.local.md
 # Registro local da faxina manual da demo (scripts/clean-demo-visitors.ts)
 clean-demo-visitors.log
 progresso-demo.log
+recover-demo-db.log
