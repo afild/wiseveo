@@ -46,7 +46,7 @@ export function DemoSharedBanner() {
   const [name, setName] = React.useState("")
   const [email, setEmail] = React.useState("")
   const [forking, setForking] = React.useState(false)
-  const [erro, setErro] = React.useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
 
   if (!shared) return null
 
@@ -56,7 +56,7 @@ export function DemoSharedBanner() {
     event.preventDefault()
     if (!isValid || forking) return
 
-    setErro(null)
+    setErrorMsg(null)
     setForking(true)
     try {
       const res = await fetch(DEMO_FORK_PATH, {
@@ -75,17 +75,17 @@ export function DemoSharedBanner() {
         return
       }
       if (res.status === 422) {
-        setErro(t("emailInvalid"))
+        setErrorMsg(t("emailInvalid"))
         toast.error(t("emailInvalid"))
       } else if (res.status === 429) {
-        setErro(t("rateLimited"))
+        setErrorMsg(t("rateLimited"))
         toast.error(t("rateLimited"))
       } else {
-        setErro(tCommon("genericError"))
+        setErrorMsg(tCommon("genericError"))
         toast.error(tCommon("genericError"))
       }
     } catch {
-      setErro(tCommon("genericError"))
+      setErrorMsg(tCommon("genericError"))
       toast.error(tCommon("genericError"))
     }
     setForking(false)
@@ -93,7 +93,7 @@ export function DemoSharedBanner() {
 
   return (
     <div className="above-mobile-nav pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 md:bottom-4">
-      <div className="pointer-events-auto flex max-w-full items-center gap-3 rounded-2xl border bg-card px-4 py-2 shadow-lg sm:rounded-full">
+      <div className="pointer-events-auto flex max-w-full items-center gap-3 rounded-2xl border bg-card px-4 py-2 shadow-lg md:rounded-full">
         <Eye className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <p role="status" className="text-sm text-muted-foreground">
           {t("banner")}
@@ -101,7 +101,10 @@ export function DemoSharedBanner() {
         <Dialog
           open={open}
           onOpenChange={(next) => {
-            if (!forking) setOpen(next)
+            if (forking) return
+            setOpen(next)
+            // Fechar limpa o erro: reabrir não deve exibir a mensagem antiga.
+            if (!next) setErrorMsg(null)
           }}
         >
           <DialogTrigger asChild>
@@ -126,7 +129,7 @@ export function DemoSharedBanner() {
                   autoComplete="name"
                   value={name}
                   onChange={(event) => {
-                    setErro(null)
+                    setErrorMsg(null)
                     setName(event.target.value)
                   }}
                 />
@@ -143,15 +146,15 @@ export function DemoSharedBanner() {
                   spellCheck={false}
                   value={email}
                   onChange={(event) => {
-                    setErro(null)
+                    setErrorMsg(null)
                     setEmail(event.target.value)
                   }}
                 />
               </div>
               <p className="text-xs text-muted-foreground">{t("notice")}</p>
-              {erro && (
+              {errorMsg && (
                 <p role="alert" className="text-sm text-destructive">
-                  {erro}
+                  {errorMsg}
                 </p>
               )}
               <Button
