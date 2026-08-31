@@ -15,29 +15,32 @@ const intlMiddleware = createMiddleware(routing)
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
 
-  // ─── /api ────────────────────────────────────────────────────────
-  // Até aqui o matcher EXCLUÍA "api": nenhuma rota /api passava pelo middleware. O
-  // matcher agora inclui /api/:path* só para a cerca de escrita abaixo alcançar
-  // estas rotas — o resto do contrato tem de continuar idêntico ao de antes (cron,
-  // webhook, provisionamento, fork): sem o gate de setup, que redirecionaria para
-  // /login numa instalação ainda não configurada, e sem qualquer outro redireciono
-  // de auth. Por isso o bloco fica ANTES do gate de setup e recalcula, sozinho, o
-  // mínimo de token+isDemoMode que a cerca precisa.
-  if (pathname.startsWith("/api")) {
-    const token = request.cookies.get(COOKIE_NAME)?.value
-    const session = token ? await verifySessionToken(token) : null
-    const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+  // /api nunca passou pelo middleware: fora da demo, a única razão de ele ver /api
+  // (a cerca de escrita abaixo) não existe — devolve na hora, sem nem ler sessão.
+  const isApi = pathname.startsWith("/api")
+  if (isApi && !isDemoMode) return NextResponse.next()
 
-    // Sessão-vitrine não escreve. A decisão é por método+claim (isBlockedSharedWrite)
-    // para cobrir as rotas /api e TAMBÉM as server actions de orçamento, que POSTam
-    // na própria página e nunca passariam por uma lista de rotas /api.
-    if (isDemoMode && isBlockedSharedWrite(request.method, pathname, session?.demoShared)) {
-      // i18n-ignore: o cliente traduz pelo código
-      return NextResponse.json({ error: "demoForkRequired" }, { status: 409 })
-    }
-    return NextResponse.next()
+  const token = request.cookies.get(COOKIE_NAME)?.value
+  const session = token ? await verifySessionToken(token) : null
+
+  // Cerca ÚNICA da sessão-vitrine: pega /api E as server actions de orçamento
+  // (POST na própria página). Fica ANTES do gate de setup de propósito — o gate
+  // redirecionaria /api para /login em instalação não configurada. Isso é seguro
+  // porque isSetupComplete() (src/lib/setup-check.ts) já retorna true sempre que
+  // NEXT_PUBLIC_DEMO_MODE==="true" — a cerca nunca precisa disparar dentro da
+  // janela "!setupComplete", que só existe fora da demo.
+  if (isDemoMode && isBlockedSharedWrite(request.method, pathname, session?.demoShared)) {
+    // i18n-ignore: o cliente detecta pelo status/cabeçalho; o corpo é código de máquina
+    return NextResponse.json(
+      { error: "demoForkRequired" },
+      { status: 409, headers: { "x-wiseveo-demo-fork-required": "1" } },
+    )
   }
+  // /api atendido: o resto do middleware (setup gate, redirects de auth) NUNCA
+  // se aplica a /api — contrato histórico do matcher antigo.
+  if (isApi) return NextResponse.next()
 
   // ─── Setup Wizard Gate ─────────────────────────────────────────────
   const setupComplete = isSetupComplete()
@@ -47,19 +50,6 @@ export async function middleware(request: NextRequest) {
   if (!setupComplete) {
     if (pathname.startsWith("/setup") || pathname === "/login") return NextResponse.next()
     return NextResponse.redirect(new URL("/login", request.url))
-  }
-
-  const token = request.cookies.get(COOKIE_NAME)?.value
-  const session = token ? await verifySessionToken(token) : null
-  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
-
-  // Sessão-vitrine não escreve. A decisão é por método+claim (isBlockedSharedWrite)
-  // para cobrir as rotas /api (tratadas acima) e TAMBÉM as server actions de
-  // orçamento, que POSTam na própria página e nunca passariam por uma lista de
-  // rotas /api.
-  if (isDemoMode && isBlockedSharedWrite(request.method, pathname, session?.demoShared)) {
-    // i18n-ignore: o cliente traduz pelo código
-    return NextResponse.json({ error: "demoForkRequired" }, { status: 409 })
   }
 
   // Instalação configurada: /setup só para quem está logado (a página confere se
@@ -118,7 +108,10 @@ export const config = {
     // Match all paths except _next/static, _next/image, favicon.ico, and static files
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)",
     // /api também passa (necessário para a cerca de escrita da sessão-vitrine
-    // alcançar estas rotas — ver bloco "/api" acima).
+    // alcançar estas rotas — ver `isApi` no corpo acima). O `startsWith("/api")` do
+    // corpo e este `/api/:path*` combinam de propósito com o lookahead `(?!api...)`
+    // do primeiro padrão: um caminho de página que começa com "api" sem barra (ex.:
+    // /apiary) não casa com NENHUM dos dois — igual a antes desta tarefa.
     "/api/:path*",
   ],
 }
