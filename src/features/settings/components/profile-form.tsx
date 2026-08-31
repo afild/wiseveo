@@ -25,6 +25,7 @@ import { toast } from "sonner"
 import * as React from "react"
 
 import { useTranslations } from "next-intl"
+import { withDemoDisplayIdentity } from "@/lib/demo-identity"
 
 export function ProfileForm() {
   const t = useTranslations("settings.profile")
@@ -73,11 +74,17 @@ export function ProfileForm() {
         if (data.success && data.data) {
           const user = data.data
           const preferences = user.preferencesJson?.profile || {}
-          
-          const nameParts = (user.name || "").split(" ")
+
+          // D6: na demo, o nome exibido/pré-preenchido é o da marca (não-editável de fato,
+          // pois não há constraint de unicidade em `name` — salvar sem alterar é inofensivo).
+          // O e-mail NUNCA passa por withDemoDisplayIdentity aqui: o campo é editável e
+          // `email` é @unique — pré-preencher com demo@wiseveo.com faria um Save sem edição
+          // gravar esse valor na linha da cópia e colidir com a vitrine.
+          const displayName = withDemoDisplayIdentity({ name: user.name }).name
+          const nameParts = (displayName || "").split(" ")
           const firstName = nameParts[0] || ""
           const lastName = nameParts.slice(1).join(" ")
-          
+
           form.reset({
             firstName,
             lastName,

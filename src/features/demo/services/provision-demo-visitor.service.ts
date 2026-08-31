@@ -5,6 +5,7 @@ import { getDemoDataset } from "@/lib/demo-data/generate-demo-dataset"
 import { materializeDataset } from "@/lib/demo-data/materialize"
 import { DEMO_DEFAULT_LOCALE } from "@/i18n/config"
 import { demoMonetarySettings } from "@/lib/monetary"
+import { DEMO_DISPLAY_NAME } from "@/lib/demo-identity"
 
 /**
  * Cria UM visitante da demo com o conjunto completo (~2.647 linhas) numa única
@@ -28,7 +29,7 @@ export async function provisionDemoVisitor(): Promise<{ userId: string }> {
     await tx.user.create({
       data: {
         id: userId,
-        name: "Demo Visitor", // i18n-ignore: nome padrão do usuário demo provisionado automaticamente — dado semente, não copy de UI
+        name: DEMO_DISPLAY_NAME, // D6: nome de exibição único da marca (também usado como nome real deste phantom — não há UI que edite o nome de um visitante demo)
         email: `${userId}@wiseveo.demo`,
         status: "ACTIVE",
         role: "USER",

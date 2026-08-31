@@ -24,6 +24,8 @@ import { initializeUserData } from "../src/lib/user-init"
 import { getDemoDataset } from "../src/lib/demo-data/generate-demo-dataset"
 import { regenerateUserDemoData } from "../src/lib/demo-data/regen"
 import { resolveDemoDatabaseUrl } from "../scripts/demo-db-guard"
+import { DEMO_DEFAULT_LOCALE } from "../src/i18n/config"
+import { demoMonetarySettings } from "../src/lib/monetary"
 
 /** Prefixo fixo do usuário demo permanente — nunca muda (o dataset é regenerado sobre ele). */
 const DEMO_USER_PREFIX = "de305eed"
@@ -47,12 +49,17 @@ async function main() {
   const hashedPassword = await bcrypt.hash(password, 10)
 
   // 1. Criar/atualizar o usuário demo
+  // Sem preferencesJson aqui, a vitrine cai no locale/moeda padrão da instalação (pt-BR/BRL)
+  // enquanto os phantoms nascem em en-US/USD (provisionDemoVisitor) — bug encontrado em
+  // 31/08: a vitrine renderizava números em pt-BR (10.909,20) e as cópias em en-US (10,909.20).
+  const preferencesJson = { locale: DEMO_DEFAULT_LOCALE, monetary: { ...demoMonetarySettings } }
   const demoUser = await prisma.user.upsert({
     where: { email },
     update: {
       passwordHash: hashedPassword,
       role: "USER",
       status: "ACTIVE",
+      preferencesJson,
     },
     create: {
       name: "WISEVEO Demo",
@@ -60,6 +67,7 @@ async function main() {
       passwordHash: hashedPassword,
       role: "USER",
       status: "ACTIVE",
+      preferencesJson,
     },
   })
   console.log(`Usuário demo criado/atualizado: ${demoUser.email} (${demoUser.id})`)

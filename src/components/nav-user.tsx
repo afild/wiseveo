@@ -23,11 +23,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { withDemoDisplayIdentity } from "@/lib/demo-identity"
 
 import { useTranslations } from "next-intl"
 
 export function NavUser({
-  user,
+  user: rawUser,
 }: {
   user: {
     name: string
@@ -37,6 +38,8 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const t = useTranslations("sidebar")
+  // D6: na demo, todo usuário aparece como a identidade única da marca (só exibição).
+  const user = withDemoDisplayIdentity(rawUser)
 
   return (
     <SidebarMenu>

@@ -19,6 +19,7 @@ import { toast } from "sonner"
 import * as React from "react"
 import { TelegramConnect } from "@/features/telegram/components/TelegramConnect"
 import { useTranslations } from "next-intl"
+import { withDemoDisplayIdentity } from "@/lib/demo-identity"
 
 export function AccountForm() {
   const t = useTranslations("settings.account")
@@ -54,10 +55,16 @@ export function AccountForm() {
         const data = await res.json()
         if (data.success && data.data) {
           const user = data.data
-          const nameParts = (user.name || "").split(" ")
+
+          // D6: mesmo tratamento do profile-form — nome pré-preenchido com a marca na demo
+          // (não tem constraint de unicidade), e-mail/username seguem os reais (editável +
+          // `email` é @unique: pré-preencher com demo@wiseveo.com faria um Save sem edição
+          // colidir com a vitrine).
+          const displayName = withDemoDisplayIdentity({ name: user.name }).name
+          const nameParts = (displayName || "").split(" ")
           const firstName = nameParts[0] || ""
           const lastName = nameParts.slice(1).join(" ")
-          
+
           form.reset({
             firstName,
             lastName,
