@@ -8,7 +8,9 @@ import { FRESH_SESSION_COOKIE } from "@/lib/client-session-reset"
  * MESMA montagem — cópias separadas divergiriam em silêncio):
  * - sessão de 24h, com a marca demoShared quando é a vitrine;
  * - wiseveo-fresh-session, para o cliente limpar filtros herdados do visitante
- *   anterior no mesmo navegador;
+ *   anterior no mesmo navegador — a ENTRADA grava (pessoa NOVA no navegador);
+ *   o FORK não (`freshSession: false`): é a MESMA pessoa continuando, período/
+ *   filtros/cache de moeda seguem válidos para o mesmo dataset;
  * - o marcador NÃO-httpOnly da vitrine (o banner lê), criado no modo
  *   compartilhado e APAGADO ao virar cópia própria.
  * O cookie de idioma NÃO entra aqui: só a entrada o define (o fork precisa
@@ -16,7 +18,7 @@ import { FRESH_SESSION_COOKIE } from "@/lib/client-session-reset"
  */
 export async function applyDemoSessionCookies(
   response: NextResponse,
-  opts: { userId: string; demoShared: boolean },
+  opts: { userId: string; demoShared: boolean; freshSession?: boolean },
 ): Promise<void> {
   const token = await createSessionToken(opts.userId, undefined, {
     demoShared: opts.demoShared,
@@ -30,12 +32,14 @@ export async function applyDemoSessionCookies(
     // ao usuário que ela aponta.
     maxAge: 60 * 60 * 24,
   })
-  response.cookies.set(FRESH_SESSION_COOKIE, "1", {
-    httpOnly: false,
-    maxAge: 60 * 60 * 24,
-    sameSite: "lax",
-    path: "/",
-  })
+  if (opts.freshSession ?? true) {
+    response.cookies.set(FRESH_SESSION_COOKIE, "1", {
+      httpOnly: false,
+      maxAge: 60 * 60 * 24,
+      sameSite: "lax",
+      path: "/",
+    })
+  }
   if (opts.demoShared) {
     response.cookies.set(DEMO_SHARED_MARKER_COOKIE, "1", {
       httpOnly: false,

@@ -6,7 +6,10 @@
 // que escondem dados. A rota de provisionamento grava um cookie-marcador curto,
 // legível por JS; o cliente o consome UMA vez e limpa as chaves abaixo.
 //
-// Só o provisionamento demo grava o marcador → o app nunca sofre reset.
+// Só a ENTRADA da demo grava o marcador (via applyDemoSessionCookies) → o
+// app nunca sofre reset. O fork (mesma pessoa saindo da vitrine) chama a
+// mesma função com freshSession:false e deliberadamente NÃO grava — o
+// período/filtros da visita continuam válidos para o dataset idêntico.
 
 /** Cookie (não httpOnly) gravado por /api/demo/provision. Consumido no primeiro mount. */
 export const FRESH_SESSION_COOKIE = "wiseveo-fresh-session"
