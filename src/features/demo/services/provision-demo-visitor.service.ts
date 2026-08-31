@@ -7,10 +7,14 @@ import { DEMO_DEFAULT_LOCALE } from "@/i18n/config"
 import { demoMonetarySettings } from "@/lib/monetary"
 
 /**
- * Cria UM visitante da demo com o conjunto completo (~2.647 linhas), numa
- * transação só. É o antigo miolo de /api/demo/provision, movido para cá para
- * ser usado tanto pelo fork (caminho normal) quanto pela entrada, como
- * reserva, se a vitrine não existir.
+ * Cria UM visitante da demo com o conjunto completo (~2.647 linhas) numa única
+ * transação. Contrato para quem chama:
+ * - Serializa: pega LOCK EXCLUSIVE em `payees` — dois provisionamentos
+ *   concorrentes viram fila (o MAX+1 do id de payee depende disso).
+ * - Custa até 55s: a rota chamadora precisa de `export const maxDuration = 60`.
+ * - Não assina sessão nem grava cookies (sessão/idioma/fresh-session são do
+ *   chamador).
+ * - Lança Error cru (mensagem interna, nunca exibida): trate no chamador.
  */
 export async function provisionDemoVisitor(): Promise<{ userId: string }> {
   const demoId = crypto.randomUUID()
@@ -28,8 +32,9 @@ export async function provisionDemoVisitor(): Promise<{ userId: string }> {
         email: `${userId}@wiseveo.demo`,
         status: "ACTIVE",
         role: "USER",
-        // Demo nasce em inglês (mesmo valor gravado no cookie abaixo, para getUserLocale
-        // concordar) e em dólar (Configurações → Moeda; a UI lê de /api/user/monetary-preferences).
+        // Demo nasce em inglês (mesmo valor que o chamador grava no cookie de idioma —
+        // ver src/app/api/demo/provision/route.ts — para getUserLocale concordar) e em
+        // dólar (Configurações → Moeda; a UI lê de /api/user/monetary-preferences).
         preferencesJson: { locale: DEMO_DEFAULT_LOCALE, monetary: { ...demoMonetarySettings } },
       },
     })

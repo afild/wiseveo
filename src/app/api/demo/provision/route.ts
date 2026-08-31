@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
-import { createSessionToken, COOKIE_NAME } from "@/lib/auth"
 import { DEMO_DEFAULT_LOCALE, LOCALE_COOKIE_NAME } from "@/i18n/config"
-import { FRESH_SESSION_COOKIE } from "@/lib/client-session-reset"
 import { DEMO_UNAVAILABLE_PATH } from "@/lib/demo-routes"
 import { provisionDemoVisitor } from "@/features/demo/services/provision-demo-visitor.service"
+import { getVitrineUserId } from "@/features/demo/services/vitrine.service"
+import { applyDemoSessionCookies } from "@/features/demo/services/demo-session-cookies"
 
 export const dynamic = 'force-dynamic'
 // Increase max duration for provisioning (Vercel Hobby allows up to 60s on API routes)
@@ -16,42 +16,26 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { userId } = await provisionDemoVisitor()
+    // 1. Vitrine: todo visitante cai no MESMO usuário, sem escrever no banco.
+    //    Sem vitrine (banco recém-criado, seed ainda não rodou), degrada para o
+    //    provisionamento clássico — a demo continua no ar, só que cara.
+    const vitrineId = await getVitrineUserId()
+    const shared = vitrineId !== null
+    const userId = shared ? vitrineId : (await provisionDemoVisitor()).userId
 
-    // 8. Create session token (outside DB transaction)
-    const token = await createSessionToken(userId)
+    // 2. Redirect para o dashboard com os cookies de sessão (sessão, fresh-session
+    //    e o marcador da vitrine — ver applyDemoSessionCookies).
+    const response = NextResponse.redirect(new URL("/dashboard", request.url))
+    await applyDemoSessionCookies(response, { userId, demoShared: shared })
 
-    // 9. Redirect to dashboard with session cookie
-    const url = new URL("/dashboard", request.url)
-    const response = NextResponse.redirect(url)
-
-    response.cookies.set(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24, // 24 hours (aligned with daily cron cleanup)
-      path: "/",
-    })
-
-    // 10. Todo demo novo nasce em inglês — sobrescreve qualquer cookie de idioma que o
-    //     navegador já tivesse. NÃO httpOnly: o LocaleMenu regrava este cookie via
-    //     document.cookie (mesmos atributos de applyUserLocale); httpOnly criaria um
-    //     cookie duplicado e o seletor de idioma pareceria quebrado.
+    // 3. Todo demo novo nasce em inglês — sobrescreve qualquer cookie de idioma que o
+    //    navegador já tivesse. NÃO httpOnly: o LocaleMenu regrava este cookie via
+    //    document.cookie (mesmos atributos de applyUserLocale); httpOnly criaria um
+    //    cookie duplicado e o seletor de idioma pareceria quebrado.
     response.cookies.set(LOCALE_COOKIE_NAME, DEMO_DEFAULT_LOCALE, {
       httpOnly: false,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 365,
-      path: "/",
-    })
-
-    // 11. Marcador de "sessão nova" (legível por JS): o cliente o consome no primeiro
-    //     mount e limpa períodos/filtros herdados do visitante anterior no mesmo
-    //     navegador (ver src/lib/client-session-reset.ts). Mesma vida da sessão para
-    //     não expirar antes de ser consumido (aba suspensa antes de hidratar etc.).
-    response.cookies.set(FRESH_SESSION_COOKIE, "1", {
-      httpOnly: false,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24,
       path: "/",
     })
 
