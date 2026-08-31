@@ -51,6 +51,7 @@ export async function getVitrineUserId(): Promise<string | null> {
     if (!warned) {
       warned = true
       console.warn(
+        // i18n-ignore: log de operação (Vercel), nunca renderizado em UI
         `Vitrine ausente (${vitrineEmail()}): demo caiu no provisionamento clássico (2.647 linhas por visita).`,
       )
     }
