@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { hasSharedDemoMarker } from "@/lib/demo-shared-client"
 import {
   defaultMonetarySettings,
   resolveMonetarySettings,
@@ -107,6 +108,12 @@ export function MonetaryPreferencesProvider({
       setPreferences(next)
       latestPrefsRef.current = next
       writeStoredMonetarySettings(next)
+
+      // Sessão compartilhada não pode escrever no servidor: o estado local
+      // (já aplicado acima) e o localStorage bastam para esta visita.
+      if (hasSharedDemoMarker()) {
+        return { success: true, data: next }
+      }
 
       try {
         const res = await fetch("/api/user/monetary-preferences", {

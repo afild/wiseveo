@@ -1105,7 +1105,7 @@
   "demo": {
     "shared": {
       "banner": "Você está explorando a demonstração compartilhada — tudo pode ser visto, nada pode ser alterado.",
-      "confirmDescription": "Criamos um ambiente só seu, com os mesmos dados, onde você pode lançar, editar e apagar à vontade. Leva alguns segundos.",
+      "confirmDescription": "Criamos um ambiente só seu, com os mesmos dados, onde você pode lançar, editar e apagar à vontade. Pode levar até um minuto.",
       "confirmTitle": "Criar a minha cópia editável",
       "cta": "Quero editar",
       "emailInvalid": "Informe um e-mail válido para criar a sua cópia.",

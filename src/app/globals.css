@@ -315,6 +315,18 @@ html {
   .mobile-nav-spacer {
     height: calc(4rem + env(safe-area-inset-bottom, 0px));
   }
+
+  /* Lifts a fixed element above the bottom nav (same 4rem it reserves), plus a
+     small gap. Guarded to < md (48rem) on purpose: a plain unconditional rule
+     here would sit later than Tailwind's own generated utilities inside the
+     same cascade layer and beat "md:bottom-4" at every width, not just below
+     md — verified empirically (computed `bottom` stayed 72px at 1280px).
+     Scoping this rule to mobile only sidesteps that instead of fighting it. */
+  @media (width < 48rem) {
+    .above-mobile-nav {
+      bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + 0.5rem);
+    }
+  }
 }
 
 /* Respect user's reduced-motion preference — disable non-essential animations */

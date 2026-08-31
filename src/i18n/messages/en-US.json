@@ -1105,7 +1105,7 @@
   "demo": {
     "shared": {
       "banner": "You're exploring the shared demo — everything can be viewed, nothing can be changed.",
-      "confirmDescription": "We'll create your own environment with the same data, where you can add, edit and delete freely. It takes a few seconds.",
+      "confirmDescription": "We'll create your own environment with the same data, where you can add, edit and delete freely. It can take up to a minute.",
       "confirmTitle": "Create my editable copy",
       "cta": "I want to edit",
       "emailInvalid": "Enter a valid email to create your copy.",
