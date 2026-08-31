@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     //    provisionamento clássico — a demo continua no ar, só que cara.
     const vitrineId = await getVitrineUserId()
     const shared = vitrineId !== null
-    const userId = shared ? vitrineId : (await provisionDemoVisitor()).userId
+    const userId = vitrineId ?? (await provisionDemoVisitor()).userId
 
     // 2. Redirect para o dashboard com os cookies de sessão (sessão, fresh-session
     //    e o marcador da vitrine — ver applyDemoSessionCookies).

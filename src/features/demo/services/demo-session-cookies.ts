@@ -4,8 +4,8 @@ import { DEMO_SHARED_MARKER_COOKIE } from "@/lib/demo-shared"
 import { FRESH_SESSION_COOKIE } from "@/lib/client-session-reset"
 
 /**
- * Monta os cookies de sessão da demo num lugar só (entrada compartilhada e
- * fork usam a MESMA montagem — três cópias divergiriam em silêncio):
+ * Monta os cookies de sessão da demo num lugar só (entrada e fork usam a
+ * MESMA montagem — cópias separadas divergiriam em silêncio):
  * - sessão de 24h, com a marca demoShared quando é a vitrine;
  * - wiseveo-fresh-session, para o cliente limpar filtros herdados do visitante
  *   anterior no mesmo navegador;
@@ -26,6 +26,8 @@ export async function applyDemoSessionCookies(
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
+    // 24h: casa com STALE_HOURS=25 da faxina — a sessão não deve sobreviver
+    // ao usuário que ela aponta.
     maxAge: 60 * 60 * 24,
   })
   response.cookies.set(FRESH_SESSION_COOKIE, "1", {
