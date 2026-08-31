@@ -5,6 +5,7 @@ import createMiddleware from "next-intl/middleware"
 import { routing } from "./i18n/routing"
 import { isSetupComplete } from "@/lib/setup-check"
 import { DEMO_UNAVAILABLE_PATH } from "@/lib/demo-routes"
+import { isBlockedSharedWrite } from "@/lib/demo-shared"
 
 const publicRoutes = ["/login", "/signup", "/cadastro-pendente"]
 // Página de aceite de convite (/convite/<token>) é pública por prefixo: quem foi
@@ -14,6 +15,29 @@ const intlMiddleware = createMiddleware(routing)
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // ─── /api ────────────────────────────────────────────────────────
+  // Até aqui o matcher EXCLUÍA "api": nenhuma rota /api passava pelo middleware. O
+  // matcher agora inclui /api/:path* só para a cerca de escrita abaixo alcançar
+  // estas rotas — o resto do contrato tem de continuar idêntico ao de antes (cron,
+  // webhook, provisionamento, fork): sem o gate de setup, que redirecionaria para
+  // /login numa instalação ainda não configurada, e sem qualquer outro redireciono
+  // de auth. Por isso o bloco fica ANTES do gate de setup e recalcula, sozinho, o
+  // mínimo de token+isDemoMode que a cerca precisa.
+  if (pathname.startsWith("/api")) {
+    const token = request.cookies.get(COOKIE_NAME)?.value
+    const session = token ? await verifySessionToken(token) : null
+    const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+
+    // Sessão-vitrine não escreve. A decisão é por método+claim (isBlockedSharedWrite)
+    // para cobrir as rotas /api e TAMBÉM as server actions de orçamento, que POSTam
+    // na própria página e nunca passariam por uma lista de rotas /api.
+    if (isDemoMode && isBlockedSharedWrite(request.method, pathname, session?.demoShared)) {
+      // i18n-ignore: o cliente traduz pelo código
+      return NextResponse.json({ error: "demoForkRequired" }, { status: 409 })
+    }
+    return NextResponse.next()
+  }
 
   // ─── Setup Wizard Gate ─────────────────────────────────────────────
   const setupComplete = isSetupComplete()
@@ -28,6 +52,15 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value
   const session = token ? await verifySessionToken(token) : null
   const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+
+  // Sessão-vitrine não escreve. A decisão é por método+claim (isBlockedSharedWrite)
+  // para cobrir as rotas /api (tratadas acima) e TAMBÉM as server actions de
+  // orçamento, que POSTam na própria página e nunca passariam por uma lista de
+  // rotas /api.
+  if (isDemoMode && isBlockedSharedWrite(request.method, pathname, session?.demoShared)) {
+    // i18n-ignore: o cliente traduz pelo código
+    return NextResponse.json({ error: "demoForkRequired" }, { status: 409 })
+  }
 
   // Instalação configurada: /setup só para quem está logado (a página confere se
   // é SUPERADMIN — "Reconfigurar"); anônimo vai para o login.
@@ -82,7 +115,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all paths except api, _next/static, _next/image, favicon.ico, and static files
+    // Match all paths except _next/static, _next/image, favicon.ico, and static files
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)",
+    // /api também passa (necessário para a cerca de escrita da sessão-vitrine
+    // alcançar estas rotas — ver bloco "/api" acima).
+    "/api/:path*",
   ],
 }
