@@ -54,6 +54,9 @@ export async function refreshVitrineCutoffIfDue(now = new Date()): Promise<boole
   const txs = await prisma.transaction.findMany({
     where: { userId: vitrineId },
     select: { id: true, date: true, amount: true, type: true },
+    // Ordem cronológica estável (num = i+1 do materializador): empate de |valor|
+    // escolhe sempre o mesmo par de vencidas, como no materialize.
+    orderBy: { num: "asc" },
   })
   const plano = planVitrineStatuses(txs, now)
 

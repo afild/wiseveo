@@ -5,6 +5,9 @@ const tx = (id: string, date: string, amount: number, type: "INCOME" | "EXPENSE"
   id, date: new Date(date), amount, type,
 })
 
+// Fronteiras inclusivas: trocar qualquer <= por < (ou 300/5 dias por um a menos)
+// derruba o teste de fronteiras abaixo.
+
 describe("planVitrineStatuses", () => {
   const now = new Date("2026-09-10T15:00:00Z") // corte = fim de 2026-09-09 UTC
 
@@ -35,5 +38,21 @@ describe("planVitrineStatuses", () => {
     expect(plan.overdueIds).toEqual([])
     expect(plan.paidIds).toEqual(["a"])
     expect(plan.pendingIds).toEqual(["b"])
+  })
+
+  it("fronteiras inclusivas: corte exato, teto 300 e janela de 5 dias", () => {
+    const plan = planVitrineStatuses(
+      [
+        tx("no-corte", "2026-09-09T23:59:59.999Z", -300, "EXPENSE"), // NO instante do corte E |valor| = 300 → vencida
+        tx("apos-corte", "2026-09-10T00:00:00.000Z", -5, "EXPENSE"), // 1ms depois do corte → pendente
+        tx("janela-5d", "2026-09-04T23:59:59.999Z", -200, "EXPENSE"), // exatamente 5 dias antes → vencida
+        tx("fora-janela", "2026-09-04T23:59:59.998Z", -1, "EXPENSE"), // 1ms além da janela (a menor!) → paga
+        tx("acima-300", "2026-09-08T12:00:00Z", -300.01, "EXPENSE"), // acima do teto → paga
+      ],
+      now,
+    )
+    expect(plan.overdueIds.sort()).toEqual(["janela-5d", "no-corte"])
+    expect(plan.pendingIds).toEqual(["apos-corte"])
+    expect(plan.paidIds.sort()).toEqual(["acima-300", "fora-janela"])
   })
 })
