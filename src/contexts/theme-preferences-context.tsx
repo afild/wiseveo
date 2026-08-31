@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { hasSharedDemoMarker } from "@/lib/demo-shared-client"
 import {
   defaultThemePreferences,
   normalizeThemePreferences,
@@ -128,6 +129,9 @@ export function ThemePreferencesProvider({
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
+      // Sessão compartilhada não pode escrever no servidor: o localStorage
+      // sozinho já garante a escolha para esta visita.
+      if (hasSharedDemoMarker()) return
       try {
         await fetch("/api/user/preferences", {
           method: "PUT",

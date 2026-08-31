@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Globe } from "lucide-react"
 import { LOCALES, LOCALE_COOKIE_NAME, LOCALE_META } from "@/i18n/config"
+import { hasSharedDemoMarker } from "@/lib/demo-shared-client"
 
 /**
  * Aplica um idioma: grava o cookie de locale e persiste no perfil do usuário
@@ -13,11 +14,15 @@ import { LOCALES, LOCALE_COOKIE_NAME, LOCALE_META } from "@/i18n/config"
  */
 export function applyUserLocale(newLocale: string) {
   document.cookie = `${LOCALE_COOKIE_NAME}=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
-  fetch("/api/user/preferences", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ locale: newLocale }),
-  }).catch(() => {})
+  // Sessão compartilhada não pode escrever no servidor: o cookie sozinho já
+  // garante a escolha para esta visita.
+  if (!hasSharedDemoMarker()) {
+    fetch("/api/user/preferences", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locale: newLocale }),
+    }).catch(() => {})
+  }
 }
 
 export function LocaleSwitcher() {

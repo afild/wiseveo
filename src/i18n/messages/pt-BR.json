@@ -944,6 +944,7 @@
       "classification": "Classificação",
       "details": "Detalhes"
     },
+    "genericError": "Algo deu errado. Tente de novo.",
     "loading": "Carregando...",
     "loginDemo": {
       "createAccount": "Criar conta",
@@ -1102,6 +1103,18 @@
     "upcomingTransactions": "Próximos Vencimentos"
   },
   "demo": {
+    "shared": {
+      "banner": "Você está explorando a demonstração compartilhada — tudo pode ser visto, nada pode ser alterado.",
+      "confirmDescription": "Criamos um ambiente só seu, com os mesmos dados, onde você pode lançar, editar e apagar à vontade. Leva alguns segundos.",
+      "confirmTitle": "Criar a minha cópia editável",
+      "cta": "Quero editar",
+      "emailInvalid": "Informe um e-mail válido para criar a sua cópia.",
+      "emailLabel": "Seu e-mail",
+      "forking": "Preparando o seu ambiente…",
+      "nameLabel": "Seu nome",
+      "notice": "Usaremos seu e-mail para enviar novidades do WISEVEO.",
+      "rateLimited": "Muitas cópias criadas agora há pouco. Tente de novo em alguns minutos."
+    },
     "unavailable": {
       "description": "Estamos preparando um ambiente novo para você explorar. Volte em alguns minutos.",
       "retry": "Tentar de novo",

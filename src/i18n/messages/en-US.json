@@ -944,6 +944,7 @@
       "classification": "Classification",
       "details": "Details"
     },
+    "genericError": "Something went wrong. Try again.",
     "loading": "Loading...",
     "loginDemo": {
       "createAccount": "Create an account",
@@ -1102,6 +1103,18 @@
     "upcomingTransactions": "Upcoming Due Dates"
   },
   "demo": {
+    "shared": {
+      "banner": "You're exploring the shared demo — everything can be viewed, nothing can be changed.",
+      "confirmDescription": "We'll create your own environment with the same data, where you can add, edit and delete freely. It takes a few seconds.",
+      "confirmTitle": "Create my editable copy",
+      "cta": "I want to edit",
+      "emailInvalid": "Enter a valid email to create your copy.",
+      "emailLabel": "Your email",
+      "forking": "Preparing your environment…",
+      "nameLabel": "Your name",
+      "notice": "We'll use your email to send WISEVEO news.",
+      "rateLimited": "Too many copies created just now. Try again in a few minutes."
+    },
     "unavailable": {
       "description": "We're preparing a fresh environment for you to explore. Check back in a few minutes.",
       "retry": "Try again",
