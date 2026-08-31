@@ -21,9 +21,13 @@ export async function applyDemoSessionCookies(
   {
     userId,
     demoShared,
-    /** Grava o marcador wiseveo-fresh-session. Padrão: sim (a ENTRADA). O fork passa false. */
     freshSession = true,
-  }: { userId: string; demoShared: boolean; freshSession?: boolean },
+  }: {
+    userId: string
+    demoShared: boolean
+    /** Grava o marcador wiseveo-fresh-session. Padrão: sim (a ENTRADA); o fork passa false. */
+    freshSession?: boolean
+  },
 ): Promise<void> {
   const token = await createSessionToken(userId, undefined, {
     demoShared,
