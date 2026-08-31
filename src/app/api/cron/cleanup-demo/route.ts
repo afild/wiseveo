@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { refreshVitrineCutoffIfDue } from "@/features/demo/services/refresh-vitrine-cutoff.service"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -57,6 +58,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
 
+  // Uma vez por dia, pegando carona na batida de 15 min: a vitrine não pode
+  // envelhecer (o corte pago/pendente dela é recalculado aqui).
+  const refreshed = await refreshVitrineCutoffIfDue().catch((e) => {
+    console.error("Vitrine cutoff refresh failed:", e)
+    return false
+  })
+
   const startedAt = Date.now()
   const cutoff = new Date(Date.now() - STALE_HOURS * 60 * 60 * 1000)
   let deleted = 0
@@ -92,7 +100,7 @@ export async function GET(request: Request) {
     // O que sobrou vai no relatório: fila encolhendo em silêncio é o que
     // escondeu o problema por semanas.
     // i18n-ignore: relatório interno do cron
-    return NextResponse.json({ success: true, deleted, batches, remaining })
+    return NextResponse.json({ success: true, deleted, batches, remaining, refreshed })
   } catch (error) {
     console.error("Cron Cleanup Error:", error)
     // i18n-ignore: resposta de máquina para máquina
