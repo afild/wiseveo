@@ -30,7 +30,10 @@ export async function createSessionToken(
 export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, await getSessionKey())
-    return { userId: String(payload.userId), demoShared: payload.demoShared === true }
+    // Falha fechado: token assinado com a MESMA chave mas sem userId existe de
+    // verdade (setup-identity) — `String(undefined)` viraria o usuário "undefined".
+    if (typeof payload.userId !== "string" || !payload.userId) return null
+    return { userId: payload.userId, demoShared: payload.demoShared === true }
   } catch {
     return null
   }
