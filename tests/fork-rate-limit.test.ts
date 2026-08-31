@@ -10,11 +10,12 @@ describe("fork rate limiter", () => {
     expect(allow("1.2.3.4", 3)).toBe(false)
   })
 
-  it("libera quando a janela passa e não mistura IPs", () => {
+  it("libera quando a janela passa, não mistura IPs e a recusa não estende a janela", () => {
     const allow = createForkRateLimiter({ max: 1, windowMs: 1000 })
     expect(allow("a", 0)).toBe(true)
     expect(allow("b", 0)).toBe(true)
     expect(allow("a", 500)).toBe(false)
+    expect(allow("a", 900)).toBe(false)
     expect(allow("a", 1001)).toBe(true)
   })
 })

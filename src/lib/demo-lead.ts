@@ -2,8 +2,13 @@
 // tácita de leads — decisão do dono, 30/08/2026). Formato apenas: a demo não
 // tem infraestrutura de e-mail para confirmar posse.
 export const MAX_LEAD_FIELD = 200
+export const MIN_LEAD_NAME = 2
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 export function isValidLeadEmail(email: string): boolean {
   return email.length > 0 && email.length <= MAX_LEAD_FIELD && EMAIL_RE.test(email)
+}
+
+export function isValidLeadName(name: string): boolean {
+  return name.length >= MIN_LEAD_NAME && name.length <= MAX_LEAD_FIELD
 }

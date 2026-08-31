@@ -18,10 +18,15 @@ import { FRESH_SESSION_COOKIE } from "@/lib/client-session-reset"
  */
 export async function applyDemoSessionCookies(
   response: NextResponse,
-  opts: { userId: string; demoShared: boolean; freshSession?: boolean },
+  {
+    userId,
+    demoShared,
+    /** Grava o marcador wiseveo-fresh-session. Padrão: sim (a ENTRADA). O fork passa false. */
+    freshSession = true,
+  }: { userId: string; demoShared: boolean; freshSession?: boolean },
 ): Promise<void> {
-  const token = await createSessionToken(opts.userId, undefined, {
-    demoShared: opts.demoShared,
+  const token = await createSessionToken(userId, undefined, {
+    demoShared,
   })
   response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
@@ -32,7 +37,7 @@ export async function applyDemoSessionCookies(
     // ao usuário que ela aponta.
     maxAge: 60 * 60 * 24,
   })
-  if (opts.freshSession ?? true) {
+  if (freshSession) {
     response.cookies.set(FRESH_SESSION_COOKIE, "1", {
       httpOnly: false,
       maxAge: 60 * 60 * 24,
@@ -40,7 +45,7 @@ export async function applyDemoSessionCookies(
       path: "/",
     })
   }
-  if (opts.demoShared) {
+  if (demoShared) {
     response.cookies.set(DEMO_SHARED_MARKER_COOKIE, "1", {
       httpOnly: false,
       maxAge: 60 * 60 * 24,
