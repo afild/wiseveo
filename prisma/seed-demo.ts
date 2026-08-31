@@ -26,6 +26,7 @@ import { regenerateUserDemoData } from "../src/lib/demo-data/regen"
 import { resolveDemoDatabaseUrl } from "../scripts/demo-db-guard"
 import { DEMO_DEFAULT_LOCALE } from "../src/i18n/config"
 import { demoMonetarySettings } from "../src/lib/monetary"
+import { DEMO_DISPLAY_NAME } from "../src/lib/demo-identity"
 
 /** Prefixo fixo do usuário demo permanente — nunca muda (o dataset é regenerado sobre ele). */
 const DEMO_USER_PREFIX = "de305eed"
@@ -56,13 +57,14 @@ async function main() {
   const demoUser = await prisma.user.upsert({
     where: { email },
     update: {
+      name: DEMO_DISPLAY_NAME,
       passwordHash: hashedPassword,
       role: "USER",
       status: "ACTIVE",
       preferencesJson,
     },
     create: {
-      name: "WISEVEO Demo",
+      name: DEMO_DISPLAY_NAME,
       email,
       passwordHash: hashedPassword,
       role: "USER",
