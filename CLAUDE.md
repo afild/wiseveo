@@ -36,3 +36,20 @@ O sistema é trilíngue: **pt-BR, en-US, es-419 (Español LatAm)**. Toda feature
     Bandeiras circulares locais em `public/flags` (HatScripts/circle-flags, MIT — conjunto completo
     para idiomas futuros).
     O seletor de idioma do usuário fica em Configurações → Aparência (`LocaleSwitcher`).
+
+## Bancos de dados (REGRA DE OURO — demo × app)
+
+DEMO e APP são irmãos de código, mas cada um tem o SEU banco, e a fronteira é absoluta:
+
+1. Ferramentas, scripts e agentes da DEMO só podem tocar o banco da DEMO (projeto Supabase
+   próprio, identificado pela env `DEMO_DB_REF`). Todo script `demo:*` passa por
+   `scripts/demo-db-guard.ts`, que ABORTA se a `DATABASE_URL` não casar com esse ref —
+   nunca contornar a guarda.
+2. O banco PESSOAL do dono (a instalação real) NUNCA é alterado por script, migração ou
+   agente sem pedido explícito dele naquela conversa. Mudança estrutural nele só pelo
+   caminho "Preparar meu banco" dentro do app, com confirmação do dono. Autorização vale
+   para aquela ação; não fica valendo para depois.
+3. SQL exclusivo da demo mora em `prisma/demo/` e só é aplicado por
+   `scripts/apply-demo-sql.ts` (que exige `DEMO_DB_REF`). Nada de `prisma/demo/` entra em
+   `prisma/migrations/` nem no `schema.prisma` — `check:migrations` regenera a migração
+   init a partir do schema, e o Setup Wizard (banco pessoal) aplica essa migração.
