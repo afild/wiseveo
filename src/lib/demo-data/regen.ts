@@ -117,6 +117,14 @@ export async function regenerateUserDemoData(
 
   return await prisma.$transaction(
     async (tx: PrismaLike): Promise<RegenResult> => {
+      // Licença de escrita na vitrine (gatilhos de prisma/demo/vitrine-guard.sql):
+      // sem isto, apagar/recriar as linhas da vitrine é RECUSADO pelo Postgres
+      // (P0403). Transaction-local; este módulo é SÓ de script (nenhum caminho
+      // de request da aplicação o usa) e inócuo para usuário não-vitrine, cujas
+      // linhas nenhum gatilho protege.
+      // i18n-ignore: comando SQL, não é texto de UI
+      await tx.$executeRaw`SELECT set_config('wiseveo.vitrine_write', 'on', true)`
+
       // Payee.id é Int global sem autoincrement — o lock precisa estar DENTRO da
       // transação para o MAX+1 ser seguro contra execuções concorrentes.
       // Ele vem ANTES de qualquer DML em `payees`: apagar primeiro pegaria

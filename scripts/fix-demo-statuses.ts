@@ -23,9 +23,20 @@ import {
 import { resolveDemoDatabaseUrl } from "./demo-db-guard"
 
 const url = resolveDemoDatabaseUrl()
-const prisma = new PrismaClient({ adapter: new PrismaPg(new Pool({ connectionString: url })) })
+// max: 1 é PROPOSITAL — este script reanora status, purga phantoms e renomeia,
+// tudo tocando as linhas da vitrine em escritas espalhadas. Com uma conexão só,
+// o `set_config(... , false)` de sessão lá embaixo licencia o script INTEIRO
+// contra os gatilhos de prisma/demo/vitrine-guard.sql. Aumentar o max quebraria
+// essa licença (as escritas iriam para conexões sem o set_config).
+const prisma = new PrismaClient({ adapter: new PrismaPg(new Pool({ connectionString: url, max: 1 })) })
 
 async function main() {
+  // Licença de escrita na vitrine para toda a execução (ver o comentário do pool).
+  // is_local = false: vale pela SESSÃO, não por transação — cobre as escritas
+  // soltas (updateMany, renomeações) que não vivem numa transação só.
+  // i18n-ignore: comando SQL, não é texto de UI
+  await prisma.$executeRaw`SELECT set_config('wiseveo.vitrine_write', 'on', false)`
+
   // Âncora por argumento: no banco novo da demo (30/08/2026) o dono permanente
   // dos status é a vitrine demo@wiseveo.com; dev@wiseveo.local segue como
   // padrão para bases antigas de desenvolvimento.

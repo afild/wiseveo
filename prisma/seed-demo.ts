@@ -54,23 +54,30 @@ async function main() {
   // enquanto os phantoms nascem em en-US/USD (provisionDemoVisitor) — bug encontrado em
   // 31/08: a vitrine renderizava números em pt-BR (10.909,20) e as cópias em en-US (10,909.20).
   const preferencesJson = { locale: DEMO_DEFAULT_LOCALE, monetary: { ...demoMonetarySettings } }
-  const demoUser = await prisma.user.upsert({
-    where: { email },
-    update: {
-      name: DEMO_DISPLAY_NAME,
-      passwordHash: hashedPassword,
-      role: "USER",
-      status: "ACTIVE",
-      preferencesJson,
-    },
-    create: {
-      name: DEMO_DISPLAY_NAME,
-      email,
-      passwordHash: hashedPassword,
-      role: "USER",
-      status: "ACTIVE",
-      preferencesJson,
-    },
+  // Licença de escrita na vitrine: o UPDATE do upsert cai no gatilho de `users`
+  // (prisma/demo/vitrine-guard.sql) num banco que já tem os gatilhos. Sem a
+  // licença, re-semear a vitrine seria RECUSADO. Transaction-local.
+  const demoUser = await prisma.$transaction(async (tx) => {
+    // i18n-ignore: comando SQL, não é texto de UI
+    await tx.$executeRaw`SELECT set_config('wiseveo.vitrine_write', 'on', true)`
+    return tx.user.upsert({
+      where: { email },
+      update: {
+        name: DEMO_DISPLAY_NAME,
+        passwordHash: hashedPassword,
+        role: "USER",
+        status: "ACTIVE",
+        preferencesJson,
+      },
+      create: {
+        name: DEMO_DISPLAY_NAME,
+        email,
+        passwordHash: hashedPassword,
+        role: "USER",
+        status: "ACTIVE",
+        preferencesJson,
+      },
+    })
   })
   console.log(`Usuário demo criado/atualizado: ${demoUser.email} (${demoUser.id})`)
 
