@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma"
  * grava `SEED_DEMO_EMAIL?.trim().toLowerCase() || "demo@wiseveo.com"`) — leitor e
  * semeador têm de concordar no e-mail, ou a vitrine nunca é encontrada.
  */
-function vitrineEmail(): string {
+export function vitrineEmail(): string {
   const configurado = (process.env.DEMO_VITRINE_EMAIL ?? process.env.SEED_DEMO_EMAIL ?? "")
     .trim()
     .toLowerCase()

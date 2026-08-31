@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { refreshVitrineCutoffIfDue } from "@/features/demo/services/refresh-vitrine-cutoff.service"
+import { vitrineEmail } from "@/features/demo/services/vitrine.service"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -73,9 +74,15 @@ export async function GET(request: Request) {
   try {
     while (Date.now() - startedAt < TIME_BUDGET_MS) {
       const stale = await prisma.user.findMany({
-        // Trava dupla: o prefixo do e-mail é a garantia de que nenhum usuário
-        // real entra na lista, mesmo que a data diga outra coisa.
-        where: { email: { startsWith: "demo_" }, createdAt: { lt: cutoff } },
+        // Só as CÓPIAS de visitante (demo_<uuid>). O `not` da vitrine é OBRIGATÓRIO:
+        // o Prisma traduz `startsWith: "demo_"` sem escapar o `_`, então o curinga
+        // do LIKE casa `demo@wiseveo.com` (o `_` bate no `@`). Sem esta exclusão a
+        // faxina apagaria a vitrine (ou, com os gatilhos, quebraria e pararia de
+        // limpar). Ver docs/superpowers/plans/2026-08-30-demo-vitrine-copia-na-escrita.md.
+        where: {
+          email: { startsWith: "demo_", not: vitrineEmail() },
+          createdAt: { lt: cutoff },
+        },
         select: { id: true },
         take: BATCH_SIZE,
       })
@@ -94,7 +101,10 @@ export async function GET(request: Request) {
     }
 
     const remaining = await prisma.user.count({
-      where: { email: { startsWith: "demo_" }, createdAt: { lt: cutoff } },
+      where: {
+        email: { startsWith: "demo_", not: vitrineEmail() },
+        createdAt: { lt: cutoff },
+      },
     })
 
     // Medidor de disco de graça: o histórico do despertador externo vira um

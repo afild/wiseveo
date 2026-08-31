@@ -52,7 +52,10 @@ async function main() {
 
   const stale = await prisma.user.findMany({
     where: {
-      email: { startsWith: "demo_" },
+      // `not: anchor.email` é OBRIGATÓRIO: `startsWith: "demo_"` vira `LIKE 'demo_%'`
+      // sem escapar o `_`, e o curinga casa a âncora `demo@wiseveo.com` (o `_` bate
+      // no `@`). Sem isto, o purgador apagaria a própria vitrine que acabou de ancorar.
+      email: { startsWith: "demo_", not: anchor.email },
       createdAt: { lt: new Date(Date.now() - 25 * 3600_000) },
     },
     select: { id: true },
