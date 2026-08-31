@@ -2,15 +2,19 @@ import { prisma } from "@/lib/prisma"
 
 /**
  * E-mail do usuário-vitrine (semeado por db:seed:demo; já existe no banco da demo).
- * Função, não const de módulo: lida com env ainda não setada no import (edge/cold
- * start) e mantém o MESMO fallback/normalização do seed (prisma/seed-demo.ts:40
+ * Função, não const de módulo: não congela o valor no primeiro import (override e
+ * teste alcançam) e mantém o MESMO fallback/normalização do seed (prisma/seed-demo.ts:40
  * grava `SEED_DEMO_EMAIL?.trim().toLowerCase() || "demo@wiseveo.com"`) — leitor e
  * semeador têm de concordar no e-mail, ou a vitrine nunca é encontrada.
  */
 function vitrineEmail(): string {
-  return (process.env.DEMO_VITRINE_EMAIL ?? process.env.SEED_DEMO_EMAIL ?? "demo@wiseveo.com")
+  const configurado = (process.env.DEMO_VITRINE_EMAIL ?? process.env.SEED_DEMO_EMAIL ?? "")
     .trim()
     .toLowerCase()
+  // `||`, não `??`: variável definida e VAZIA é o caso comum (o .env.example traz
+  // `DEMO_VITRINE_EMAIL=""`; a Vercel guarda "" para campo em branco). Mesma
+  // escolha de prisma/seed-demo.ts:40 — senão o leitor procura "" e nunca acha.
+  return configurado || "demo@wiseveo.com"
 }
 
 const CACHE_TTL_MS = 60_000
@@ -20,7 +24,10 @@ let warned = false
 /**
  * Derruba o cache da vitrine. Uso: depois de re-semear a vitrine (db:seed:demo),
  * o id antigo pode ser servido por até 60s — sessões emitidas nessa janela apontam
- * para um usuário morto por 24h. Esta é a saída do operador.
+ * para um usuário morto por 24h. Hoje nada chama isto em runtime (e uma rota só
+ * limparia a instância que a atendesse): após re-semear, aguarde 60s ou redeploy;
+ * o export existe por paridade com os irmãos (telegram-config/ai-config) e para
+ * uma futura rota de admin.
  */
 export function invalidateVitrineCache(): void {
   cache = null
@@ -50,5 +57,7 @@ export async function getVitrineUserId(): Promise<string | null> {
     return null
   }
   cache = { id: user.id, at: Date.now() }
+  // A vitrine voltou: rearma o aviso para um sumiço FUTURO não passar em silêncio.
+  warned = false
   return user.id
 }
