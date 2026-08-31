@@ -97,10 +97,25 @@ export async function GET(request: Request) {
       where: { email: { startsWith: "demo_" }, createdAt: { lt: cutoff } },
     })
 
+    // Medidor de disco de graça: o histórico do despertador externo vira um
+    // gráfico de saúde do banco. Acima de 300MB (teto do plano: 500) grita no log.
+    let dbSizeMb = -1
+    try {
+      const tamanho = await prisma.$queryRaw<{ mb: number }[]>`
+        SELECT (pg_database_size(current_database()) / 1024 / 1024)::int AS mb`
+      dbSizeMb = tamanho[0]?.mb ?? -1
+      if (dbSizeMb > 300) {
+        // i18n-ignore: mensagem de log interno, nunca renderizada em UI
+        console.warn(`Demo DB at ${dbSizeMb}MB — investigate before it hits the 500MB cap`)
+      }
+    } catch (error) {
+      console.error("DB size check failed:", error)
+    }
+
     // O que sobrou vai no relatório: fila encolhendo em silêncio é o que
     // escondeu o problema por semanas.
     // i18n-ignore: relatório interno do cron
-    return NextResponse.json({ success: true, deleted, batches, remaining, refreshed })
+    return NextResponse.json({ success: true, deleted, batches, remaining, refreshed, dbSizeMb })
   } catch (error) {
     console.error("Cron Cleanup Error:", error)
     // i18n-ignore: resposta de máquina para máquina
