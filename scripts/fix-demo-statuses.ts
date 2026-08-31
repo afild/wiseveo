@@ -26,8 +26,12 @@ const url = resolveDemoDatabaseUrl()
 const prisma = new PrismaClient({ adapter: new PrismaPg(new Pool({ connectionString: url })) })
 
 async function main() {
-  const anchor = await prisma.user.findFirst({ where: { email: "dev@wiseveo.local" } })
-  if (!anchor) throw new Error("Usuário âncora dev@wiseveo.local não encontrado.")
+  // Âncora por argumento: no banco novo da demo (30/08/2026) o dono permanente
+  // dos status é a vitrine demo@wiseveo.com; dev@wiseveo.local segue como
+  // padrão para bases antigas de desenvolvimento.
+  const anchorEmail = process.argv[2] ?? "dev@wiseveo.local"
+  const anchor = await prisma.user.findFirst({ where: { email: anchorEmail } })
+  if (!anchor) throw new Error(`Usuário âncora ${anchorEmail} não encontrado.`)
 
   const moved = await prisma.transactionStatusLookup.updateMany({
     where: { code: { in: [1, 2, 3, 4] } },
