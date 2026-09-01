@@ -93,7 +93,7 @@ export function useThemeManager() {
     applyStyleMap(darkMode ? selectedTheme.preset.styles.dark : selectedTheme.preset.styles.light)
   }, [applyStyleMap])
 
-  const applyTweakcnTheme = React.useCallback((themePreset: ThemePreset, darkMode: boolean) => {
+  const applyExtraTheme = React.useCallback((themePreset: ThemePreset, darkMode: boolean) => {
     applyStyleMap(darkMode ? themePreset.styles.dark : themePreset.styles.light)
   }, [applyStyleMap])
 
@@ -133,7 +133,7 @@ export function useThemeManager() {
     updateBrandColorsFromTheme,
     applyStyleMap,
     applyTheme,
-    applyTweakcnTheme,
+    applyExtraTheme,
     applyImportedTheme,
     applyBrandColorOverrides,
     applyRadius,

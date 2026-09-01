@@ -946,21 +946,6 @@
     },
     "genericError": "Algo salió mal. Intenta de nuevo.",
     "loading": "Cargando...",
-    "loginDemo": {
-      "createAccount": "Crear una cuenta",
-      "email": "Correo electrónico*",
-      "forgotPassword": "¿Olvidaste tu contraseña?",
-      "loginToAccount": "Inicia sesión en tu cuenta ahora",
-      "noAccount": "¿No tienes una cuenta?",
-      "orSignInWith": "o inicia sesión con",
-      "password": "Contraseña*",
-      "passwordPlaceholder": "Ingresa tu contraseña",
-      "rememberDevice": "Recordar este dispositivo",
-      "signIn": "Iniciar sesión",
-      "signInWithGithub": "Iniciar sesión con Github",
-      "signInWithGoogle": "Iniciar sesión con Google",
-      "welcomeTo": "Bienvenido a Shadcn Space"
-    },
     "mobileMoreSheet": {
       "descriptions": {
         "advisor": "Conversa con tu analista",
@@ -995,14 +980,6 @@
     "search": "Buscar...",
     "searchPlaceholder": "¿Qué necesitas?",
     "selectPeriod": "Seleccionar período",
-    "sidebarNotification": {
-      "blocks": "bloques premium de Shadcn UI",
-      "brandName": "ShadcnStore",
-      "closeNotification": "Cerrar notificación",
-      "exploreBlocks": "Explora nuestros",
-      "toBuildFaster": "para construir tu próximo proyecto más rápido.",
-      "welcomeTo": "Bienvenido a"
-    },
     "sidebarPrimitive": {
       "description": "Muestra la barra lateral en el móvil.",
       "title": "Barra Lateral",
@@ -2602,8 +2579,6 @@
     }
   },
   "themeCustomizer": {
-    "advancedCustomization": "Personalización avanzada",
-    "advancedCustomizationDesc": "Para una edición avanzada con vista previa visual y cientos de presets listos, abre el editor de Tweakcn.",
     "appearanceSource": "Fuente global de apariencia",
     "brandColor": {
       "accent": "Accent",
@@ -2616,10 +2591,14 @@
       "secondaryForeground": "Texto del Secundario"
     },
     "brandColors": "Colores de marca",
-    "chooseShadcnPreset": "Elige un preset de Shadcn",
-    "chooseTweakcnPreset": "Elige un preset de Tweakcn",
+    "chooseColorScheme": "Elige un esquema de colores",
+    "chooseExtraTheme": "Elige un tema",
+    "colorSchemes": "Esquemas de colores",
+    "customizationGuide": "Personalización del tema",
+    "customizationGuideDesc": "Elige el modo claro u oscuro, aplica esquemas de colores y temas listos, ajusta el radio de las esquinas y los colores de la marca, o importa un tema CSS completo.",
     "customizer": "Customizer",
     "dark": "Oscuro",
+    "extraThemes": "Más temas",
     "importModal": {
       "description": "Pega abajo el CSS de tu tema. Incluye las secciones <code>:root</code> (modo claro) y <code>.dark</code> (modo oscuro) con variables como <code>--primary</code>, <code>--background</code> y otras. El sistema alternará automáticamente entre claro y oscuro.",
       "importErrorLog": "Error al importar el tema:",
@@ -2632,14 +2611,12 @@
     "mode": "Modo",
     "officialTheme": "Tema oficial",
     "officialThemeDesc": "La identidad visual de la marca: teal en modo claro, cian en modo oscuro.",
-    "openTweakcn": "Abrir Tweakcn",
     "panelDescription": "Centraliza aquí las preferencias globales que afectan a todo el proyecto.",
     "radius": "Radio",
     "random": "Aleatorio",
     "restoreDefault": "Restaurar predeterminado",
     "secondaryThemes": "Temas secundarios",
-    "secondaryThemesDesc": "Alternativas conservadas: presets de Shadcn, presets de Tweakcn y temas importados.",
-    "shadcnPresets": "Presets de Shadcn UI",
+    "secondaryThemesDesc": "Alternativas conservadas: esquemas de colores, temas extra y temas importados.",
     "sheetDescription": "Personaliza el tema y el diseño del proyecto.",
     "sidebarCollapseDesc": {
       "icon": "Íconos: la barra lateral se contrae al modo compacto.",
@@ -2674,8 +2651,7 @@
     "sidebarVariantLabel": "Variante de la barra lateral",
     "system": "Sistema",
     "tabLayout": "Diseño",
-    "tabTheme": "Tema",
-    "tweakcnPresets": "Presets de Tweakcn"
+    "tabTheme": "Tema"
   },
   "transactions": {
     "actions": {

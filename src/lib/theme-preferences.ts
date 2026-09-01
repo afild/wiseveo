@@ -1,12 +1,12 @@
 import type { ImportedTheme } from "@/types/theme-customizer"
-import { tweakcnPresets } from "@/utils/tweakcn-theme-presets"
-import { shadcnThemePresets } from "@/utils/shadcn-ui-theme-presets"
+import { extraThemePresets } from "@/utils/extra-theme-presets"
+import { colorSchemePresets } from "@/utils/color-scheme-presets"
 
 export type ThemeMode = "light" | "dark" | "system"
 
 export interface ThemePreferences {
   selectedTheme: string
-  selectedTweakcnTheme: string
+  selectedExtraTheme: string
   selectedRadius: string
   importedTheme: ImportedTheme | null
   brandColorOverrides: Record<string, string>
@@ -20,7 +20,7 @@ export const THEME_PREFERENCES_STORAGE_KEY = "wiseveo-theme-preferences"
 
 export const defaultThemePreferences: ThemePreferences = {
   selectedTheme: "wiseveo",
-  selectedTweakcnTheme: "",
+  selectedExtraTheme: "",
   selectedRadius: "0.625rem",
   importedTheme: null,
   brandColorOverrides: {},
@@ -90,10 +90,14 @@ export function normalizeThemePreferences(value: unknown): ThemePreferences {
       typeof input.selectedTheme === "string" && input.selectedTheme.trim()
         ? input.selectedTheme
         : defaultThemePreferences.selectedTheme,
-    selectedTweakcnTheme:
-      typeof input.selectedTweakcnTheme === "string"
-        ? input.selectedTweakcnTheme
-        : defaultThemePreferences.selectedTweakcnTheme,
+    // selectedTweakcnTheme é o nome legado do campo persistido (banco e
+    // localStorage anteriores à renomeação) — a leitura precisa aceitá-lo sempre.
+    selectedExtraTheme:
+      typeof input.selectedExtraTheme === "string"
+        ? input.selectedExtraTheme
+        : typeof input.selectedTweakcnTheme === "string"
+          ? input.selectedTweakcnTheme
+          : defaultThemePreferences.selectedExtraTheme,
     selectedRadius:
       typeof input.selectedRadius === "string" && input.selectedRadius.trim()
         ? input.selectedRadius
@@ -132,8 +136,8 @@ function resolveBaseStyles(preferences: ThemePreferences) {
     }
   }
 
-  if (preferences.selectedTweakcnTheme) {
-    const preset = tweakcnPresets[preferences.selectedTweakcnTheme]
+  if (preferences.selectedExtraTheme) {
+    const preset = extraThemePresets[preferences.selectedExtraTheme]
     if (preset) {
       return {
         light: preset.styles.light,
@@ -143,8 +147,8 @@ function resolveBaseStyles(preferences: ThemePreferences) {
   }
 
   const preset =
-    shadcnThemePresets[preferences.selectedTheme || "wiseveo"]
-    ?? shadcnThemePresets.wiseveo
+    colorSchemePresets[preferences.selectedTheme || "wiseveo"]
+    ?? colorSchemePresets.wiseveo
 
   return {
     light: preset.styles.light,

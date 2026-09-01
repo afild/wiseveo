@@ -1,6 +1,6 @@
 import type { ThemePreset } from "../types/theme";
 
-export const tweakcnPresets: Record<string, ThemePreset> = {
+export const extraThemePresets: Record<string, ThemePreset> = {
   "modern-minimal": {
     label: "Modern Minimal",
     styles: {

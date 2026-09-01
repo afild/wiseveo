@@ -1,16 +1,16 @@
-import { shadcnThemePresets } from '@/utils/shadcn-ui-theme-presets'
-import { tweakcnPresets } from '@/utils/tweakcn-theme-presets'
+import { colorSchemePresets } from '@/utils/color-scheme-presets'
+import { extraThemePresets } from '@/utils/extra-theme-presets'
 import type { ColorTheme } from '@/types/theme-customizer'
 
-// Tweakcn theme presets for the dropdown - convert from tweakcnPresets
-export const tweakcnThemes: ColorTheme[] = Object.entries(tweakcnPresets).map(([key, preset]) => ({
+// Temas extras para o dropdown - convertidos de extraThemePresets
+export const extraThemes: ColorTheme[] = Object.entries(extraThemePresets).map(([key, preset]) => ({
   name: preset.label || key,
   value: key,
   preset: preset
 }))
 
-// Shadcn theme presets for the dropdown - convert from shadcnThemePresets  
-export const colorThemes: ColorTheme[] = Object.entries(shadcnThemePresets).map(([key, preset]) => ({
+// Esquemas de cores para o dropdown - convertidos de colorSchemePresets
+export const colorThemes: ColorTheme[] = Object.entries(colorSchemePresets).map(([key, preset]) => ({
   name: preset.label || key,
   value: key,
   preset: preset

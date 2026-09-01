@@ -53,16 +53,16 @@ export function ThemeCustomizerPanel({
   const handleThemeSelect = React.useCallback((value: string) => {
     savePreferences({
       selectedTheme: value,
-      selectedTweakcnTheme: "",
+      selectedExtraTheme: "",
       importedTheme: null,
       brandColorOverrides: {},
     })
   }, [savePreferences])
 
-  const handleTweakcnThemeSelect = React.useCallback((value: string) => {
+  const handleExtraThemeSelect = React.useCallback((value: string) => {
     savePreferences({
       selectedTheme: "",
-      selectedTweakcnTheme: value,
+      selectedExtraTheme: value,
       importedTheme: null,
       brandColorOverrides: {},
     })
@@ -92,7 +92,7 @@ export function ThemeCustomizerPanel({
     savePreferences({
       importedTheme: themeData,
       selectedTheme: "",
-      selectedTweakcnTheme: "",
+      selectedExtraTheme: "",
       brandColorOverrides: {},
     })
   }, [savePreferences])
@@ -139,11 +139,11 @@ export function ThemeCustomizerPanel({
               onImportClick={() => setImportModalOpen(true)}
               onSelectedRadiusChange={handleRadiusChange}
               onSelectedThemeChange={handleThemeSelect}
-              onSelectedTweakcnThemeChange={handleTweakcnThemeSelect}
+              onSelectedExtraThemeChange={handleExtraThemeSelect}
               onThemeModeChange={handleThemeModeChange}
               selectedRadius={preferences.selectedRadius}
               selectedTheme={preferences.selectedTheme}
-              selectedTweakcnTheme={preferences.selectedTweakcnTheme}
+              selectedExtraTheme={preferences.selectedExtraTheme}
               themeMode={preferences.themeMode}
             />
           </TabsContent>

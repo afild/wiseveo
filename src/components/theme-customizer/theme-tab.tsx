@@ -2,13 +2,13 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
-import { Check, Dices, ExternalLink, Moon, Palette, Sun, Upload, MonitorCog } from "lucide-react"
+import { Check, Dices, Moon, Palette, Sun, Upload, MonitorCog } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { colorThemes, tweakcnThemes } from "@/config/theme-data"
+import { colorThemes, extraThemes } from "@/config/theme-data"
 import { radiusOptions, baseColors } from "@/config/theme-customizer-constants"
 import { ColorPicker } from "@/components/color-picker"
 import { Logo } from "@/components/logo"
@@ -20,11 +20,11 @@ interface ThemeTabProps {
   onImportClick: () => void
   onSelectedRadiusChange: (radius: string) => void
   onSelectedThemeChange: (theme: string) => void
-  onSelectedTweakcnThemeChange: (theme: string) => void
+  onSelectedExtraThemeChange: (theme: string) => void
   onThemeModeChange: (mode: ThemeMode) => void
   selectedRadius: string
   selectedTheme: string
-  selectedTweakcnTheme: string
+  selectedExtraTheme: string
   themeMode: ThemeMode
 }
 
@@ -34,11 +34,11 @@ export function ThemeTab({
   onImportClick,
   onSelectedRadiusChange,
   onSelectedThemeChange,
-  onSelectedTweakcnThemeChange,
+  onSelectedExtraThemeChange,
   onThemeModeChange,
   selectedRadius,
   selectedTheme,
-  selectedTweakcnTheme,
+  selectedExtraTheme,
   themeMode,
 }: ThemeTabProps) {
   const t = useTranslations("themeCustomizer")
@@ -48,17 +48,17 @@ export function ThemeTab({
     () => colorThemes.filter((theme) => theme.value !== "wiseveo"),
     [],
   )
-  const isWiseveoActive = selectedTheme === "wiseveo" && !selectedTweakcnTheme
+  const isWiseveoActive = selectedTheme === "wiseveo" && !selectedExtraTheme
 
-  const handleRandomShadcn = React.useCallback(() => {
+  const handleRandomColorScheme = React.useCallback(() => {
     const randomTheme = secondaryColorThemes[Math.floor(Math.random() * secondaryColorThemes.length)]
     onSelectedThemeChange(randomTheme.value)
   }, [onSelectedThemeChange, secondaryColorThemes])
 
-  const handleRandomTweakcn = React.useCallback(() => {
-    const randomTheme = tweakcnThemes[Math.floor(Math.random() * tweakcnThemes.length)]
-    onSelectedTweakcnThemeChange(randomTheme.value)
-  }, [onSelectedTweakcnThemeChange])
+  const handleRandomExtraTheme = React.useCallback(() => {
+    const randomTheme = extraThemes[Math.floor(Math.random() * extraThemes.length)]
+    onSelectedExtraThemeChange(randomTheme.value)
+  }, [onSelectedExtraThemeChange])
 
   return (
     <div className="space-y-6 p-4">
@@ -128,8 +128,8 @@ export function ThemeTab({
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">{t("shadcnPresets")}</Label>
-          <Button variant="outline" size="sm" onClick={handleRandomShadcn} className="cursor-pointer">
+          <Label className="text-sm font-medium">{t("colorSchemes")}</Label>
+          <Button variant="outline" size="sm" onClick={handleRandomColorScheme} className="cursor-pointer">
             <Dices className="mr-1.5 h-3.5 w-3.5" />
             {t("random")}
           </Button>
@@ -137,7 +137,7 @@ export function ThemeTab({
 
         <Select value={selectedTheme || undefined} onValueChange={onSelectedThemeChange}>
           <SelectTrigger className="w-full cursor-pointer">
-            <SelectValue placeholder={t("chooseShadcnPreset")} />
+            <SelectValue placeholder={t("chooseColorScheme")} />
           </SelectTrigger>
           <SelectContent className="max-h-60">
             <div className="p-2">
@@ -163,20 +163,20 @@ export function ThemeTab({
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">{t("tweakcnPresets")}</Label>
-          <Button variant="outline" size="sm" onClick={handleRandomTweakcn} className="cursor-pointer">
+          <Label className="text-sm font-medium">{t("extraThemes")}</Label>
+          <Button variant="outline" size="sm" onClick={handleRandomExtraTheme} className="cursor-pointer">
             <Dices className="mr-1.5 h-3.5 w-3.5" />
             {t("random")}
           </Button>
         </div>
 
-        <Select value={selectedTweakcnTheme || undefined} onValueChange={onSelectedTweakcnThemeChange}>
+        <Select value={selectedExtraTheme || undefined} onValueChange={onSelectedExtraThemeChange}>
           <SelectTrigger className="w-full cursor-pointer">
-            <SelectValue placeholder={t("chooseTweakcnPreset")} />
+            <SelectValue placeholder={t("chooseExtraTheme")} />
           </SelectTrigger>
           <SelectContent className="max-h-60">
             <div className="p-2">
-              {tweakcnThemes.map((theme) => (
+              {extraThemes.map((theme) => (
                 <SelectItem key={theme.value} value={theme.value} className="cursor-pointer">
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
@@ -203,14 +203,14 @@ export function ThemeTab({
             <button
               key={option.value}
               type="button"
-              className={`relative rounded-md border p-3 text-center transition-colors ${
+              className={`relative flex min-w-0 items-center justify-center rounded-md border px-1 py-3 transition-colors ${
                 selectedRadius === option.value
                   ? "border-primary"
                   : "border-border hover:border-border/60"
               }`}
               onClick={() => onSelectedRadiusChange(option.value)}
             >
-              <span className="text-xs font-medium">{option.name}</span>
+              <span className="text-xs font-medium tabular-nums">{option.name}</span>
             </button>
           ))}
         </div>
@@ -252,20 +252,11 @@ export function ThemeTab({
       <div className="space-y-3 rounded-lg bg-muted p-4">
         <div className="flex items-center gap-2">
           <Palette className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">{t("advancedCustomization")}</span>
+          <span className="text-sm font-medium">{t("customizationGuide")}</span>
         </div>
         <p className="text-xs text-muted-foreground">
-          {t("advancedCustomizationDesc")}
+          {t("customizationGuideDesc")}
         </p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full cursor-pointer"
-          onClick={() => typeof window !== "undefined" && window.open("https://tweakcn.com/editor/theme", "_blank")}
-        >
-          <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-          {t("openTweakcn")}
-        </Button>
       </div>
     </div>
   )

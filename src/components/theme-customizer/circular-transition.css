@@ -1,4 +1,4 @@
-/* View Transition Circular Effect - Based on tweakcn implementation */
+/* View Transition Circular Effect */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;

@@ -946,21 +946,6 @@
     },
     "genericError": "Algo deu errado. Tente de novo.",
     "loading": "Carregando...",
-    "loginDemo": {
-      "createAccount": "Criar conta",
-      "email": "Email*",
-      "forgotPassword": "Esqueceu a senha?",
-      "loginToAccount": "Faça login na sua conta agora",
-      "noAccount": "Não tem uma conta?",
-      "orSignInWith": "ou faça login com",
-      "password": "Senha*",
-      "passwordPlaceholder": "Digite sua senha",
-      "rememberDevice": "Lembrar este dispositivo",
-      "signIn": "Entrar",
-      "signInWithGithub": "Entrar com Github",
-      "signInWithGoogle": "Entrar com Google",
-      "welcomeTo": "Bem-vindo ao Shadcn Space"
-    },
     "mobileMoreSheet": {
       "descriptions": {
         "advisor": "Converse com o seu analista",
@@ -995,14 +980,6 @@
     "search": "Buscar...",
     "searchPlaceholder": "O que você precisa?",
     "selectPeriod": "Selecionar período",
-    "sidebarNotification": {
-      "blocks": "blocos premium do Shadcn UI",
-      "brandName": "ShadcnStore",
-      "closeNotification": "Fechar notificação",
-      "exploreBlocks": "Explore nossos",
-      "toBuildFaster": "para construir seu próximo projeto mais rápido.",
-      "welcomeTo": "Bem-vindo ao"
-    },
     "sidebarPrimitive": {
       "description": "Exibe a barra lateral no dispositivo móvel.",
       "title": "Barra Lateral",
@@ -1474,7 +1451,7 @@
         "historyLabel": "Histórico",
         "historyPlaceholder": "Beneficiário ou descrição rápida...",
         "refLabel": "REF",
-        "refPlaceholder": "ex: Boleto FIES",
+        "refPlaceholder": "ex: Conta de luz",
         "saving": "Salvando...",
         "selectPlaceholder": "Selecione...",
         "statusLabel": "Status",
@@ -2602,8 +2579,6 @@
     }
   },
   "themeCustomizer": {
-    "advancedCustomization": "Customização avançada",
-    "advancedCustomizationDesc": "Para edição avançada com preview visual e centenas de presets prontos, abra o editor do Tweakcn.",
     "appearanceSource": "Fonte global de aparência",
     "brandColor": {
       "accent": "Accent",
@@ -2616,10 +2591,14 @@
       "secondaryForeground": "Texto da Secundária"
     },
     "brandColors": "Cores de marca",
-    "chooseShadcnPreset": "Escolha um preset Shadcn",
-    "chooseTweakcnPreset": "Escolha um preset Tweakcn",
+    "chooseColorScheme": "Escolha um esquema de cores",
+    "chooseExtraTheme": "Escolha um tema",
+    "colorSchemes": "Esquemas de cores",
+    "customizationGuide": "Personalização do tema",
+    "customizationGuideDesc": "Escolha o modo claro ou escuro, aplique esquemas de cores e temas prontos, ajuste o raio dos cantos e as cores da marca, ou importe um tema CSS completo.",
     "customizer": "Customizer",
     "dark": "Escuro",
+    "extraThemes": "Mais temas",
     "importModal": {
       "description": "Cole abaixo o CSS do seu tema. Inclua as seções <code>:root</code> (modo claro) e <code>.dark</code> (modo escuro) com variáveis como <code>--primary</code>, <code>--background</code> e outras. O sistema alternará automaticamente entre claro e escuro.",
       "importErrorLog": "Erro ao importar tema:",
@@ -2632,14 +2611,12 @@
     "mode": "Modo",
     "officialTheme": "Tema oficial",
     "officialThemeDesc": "A identidade visual da marca: teal no claro, cian no escuro.",
-    "openTweakcn": "Abrir Tweakcn",
     "panelDescription": "Centralize aqui as preferências globais que afetam o projeto inteiro.",
     "radius": "Raio",
     "random": "Aleatório",
     "restoreDefault": "Restaurar padrão",
     "secondaryThemes": "Temas secundários",
-    "secondaryThemesDesc": "Alternativas preservadas: presets Shadcn, Tweakcn e temas importados.",
-    "shadcnPresets": "Presets Shadcn UI",
+    "secondaryThemesDesc": "Alternativas preservadas: esquemas de cores, temas extras e temas importados.",
     "sheetDescription": "Personalize o tema e o layout do projeto.",
     "sidebarCollapseDesc": {
       "icon": "Ícones: a sidebar recolhe para o modo compacto.",
@@ -2674,8 +2651,7 @@
     "sidebarVariantLabel": "Variação da sidebar",
     "system": "Sistema",
     "tabLayout": "Layout",
-    "tabTheme": "Tema",
-    "tweakcnPresets": "Presets Tweakcn"
+    "tabTheme": "Tema"
   },
   "transactions": {
     "actions": {
@@ -2859,7 +2835,7 @@
         "refDefaultHint": "Padrão (#01/NN)",
         "refLabel": "REF",
         "refPlaceholderInstallment": "ex: Compra",
-        "refPlaceholderSingle": "ex: Boleto FIES",
+        "refPlaceholderSingle": "ex: Conta de luz",
         "removeFileAria": "Remover arquivo",
         "save": "Salvar",
         "saveInstallments": "Salvar {count} parcelas",

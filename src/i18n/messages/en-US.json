@@ -946,21 +946,6 @@
     },
     "genericError": "Something went wrong. Try again.",
     "loading": "Loading...",
-    "loginDemo": {
-      "createAccount": "Create an account",
-      "email": "Email*",
-      "forgotPassword": "Forgot password?",
-      "loginToAccount": "Login to your account now",
-      "noAccount": "Don't have an account?",
-      "orSignInWith": "or sign in with",
-      "password": "Password*",
-      "passwordPlaceholder": "Enter your password",
-      "rememberDevice": "Remember this device",
-      "signIn": "Sign in",
-      "signInWithGithub": "Sign in with Github",
-      "signInWithGoogle": "Sign in with Google",
-      "welcomeTo": "Welcome to Shadcn Space"
-    },
     "mobileMoreSheet": {
       "descriptions": {
         "advisor": "Talk to your analyst",
@@ -995,14 +980,6 @@
     "search": "Search...",
     "searchPlaceholder": "What do you need?",
     "selectPeriod": "Select period",
-    "sidebarNotification": {
-      "blocks": "premium Shadcn UI blocks",
-      "brandName": "ShadcnStore",
-      "closeNotification": "Close notification",
-      "exploreBlocks": "Explore our",
-      "toBuildFaster": "to build your next project faster.",
-      "welcomeTo": "Welcome to"
-    },
     "sidebarPrimitive": {
       "description": "Displays the mobile sidebar.",
       "title": "Sidebar",
@@ -2602,8 +2579,6 @@
     }
   },
   "themeCustomizer": {
-    "advancedCustomization": "Advanced customization",
-    "advancedCustomizationDesc": "For advanced editing with visual preview and hundreds of ready-made presets, open the Tweakcn editor.",
     "appearanceSource": "Global appearance source",
     "brandColor": {
       "accent": "Accent",
@@ -2616,10 +2591,14 @@
       "secondaryForeground": "Secondary Foreground"
     },
     "brandColors": "Brand colors",
-    "chooseShadcnPreset": "Choose a Shadcn preset",
-    "chooseTweakcnPreset": "Choose a Tweakcn preset",
+    "chooseColorScheme": "Choose a color scheme",
+    "chooseExtraTheme": "Choose a theme",
+    "colorSchemes": "Color schemes",
+    "customizationGuide": "Theme customization",
+    "customizationGuideDesc": "Choose light or dark mode, apply color schemes and ready-made themes, adjust corner radius and brand colors, or import a complete CSS theme.",
     "customizer": "Customizer",
     "dark": "Dark",
+    "extraThemes": "More themes",
     "importModal": {
       "description": "Paste your theme's CSS below. Include the <code>:root</code> (light mode) and <code>.dark</code> (dark mode) sections with variables like <code>--primary</code>, <code>--background</code> and others. The system will automatically switch between light and dark.",
       "importErrorLog": "Error importing theme:",
@@ -2632,14 +2611,12 @@
     "mode": "Mode",
     "officialTheme": "Official theme",
     "officialThemeDesc": "The brand's visual identity: teal in light mode, cyan in dark mode.",
-    "openTweakcn": "Open Tweakcn",
     "panelDescription": "Centralize here the global preferences that affect the entire project.",
     "radius": "Radius",
     "random": "Random",
     "restoreDefault": "Restore default",
     "secondaryThemes": "Secondary themes",
-    "secondaryThemesDesc": "Preserved alternatives: Shadcn presets, Tweakcn presets and imported themes.",
-    "shadcnPresets": "Shadcn UI Presets",
+    "secondaryThemesDesc": "Preserved alternatives: color schemes, extra themes and imported themes.",
     "sheetDescription": "Customize the project's theme and layout.",
     "sidebarCollapseDesc": {
       "icon": "Icons: the sidebar collapses to compact mode.",
@@ -2674,8 +2651,7 @@
     "sidebarVariantLabel": "Sidebar variant",
     "system": "System",
     "tabLayout": "Layout",
-    "tabTheme": "Theme",
-    "tweakcnPresets": "Tweakcn Presets"
+    "tabTheme": "Theme"
   },
   "transactions": {
     "actions": {

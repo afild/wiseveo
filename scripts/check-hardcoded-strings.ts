@@ -12,11 +12,11 @@ const IGNORE = [
   ".d.ts",
   // guia de estilo interno (dev-only), deliberadamente não localizado
   "src/features/component-library",
-  // dataset de terceiros (tweakcn.com): nomes de presets de tema e font-stacks
-  // CSS ("Inter, sans-serif") são dados vendorizados, não copy de produto.
-  "src/utils/tweakcn-theme-presets.ts",
-  // dados mock do bloco "mail" (shadcn admin kit): remetentes/assuntos/corpos
-  // de e-mail fictícios usados só para popular a demo — não é copy de UI.
+  // dataset vendorizado: nomes de presets de tema e font-stacks CSS
+  // ("Inter, sans-serif") são dados, não copy de produto.
+  "src/utils/extra-theme-presets.ts",
+  // dados mock do bloco "mail" (herdados do template original): remetentes/
+  // assuntos/corpos de e-mail fictícios só para popular a demo — não é copy de UI.
   "src/labs/mail/data.tsx",
 ]
 

@@ -374,7 +374,7 @@ export function DataTable<TData, TValue>({
                     modifiers={[restrictToHorizontalAxis]}
                     onDragEnd={handleDragEnd}
                 >
-                {/* O scroller é o wrapper do próprio <Table> (overflow-x-auto no shadcn); este
+                {/* O scroller é o wrapper do próprio <Table> (overflow-x-auto no componente base); este
                     div só mede a largura disponível. A tabela ocupa 100% e só rola abaixo da
                     soma dos mínimos das colunas visíveis. */}
                 <div ref={containerRef} className="rounded-lg border">

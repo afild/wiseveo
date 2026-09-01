@@ -1,6 +1,6 @@
 import type { ThemePreset } from "../types/theme";
 
-export const shadcnThemePresets: Record<string, ThemePreset> = {
+export const colorSchemePresets: Record<string, ThemePreset> = {
   // Tema oficial da marca. Valores de docs/branding/brand-book/tokens/wiseveo-theme.css
   // (15/15 pares AA). Regra F5: teal assina o light; cian é exclusivo do dark
   // e JAMAIS pode aparecer sobre fundo claro. sidebar/popover derivados da

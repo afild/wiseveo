@@ -1,5 +1,5 @@
-import { tweakcnPresets } from "@/utils/tweakcn-theme-presets"
-import { shadcnThemePresets } from "@/utils/shadcn-ui-theme-presets"
+import { extraThemePresets } from "@/utils/extra-theme-presets"
+import { colorSchemePresets } from "@/utils/color-scheme-presets"
 import {
   normalizeThemePreferences,
   type ThemePreferences,
@@ -40,8 +40,8 @@ function resolveBaseStyles(
     }
   }
 
-  if (preferences.selectedTweakcnTheme) {
-    const preset = tweakcnPresets[preferences.selectedTweakcnTheme]
+  if (preferences.selectedExtraTheme) {
+    const preset = extraThemePresets[preferences.selectedExtraTheme]
     if (preset) {
       return {
         light: preset.styles.light,
@@ -50,8 +50,8 @@ function resolveBaseStyles(
     }
   }
 
-  const preset = shadcnThemePresets[preferences.selectedTheme || "wiseveo"]
-    ?? shadcnThemePresets.wiseveo
+  const preset = colorSchemePresets[preferences.selectedTheme || "wiseveo"]
+    ?? colorSchemePresets.wiseveo
 
   return {
     light: preset.styles.light,

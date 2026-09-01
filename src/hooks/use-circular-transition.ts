@@ -18,7 +18,7 @@ export function useCircularTransition(): CircularTransitionHook {
 
     isTransitioningRef.current = true
 
-    // Set CSS variables for the circular reveal animation - exactly like tweakcn
+    // Set CSS variables for the circular reveal animation
     const x = (coords.x / window.innerWidth) * 100
     const y = (coords.y / window.innerHeight) * 100
 
@@ -45,7 +45,7 @@ export function useCircularTransition(): CircularTransitionHook {
   }, [])
 
   const toggleTheme = useCallback((event: React.MouseEvent) => {
-    // Get precise click coordinates - use clientX/clientY directly like tweakcn
+    // Get precise click coordinates - use clientX/clientY directly
     const coords = {
       x: event.clientX,
       y: event.clientY
