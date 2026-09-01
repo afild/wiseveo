@@ -21,6 +21,12 @@ import { getTickSecretStatus } from "@/features/notifications/services/tick-secr
 import { getAccountOwnership } from "@/features/settings/services/admin-users-service"
 import { listPendingInvitations } from "@/features/settings/services/invitations-service"
 import { defaultMonetarySettings } from "@/lib/monetary"
+import {
+  demoAdminShowcase,
+  demoAppSettingsStructure,
+  demoIntegrationsContext,
+  demoNotificationPreferences,
+} from "@/features/settings/lib/demo-showcase"
 
 const baseTabs = ["general", "appearance", "monetary", "profile", "account"] as const
 type SettingsTab = (typeof baseTabs)[number] | "notifications" | "integrations" | "admin"
@@ -93,11 +99,17 @@ export default async function ConfiguracoesPage({
         ])
       : [null, null, null]
 
+  // DEMO ilustrativa: as três abas escondidas aparecem com dados FICTÍCIOS e
+  // tudo somente-leitura. Nenhum caminho do APP muda: fora da demo os contextos
+  // continuam vindo do banco, como sempre.
+  const isDemoShowcase = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+  const demoAdmin = isDemoShowcase ? demoAdminShowcase(userId) : null
+
   const validTabs: string[] = [
     ...baseTabs,
-    ...(showNotifications ? ["notifications"] : []),
-    ...(showIntegrations ? ["integrations"] : []),
-    ...(isAdmin ? ["admin"] : []),
+    ...(showNotifications || isDemoShowcase ? ["notifications"] : []),
+    ...(showIntegrations || isDemoShowcase ? ["integrations"] : []),
+    ...(isAdmin || isDemoShowcase ? ["admin"] : []),
   ]
   const initialTab: SettingsTab =
     requestedTab && validTabs.includes(requestedTab) ? (requestedTab as SettingsTab) : "general"
@@ -105,54 +117,65 @@ export default async function ConfiguracoesPage({
   return (
     <ConfiguracoesPageClient
       initialTab={initialTab}
-      isAdmin={isAdmin}
+      isAdmin={isAdmin || isDemoShowcase}
+      demoShowcase={isDemoShowcase}
       notificationsContext={
-        showNotifications && notificationPreferences
+        isDemoShowcase
           ? {
-              preferences: notificationPreferences,
-              telegramConnected: Boolean(telegramConnection?.isActive),
-              // O cartão do preparo é do SUPERADMIN; aqui só interessa se o
-              // caderno de envios já existe — sem ele o relógio não manda nada.
-              ledgerReady: appSettings?.notificationsReady ?? false,
+              preferences: demoNotificationPreferences(),
+              telegramConnected: true,
+              ledgerReady: true,
             }
-          : undefined
+          : showNotifications && notificationPreferences
+            ? {
+                preferences: notificationPreferences,
+                telegramConnected: Boolean(telegramConnection?.isActive),
+                // O cartão do preparo é do SUPERADMIN; aqui só interessa se o
+                // caderno de envios já existe — sem ele o relógio não manda nada.
+                ledgerReady: appSettings?.notificationsReady ?? false,
+              }
+            : undefined
       }
       integrationsContext={
-        showIntegrations
-          ? {
-              structure: appSettings,
-              bot: telegramBot ?? { configured: false, source: null, botUsername: null },
-              ai:
-                aiSummary && aiUsage
-                  ? {
-                      providers: aiSummary.providers,
-                      compatibleBaseUrl: aiSummary.compatibleBaseUrl,
-                      models: aiSummary.models,
-                      budget: aiSummary.budget,
-                      usage: { period: aiUsage.period, calls: aiUsage.calls, costUsd: aiUsage.costUsd },
-                    }
-                  : null,
-              tick: tickStatus,
-            }
-          : undefined
+        isDemoShowcase
+          ? { ...demoIntegrationsContext(), structure: demoAppSettingsStructure() }
+          : showIntegrations
+            ? {
+                structure: appSettings,
+                bot: telegramBot ?? { configured: false, source: null, botUsername: null },
+                ai:
+                  aiSummary && aiUsage
+                    ? {
+                        providers: aiSummary.providers,
+                        compatibleBaseUrl: aiSummary.compatibleBaseUrl,
+                        models: aiSummary.models,
+                        budget: aiSummary.budget,
+                        usage: { period: aiUsage.period, calls: aiUsage.calls, costUsd: aiUsage.costUsd },
+                      }
+                    : null,
+                tick: tickStatus,
+              }
+            : undefined
       }
       initialQuickPaymentSettings={
         settings?.general.quickPayment ?? defaultQuickPaymentSettings
       }
       quickPaymentOptions={quickPaymentOptions}
       initialMonetarySettings={settings?.monetary ?? defaultMonetarySettings}
-      initialAdminUsers={adminUsers}
+      initialAdminUsers={demoAdmin ? demoAdmin.users : adminUsers}
       adminContext={
-        isAdmin && currentUser
-          ? {
-              currentUserId: userId,
-              currentUserRole: currentUser.role,
-              sharedAccount,
-              invitations,
-              ownerId: ownership?.ownerId ?? userId,
-              memberIds: ownership?.memberIds ?? [],
-            }
-          : undefined
+        demoAdmin
+          ? demoAdmin.context
+          : isAdmin && currentUser
+            ? {
+                currentUserId: userId,
+                currentUserRole: currentUser.role,
+                sharedAccount,
+                invitations,
+                ownerId: ownership?.ownerId ?? userId,
+                memberIds: ownership?.memberIds ?? [],
+              }
+            : undefined
       }
     />
   )

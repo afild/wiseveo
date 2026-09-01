@@ -104,6 +104,14 @@
   "advisor": {
     "clear": "Clear conversation",
     "cleared": "Conversation cleared",
+    "demo": {
+      "a1": "I am the WISEVEO financial analyst. I can summarize your income and expenses, compare periods, point out the categories that weighed the most and list the bills due soon. Just ask in your own words, like you would with an advisor.",
+      "a2": "In a typical month I would pull your transactions, work out income, expenses and balance, and highlight anything unusual. If dining out jumped well above your average, for example, I would flag it and show which purchases drove the increase. This answer is a demo example, so I left the numbers out.",
+      "banner": "This conversation is a demo with sample answers. Nothing you send here is saved.",
+      "q1": "What can you do?",
+      "q2": "How was my month?",
+      "reply": "In this demo I follow a fixed sample script. In the full version, with an AI connected in Settings, I analyze your real numbers and answer questions like that on the spot."
+    },
     "emptyState": "Ask anything about your money. I look at your data before answering.",
     "error": "I couldn't answer right now. Try again.",
     "notPersisted": "Conversations are not being stored yet. To enable that, prepare your database in Settings → Integrations.",
@@ -1091,6 +1099,10 @@
       "nameLabel": "Your name",
       "notice": "We'll use your email to send WISEVEO news.",
       "rateLimited": "Too many copies created just now. Try again in a few minutes."
+    },
+    "showcase": {
+      "description": "The data on this screen is sample content. Nothing here really gets saved.",
+      "saveNotice": "Changes are not saved in the demo."
     },
     "unavailable": {
       "description": "We're preparing a fresh environment for you to explore. Check back in a few minutes.",

@@ -25,6 +25,7 @@ import type { TickSecretView } from "./tick-settings-card"
 import type { AppSettingsStructure } from "../lib/app-settings-structure"
 import { PartyPopper } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { DemoShowcaseBanner } from "@/components/demo-showcase-banner"
 
 interface ConfiguracoesPageClientProps {
   initialTab?:
@@ -37,6 +38,8 @@ interface ConfiguracoesPageClientProps {
     | "integrations"
     | "admin"
   isAdmin: boolean
+  /** Demo ilustrativa: abas extras com dados fictícios e tudo somente-leitura. */
+  demoShowcase?: boolean
   initialQuickPaymentSettings: QuickPaymentSettings
   quickPaymentOptions: QuickPaymentOptions
   initialMonetarySettings: MonetarySettings
@@ -68,6 +71,7 @@ interface ConfiguracoesPageClientProps {
 export function ConfiguracoesPageClient({
   initialTab = "general",
   isAdmin,
+  demoShowcase = false,
   initialQuickPaymentSettings,
   quickPaymentOptions,
   initialMonetarySettings,
@@ -160,11 +164,13 @@ export function ConfiguracoesPageClient({
 
         {notificationsContext && (
           <TabsContent value="notifications" className="border-none p-0 mt-6 outline-none">
-            <div className="max-w-3xl">
+            <div className="max-w-3xl space-y-4">
+              {demoShowcase && <DemoShowcaseBanner />}
               <NotificationsForm
                 initialPreferences={notificationsContext.preferences}
                 initialTelegramConnected={notificationsContext.telegramConnected}
                 initialLedgerReady={notificationsContext.ledgerReady}
+                demoMode={demoShowcase}
               />
             </div>
           </TabsContent>
@@ -172,12 +178,14 @@ export function ConfiguracoesPageClient({
 
         {integrationsContext && (
           <TabsContent value="integrations" className="border-none p-0 mt-6 outline-none">
-            <div className="max-w-3xl">
+            <div className="max-w-3xl space-y-4">
+              {demoShowcase && <DemoShowcaseBanner />}
               <IntegrationsForm
                 initialStructure={integrationsContext.structure}
                 initialBot={integrationsContext.bot}
                 initialAi={integrationsContext.ai}
                 initialTick={integrationsContext.tick}
+                readOnly={demoShowcase}
               />
             </div>
           </TabsContent>
@@ -185,8 +193,13 @@ export function ConfiguracoesPageClient({
 
         {isAdmin && (
           <TabsContent value="admin" className="border-none p-0 mt-6 outline-none">
-            <div className="max-w-5xl">
-              <AdminUsersForm initialUsers={initialAdminUsers} context={adminContext} />
+            <div className="max-w-5xl space-y-4">
+              {demoShowcase && <DemoShowcaseBanner />}
+              <AdminUsersForm
+                initialUsers={initialAdminUsers}
+                context={adminContext}
+                readOnly={demoShowcase}
+              />
             </div>
           </TabsContent>
         )}

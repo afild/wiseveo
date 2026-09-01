@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
 import { AdvisorClient } from "@/features/advisor/components/advisor-client"
@@ -18,8 +17,9 @@ import { resolveDataOwnerId } from "@/lib/data-owner"
 export const dynamic = "force-dynamic"
 
 export default async function AdvisorPage() {
-  // Na demo o Advisor não existe (mesmo padrão dos convites e das integrações).
-  if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") notFound()
+  // Na demo o Advisor é ilustrativo: retrato do mês real (sem IA) e uma
+  // conversa de roteiro fixo. As rotas de chat continuam 404 na demo.
+  const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
 
   const userId = await getSettingsUserId()
   if (!userId) {
@@ -36,8 +36,8 @@ export default async function AdvisorPage() {
   // e a rota do chat logo ali também).
   const [monetarySettings, structure, latestConversationId, dataOwnerId] = await Promise.all([
     getUserMonetarySettings(userId),
-    readAppSettingsStructure().catch(() => null),
-    getLatestConversationId(userId).catch(() => null),
+    isDemo ? Promise.resolve(null) : readAppSettingsStructure().catch(() => null),
+    isDemo ? Promise.resolve(null) : getLatestConversationId(userId).catch(() => null),
     resolveDataOwnerId(userId),
   ])
 
@@ -47,14 +47,29 @@ export default async function AdvisorPage() {
     latestConversationId ? getConversation(userId, latestConversationId) : Promise.resolve([]),
   ])
 
+  // O roteiro da demonstração vem das traduções: mesma conversa nos 3 idiomas.
+  const initialMessages = isDemo ? await buildDemoScript() : messages
+
   return (
     <div className="flex flex-1 flex-col px-4 pt-0 lg:px-6">
       <AdvisorClient
         opening={opening}
         conversationId={conversationId}
-        initialMessages={messages}
-        conversationsPersisted={structure?.advisorReady === true}
+        initialMessages={initialMessages}
+        conversationsPersisted={isDemo ? true : structure?.advisorReady === true}
+        demoMode={isDemo}
       />
     </div>
   )
+}
+
+async function buildDemoScript() {
+  const t = await getTranslations("advisor.demo")
+  const createdAt = new Date().toISOString()
+  return [
+    { id: "demo-q1", role: "user" as const, content: t("q1"), createdAt },
+    { id: "demo-a1", role: "assistant" as const, content: t("a1"), createdAt },
+    { id: "demo-q2", role: "user" as const, content: t("q2"), createdAt },
+    { id: "demo-a2", role: "assistant" as const, content: t("a2"), createdAt },
+  ]
 }

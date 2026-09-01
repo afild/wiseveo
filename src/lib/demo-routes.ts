@@ -5,7 +5,9 @@
  * Lista única para o menu lateral e o do celular não saírem de sincronia: quem
  * desligar uma página na demo acrescenta o caminho aqui e os dois obedecem.
  */
-export const DEMO_DISABLED_ROUTES: string[] = ["/advisor"]
+// Vazia hoje: o Advisor ganhou uma versão ilustrativa na demo (roteiro fixo,
+// sem IA). A lista fica porque é o único ponto que desliga páginas na demo.
+export const DEMO_DISABLED_ROUTES: string[] = []
 
 /**
  * Para onde o visitante vai quando o provisionamento falha (banco fora do ar,

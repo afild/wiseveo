@@ -63,6 +63,8 @@ interface AdminContext {
 interface AdminUsersFormProps {
   initialUsers: AdminUserSummary[]
   context?: AdminContext
+  /** Demo ilustrativa: ações travadas; o papel aparece como selo fixo. */
+  readOnly?: boolean
 }
 
 function statusBadge(status: AdminUserSummary["status"], t: ReturnType<typeof useTranslations>) {
@@ -100,7 +102,7 @@ function formatDate(value: string, locale: string) {
   }).format(new Date(value))
 }
 
-export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
+export function AdminUsersForm({ initialUsers, context, readOnly = false }: AdminUsersFormProps) {
   const t = useTranslations("settings.adminUsers")
   const tCommon = useTranslations("common")
   const locale = useLocale()
@@ -250,7 +252,7 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
   }
 
   function roleControl(user: AdminUserSummary) {
-    if (!context) return roleBadge(user.role, t)
+    if (!context || readOnly) return roleBadge(user.role, t)
     const isSelf = user.id === context.currentUserId
     const options = USER_ROLES.filter(
       (role) =>
@@ -300,7 +302,12 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
           <p className="text-muted-foreground">{t("pendingCount", { count: pendingCount })}</p>
         </div>
         {canInvite && (
-          <Button type="button" className="cursor-pointer" onClick={() => setInviteOpen(true)}>
+          <Button
+            type="button"
+            className="cursor-pointer"
+            disabled={readOnly}
+            onClick={() => setInviteOpen(true)}
+          >
             <UserPlus className="size-4" />
             {t("invitations.inviteButton")}
           </Button>
@@ -362,7 +369,7 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
                               type="button"
                               size="sm"
                               className="cursor-pointer"
-                              disabled={busyId === user.id}
+                              disabled={busyId === user.id || readOnly}
                               onClick={() => approve(user.id)}
                             >
                               <UserCheck className="size-4" />
@@ -381,7 +388,7 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
                               variant="ghost"
                               className="cursor-pointer text-destructive hover:text-destructive"
                               aria-label={t("remove")}
-                              disabled={busyId === user.id}
+                              disabled={busyId === user.id || readOnly}
                               onClick={() => setRemoveTarget(user)}
                             >
                               <Trash2 className="size-4" />
@@ -436,7 +443,7 @@ export function AdminUsersForm({ initialUsers, context }: AdminUsersFormProps) {
                             size="sm"
                             variant="ghost"
                             className="cursor-pointer text-destructive hover:text-destructive"
-                            disabled={busyId === invitation.id}
+                            disabled={busyId === invitation.id || readOnly}
                             onClick={() => revokeInvite(invitation.id)}
                           >
                             {t("invitations.revoke")}

@@ -64,6 +64,8 @@ interface IntegrationsFormProps {
   initialAi: AiSettingsSnapshot | null
   /** null = leitura falhou; o cartão do despertador fica de fora nesta visita. */
   initialTick: TickSecretView | null
+  /** Demo ilustrativa: campos e ações travados; nada chama o servidor. */
+  readOnly?: boolean
 }
 
 /**
@@ -78,6 +80,7 @@ export function IntegrationsForm({
   initialBot,
   initialAi,
   initialTick,
+  readOnly = false,
 }: IntegrationsFormProps) {
   const t = useTranslations("settings.integrations")
   const tCommon = useTranslations("common")
@@ -246,11 +249,12 @@ export function IntegrationsForm({
                     onChange={(e) => setToken(e.target.value)}
                     placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
                     className="font-mono text-xs"
+                    disabled={readOnly}
                   />
                   <Button
                     type="button"
                     className="cursor-pointer"
-                    disabled={!token.trim() || connecting}
+                    disabled={!token.trim() || connecting || readOnly}
                     onClick={connectBot}
                   >
                     {connecting ? <Loader2 className="size-4 animate-spin" /> : <Bot className="size-4" />}
@@ -265,7 +269,7 @@ export function IntegrationsForm({
                   variant="destructive"
                   size="sm"
                   className="cursor-pointer"
-                  disabled={disconnecting}
+                  disabled={disconnecting || readOnly}
                   onClick={() => setConfirmDisconnect(true)}
                 >
                   <Unplug className="size-4" />
@@ -279,9 +283,13 @@ export function IntegrationsForm({
         </CardContent>
       </Card>
 
-      {initialAi && <AiSettingsCard structureReady={secretsReady} initial={initialAi} />}
+      {initialAi && (
+        <AiSettingsCard structureReady={secretsReady} initial={initialAi} readOnly={readOnly} />
+      )}
 
-      {initialTick && <TickSettingsCard structureReady={secretsReady} initial={initialTick} />}
+      {initialTick && (
+        <TickSettingsCard structureReady={secretsReady} initial={initialTick} readOnly={readOnly} />
+      )}
 
       <AlertDialog open={confirmPrepare} onOpenChange={(open) => !open && setConfirmPrepare(false)}>
         <AlertDialogContent>

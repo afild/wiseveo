@@ -28,6 +28,9 @@ async function errorResponse(error: unknown) {
 }
 
 export async function GET() {
+  // Mesma trava de demo das outras rotas /api/admin/* : a aba Admin da demo é
+  // ilustrativa e nunca chama o servidor.
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") return new NextResponse(null, { status: 404 })
   try {
     await requireAdminUser(await getSessionUserId())
     const users = await listUsersForAdmin()

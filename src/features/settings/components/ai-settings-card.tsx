@@ -41,6 +41,8 @@ interface AiSettingsCardProps {
   /** Tabelas do "Preparar meu banco" prontas? Sem elas, só leitura + aviso. */
   structureReady: boolean
   initial: AiSettingsSnapshot
+  /** Demo ilustrativa: o fieldset desabilita todos os controles do cartão. */
+  readOnly?: boolean
 }
 
 /**
@@ -49,7 +51,7 @@ interface AiSettingsCardProps {
  * modelo (econômico/avançado) e o teto mensal com o gasto estimado do mês.
  * Nenhuma chave volta do servidor — a tela só vê "configurada: sim/não".
  */
-export function AiSettingsCard({ structureReady, initial }: AiSettingsCardProps) {
+export function AiSettingsCard({ structureReady, initial, readOnly = false }: AiSettingsCardProps) {
   const t = useTranslations("settings.integrations.ai")
   const locale = useLocale()
   const [data, setData] = React.useState(initial)
@@ -108,6 +110,9 @@ export function AiSettingsCard({ structureReady, initial }: AiSettingsCardProps)
    */
   const loadModels = React.useCallback(
     async (id: AiProviderId, options: { silent?: boolean; apiKey?: string; baseUrl?: string } = {}) => {
+      // Segunda cerca da demo: é a única chamada que dispara sem clique de
+      // botão (abrir o seletor de modelo), então não confia só no fieldset.
+      if (readOnly) return
       setLoadingModels(id)
       try {
         const response = await fetch("/api/admin/ai-settings/models", {
@@ -133,7 +138,7 @@ export function AiSettingsCard({ structureReady, initial }: AiSettingsCardProps)
         setLoadingModels(null)
       }
     },
-    [t],
+    [t, readOnly],
   )
 
   /**
@@ -360,7 +365,10 @@ export function AiSettingsCard({ structureReady, initial }: AiSettingsCardProps)
         </CardTitle>
         <CardDescription>{t("desc")}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
+        {/* Na demo o fieldset desabilita tudo de uma vez, sem tocar controle
+            por controle; fora dela ele é transparente. */}
+        <fieldset disabled={readOnly} className="m-0 min-w-0 space-y-6 border-0 p-0">
         {/* Provedores com algo guardado (mesmo o que ainda não serve como
             modelo — precisa aparecer para poder ser removido) */}
         {visibleProviders.length > 0 && (
@@ -501,6 +509,7 @@ export function AiSettingsCard({ structureReady, initial }: AiSettingsCardProps)
             </Button>
           </>
         )}
+        </fieldset>
       </CardContent>
     </Card>
   )

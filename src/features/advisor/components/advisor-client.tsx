@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowUp, Eraser, Loader2, Sparkles, TrendingDown, TrendingUp, Wallet } from "lucide-react"
+import { DemoShowcaseBanner } from "@/components/demo-showcase-banner"
 import type { AdvisorOpening } from "../services/advisor-opening.service"
 import type { AdvisorStoredMessage } from "../services/advisor-chat.service"
 
@@ -16,6 +17,8 @@ interface AdvisorClientProps {
   initialMessages: AdvisorStoredMessage[]
   /** Sem a tabela de conversas, responde mas não lembra — a tela avisa. */
   conversationsPersisted: boolean
+  /** Demonstração: roteiro fixo, sem chamada de servidor. O APP nunca liga isto. */
+  demoMode?: boolean
 }
 
 interface ChatMessage {
@@ -32,6 +35,7 @@ export function AdvisorClient({
   conversationId,
   initialMessages,
   conversationsPersisted,
+  demoMode = false,
 }: AdvisorClientProps) {
   const t = useTranslations("advisor")
   const [messages, setMessages] = React.useState<ChatMessage[]>(
@@ -49,6 +53,12 @@ export function AdvisorClient({
    */
   async function clearConversation() {
     if (clearing || asking) return
+    if (demoMode) {
+      // Só a tela: na demo não há nada guardado no servidor para apagar.
+      setMessages([])
+      toast.success(t("cleared"))
+      return
+    }
     setClearing(true)
     try {
       const response = await fetch("/api/advisor/conversation", {
@@ -78,6 +88,13 @@ export function AdvisorClient({
     setMessages((current) => [...current, { role: "user", content: trimmed }])
     setQuestion("")
     setAsking(true)
+    if (demoMode) {
+      // Roteiro fixo: a pausa imita o "pensando" e a resposta explica a demo.
+      await new Promise((resolve) => setTimeout(resolve, 900))
+      setMessages((current) => [...current, { role: "assistant", content: t("demo.reply") }])
+      setAsking(false)
+      return
+    }
     try {
       const response = await fetch("/api/advisor/chat", {
         method: "POST",
@@ -139,6 +156,8 @@ export function AdvisorClient({
           </p>
         </CardContent>
       </Card>
+
+      {demoMode && <DemoShowcaseBanner text={t("demo.banner")} />}
 
       {!conversationsPersisted && (
         <p className="rounded-lg border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">

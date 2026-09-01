@@ -104,6 +104,14 @@
   "advisor": {
     "clear": "Limpar conversa",
     "cleared": "Conversa apagada",
+    "demo": {
+      "a1": "Sou o analista financeiro do WISEVEO. Posso resumir seus gastos e receitas, comparar períodos, apontar as categorias que mais pesaram e listar as contas que vencem em breve. É só perguntar com as suas palavras, como você faria com um consultor.",
+      "a2": "Num mês típico, eu buscaria seus lançamentos, calcularia entradas, saídas e saldo, e destacaria o que fugiu do padrão. Se o gasto com alimentação subisse bem acima da média, por exemplo, eu avisaria e mostraria quais compras puxaram a alta. Esta resposta é um exemplo da demonstração, por isso deixei os números de fora.",
+      "banner": "Esta conversa é uma demonstração com respostas de exemplo. Nada do que você enviar aqui é salvo.",
+      "q1": "O que você consegue fazer?",
+      "q2": "Como foi o meu mês?",
+      "reply": "Aqui na demonstração eu sigo um roteiro fixo de exemplo. Na versão completa, com uma inteligência artificial conectada nas Configurações, eu analiso seus números de verdade e respondo perguntas como essa na hora."
+    },
     "emptyState": "Pergunte qualquer coisa sobre o seu dinheiro. Eu consulto os seus dados antes de responder.",
     "error": "Não consegui responder agora. Tente de novo.",
     "notPersisted": "As conversas ainda não estão sendo guardadas. Para isso, prepare o seu banco em Configurações → Integrações.",
@@ -1091,6 +1099,10 @@
       "nameLabel": "Seu nome",
       "notice": "Usaremos seu e-mail para enviar novidades do WISEVEO.",
       "rateLimited": "Muitas cópias criadas agora há pouco. Tente de novo em alguns minutos."
+    },
+    "showcase": {
+      "description": "Os dados desta tela são exemplos. Nada aqui é salvo de verdade.",
+      "saveNotice": "Na demonstração as alterações não são salvas."
     },
     "unavailable": {
       "description": "Estamos preparando um ambiente novo para você explorar. Volte em alguns minutos.",

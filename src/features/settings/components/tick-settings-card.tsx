@@ -40,9 +40,11 @@ interface TickSettingsCardProps {
   /** Sem a tabela de segredos não há onde guardar a chave. */
   structureReady: boolean
   initial: TickSecretView
+  /** Demo ilustrativa: gerar/remover travados; o passo a passo continua aberto. */
+  readOnly?: boolean
 }
 
-export function TickSettingsCard({ structureReady, initial }: TickSettingsCardProps) {
+export function TickSettingsCard({ structureReady, initial, readOnly = false }: TickSettingsCardProps) {
   const t = useTranslations("settings.integrations.tick")
   const [status, setStatus] = React.useState(initial)
   const [url, setUrl] = React.useState<string | null>(null)
@@ -174,7 +176,12 @@ export function TickSettingsCard({ structureReady, initial }: TickSettingsCardPr
             </Collapsible>
 
             <div className="flex flex-wrap gap-2">
-              <Button type="button" className="cursor-pointer" disabled={working} onClick={generate}>
+              <Button
+                type="button"
+                className="cursor-pointer"
+                disabled={working || readOnly}
+                onClick={generate}
+              >
                 {working ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : (
@@ -188,7 +195,7 @@ export function TickSettingsCard({ structureReady, initial }: TickSettingsCardPr
                   variant="destructive"
                   size="sm"
                   className="cursor-pointer"
-                  disabled={working}
+                  disabled={working || readOnly}
                   onClick={remove}
                 >
                   <Trash2 className="size-4" />

@@ -29,6 +29,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Mesma trava de demo das outras rotas /api/admin/* : a aba Admin da demo é
+  // ilustrativa e nunca chama o servidor.
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") return new NextResponse(null, { status: 404 })
   const t = await getTranslations("api.admin")
 
   try {
@@ -58,6 +61,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") return new NextResponse(null, { status: 404 })
   const t = await getTranslations("api.admin")
 
   try {

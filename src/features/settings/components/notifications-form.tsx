@@ -43,6 +43,8 @@ interface NotificationsFormProps {
   initialPreferences: NotificationPreferences
   initialTelegramConnected: boolean
   initialLedgerReady: boolean
+  /** Demo ilustrativa: os controles mexem só na tela e o salvar não grava. */
+  demoMode?: boolean
 }
 
 /** Horários de meia em meia hora: 48 opções cobrem qualquer rotina sem virar lista infinita. */
@@ -99,9 +101,11 @@ export function NotificationsForm({
   initialPreferences,
   initialTelegramConnected,
   initialLedgerReady,
+  demoMode = false,
 }: NotificationsFormProps) {
   const t = useTranslations("settings.notifications")
   const tCommon = useTranslations("common")
+  const tShowcase = useTranslations("demo.showcase")
   const locale = useLocale()
 
   const [preferences, setPreferences] = React.useState(initialPreferences)
@@ -142,6 +146,10 @@ export function NotificationsForm({
   }
 
   async function save() {
+    if (demoMode) {
+      toast.info(tShowcase("saveNotice"))
+      return
+    }
     setSaving(true)
     try {
       const response = await fetch("/api/user/notifications", {
