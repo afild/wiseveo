@@ -2,7 +2,7 @@
 
 import React from "react"
 import { AppSidebar } from "@/components/app-sidebar"
-import { DemoSharedBanner } from "@/components/demo-shared-banner"
+import { DemoWriteGuard } from "@/components/demo-write-guard"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { ThemeCustomizer } from "@/components/theme-customizer"
@@ -122,7 +122,7 @@ export default function DashboardLayout({
         <DateRangeProvider>
           <ApplyDashboardPreferences />
           <DashboardContent>{children}</DashboardContent>
-          <DemoSharedBanner />
+          <DemoWriteGuard />
           <Toaster />
         </DateRangeProvider>
       </MonetaryPreferencesProvider>

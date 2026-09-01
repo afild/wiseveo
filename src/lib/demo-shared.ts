@@ -6,6 +6,10 @@ export const DEMO_FORK_PATH = "/api/demo/fork"
 /** Cookie NÃO-httpOnly que o cliente lê para mostrar o banner. Só sinalização. */
 export const DEMO_SHARED_MARKER_COOKIE = "wiseveo-demo-shared"
 
+/** Cabeçalho que o middleware põe no 409 quando a sessão-vitrine tenta escrever.
+ *  O cliente (DemoWriteGuard) escuta isto para abrir a janela de "crie sua cópia". */
+export const DEMO_FORK_REQUIRED_HEADER = "x-wiseveo-demo-fork-required"
+
 const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"])
 // fork: é a rota que TIRA a pessoa da vitrine. logout: só apaga o cookie (não grava
 // no banco) — sem ele o visitante ficaria preso.

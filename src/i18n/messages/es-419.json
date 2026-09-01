@@ -1104,13 +1104,13 @@
   },
   "demo": {
     "shared": {
-      "banner": "Estás explorando la demostración compartida: todo se puede ver, nada se puede cambiar.",
       "confirmDescription": "Crearemos un entorno solo tuyo, con los mismos datos, donde puedes agregar, editar y borrar con libertad. Puede tardar hasta un minuto.",
       "confirmTitle": "Crear mi copia editable",
       "cta": "Quiero editar",
       "emailInvalid": "Ingresa un correo válido para crear tu copia.",
       "emailLabel": "Tu correo",
       "forking": "Preparando tu entorno…",
+      "keepExploring": "Seguir explorando",
       "nameLabel": "Tu nombre",
       "notice": "Usaremos tu correo para enviarte novedades de WISEVEO.",
       "rateLimited": "Se crearon demasiadas copias hace un momento. Intenta de nuevo en unos minutos."

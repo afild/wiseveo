@@ -5,7 +5,7 @@ import createMiddleware from "next-intl/middleware"
 import { routing } from "./i18n/routing"
 import { isSetupComplete } from "@/lib/setup-check"
 import { DEMO_UNAVAILABLE_PATH } from "@/lib/demo-routes"
-import { isBlockedSharedWrite } from "@/lib/demo-shared"
+import { isBlockedSharedWrite, DEMO_FORK_REQUIRED_HEADER } from "@/lib/demo-shared"
 
 const publicRoutes = ["/login", "/signup", "/cadastro-pendente"]
 // Página de aceite de convite (/convite/<token>) é pública por prefixo: quem foi
@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
     // i18n-ignore: o cliente detecta pelo status/cabeçalho; o corpo é código de máquina
     return NextResponse.json(
       { error: "demoForkRequired" },
-      { status: 409, headers: { "x-wiseveo-demo-fork-required": "1" } },
+      { status: 409, headers: { [DEMO_FORK_REQUIRED_HEADER]: "1" } },
     )
   }
   // /api atendido: o resto do middleware (setup gate, redirects de auth) NUNCA
