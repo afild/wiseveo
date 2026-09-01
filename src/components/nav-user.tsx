@@ -40,6 +40,8 @@ export function NavUser({
   const t = useTranslations("sidebar")
   // D6: na demo, todo usuário aparece como a identidade única da marca (só exibição).
   const user = withDemoDisplayIdentity(rawUser)
+  // D6 (30/08/2026): na demo, NENHUM e-mail aparece na UI — só o nome da marca.
+  const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
 
   return (
     <SidebarMenu>
@@ -55,9 +57,11 @@ export function NavUser({
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
-                </span>
+                {!isDemo && (
+                  <span className="text-muted-foreground truncate text-xs">
+                    {user.email}
+                  </span>
+                )}
               </div>
               <EllipsisVertical className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -75,9 +79,11 @@ export function NavUser({
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">
-                    {user.email}
-                  </span>
+                  {!isDemo && (
+                    <span className="text-muted-foreground truncate text-xs">
+                      {user.email}
+                    </span>
+                  )}
                 </div>
               </div>
             </DropdownMenuLabel>

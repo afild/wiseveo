@@ -29,6 +29,8 @@ import { withDemoDisplayIdentity } from "@/lib/demo-identity"
 
 export function ProfileForm() {
   const t = useTranslations("settings.profile")
+  // D6 (30/08/2026): na demo, o e-mail (real, `demo_<uuid>@...`) nunca aparece na UI.
+  const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
 
   const profileFormSchema = z.object({
     firstName: z.string().min(1, t("firstNameReq")),
@@ -244,20 +246,22 @@ export function ProfileForm() {
                 )}
               />
 
-              {/* Email */}
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("email")}</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder={t("emailPl")} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Email — oculto na demo (D6: sem e-mail visível em lugar nenhum) */}
+              {!isDemo && (
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("email")}</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder={t("emailPl")} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {/* Company */}
               <FormField

@@ -23,6 +23,9 @@ import { withDemoDisplayIdentity } from "@/lib/demo-identity"
 
 export function AccountForm() {
   const t = useTranslations("settings.account")
+  // D6 (30/08/2026): na demo, e-mail (real) e username (deriva o prefixo `demo_<uuid>`)
+  // nunca aparecem na UI.
+  const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
 
   const accountFormSchema = z.object({
     firstName: z.string().min(1, t("firstNameReq")),
@@ -157,32 +160,37 @@ export function AccountForm() {
                     )}
                   />
                 </div>
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("email")}</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder={t("emailPl")} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("username")}</FormLabel>
-                      <FormControl>
-                        <Input placeholder={t("usernamePl")} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Email e username — ocultos na demo (D6: sem e-mail visível em lugar nenhum) */}
+                {!isDemo && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("email")}</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder={t("emailPl")} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("username")}</FormLabel>
+                          <FormControl>
+                            <Input placeholder={t("usernamePl")} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
               </CardContent>
             </Card>
 
