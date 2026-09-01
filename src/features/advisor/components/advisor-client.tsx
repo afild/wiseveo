@@ -44,6 +44,19 @@ export function AdvisorClient({
   const [question, setQuestion] = React.useState("")
   const [asking, setAsking] = React.useState(false)
   const [clearing, setClearing] = React.useState(false)
+  // O roteiro da demo NÃO entra no estado: sai das traduções a cada desenho,
+  // para acompanhar a troca de idioma ao vivo (estado guardaria o idioma velho).
+  const [demoScriptVisible, setDemoScriptVisible] = React.useState(true)
+  const demoScript: ChatMessage[] =
+    demoMode && demoScriptVisible
+      ? [
+          { role: "user", content: t("demo.q1") },
+          { role: "assistant", content: t("demo.a1") },
+          { role: "user", content: t("demo.q2") },
+          { role: "assistant", content: t("demo.a2") },
+        ]
+      : []
+  const displayMessages = demoMode ? [...demoScript, ...messages] : messages
   const endRef = React.useRef<HTMLDivElement | null>(null)
 
   /**
@@ -55,6 +68,7 @@ export function AdvisorClient({
     if (clearing || asking) return
     if (demoMode) {
       // Só a tela: na demo não há nada guardado no servidor para apagar.
+      setDemoScriptVisible(false)
       setMessages([])
       toast.success(t("cleared"))
       return
@@ -165,7 +179,7 @@ export function AdvisorClient({
         </p>
       )}
 
-      {messages.length > 0 && (
+      {displayMessages.length > 0 && (
         <div className="flex justify-end">
           <Button
             type="button"
@@ -183,7 +197,7 @@ export function AdvisorClient({
 
       {/* Conversa */}
       <div className="flex-1 space-y-3">
-        {messages.length === 0 && !asking && (
+        {displayMessages.length === 0 && !asking && (
           <div className="space-y-3 py-6 text-center">
             <Sparkles className="mx-auto size-6 text-primary" />
             <p className="text-sm text-muted-foreground">{t("emptyState")}</p>
@@ -204,7 +218,7 @@ export function AdvisorClient({
           </div>
         )}
 
-        {messages.map((message, index) => (
+        {displayMessages.map((message, index) => (
           <div
             key={`${index}-${message.role}`}
             className={message.role === "user" ? "flex justify-end" : "flex justify-start"}

@@ -47,29 +47,15 @@ export default async function AdvisorPage() {
     latestConversationId ? getConversation(userId, latestConversationId) : Promise.resolve([]),
   ])
 
-  // O roteiro da demonstração vem das traduções: mesma conversa nos 3 idiomas.
-  const initialMessages = isDemo ? await buildDemoScript() : messages
-
   return (
     <div className="flex flex-1 flex-col px-4 pt-0 lg:px-6">
       <AdvisorClient
         opening={opening}
         conversationId={conversationId}
-        initialMessages={initialMessages}
+        initialMessages={messages}
         conversationsPersisted={isDemo ? true : structure?.advisorReady === true}
         demoMode={isDemo}
       />
     </div>
   )
-}
-
-async function buildDemoScript() {
-  const t = await getTranslations("advisor.demo")
-  const createdAt = new Date().toISOString()
-  return [
-    { id: "demo-q1", role: "user" as const, content: t("q1"), createdAt },
-    { id: "demo-a1", role: "assistant" as const, content: t("a1"), createdAt },
-    { id: "demo-q2", role: "user" as const, content: t("q2"), createdAt },
-    { id: "demo-a2", role: "assistant" as const, content: t("a2"), createdAt },
-  ]
 }
