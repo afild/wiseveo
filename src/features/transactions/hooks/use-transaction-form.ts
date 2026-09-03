@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 
+import { useDateClosing } from "@/features/security/components/date-closing-provider"
+import { useDateClosingGuard } from "@/features/security/components/date-closing-guard"
+import { closedInstallments } from "@/features/security/lib/batch-loops"
 import { periodFromDate } from "@/lib/financial"
 import { PAID_STATUS_NAMES } from "@/lib/paid-status"
 import type {
@@ -90,6 +93,10 @@ export function useTransactionForm({
   onSuccess,
 }: UseTransactionFormParams) {
   const t = useTranslations("transactions.form")
+  // Os avisos de lote moram em `transactions.toasts`, ao lado dos outros toasts de lote.
+  const tToasts = useTranslations("transactions.toasts")
+  const { state } = useDateClosing()
+  const guard = useDateClosingGuard()
   const [open, setOpen] = useState(false)
   const [type, setType] = useState<TransactionType>("EXPENSE")
   const [formData, setFormData] = useState<FormData>(getInitialFormData)
@@ -631,20 +638,49 @@ export function useTransactionForm({
             },
           ]
 
+      // Parcelas em dia fechado: perguntamos ANTES do laço, senão a pessoa criaria as primeiras
+      // parcelas e só esbarraria na trava no meio do caminho. Com um token já em mãos, nada a
+      // perguntar. Recusou: nada é criado (o `finally` solta o botão).
+      const closedDays = closedInstallments(
+        payloads.map((payload) => payload.date),
+        state?.closedThrough ?? null,
+      )
+      if (closedDays.length > 0 && !guard.hasValidToken()) {
+        const ok = await guard.requestOverride(closedDays)
+        if (!ok) return
+      }
+
       // Create all transactions sequentially (to respect NUM ordering)
       const createdIds: string[] = []
-      for (const payload of payloads) {
-        const res = await fetch("/api/transactions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        })
-        if (!res.ok) {
-          const data = await res.json()
-          throw new Error(data.error || t("createError"))
+      try {
+        // Um PIN para as parcelas todas: a resposta da primeira vale para as seguintes.
+        guard.beginBatch()
+        for (const payload of payloads) {
+          const res = await fetch("/api/transactions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+          if (!res.ok) {
+            const data = await res.json()
+            throw new Error(data.error || t("createError"))
+          }
+          const created = await res.json()
+          createdIds.push(created.transaction?.id)
         }
-        const created = await res.json()
-        createdIds.push(created.transaction?.id)
+      } catch (error) {
+        // Parte das parcelas já nasceu: dizer quantas, senão a pessoa tenta de novo e duplica.
+        if (createdIds.length > 0) {
+          toast.warning(
+            tToasts("installmentsPartial", {
+              done: createdIds.length,
+              total: payloads.length,
+            }),
+          )
+        }
+        throw error
+      } finally {
+        guard.endBatch()
       }
 
       // Upload attachments to the first (or only) transaction
@@ -690,6 +726,9 @@ export function useTransactionForm({
     queuedFiles,
     isSubmitting,
     onSuccess,
+    guard,
+    state,
+    tToasts,
   ])
 
   return {

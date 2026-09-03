@@ -1514,6 +1514,7 @@
       "printTitle": "Recurring transactions"
     },
     "toasts": {
+      "batchClosed": "{count, plural, one {# recurrence is on a closed date, change its date} other {# recurrences are on a closed date, change their dates}}",
       "batchDeleteError": "Failed to delete the selected recurrences",
       "batchDeletePartial": "{succeeded} deleted and {failed} failed",
       "batchDeleteSuccess": "{count, plural, one {# recurrence deleted} other {# recurrences deleted}} successfully",
@@ -3014,6 +3015,7 @@
     "toasts": {
       "attachmentsOpenError": "Failed to open transaction attachments",
       "attachmentsOpened": "Attachment manager opened",
+      "batchClosed": "{count, plural, one {# transaction is on a closed date, change its date} other {# transactions are on a closed date, change their dates}}",
       "batchCopyError": "Failed to copy the selected transactions",
       "batchCopyPartial": "{succeeded} succeeded and {failed} failed",
       "batchCopySuccess": "{count, plural, one {# transaction copied} other {# transactions copied}}",
@@ -3038,6 +3040,7 @@
       "deleteSuccess": "Transaction deleted successfully",
       "editOpenError": "Failed to open transaction edit",
       "editOpened": "Transaction edit opened",
+      "installmentsPartial": "{done} of {total} installments were created before the error",
       "quickPayError": "Failed to process quick pay",
       "quickPaySuccess": "Quick pay processed successfully",
       "recurringError": "Failed to create recurring transaction",

@@ -21,6 +21,11 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
+import { useDateClosingGuard } from "@/features/security/components/date-closing-guard"
+import {
+  summarizeBatch,
+  type BatchRowResult,
+} from "@/features/security/lib/batch-loops"
 import {
   Select,
   SelectContent,
@@ -114,6 +119,7 @@ export function RecurringClient({
   const monetary = useMonetaryFormattingSafe()
   const t = useTranslations("recurring")
   const tCommon = useTranslations("common")
+  const guard = useDateClosingGuard()
   // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
   const tRoot = useTranslations()
   const locale = useLocale()
@@ -483,8 +489,11 @@ export function RecurringClient({
 
     setBatchLoading(true)
     try {
+      // Um PIN para o lote inteiro: a primeira resposta vale para as linhas seguintes (com token
+      // elas repetem sozinhas; recusada, passam direto sem a janela abrir de novo).
+      guard.beginBatch()
       const launched: Array<{ id: string; date: string; period: string | null }> = []
-      let failed = 0
+      const results: BatchRowResult[] = []
 
       for (const recurring of items) {
         try {
@@ -492,9 +501,13 @@ export function RecurringClient({
             `/api/recurring-transactions/${recurring.id}/launch`,
             { method: "POST" }
           )
+          if (response.status === 423) {
+            results.push("closed")
+            continue
+          }
           const payload = await response.json().catch(() => ({}))
           if (!response.ok) {
-            failed += 1
+            results.push("failed")
             continue
           }
           const launchedDate =
@@ -508,8 +521,9 @@ export function RecurringClient({
               ? payload.recurring.period
               : null
           launched.push({ id: recurring.id, date: launchedDate, period: launchedPeriod })
+          results.push("succeeded")
         } catch {
-          failed += 1
+          results.push("failed")
         }
       }
 
@@ -530,18 +544,21 @@ export function RecurringClient({
         )
       }
 
-      if (failed === 0) {
-        toast.success(t("toasts.batchLaunchSuccess", { count: launched.length }))
-      } else if (launched.length > 0) {
-        toast.warning(
-          t("toasts.batchLaunchPartial", { succeeded: launched.length, failed })
-        )
-      } else {
+      const { succeeded, failed, closed, keepDialogOpen } = summarizeBatch(results)
+      if (succeeded > 0 && failed === 0) {
+        toast.success(t("toasts.batchLaunchSuccess", { count: succeeded }))
+      } else if (succeeded > 0) {
+        toast.warning(t("toasts.batchLaunchPartial", { succeeded, failed }))
+      } else if (failed > 0) {
         toast.error(t("toasts.batchLaunchError"))
       }
+      if (closed > 0) {
+        toast.warning(t("toasts.batchClosed", { count: closed }))
+      }
 
-      return true
+      return !keepDialogOpen
     } finally {
+      guard.endBatch()
       setBatchLoading(false)
     }
   }

@@ -1514,6 +1514,7 @@
       "printTitle": "Transações recorrentes"
     },
     "toasts": {
+      "batchClosed": "{count, plural, one {# recorrência está em data fechada, altere a data dela} other {# recorrências estão em data fechada, altere a data delas}}",
       "batchDeleteError": "Falha ao excluir recorrências selecionadas",
       "batchDeletePartial": "{succeeded} excluída(s) e {failed} com falha",
       "batchDeleteSuccess": "{count, plural, one {# recorrência excluída} other {# recorrências excluídas}} com sucesso",
@@ -3014,6 +3015,7 @@
     "toasts": {
       "attachmentsOpenError": "Erro ao abrir anexos do lançamento",
       "attachmentsOpened": "Gerenciador de anexos aberto",
+      "batchClosed": "{count, plural, one {# lançamento está em data fechada, altere a data dele} other {# lançamentos estão em data fechada, altere a data deles}}",
       "batchCopyError": "Falha ao copiar os lançamentos selecionados",
       "batchCopyPartial": "{succeeded} copiado(s) e {failed} com falha",
       "batchCopySuccess": "{count, plural, one {# lançamento copiado} other {# lançamentos copiados}}",
@@ -3038,6 +3040,7 @@
       "deleteSuccess": "Lançamento excluído com sucesso",
       "editOpenError": "Erro ao abrir edição do lançamento",
       "editOpened": "Edição de lançamento aberta",
+      "installmentsPartial": "{done} de {total} parcelas foram criadas antes do erro",
       "quickPayError": "Erro ao efetuar pagamento rápido",
       "quickPaySuccess": "Pagamento rápido efetuado com sucesso",
       "recurringError": "Erro ao criar transação recorrente",

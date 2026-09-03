@@ -16,10 +16,15 @@ import {
 import { useDateRange } from "@/contexts/date-range-context"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { formatAppDate } from "@/i18n/format"
+import { useDateClosingGuard } from "@/features/security/components/date-closing-guard"
 import {
   DateClosingSwitch,
   useDateClosingLabel,
 } from "@/features/security/components/date-closing-switch"
+import {
+  summarizeBatch,
+  type BatchRowResult,
+} from "@/features/security/lib/batch-loops"
 import type { AccountWithBalance } from "@/features/accounts/types"
 import type { FinancialSummary } from "@/features/shared/services/get-financial-summary"
 
@@ -71,6 +76,7 @@ export function TransactionsClient({
   const { dateRange, setDateRange } = useDateRange()
   // Texto de estado do fechamento; o switch em si mora no CardAction do mesmo cabeçalho.
   const closingLabel = useDateClosingLabel()
+  const guard = useDateClosingGuard()
   const pathname = usePathname()
   const [transactions, setTransactions] = useState(initialTransactions)
   const [filterOptions, setFilterOptions] = useState(initialFilterOptions)
@@ -245,38 +251,49 @@ export function TransactionsClient({
 
     setBatchLoading(true)
     try {
-      let succeeded = 0
-      let failed = 0
+      // Um PIN para o lote inteiro: a primeira resposta vale para as linhas seguintes (com token
+      // elas repetem sozinhas; recusada, passam direto sem a janela abrir de novo).
+      guard.beginBatch()
+      const results: BatchRowResult[] = []
 
       for (const transaction of items) {
         try {
           const response = await fetch(`/api/transactions/${transaction.id}/quick-pay`, {
             method: "POST",
           })
-          if (!response.ok) {
-            failed += 1
+          if (response.status === 423) {
+            results.push("closed")
             continue
           }
-          succeeded += 1
+          if (!response.ok) {
+            results.push("failed")
+            continue
+          }
+          results.push("succeeded")
         } catch {
-          failed += 1
+          results.push("failed")
         }
       }
 
-      if (failed === 0) {
+      const { succeeded, failed, closed, keepDialogOpen } = summarizeBatch(results)
+      if (succeeded > 0 && failed === 0) {
         toast.success(t("toasts.batchQuickPaySuccess", { count: succeeded }))
       } else if (succeeded > 0) {
         toast.warning(t("toasts.batchQuickPayPartial", { succeeded, failed }))
-      } else {
+      } else if (failed > 0) {
         toast.error(t("toasts.batchQuickPayError"))
+      }
+      if (closed > 0) {
+        toast.warning(t("toasts.batchClosed", { count: closed }))
       }
 
       await refetch()
-      return true
+      return !keepDialogOpen
     } finally {
+      guard.endBatch()
       setBatchLoading(false)
     }
-  }, [refetch, t])
+  }, [guard, refetch, t])
 
   const handleBatchEditDate = useCallback(async (
     items: SerializedTransaction[],
@@ -286,8 +303,8 @@ export function TransactionsClient({
 
     setBatchLoading(true)
     try {
-      let succeeded = 0
-      let failed = 0
+      guard.beginBatch()
+      const results: BatchRowResult[] = []
 
       for (const transaction of items) {
         try {
@@ -296,30 +313,39 @@ export function TransactionsClient({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ date }),
           })
-          if (!response.ok) {
-            failed += 1
+          if (response.status === 423) {
+            results.push("closed")
             continue
           }
-          succeeded += 1
+          if (!response.ok) {
+            results.push("failed")
+            continue
+          }
+          results.push("succeeded")
         } catch {
-          failed += 1
+          results.push("failed")
         }
       }
 
-      if (failed === 0) {
+      const { succeeded, failed, closed, keepDialogOpen } = summarizeBatch(results)
+      if (succeeded > 0 && failed === 0) {
         toast.success(t("toasts.batchEditDateSuccess", { count: succeeded }))
       } else if (succeeded > 0) {
         toast.warning(t("toasts.batchPartialUpdated", { succeeded, failed }))
-      } else {
+      } else if (failed > 0) {
         toast.error(t("toasts.batchEditDateError"))
+      }
+      if (closed > 0) {
+        toast.warning(t("toasts.batchClosed", { count: closed }))
       }
 
       await refetch()
-      return true
+      return !keepDialogOpen
     } finally {
+      guard.endBatch()
       setBatchLoading(false)
     }
-  }, [refetch, t])
+  }, [guard, refetch, t])
 
   const handleBatchEditPeriod = useCallback(async (
     items: SerializedTransaction[],
@@ -329,8 +355,8 @@ export function TransactionsClient({
 
     setBatchLoading(true)
     try {
-      let succeeded = 0
-      let failed = 0
+      guard.beginBatch()
+      const results: BatchRowResult[] = []
 
       for (const transaction of items) {
         try {
@@ -339,30 +365,39 @@ export function TransactionsClient({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ period }),
           })
-          if (!response.ok) {
-            failed += 1
+          if (response.status === 423) {
+            results.push("closed")
             continue
           }
-          succeeded += 1
+          if (!response.ok) {
+            results.push("failed")
+            continue
+          }
+          results.push("succeeded")
         } catch {
-          failed += 1
+          results.push("failed")
         }
       }
 
-      if (failed === 0) {
+      const { succeeded, failed, closed, keepDialogOpen } = summarizeBatch(results)
+      if (succeeded > 0 && failed === 0) {
         toast.success(t("toasts.batchEditPeriodSuccess", { count: succeeded }))
       } else if (succeeded > 0) {
         toast.warning(t("toasts.batchPartialUpdated", { succeeded, failed }))
-      } else {
+      } else if (failed > 0) {
         toast.error(t("toasts.batchEditPeriodError"))
+      }
+      if (closed > 0) {
+        toast.warning(t("toasts.batchClosed", { count: closed }))
       }
 
       await refetch()
-      return true
+      return !keepDialogOpen
     } finally {
+      guard.endBatch()
       setBatchLoading(false)
     }
-  }, [refetch, t])
+  }, [guard, refetch, t])
 
   const handleBatchCopyTransactions = useCallback(async (
     items: SerializedTransaction[],
@@ -372,8 +407,8 @@ export function TransactionsClient({
 
     setBatchLoading(true)
     try {
-      let succeeded = 0
-      let failed = 0
+      guard.beginBatch()
+      const results: BatchRowResult[] = []
 
       for (const transaction of items) {
         try {
@@ -382,30 +417,39 @@ export function TransactionsClient({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ date }),
           })
-          if (!response.ok) {
-            failed += 1
+          if (response.status === 423) {
+            results.push("closed")
             continue
           }
-          succeeded += 1
+          if (!response.ok) {
+            results.push("failed")
+            continue
+          }
+          results.push("succeeded")
         } catch {
-          failed += 1
+          results.push("failed")
         }
       }
 
-      if (failed === 0) {
+      const { succeeded, failed, closed, keepDialogOpen } = summarizeBatch(results)
+      if (succeeded > 0 && failed === 0) {
         toast.success(t("toasts.batchCopySuccess", { count: succeeded }))
       } else if (succeeded > 0) {
         toast.warning(t("toasts.batchCopyPartial", { succeeded, failed }))
-      } else {
+      } else if (failed > 0) {
         toast.error(t("toasts.batchCopyError"))
+      }
+      if (closed > 0) {
+        toast.warning(t("toasts.batchClosed", { count: closed }))
       }
 
       await refetch()
-      return true
+      return !keepDialogOpen
     } finally {
+      guard.endBatch()
       setBatchLoading(false)
     }
-  }, [refetch, t])
+  }, [guard, refetch, t])
 
   const handleBatchMakeRecurring = useCallback(async (
     items: SerializedTransaction[]
@@ -461,38 +505,47 @@ export function TransactionsClient({
 
     setBatchLoading(true)
     try {
-      let succeeded = 0
-      let failed = 0
+      guard.beginBatch()
+      const results: BatchRowResult[] = []
 
       for (const transaction of items) {
         try {
           const response = await fetch(`/api/transactions/${transaction.id}/exclude`, {
             method: "POST",
           })
-          if (!response.ok) {
-            failed += 1
+          if (response.status === 423) {
+            results.push("closed")
             continue
           }
-          succeeded += 1
+          if (!response.ok) {
+            results.push("failed")
+            continue
+          }
+          results.push("succeeded")
         } catch {
-          failed += 1
+          results.push("failed")
         }
       }
 
-      if (failed === 0) {
+      const { succeeded, failed, closed, keepDialogOpen } = summarizeBatch(results)
+      if (succeeded > 0 && failed === 0) {
         toast.success(t("toasts.batchDeleteSuccess", { count: succeeded }))
       } else if (succeeded > 0) {
         toast.warning(t("toasts.batchDeletePartial", { succeeded, failed }))
-      } else {
+      } else if (failed > 0) {
         toast.error(t("toasts.batchDeleteError"))
+      }
+      if (closed > 0) {
+        toast.warning(t("toasts.batchClosed", { count: closed }))
       }
 
       await refetch()
-      return true
+      return !keepDialogOpen
     } finally {
+      guard.endBatch()
       setBatchLoading(false)
     }
-  }, [refetch, t])
+  }, [guard, refetch, t])
 
   useEffect(() => {
     if (pathname !== "/transactions") return

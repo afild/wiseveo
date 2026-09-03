@@ -1514,6 +1514,7 @@
       "printTitle": "Transacciones recurrentes"
     },
     "toasts": {
+      "batchClosed": "{count, plural, one {# recurrencia está en fecha cerrada, cambia su fecha} other {# recurrencias están en fecha cerrada, cambia sus fechas}}",
       "batchDeleteError": "Error al eliminar las recurrencias seleccionadas",
       "batchDeletePartial": "{succeeded} eliminada(s) y {failed} con error",
       "batchDeleteSuccess": "{count, plural, one {# recurrencia eliminada} other {# recurrencias eliminadas}} con éxito",
@@ -3014,6 +3015,7 @@
     "toasts": {
       "attachmentsOpenError": "Error al abrir los adjuntos del movimiento",
       "attachmentsOpened": "Administrador de adjuntos abierto",
+      "batchClosed": "{count, plural, one {# movimiento está en fecha cerrada, cambia su fecha} other {# movimientos están en fecha cerrada, cambia sus fechas}}",
       "batchCopyError": "Error al copiar los movimientos seleccionados",
       "batchCopyPartial": "{succeeded} exitoso(s) y {failed} con error",
       "batchCopySuccess": "{count, plural, one {# movimiento copiado} other {# movimientos copiados}}",
@@ -3038,6 +3040,7 @@
       "deleteSuccess": "Movimiento eliminado con éxito",
       "editOpenError": "Error al abrir la edición del movimiento",
       "editOpened": "Edición de movimiento abierta",
+      "installmentsPartial": "{done} de {total} cuotas se crearon antes del error",
       "quickPayError": "Error al efectuar el pago rápido",
       "quickPaySuccess": "Pago rápido efectuado con éxito",
       "recurringError": "Error al crear el movimiento recurrente",
