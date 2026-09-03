@@ -1,11 +1,20 @@
 import { prisma } from "@/lib/prisma"
+import { dayKeyOfStored } from "@/features/security/lib/date-closing"
+import { assertWritable } from "@/features/security/services/date-closing.service"
+import type { WriteContext } from "@/features/security/services/write-context"
 
-export async function excludeTransaction(id: string, userId: string) {
+export async function excludeTransaction(
+  id: string,
+  userId: string,
+  ctx: WriteContext
+) {
   const result = await prisma.$transaction(async (tx) => {
     const transaction = await tx.transaction.findFirst({
       where: { id, userId },
     })
     if (!transaction) return null
+
+    await assertWritable(tx, ctx, { days: [dayKeyOfStored(transaction.date)] })
 
     // Defensive cleanup in case the same id was already copied before.
     await tx.excludedTransaction.deleteMany({

@@ -1,12 +1,14 @@
 import { getTranslations } from "next-intl/server"
 import { prisma } from "@/lib/prisma"
 import { periodFromDate } from "@/lib/financial"
+import type { WriteContext } from "@/features/security/services/write-context"
 import { createTransaction } from "./create-transaction"
 
 export async function copyTransaction(
   transactionId: string,
   targetDate: string,
-  userId: string
+  userId: string,
+  ctx: WriteContext
 ) {
   const original = await prisma.transaction.findUnique({
     where: {
@@ -44,5 +46,6 @@ export async function copyTransaction(
     destAccountId: original.destAccountId ?? undefined,
   }
 
-  return createTransaction(input)
+  // A cópia é um lançamento novo: quem confere o dia de destino é o createTransaction.
+  return createTransaction(input, ctx)
 }

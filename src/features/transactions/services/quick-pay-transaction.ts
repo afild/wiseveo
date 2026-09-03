@@ -1,6 +1,9 @@
 import { getTranslations } from "next-intl/server"
 import { getUserQuickPaymentSettings } from "@/features/settings/services/user-settings-service"
 import { prisma } from "@/lib/prisma"
+import { dayKeyOfStored } from "@/features/security/lib/date-closing"
+import { assertWritable } from "@/features/security/services/date-closing.service"
+import type { WriteContext } from "@/features/security/services/write-context"
 
 interface QuickPayResult {
   success: boolean
@@ -9,7 +12,8 @@ interface QuickPayResult {
 
 export async function quickPayTransaction(
   id: string,
-  userId: string
+  userId: string,
+  ctx: WriteContext
 ): Promise<QuickPayResult> {
   const t = await getTranslations("transactions.services.quickPay")
   const quickPayment = await getUserQuickPaymentSettings(userId)
@@ -24,7 +28,7 @@ export async function quickPayTransaction(
     }
   }
 
-  const [account, status, tx] = await Promise.all([
+  const [account, status, existing] = await Promise.all([
     prisma.account.findFirst({
       where: {
         id: quickPayment.defaultAccountId,
@@ -42,7 +46,7 @@ export async function quickPayTransaction(
     }),
     prisma.transaction.findFirst({
       where: { id, userId },
-      select: { id: true },
+      select: { id: true, date: true },
     }),
   ])
 
@@ -53,14 +57,22 @@ export async function quickPayTransaction(
     }
   }
 
-  if (!tx) return { success: false, error: t("transactionNotFound") }
+  if (!existing) return { success: false, error: t("transactionNotFound") }
 
-  await prisma.transaction.update({
-    where: { id },
-    data: {
-      accountId: quickPayment.defaultAccountId,
-      statusCode: quickPayment.defaultStatusCode,
-    },
+  // Fora do closure: dentro dele o tsc perde o estreitamento feito acima.
+  const { defaultAccountId, defaultStatusCode } = quickPayment
+
+  // Transação curta só para a escrita: a guarda lê a linha do dono e grava sem soltar.
+  await prisma.$transaction(async (tx) => {
+    await assertWritable(tx, ctx, { days: [dayKeyOfStored(existing.date)] })
+
+    await tx.transaction.update({
+      where: { id },
+      data: {
+        accountId: defaultAccountId,
+        statusCode: defaultStatusCode,
+      },
+    })
   })
 
   return { success: true }

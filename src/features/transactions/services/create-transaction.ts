@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import { normalizeDate, periodFromDate, isValidPeriod } from "@/lib/financial"
+import { dayKeyOfStored } from "@/features/security/lib/date-closing"
+import { assertWritable } from "@/features/security/services/date-closing.service"
+import type { WriteContext } from "@/features/security/services/write-context"
 
 interface CreateTransactionInput {
   userId: string
@@ -57,10 +60,20 @@ async function resolvePayeeId(
   return created.id
 }
 
-export async function createTransaction(input: CreateTransactionInput) {
+export async function createTransaction(
+  input: CreateTransactionInput,
+  ctx: WriteContext
+) {
   return prisma.$transaction(async (tx) => {
     // i18n-ignore: string SQL bruta, não é texto de UI
     await tx.$executeRaw`LOCK TABLE transactions IN EXCLUSIVE MODE`
+
+    // A trava da tabela vem primeiro (ordem fixa das travas); a linha do dono, logo depois.
+    const storedDate = normalizeDate(input.date)
+    await assertWritable(tx, ctx, {
+      days: [dayKeyOfStored(storedDate)],
+      periods: [input.period],
+    })
 
     const result = await tx.$queryRaw<[{ next_num: number }]>`
       SELECT COALESCE(MAX("NUM"), 0) + 1 AS next_num
@@ -87,17 +100,18 @@ export async function createTransaction(input: CreateTransactionInput) {
       input.payeeName
     )
 
+    // Sem competência explícita, vale o mês da DATA do lançamento — nunca o mês corrente.
     const period =
       input.period && isValidPeriod(input.period)
         ? input.period
-        : periodFromDate()
+        : periodFromDate(storedDate)
 
     return tx.transaction.create({
       data: {
         id: crypto.randomUUID(),
         num: nextNum,
         period,
-        date: normalizeDate(input.date),
+        date: storedDate,
         reference: input.reference?.trim() || null,
         note: input.note?.trim() || null,
         description: input.description?.trim() || null,

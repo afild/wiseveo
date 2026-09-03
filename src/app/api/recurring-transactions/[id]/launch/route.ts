@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server"
 
 import { prisma } from "@/lib/prisma"
 import { createTransaction } from "@/features/transactions/services/create-transaction"
-import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import { getWriteContext } from "@/features/security/services/write-context"
 import { periodFromDate } from "@/lib/financial"
 
 function getTodayLocalDateString() {
@@ -20,18 +20,20 @@ function getRecurringDateString(date: Date | null) {
 }
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const t = await getTranslations("api")
-  const userId = await getDefaultUserId()
-
-  if (!userId) {
+  // Tarefa 8a: o contexto de escrita (ator + dono + token de PIN) substitui o userId solto.
+  // A resposta 423 do DATE_CLOSED entra na Tarefa 8b.
+  const ctx = await getWriteContext(request)
+  if (!ctx) {
     return NextResponse.json(
       { error: t("errors.userNotFound") },
       { status: 401 }
     )
   }
+  const userId = ctx.ownerId
 
   const { id } = await params
 
@@ -63,21 +65,24 @@ export async function POST(
   try {
     const launchDate = getRecurringDateString(recurring.lastDate)
 
-    const transaction = await createTransaction({
-      userId,
-      date: launchDate,
-      period: periodFromDate(launchDate),
-      reference: recurring.reference ?? undefined,
-      note: recurring.note ?? undefined,
-      description: recurring.description ?? undefined,
-      amount: Number(recurring.amount),
-      type: recurring.type,
-      accountId: recurring.accountId,
-      groupCode: recurring.groupCode,
-      categoryCode: recurring.categoryCode,
-      statusCode: recurring.statusCode,
-      payeeId: recurring.payeeId ?? undefined,
-    })
+    const transaction = await createTransaction(
+      {
+        userId,
+        date: launchDate,
+        period: periodFromDate(launchDate),
+        reference: recurring.reference ?? undefined,
+        note: recurring.note ?? undefined,
+        description: recurring.description ?? undefined,
+        amount: Number(recurring.amount),
+        type: recurring.type,
+        accountId: recurring.accountId,
+        groupCode: recurring.groupCode,
+        categoryCode: recurring.categoryCode,
+        statusCode: recurring.statusCode,
+        payeeId: recurring.payeeId ?? undefined,
+      },
+      ctx
+    )
 
     await prisma.recurringTransaction.update({
       where: { id: recurring.id },
