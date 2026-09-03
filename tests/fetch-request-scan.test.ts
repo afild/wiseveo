@@ -10,11 +10,19 @@ import { describe, expect, it } from "vitest"
  *   - mandar um `ReadableStream` como corpo (uma vez lido, acabou).
  * Hoje nenhum arquivo de src/ usa nenhuma das duas.
  *
- * As agulhas são montadas por PARTES de propósito: a string proibida nunca aparece
- * inteira em arquivo nenhum, então a varredura não se acha nem quando o padrão for
- * citado em teste ou comentário — e continua achando ocorrência de verdade.
+ * As agulhas são EXPRESSÕES REGULARES tolerantes a espaço em branco, não pedaços de texto:
+ * a chamada de fetch quebrada em duas linhas (o `new Request` indo para a linha de baixo) e o
+ * corpo de stream com espaço sobrando depois dos dois-pontos passavam batido na comparação
+ * literal antiga.
+ *
+ * E são montadas por PARTES de propósito: o padrão proibido nunca aparece inteiro em arquivo
+ * nenhum (nem neste), então a varredura não se acha nem quando o padrão for citado em teste ou
+ * comentário — e continua achando ocorrência de verdade. O teste abaixo prende essa propriedade.
  */
-const AGULHAS = ["fetch(" + "new Request", "body: " + "new ReadableStream"]
+const AGULHAS = [
+  { nome: "fetch(" + "new Request", re: new RegExp("fetch\\(\\s*" + "new\\s+Request") },
+  { nome: "body: " + "new ReadableStream", re: new RegExp("body\\s*:\\s*" + "new\\s+ReadableStream") },
+]
 
 const RAIZ = path.resolve(__dirname, "..", "src")
 const IGNORADOS = new Set(["generated", "node_modules"])
@@ -44,9 +52,13 @@ describe("varredura: nenhuma chamada que o interceptador não consiga repetir", 
     for (const arquivo of arquivos) {
       const conteudo = readFileSync(arquivo, "utf8")
       for (const agulha of AGULHAS) {
-        if (conteudo.includes(agulha)) ofensores.push(`${path.relative(RAIZ, arquivo)}: ${agulha}`)
+        if (agulha.re.test(conteudo)) ofensores.push(`${path.relative(RAIZ, arquivo)}: ${agulha.nome}`)
       }
     }
     expect(ofensores).toEqual([])
+  })
+  it("a própria varredura não casa consigo mesma", () => {
+    const conteudo = readFileSync(ESTE_ARQUIVO, "utf8")
+    expect(AGULHAS.filter((agulha) => agulha.re.test(conteudo)).map((agulha) => agulha.nome)).toEqual([])
   })
 })

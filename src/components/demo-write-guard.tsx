@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { DEMO_FORK_PATH, DEMO_FORK_REQUIRED_HEADER } from "@/lib/demo-shared"
-import { installFetchInterceptor } from "@/lib/fetch-interceptors"
+import { DEMO_FENCE_ORDER, installFetchInterceptor } from "@/lib/fetch-interceptors"
 import { hasSharedDemoMarker } from "@/lib/demo-shared-client"
 import { isValidLeadEmail, isValidLeadName } from "@/lib/demo-lead"
 
@@ -57,7 +57,7 @@ export function DemoWriteGuard() {
     if (!shared) return
     // Registra um handler no host único de fetch (src/lib/fetch-interceptors.ts) em vez de
     // embrulhar window.fetch aqui: o cleanup antigo restaurava o fetch anterior e apagaria o
-    // embrulho do fechamento de datas. Ordem 10 = primeiro da fila; na vitrine a cerca
+    // embrulho do fechamento de datas. DEMO_FENCE_ORDER = primeiro da fila; na vitrine a cerca
     // responde 409 antes de qualquer 423. Toda tentativa de escrita da vitrine volta 409 +
     // cabeçalho; aí a janela assume e a resposta original é descartada com uma promise que
     // NUNCA resolve — quem chamou fica pendurado de propósito, porque sair da janela SEMPRE
@@ -72,7 +72,7 @@ export function DemoWriteGuard() {
           return null
         },
       },
-      10,
+      DEMO_FENCE_ORDER,
     )
   }, [shared])
 

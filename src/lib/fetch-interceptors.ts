@@ -13,8 +13,25 @@ export interface InterceptorTools {
 
 export interface FetchInterceptor {
   before?: (args: FetchArgs) => FetchArgs
+  /**
+   * CONTRATO: inspecione a resposta SEMPRE por `res.clone()`. O corpo só pode ser lido uma vez e
+   * quem chamou o fetch ainda vai lê-lo; ler o original direto (`res.json()`) deixa o chamador com
+   * "TypeError: Body is unusable". Devolva `null` para deixar a resposta seguir intacta, ou uma
+   * outra Response para substituí-la (e aí os handlers seguintes nem rodam).
+   */
   after?: (response: Response, args: FetchArgs, tools: InterceptorTools) => Promise<Response | null>
 }
+
+/**
+ * Ordem dos handlers no host (menor roda primeiro; o padrão de `install` é 100).
+ *
+ * A cerca da vitrine tem que ser SEMPRE a primeira: ela é quem vê o 409 e abre a janela de "crie
+ * sua cópia". Um handler registrado antes dela poderia devolver outra resposta no lugar do 409 e
+ * o popup da vitrine nunca apareceria.
+ */
+export const DEMO_FENCE_ORDER = 10
+/** Trava de data fechada: roda depois da cerca da vitrine (na vitrine o 409 vem antes de qualquer 423). */
+export const DATE_CLOSING_ORDER = 20
 
 interface Host {
   install: (interceptor: FetchInterceptor, order?: number) => () => void
@@ -28,9 +45,14 @@ export function createInterceptorHost(target: { fetch: typeof fetch }): Host {
 
   target.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     let args: FetchArgs = [input, init]
-    for (const h of handlers) if (h.interceptor.before) args = h.interceptor.before(args)
+    // Os dois laços percorrem uma CÓPIA da lista. Iterar a lista viva pula handler: o `after` do
+    // fechamento de datas fica minutos esperando a pessoa digitar o PIN, e se o componente dele
+    // (ou o da vitrine) desmontar nesse meio-tempo o splice do cleanup desloca os índices e o
+    // handler seguinte nunca roda. A cópia do `after` é tirada só depois da resposta, então quem
+    // saiu antes de a rede voltar continua fora.
+    for (const h of handlers.slice()) if (h.interceptor.before) args = h.interceptor.before(args)
     const response = await original(...args)
-    for (const h of handlers) {
+    for (const h of handlers.slice()) {
       if (!h.interceptor.after) continue
       const replaced = await h.interceptor.after(response, args, tools)
       if (replaced) return replaced
@@ -68,6 +90,9 @@ export function isEligibleWrite(
   origin: string = typeof window !== "undefined" ? window.location.origin : "",
 ): boolean {
   const [input, init] = args
+  // Sem origem utilizável (SSR, sem window) nada é elegível — e `new URL("/api/x", "")` LANÇA
+  // em vez de devolver falso.
+  if (!origin) return false
   if (!(typeof input === "string" || input instanceof URL)) return false
   const url = new URL(String(input), origin)
   if (url.origin !== origin || !url.pathname.startsWith("/api/")) return false

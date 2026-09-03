@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { installFetchInterceptor } from "@/lib/fetch-interceptors"
+import { DATE_CLOSING_ORDER, installFetchInterceptor } from "@/lib/fetch-interceptors"
 import {
   createDateClosingInterceptor,
   createGuardMachine,
@@ -36,7 +36,7 @@ const FALLBACK: DateClosingGuardValue = {
 const GuardContext = React.createContext<DateClosingGuardValue>(FALLBACK)
 
 /**
- * Registra o handler de fetch do fechamento (ordem 20), monta a janela do PIN e entrega o
+ * Registra o handler de fetch do fechamento (DATE_CLOSING_ORDER), monta a janela do PIN e entrega o
  * contexto para toda a subárvore do painel.
  *
  * O handler devolve uma promise que só resolve quando a pessoa responde a janela, então a
@@ -109,7 +109,7 @@ export function DateClosingGuard({ children }: { children: React.ReactNode }) {
   )
 
   React.useEffect(
-    () => installFetchInterceptor(createDateClosingInterceptor({ machine, open }), 20),
+    () => installFetchInterceptor(createDateClosingInterceptor({ machine, open }), DATE_CLOSING_ORDER),
     [machine, open],
   )
 
