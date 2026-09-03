@@ -18,7 +18,9 @@ export function dayKeyOfLocal(date: Date): string {
 }
 
 export function isDayKey(value: unknown): value is string {
-  return typeof value === "string" && DAY_KEY_RE.test(value) && !Number.isNaN(Date.parse(`${value}T12:00:00.000Z`))
+  if (typeof value !== "string" || !DAY_KEY_RE.test(value)) return false
+  const [y, m, d] = value.split("-").map(Number)
+  return dayKeyOfStored(new Date(Date.UTC(y, m - 1, d, 12))) === value
 }
 
 export function addDays(key: string, days: number): string {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
-  addDays, computeSwitchState, dayKeyOfLocal, dayKeyOfStored, isDayClosed, isPeriodClosed,
+  addDays, computeSwitchState, dayKeyOfLocal, dayKeyOfStored, isDayClosed, isDayKey, isPeriodClosed,
   lastDayOfPeriod, resolveDateClosingPreferences,
 } from "@/features/security/lib/date-closing"
 
@@ -15,6 +15,15 @@ describe("chaves de dia", () => {
   it("addDays soma e subtrai dias de calendário", () => {
     expect(addDays("2026-08-31", 1)).toBe("2026-09-01")
     expect(addDays("2026-03-01", -1)).toBe("2026-02-28")
+  })
+  it("isDayKey aceita data real e recusa dia que não existe no calendário", () => {
+    expect(isDayKey("2026-08-31")).toBe(true)
+    expect(isDayKey("2024-02-29")).toBe(true)
+    expect(isDayKey("2026-02-29")).toBe(false)
+    expect(isDayKey("2026-02-30")).toBe(false)
+    expect(isDayKey("2026-04-31")).toBe(false)
+    expect(isDayKey("31/08/2026")).toBe(false)
+    expect(isDayKey(20260831)).toBe(false)
   })
 })
 
@@ -45,6 +54,15 @@ describe("resolveDateClosingPreferences", () => {
     expect(resolveDateClosingPreferences({ closedThrough: "2026-08-31", pinHash: "h", pinFailures: { count: 2, lockedUntil: null } }))
       .toMatchObject({ closedThrough: "2026-08-31", pinHash: "h", pinFailures: { count: 2 } })
   })
+  it("corte com data que não existe no calendário vira null", () => {
+    expect(resolveDateClosingPreferences({ closedThrough: "2026-02-30" }).closedThrough).toBeNull()
+    expect(resolveDateClosingPreferences({ closedThrough: "2026-02-29" }).closedThrough).toBeNull()
+    expect(resolveDateClosingPreferences({ closedThrough: "2026-04-31" }).closedThrough).toBeNull()
+  })
+  it("corte com data real passa, inclusive 29 de fevereiro em ano bissexto", () => {
+    expect(resolveDateClosingPreferences({ closedThrough: "2026-02-28" }).closedThrough).toBe("2026-02-28")
+    expect(resolveDateClosingPreferences({ closedThrough: "2024-02-29" }).closedThrough).toBe("2024-02-29")
+  })
 })
 
 describe("computeSwitchState (tabela ordenada da seção 7)", () => {
@@ -70,5 +88,17 @@ describe("computeSwitchState (tabela ordenada da seção 7)", () => {
   it("5: misto é desligado com 'fechado até' e ligar fecha o resto", () => {
     expect(computeSwitchState({ from: "2026-08-25", to: "2026-09-02", today, closedThrough: "2026-08-31" }))
       .toEqual({ checked: false, disabled: false, label: "closedThrough", closeTarget: "2026-09-02", reopenFrom: null })
+  })
+  it("2 no passado: sem corte, ligar fecha até o fim do período, nunca até hoje", () => {
+    expect(computeSwitchState({ from: "2026-07-01", to: "2026-07-31", today, closedThrough: null }))
+      .toEqual({ checked: false, disabled: false, label: "open", closeTarget: "2026-07-31", reopenFrom: null })
+  })
+  it("3 no passado: mês antigo inteiro dentro do corte aparece ligado e fechado", () => {
+    expect(computeSwitchState({ from: "2026-07-01", to: "2026-07-31", today, closedThrough: "2026-08-31" }))
+      .toEqual({ checked: true, disabled: false, label: "closed", closeTarget: null, reopenFrom: "2026-07-01" })
+  })
+  it("5 no passado: corte no meio de um mês antigo fecha só o resto daquele mês", () => {
+    expect(computeSwitchState({ from: "2026-07-01", to: "2026-07-31", today, closedThrough: "2026-07-15" }))
+      .toEqual({ checked: false, disabled: false, label: "closedThrough", closeTarget: "2026-07-31", reopenFrom: null })
   })
 })
