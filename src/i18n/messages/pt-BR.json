@@ -291,6 +291,19 @@
     "recurringTransactions": {
       "launchFailed": "Erro ao lançar transação recorrente"
     },
+    "security": {
+      "closeWouldReopen": "Essa data já está fechada. Para voltar atrás, use Reabrir.",
+      "dateClosed": "Essa data está fechada. Altere a data ou prossiga com o PIN.",
+      "forbidden": "Você não tem permissão para fechar ou reabrir datas.",
+      "invalidToday": "Data inválida. Escolha outra.",
+      "nothingToReopen": "Não há nada fechado a partir dessa data.",
+      "pinInvalid": "PIN incorreto.",
+      "pinLocked": "Muitas tentativas. Aguarde alguns minutos.",
+      "pinMismatch": "Os dois PINs não conferem.",
+      "pinNotSet": "Defina um PIN antes de fechar datas.",
+      "pinRequired": "Digite o PIN para reabrir.",
+      "unpaidBlockers": "Há lançamentos não pagos até essa data. Resolva-os antes de fechar."
+    },
     "setup": {
       "adminCreationFailed": "Erro ao criar usuário admin: {message}",
       "connectionStringRequired": "String de conexão é obrigatória.",
@@ -2385,6 +2398,7 @@
       "notConfigured": "A integração com o Telegram ainda não está ativa nesta instalação. Peça a quem administra para conectar o bot em Configurações → Integrações.",
       "title": "Integração Telegram"
     },
+    "dateClosed": "Essa data está fechada. Use o app para lançar nela.",
     "greetings": {
       "afternoon": "Boa tarde",
       "evening": "Boa noite",

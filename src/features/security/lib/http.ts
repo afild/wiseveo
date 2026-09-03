@@ -41,20 +41,11 @@ export class DateClosedError extends Error {
   }
 }
 
-/**
- * As chaves `api.security.*` só nascem na Tarefa 10, e as mensagens são tipadas (ver
- * `src/i18n/types.d.ts`): sem este apelido o `tsc` recusa as duas chamadas abaixo. Mesmo atalho de
- * chave montada em tempo de execução já usado no código (`src/i18n/chart-labels.ts`), só que
- * apertado no tipo real da chave em vez de `as never`. Com a Tarefa 10 no lugar, os dois `as ApiKey`
- * podem sair: o `tsc` já resolve `security.${error.code}` como união de literais.
- */
-type ApiKey = Parameters<ApiTranslator>[0]
-
 /** Toda rota de escrita chama isto no topo do catch: 423 + cabeçalho + corpo legível por máquina. */
 export function respondDateClosed(error: unknown, t: ApiTranslator): NextResponse | null {
   if (!(error instanceof DateClosedError)) return null
   return NextResponse.json(
-    { error: t("security.dateClosed" as ApiKey), code: error.code, days: error.days, periods: error.periods, closedThrough: error.closedThrough, canOverride: error.canOverride },
+    { error: t("security.dateClosed"), code: error.code, days: error.days, periods: error.periods, closedThrough: error.closedThrough, canOverride: error.canOverride },
     { status: 423, headers: { [DATE_CLOSED_HEADER]: "1" } },
   )
 }
@@ -64,7 +55,7 @@ export function respondSecurityError(error: unknown, t: ApiTranslator): NextResp
   return NextResponse.json(
     // `extra` vem ANTES: espalhado depois, um `extra.code` (ou `extra.error`) trocaria em silêncio o
     // código estável de que o cliente depende. Os dois campos do contrato ganham sempre.
-    { ...(error.extra ?? {}), error: t(`security.${error.code}` as ApiKey), code: SECURITY_CODES[error.code] },
+    { ...(error.extra ?? {}), error: t(`security.${error.code}`), code: SECURITY_CODES[error.code] },
     { status: error.status },
   )
 }

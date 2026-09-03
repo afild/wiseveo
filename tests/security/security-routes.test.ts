@@ -238,6 +238,12 @@ describe("GET /api/security/date-closing/reopen-preview", () => {
     expect(m.preview).not.toHaveBeenCalled()
   })
 
+  it("403 FORBIDDEN na vitrine: a cerca da demo é por método e não pega GET", async () => {
+    m.ctx = SHOWCASE
+    await expectCode(await call("?from=2026-08-01"), 403, "FORBIDDEN")
+    expect(m.preview).not.toHaveBeenCalled()
+  })
+
   it("400 INVALID_TODAY sem o parâmetro from", async () => {
     m.preview.mockRejectedValue(new SecurityError("invalidToday", 400))
     await expectCode(await call(""), 400, "INVALID_TODAY")
@@ -261,6 +267,12 @@ describe("POST /api/security/date-closing/reopen", () => {
     expect(m.reopen).toHaveBeenCalledWith(OWNER, "2026-08-01")
   })
 
+  it("convidado ADMIN também reabre", async () => {
+    m.ctx = ADMIN
+    expect((await call({ from: "2026-08-01" })).status).toBe(200)
+    expect(m.reopen).toHaveBeenCalledWith(ADMIN, "2026-08-01")
+  })
+
   it("é a ÚNICA rota que aceita o token de PIN", async () => {
     await call({ from: "2026-08-01" })
     expect(m.ctxOpts).toEqual([undefined])
@@ -273,6 +285,12 @@ describe("POST /api/security/date-closing/reopen", () => {
 
   it("403 FORBIDDEN para USER convidado, antes de qualquer leitura", async () => {
     m.ctx = GUEST
+    await expectCode(await call({ from: "2026-08-01" }), 403, "FORBIDDEN")
+    expect(m.reopen).not.toHaveBeenCalled()
+  })
+
+  it("403 FORBIDDEN na vitrine", async () => {
+    m.ctx = SHOWCASE
     await expectCode(await call({ from: "2026-08-01" }), 403, "FORBIDDEN")
     expect(m.reopen).not.toHaveBeenCalled()
   })

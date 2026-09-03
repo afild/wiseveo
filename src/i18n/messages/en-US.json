@@ -291,6 +291,19 @@
     "recurringTransactions": {
       "launchFailed": "Failed to launch recurring transaction"
     },
+    "security": {
+      "closeWouldReopen": "That date is already closed. To go back, use Reopen.",
+      "dateClosed": "That date is closed. Change the date or continue with your PIN.",
+      "forbidden": "You do not have permission to close or reopen dates.",
+      "invalidToday": "Invalid date. Pick another one.",
+      "nothingToReopen": "Nothing is closed from that date on.",
+      "pinInvalid": "Wrong PIN.",
+      "pinLocked": "Too many tries. Wait a few minutes.",
+      "pinMismatch": "The two PINs do not match.",
+      "pinNotSet": "Set a PIN before closing dates.",
+      "pinRequired": "Enter the PIN to reopen.",
+      "unpaidBlockers": "There are unpaid transactions up to that date. Settle them before closing."
+    },
     "setup": {
       "adminCreationFailed": "Failed to create admin user: {message}",
       "connectionStringRequired": "Connection string is required.",
@@ -2385,6 +2398,7 @@
       "notConfigured": "Telegram integration is not active in this installation yet. Ask whoever administers it to connect the bot in Settings → Integrations.",
       "title": "Telegram Integration"
     },
+    "dateClosed": "That date is closed. Use the app to add entries there.",
     "greetings": {
       "afternoon": "Good afternoon",
       "evening": "Good evening",
