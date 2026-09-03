@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { normalizeDate, isValidPeriod } from "@/lib/financial"
-import { dayKeyOfStored } from "@/features/security/lib/date-closing"
+import { dayKeyOfStored, storedPeriod } from "@/features/security/lib/date-closing"
 import { assertWritable } from "@/features/security/services/date-closing.service"
 import type { WriteContext } from "@/features/security/services/write-context"
 
@@ -82,7 +82,7 @@ export async function updateTransaction(
     const storedDate = normalizeDate(input.date)
     await assertWritable(tx, ctx, {
       days: [dayKeyOfStored(existing.date), dayKeyOfStored(storedDate)],
-      periods: [existing.period, input.period],
+      periods: [storedPeriod(existing.period), input.period],
     })
 
     // Sign determined by the category's actual type in the DB (not the tab type).

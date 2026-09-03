@@ -202,6 +202,20 @@ describe("updateTransaction", () => {
     m.existing = openRow()
     await expect(updateTransaction(updateInput(OPEN, "202608"), owner)).rejects.toMatchObject({ periods: ["202608"] })
   })
+
+  /**
+   * A coluna é `char(6)` e o banco do dono tem anos de histórico: competência com padding, vazia
+   * ou fora do formato NÃO pode derrubar uma edição comum. O dia da própria linha continua
+   * conferido, que é a proteção de verdade. Isto vale só para o que já está gravado; competência
+   * vinda da requisição segue barrada com 400 na rota.
+   */
+  it("competência legada do banco não derruba a edição", async () => {
+    for (const legacy of ["20268 ", "      ", "000000"]) {
+      m.existing = { ...openRow(), period: legacy }
+      await expect(updateTransaction(updateInput(OPEN), owner)).resolves.toBeDefined()
+    }
+    expect(m.updated).toHaveLength(3)
+  })
 })
 
 describe("updateTransactionDate", () => {
@@ -232,6 +246,13 @@ describe("updateTransactionPeriod", () => {
     await expect(updateTransactionPeriod("t1", "dono", "202608", withPin)).resolves.toBeDefined()
     expect(m.updated).toHaveLength(2)
     expectGuardInsideTransaction()
+  })
+
+  /** Mesma tolerância do `updateTransaction`: competência legada do banco não vira erro interno. */
+  it("competência legada do banco não derruba a troca de competência", async () => {
+    m.existing = { ...openRow(), period: "20268 " }
+    await expect(updateTransactionPeriod("t1", "dono", "202609", owner)).resolves.toBeDefined()
+    expect(m.updated).toHaveLength(1)
   })
 })
 

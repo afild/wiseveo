@@ -3,6 +3,10 @@ import { getTranslations } from "next-intl/server"
 
 import { prisma } from "@/lib/prisma"
 import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import { respondDateClosed } from "@/features/security/lib/http"
+import { dayKeyOfStored } from "@/features/security/lib/date-closing"
+import { assertWritable } from "@/features/security/services/date-closing.service"
+import { getWriteContext } from "@/features/security/services/write-context"
 
 export async function GET(
   request: NextRequest,
@@ -48,36 +52,48 @@ export async function GET(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string; attachmentId: string }> }
 ) {
   const t = await getTranslations("api")
-  const userId = await getDefaultUserId()
-  if (!userId) {
+  // O contexto de escrita (ator + dono + token de PIN) substitui o userId solto.
+  const ctx = await getWriteContext(request)
+  if (!ctx) {
     return NextResponse.json({ error: t("errors.userNotFound") }, { status: 401 })
   }
+  const userId = ctx.ownerId
 
   const { id: transactionId, attachmentId } = await params
 
-  const transaction = await prisma.transaction.findFirst({
-    where: { id: transactionId, userId },
-    select: { id: true },
-  })
-  if (!transaction) {
-    return NextResponse.json({ error: t("errors.transactionNotFound") }, { status: 404 })
+  try {
+    // A data entra na busca: é o dia que a trava confere antes de deixar apagar o anexo.
+    const transaction = await prisma.transaction.findFirst({
+      where: { id: transactionId, userId },
+      select: { id: true, date: true },
+    })
+    if (!transaction) {
+      return NextResponse.json({ error: t("errors.transactionNotFound") }, { status: 404 })
+    }
+
+    const attachment = await prisma.transactionAttachment.findFirst({
+      where: { id: attachmentId, transactionId },
+      select: { id: true },
+    })
+    if (!attachment) {
+      return NextResponse.json({ error: t("transactions.attachmentNotFound") }, { status: 404 })
+    }
+
+    // A conferência corre DENTRO da transação que apaga, nunca antes dela.
+    await prisma.$transaction(async (tx) => {
+      await assertWritable(tx, ctx, { days: [dayKeyOfStored(transaction.date)] })
+      await tx.transactionAttachment.delete({ where: { id: attachmentId } })
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    const locked = respondDateClosed(error, t)
+    if (locked) return locked
+    console.error("Error deleting transaction attachment:", error)
+    return NextResponse.json({ error: t("transactions.deleteAttachmentFailed") }, { status: 500 })
   }
-
-  const attachment = await prisma.transactionAttachment.findFirst({
-    where: { id: attachmentId, transactionId },
-    select: { id: true },
-  })
-  if (!attachment) {
-    return NextResponse.json({ error: t("transactions.attachmentNotFound") }, { status: 404 })
-  }
-
-  await prisma.transactionAttachment.delete({
-    where: { id: attachmentId },
-  })
-
-  return NextResponse.json({ success: true })
 }

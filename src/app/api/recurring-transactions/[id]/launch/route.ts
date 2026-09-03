@@ -3,20 +3,14 @@ import { getTranslations } from "next-intl/server"
 
 import { prisma } from "@/lib/prisma"
 import { createTransaction } from "@/features/transactions/services/create-transaction"
+import { DateClosedError, respondDateClosed } from "@/features/security/lib/http"
+import { dayKeyOfLocal, dayKeyOfStored, isDayKey } from "@/features/security/lib/date-closing"
 import { getWriteContext } from "@/features/security/services/write-context"
 import { periodFromDate } from "@/lib/financial"
 
-function getTodayLocalDateString() {
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = String(today.getMonth() + 1).padStart(2, "0")
-  const day = String(today.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
-}
-
 function getRecurringDateString(date: Date | null) {
-  if (!date) return getTodayLocalDateString()
-  return date.toISOString().slice(0, 10)
+  if (!date) return dayKeyOfLocal(new Date())
+  return dayKeyOfStored(date)
 }
 
 export async function POST(
@@ -24,9 +18,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const t = await getTranslations("api")
-  // Tarefa 8a: o contexto de escrita (ator + dono + token de PIN) substitui o userId solto.
-  // A resposta 423 do DATE_CLOSED entra na Tarefa 8b.
-  const ctx = await getWriteContext(request)
+  // Lançar recorrente NUNCA passa com PIN: repetiria o lançamento dentro do período fechado. Por
+  // isso o token do cabeçalho é descartado aqui, e a janela oferece escolher outra data.
+  const ctx = await getWriteContext(request, { allowOverride: false })
   if (!ctx) {
     return NextResponse.json(
       { error: t("errors.userNotFound") },
@@ -34,6 +28,15 @@ export async function POST(
     )
   }
   const userId = ctx.ownerId
+
+  // Corpo opcional: sem ele, vale a regra antiga do lastDate.
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>
+  if (body.date !== undefined && !isDayKey(body.date)) {
+    return NextResponse.json(
+      { error: t("errors.invalidDateFormat") },
+      { status: 400 }
+    )
+  }
 
   const { id } = await params
 
@@ -63,7 +66,8 @@ export async function POST(
   }
 
   try {
-    const launchDate = getRecurringDateString(recurring.lastDate)
+    // A data escolhida na janela vira a data da recorrência: o modelo passa a apontar para ela.
+    const launchDate = typeof body.date === "string" ? body.date : getRecurringDateString(recurring.lastDate)
 
     const transaction = await createTransaction(
       {
@@ -105,6 +109,15 @@ export async function POST(
       { status: 201 }
     )
   } catch (error) {
+    // O 423 daqui sai SEMPRE com canOverride falso, mesmo para o dono com token válido: oferecer o
+    // PIN levaria a repetir o lançamento dentro do período fechado. A saída é outra data.
+    const locked = respondDateClosed(
+      error instanceof DateClosedError
+        ? new DateClosedError(error.days, error.periods, error.closedThrough, false)
+        : error,
+      t
+    )
+    if (locked) return locked
     console.error("Error launching transaction from recurring:", error)
     return NextResponse.json(
       { error: t("recurringTransactions.launchFailed") },

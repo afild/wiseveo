@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { isValidPeriod } from "@/lib/financial"
-import { dayKeyOfStored } from "@/features/security/lib/date-closing"
+import { dayKeyOfStored, storedPeriod } from "@/features/security/lib/date-closing"
 import { assertWritable } from "@/features/security/services/date-closing.service"
 import type { WriteContext } from "@/features/security/services/write-context"
 
@@ -25,7 +25,7 @@ export async function updateTransactionPeriod(
     // A data não muda; as competências, sim — a de saída e a de chegada.
     await assertWritable(tx, ctx, {
       days: [dayKeyOfStored(existing.date)],
-      periods: [existing.period, period],
+      periods: [storedPeriod(existing.period), period],
     })
 
     const transaction = await tx.transaction.update({

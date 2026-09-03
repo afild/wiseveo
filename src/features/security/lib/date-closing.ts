@@ -45,6 +45,18 @@ export function toDayKeyInput(value: unknown): string | null {
   return isDayKey(key) ? key : null
 }
 
+/**
+ * Competência LIDA DO BANCO (coluna `char(6)`, com anos de histórico), ou null quando não é
+ * exatamente "YYYYMM". Padding de espaço, vazio e lixo antigo viram null, que a trava ignora sem
+ * lançar: sem isto, uma linha velha derrubaria uma edição comum com 500. O DIA da própria linha
+ * continua conferido, que é a proteção de verdade. Vale só para o que já está gravado; competência
+ * vinda da requisição segue barrada com 400 na rota (`toPeriodInput`).
+ */
+export function storedPeriod(value: string | null | undefined): string | null {
+  const raw = typeof value === "string" ? value.trim() : ""
+  return PERIOD_RE.test(raw) ? raw : null
+}
+
 /** Entrada de rota para competência, ou null quando não é exatamente "YYYYMM" (a rota responde 400). */
 export function toPeriodInput(value: unknown): string | null {
   const raw =
