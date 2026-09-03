@@ -22,6 +22,7 @@ export function demoNotificationPreferences(): NotificationPreferences {
     monthlyDigest: { enabled: true, time: "09:00", day: 1 },
     sentinel: { enabled: false, time: "20:00" },
     billsReminder: { enabled: true, time: "08:30", daysAhead: 3 },
+    openDatesReminder: { enabled: true, time: "09:00", days: 7 },
   }
 }
 

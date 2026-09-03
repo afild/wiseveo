@@ -138,6 +138,13 @@ export function listDueJobs(
     due.push({ kind: "billsReminder", occurrenceKey: dayKey })
   }
 
+  if (
+    preferences.openDatesReminder.enabled &&
+    isWithinWindow(parts, preferences.openDatesReminder.time, graceMinutes)
+  ) {
+    due.push({ kind: "openDatesReminder", occurrenceKey: dayKey })
+  }
+
   return due
 }
 

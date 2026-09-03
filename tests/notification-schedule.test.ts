@@ -40,13 +40,30 @@ describe("resolveNotificationPreferences", () => {
       weeklyDigest: { enabled: true, time: "18:00", weekday: 5 },
       monthlyDigest: { enabled: true, time: "09:00", day: 3 },
       billsReminder: { enabled: true, time: "20:00", daysAhead: 5 },
+      openDatesReminder: { enabled: true, time: "09:30", days: 15 },
     })
     expect(resolved.timezone).toBe("America/Sao_Paulo")
     expect(resolved.dailyDigest).toEqual({ enabled: true, time: "07:30" })
     expect(resolved.weeklyDigest).toEqual({ enabled: true, time: "18:00", weekday: 5 })
     expect(resolved.monthlyDigest).toEqual({ enabled: true, time: "09:00", day: 3 })
     expect(resolved.billsReminder).toEqual({ enabled: true, time: "20:00", daysAhead: 5 })
+    expect(resolved.openDatesReminder).toEqual({ enabled: true, time: "09:30", days: 15 })
     expect(hasAnyNotificationEnabled(resolved)).toBe(true)
+  })
+
+  it("só o aviso de datas abertas ligado já faz a pessoa entrar na fila", () => {
+    expect(hasAnyNotificationEnabled(prefs({ openDatesReminder: { enabled: true } }))).toBe(true)
+  })
+
+  it("o prazo das datas abertas vive entre 1 e 60 dias", () => {
+    expect(prefs({ openDatesReminder: { days: 1 } }).openDatesReminder.days).toBe(1)
+    expect(prefs({ openDatesReminder: { days: 60 } }).openDatesReminder.days).toBe(60)
+    const padrao = defaultNotificationPreferences.openDatesReminder.days
+    expect(padrao).toBe(7)
+    // Fora da régua cai no padrão, como todo o resto: nunca lança.
+    expect(prefs({ openDatesReminder: { days: 0 } }).openDatesReminder.days).toBe(padrao)
+    expect(prefs({ openDatesReminder: { days: 61 } }).openDatesReminder.days).toBe(padrao)
+    expect(prefs({ openDatesReminder: { days: "muitos" } }).openDatesReminder.days).toBe(padrao)
   })
 
   it("o que está fora da régua vira o padrão, sem lançar", () => {
@@ -168,15 +185,28 @@ describe("listDueJobs", () => {
     ])
   })
 
+  it("o aviso de datas abertas vence no horário escolhido, uma vez por dia", () => {
+    const openDates = prefs({
+      timezone: "America/Sao_Paulo",
+      openDatesReminder: { enabled: true, time: "09:00", days: 7 },
+    })
+    expect(listDueJobs(openDates, new Date("2026-08-25T11:45:00Z"))).toEqual([])
+    // 12:00Z = 09:00 em São Paulo.
+    expect(listDueJobs(openDates, new Date("2026-08-25T12:00:00Z"))).toEqual([
+      { kind: "openDatesReminder", occurrenceKey: "2026-08-25" },
+    ])
+  })
+
   it("vários avisos no mesmo horário saem juntos", () => {
     const all = prefs({
       timezone: "UTC",
       dailyDigest: { enabled: true, time: "08:00" },
       sentinel: { enabled: true, time: "08:00" },
       billsReminder: { enabled: true, time: "08:00", daysAhead: 2 },
+      openDatesReminder: { enabled: true, time: "08:00", days: 7 },
     })
     const due = listDueJobs(all, new Date("2026-08-25T08:00:00Z")).map((job) => job.kind)
-    expect(due.sort()).toEqual(["billsReminder", "dailyDigest", "sentinel"])
+    expect(due.sort()).toEqual(["billsReminder", "dailyDigest", "openDatesReminder", "sentinel"])
   })
 })
 

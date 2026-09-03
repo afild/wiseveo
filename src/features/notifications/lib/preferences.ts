@@ -16,6 +16,7 @@ export const NOTIFICATION_KINDS = [
   "monthlyDigest",
   "sentinel",
   "billsReminder",
+  "openDatesReminder",
 ] as const
 
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number]
@@ -34,11 +35,15 @@ export interface NotificationPreferences {
   sentinel: { enabled: boolean; time: TimeOfDay }
   /** `daysAhead`: quantos dias à frente o lembrete olha (1 = só amanhã). */
   billsReminder: { enabled: boolean; time: TimeOfDay; daysAhead: number }
+  /** `days`: quantos dias uma data pode ficar aberta antes de virar assunto. */
+  openDatesReminder: { enabled: boolean; time: TimeOfDay; days: number }
 }
 
 export const MIN_BILLS_DAYS_AHEAD = 1
 export const MAX_BILLS_DAYS_AHEAD = 14
 export const MAX_MONTHLY_DAY = 28
+export const MIN_OPEN_DATES_DAYS = 1
+export const MAX_OPEN_DATES_DAYS = 60
 
 export const defaultNotificationPreferences: NotificationPreferences = {
   timezone: "UTC",
@@ -47,6 +52,7 @@ export const defaultNotificationPreferences: NotificationPreferences = {
   monthlyDigest: { enabled: false, time: "08:00", day: 1 },
   sentinel: { enabled: false, time: "20:00" },
   billsReminder: { enabled: false, time: "08:00", daysAhead: 1 },
+  openDatesReminder: { enabled: false, time: "08:00", days: 7 },
 }
 
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/
@@ -108,6 +114,7 @@ export function resolveNotificationPreferences(value: unknown): NotificationPref
   const monthly = asRecord(record.monthlyDigest)
   const sentinel = asRecord(record.sentinel)
   const bills = asRecord(record.billsReminder)
+  const openDates = asRecord(record.openDatesReminder)
   const defaults = defaultNotificationPreferences
 
   return {
@@ -140,6 +147,16 @@ export function resolveNotificationPreferences(value: unknown): NotificationPref
         MAX_BILLS_DAYS_AHEAD,
       ),
     },
+    openDatesReminder: {
+      enabled: pickBoolean(openDates.enabled, defaults.openDatesReminder.enabled),
+      time: pickTime(openDates.time, defaults.openDatesReminder.time),
+      days: pickInteger(
+        openDates.days,
+        defaults.openDatesReminder.days,
+        MIN_OPEN_DATES_DAYS,
+        MAX_OPEN_DATES_DAYS,
+      ),
+    },
   }
 }
 
@@ -150,6 +167,7 @@ export function hasAnyNotificationEnabled(preferences: NotificationPreferences):
     preferences.weeklyDigest.enabled ||
     preferences.monthlyDigest.enabled ||
     preferences.sentinel.enabled ||
-    preferences.billsReminder.enabled
+    preferences.billsReminder.enabled ||
+    preferences.openDatesReminder.enabled
   )
 }

@@ -1395,6 +1395,11 @@
       "upcoming": "Coming up",
       "vsAverage": "Average left over across the {months} months on record: {average}."
     },
+    "openDates": {
+      "pending": "You have {count, plural, one {# entry} other {# entries}} between {from} and {to} still not closed.",
+      "stale": "No date closed since {date}.",
+      "unpaid": "{unpaid, plural, one {# of them is still unpaid} other {# of them are still unpaid}}, and the closing stops there."
+    },
     "sentinel": {
       "anomaly": "• {name}: {amount} this month, against {usual} as usual.",
       "budget": "• Budget: {spent} of {limit} already used ({percent}).",
@@ -1888,6 +1893,11 @@
         "day": "Day of the month",
         "desc": "The closed month, compared with your average.",
         "title": "Monthly briefing"
+      },
+      "openDates": {
+        "days": "Days open",
+        "desc": "Reminds you when days go by without a date being closed.",
+        "title": "Open dates"
       },
       "saved": "Preferences saved",
       "saving": "Saving…",

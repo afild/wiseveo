@@ -25,6 +25,7 @@ import {
 import { buildBulletin, type BulletinKind } from "./bulletin.service"
 import { buildSentinel, formatSentinelMessage } from "./sentinel.service"
 import { buildBillsReminder, formatBillsReminderMessage } from "./bills-reminder.service"
+import { buildOpenDatesReminder } from "@/features/security/services/open-dates-reminder.service"
 import { captureKpiSnapshot, findOwnersMissingSnapshot } from "./kpi-snapshot.service"
 import { sendTextNotification } from "./notification-channel.service"
 import { sendComposedBlocks } from "@/features/telegram/services/block-sender.service"
@@ -103,6 +104,9 @@ interface QueuedJob {
   rawPreferences: Record<string, unknown>
   /** Primeiro nome de quem recebe — o boletim fala com uma pessoa. */
   audience: string
+  /** Papel e situação de quem recebe: o aviso de datas abertas só vai a quem pode fechar. */
+  role: string
+  status: string
 }
 
 /** Pronto para sair: nada aqui depende mais de banco, de IA nem de desenho. */
@@ -197,6 +201,32 @@ async function buildBillsJob(
 }
 
 /**
+ * O aviso de datas abertas. O ator é montado AQUI, com `showcase: false` — um
+ * despertador nunca é sessão de vitrine — e com o dono já resolvido, para que a
+ * regra de quem-pode-fechar seja exatamente a mesma das telas e das rotas.
+ */
+async function buildOpenDatesJob(
+  job: QueuedJob,
+  dataOwnerId: string,
+  ctx: NotificationContext,
+): Promise<BuiltNotification> {
+  const text = await buildOpenDatesReminder({
+    actor: {
+      actorUserId: job.userId,
+      ownerId: dataOwnerId,
+      role: job.role,
+      status: job.status,
+      showcase: false,
+    },
+    parts: job.parts,
+    days: job.preferences.openDatesReminder.days,
+    ctx,
+  })
+  if (text === null) return { send: "nothing", reason: "quiet" }
+  return { send: "text", text }
+}
+
+/**
  * Um aviso, do começo ao fim. A reserva já foi feita pelo chamador; aqui se
  * decide entre confirmar, anotar silêncio, devolver a reserva ou anotar falha.
  */
@@ -215,7 +245,9 @@ async function runJob(job: QueuedJob, now: Date): Promise<"sent" | "skipped" | "
         ? await buildSentinelJob(job, dataOwnerId, ctx, now)
         : job.kind === "billsReminder"
           ? await buildBillsJob(job, dataOwnerId, ctx)
-          : await buildBulletinJob(job, dataOwnerId, ctx, job.audience)
+          : job.kind === "openDatesReminder"
+            ? await buildOpenDatesJob(job, dataOwnerId, ctx)
+            : await buildBulletinJob(job, dataOwnerId, ctx, job.audience)
 
     if (built.send === "nothing") {
       await markSkipped(ref, built.reason)
@@ -287,7 +319,7 @@ export async function runNotificationTick(now: Date = new Date()): Promise<TickR
     select: {
       userId: true,
       telegramChatId: true,
-      user: { select: { preferencesJson: true, name: true } },
+      user: { select: { preferencesJson: true, name: true, role: true, status: true } },
     },
     orderBy: { userId: "asc" },
   })
@@ -308,6 +340,8 @@ export async function runNotificationTick(now: Date = new Date()): Promise<TickR
       queue.push({
         userId: connection.userId,
         audience,
+        role: connection.user.role,
+        status: connection.user.status,
         // O chat vem como BigInt do banco; a API do Telegram aceita o número em texto.
         chatId: connection.telegramChatId.toString(),
         kind: job.kind,

@@ -1395,6 +1395,11 @@
       "upcoming": "A vencer",
       "vsAverage": "Média de sobra dos {months} meses já registrados: {average}."
     },
+    "openDates": {
+      "pending": "Você tem {count, plural, one {# lançamento} other {# lançamentos}} entre {from} e {to} ainda não fechados.",
+      "stale": "Nenhuma data fechada desde {date}.",
+      "unpaid": "{unpaid, plural, one {# deles ainda não está pago} other {# deles ainda não estão pagos}}, e o fechamento vai parar aí."
+    },
     "sentinel": {
       "anomaly": "• {name}: {amount} neste mês, contra {usual} de costume.",
       "budget": "• Orçamento: {spent} de {limit} já usados ({percent}).",
@@ -1888,6 +1893,11 @@
         "day": "Dia do mês",
         "desc": "O mês fechado, comparado com a sua média.",
         "title": "Boletim mensal"
+      },
+      "openDates": {
+        "days": "Dias em aberto",
+        "desc": "Lembra quando faz dias que você não fecha uma data.",
+        "title": "Datas abertas"
       },
       "saved": "Preferências salvas",
       "saving": "Salvando…",

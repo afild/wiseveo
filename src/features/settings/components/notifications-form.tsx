@@ -27,6 +27,7 @@ import {
   defaultNotificationPreferences,
   MAX_BILLS_DAYS_AHEAD,
   MAX_MONTHLY_DAY,
+  MAX_OPEN_DATES_DAYS,
   resolveNotificationPreferences,
   type NotificationPreferences,
 } from "@/features/notifications/lib/preferences"
@@ -57,6 +58,7 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6]
 const MONTH_DAYS = Array.from({ length: MAX_MONTHLY_DAY }, (_, index) => index + 1)
 const DAYS_AHEAD = Array.from({ length: MAX_BILLS_DAYS_AHEAD }, (_, index) => index + 1)
+const OPEN_DATES_DAYS = Array.from({ length: MAX_OPEN_DATES_DAYS }, (_, index) => index + 1)
 
 /**
  * "HH:MM" vira o relógio do idioma da tela (24h em pt-BR e es-419, AM/PM em
@@ -424,6 +426,56 @@ export function NotificationsForm({
               {renderTimeSelect(
                 preferences.billsReminder.time,
                 (time) => update({ billsReminder: { ...preferences.billsReminder, time } }),
+                t("at"),
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Switch
+                checked={preferences.openDatesReminder.enabled}
+                onCheckedChange={(enabled) =>
+                  update({ openDatesReminder: { ...preferences.openDatesReminder, enabled } })
+                }
+                className="mt-1 cursor-pointer"
+              />
+              <div>
+                <p className="font-medium">{t("openDates.title")}</p>
+                <p className="text-sm text-muted-foreground">{t("openDates.desc")}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs text-muted-foreground">{t("openDates.days")}</Label>
+                <Select
+                  value={String(preferences.openDatesReminder.days)}
+                  onValueChange={(value) =>
+                    update({
+                      openDatesReminder: {
+                        ...preferences.openDatesReminder,
+                        days: Number(value),
+                      },
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-[110px] cursor-pointer">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {OPEN_DATES_DAYS.map((days) => (
+                      <SelectItem key={days} value={String(days)} className="cursor-pointer">
+                        {days}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {renderTimeSelect(
+                preferences.openDatesReminder.time,
+                (time) => update({ openDatesReminder: { ...preferences.openDatesReminder, time } }),
                 t("at"),
               )}
             </div>
