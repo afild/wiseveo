@@ -4,6 +4,7 @@ import { isAppLocale, type AppLocale } from "@/i18n/config"
 import { resolveLocaleOrInstallDefault } from "@/i18n/install-locale"
 import { prisma } from "@/lib/prisma"
 import { resolveDataOwnerId } from "@/lib/data-owner"
+import { setUserPreferenceKey } from "@/features/settings/services/user-preferences-write"
 import {
   resolveMonetarySettings,
   type MonetarySettings,
@@ -108,17 +109,15 @@ export function resolveQuickPaymentSettings(value: unknown): QuickPaymentSetting
 
 export async function updateUserAppearance(userId: string, settings: AppearanceSettings) {
   const nextAppearance = normalizeThemePreferences(settings)
-  const currentPreferences = await getUserPreferences(userId)
 
-  return prisma.user.update({
-    where: { id: userId },
-    data: {
-      themePreferences: toInputJsonValue(nextAppearance),
-      preferencesJson: toInputJsonValue({
-        ...currentPreferences,
-        appearance: nextAppearance,
-      }),
-    },
+  // Coluna e chave na mesma transação: ou as duas mudam, ou nenhuma.
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.update({
+      where: { id: userId },
+      data: { themePreferences: toInputJsonValue(nextAppearance) },
+    })
+    await setUserPreferenceKey(tx, userId, "appearance", nextAppearance)
+    return user
   })
 }
 
@@ -137,27 +136,24 @@ export async function getUserAppearanceSettings(userId: string) {
 
 export async function updateUserProfile(userId: string, data: ProfileSettings) {
   const name = `${data.firstName} ${data.lastName}`.trim()
-  const currentPreferences = await getUserPreferences(userId)
-  
-  return prisma.user.update({
-    where: { id: userId },
-    data: {
-      name,
-      email: data.email,
-      phone: data.phone,
-      preferencesJson: toInputJsonValue({
-        ...currentPreferences,
-        profile: {
-          company: data.company,
-          location: data.location,
-          website: data.website,
-          language: data.language,
-          role: data.role,
-          timezone: data.timezone,
-          bio: data.bio,
-        },
-      }),
-    },
+  const profile = {
+    company: data.company,
+    location: data.location,
+    website: data.website,
+    language: data.language,
+    role: data.role,
+    timezone: data.timezone,
+    bio: data.bio,
+  }
+
+  // Colunas e chave na mesma transação: ou as duas mudam, ou nenhuma.
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.update({
+      where: { id: userId },
+      data: { name, email: data.email, phone: data.phone },
+    })
+    await setUserPreferenceKey(tx, userId, "profile", profile)
+    return user
   })
 }
 
@@ -220,17 +216,7 @@ export async function getUserLocale(userId: string): Promise<AppLocale> {
 export async function setUserLocale(userId: string, locale: string): Promise<void> {
   if (!isAppLocale(locale)) return
 
-  const currentPreferences = await getUserPreferences(userId)
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      preferencesJson: toInputJsonValue({
-        ...currentPreferences,
-        locale,
-      }),
-    },
-  })
+  await setUserPreferenceKey(prisma, userId, "locale", locale)
 }
 
 /**
@@ -250,17 +236,8 @@ export async function updateUserNotificationSettings(
   settings: unknown,
 ): Promise<NotificationPreferences> {
   const next = resolveNotificationPreferences(settings)
-  const currentPreferences = await getUserPreferences(userId)
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      preferencesJson: toInputJsonValue({
-        ...currentPreferences,
-        notifications: next,
-      }),
-    },
-  })
+  await setUserPreferenceKey(prisma, userId, "notifications", next)
 
   return next
 }
@@ -279,13 +256,7 @@ export async function getUserCardTheme(userId: string): Promise<CardThemeMode> {
 }
 
 export async function setUserCardTheme(userId: string, mode: CardThemeMode): Promise<void> {
-  const currentPreferences = await getUserPreferences(userId)
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      preferencesJson: toInputJsonValue({ ...currentPreferences, cardTheme: mode }),
-    },
-  })
+  await setUserPreferenceKey(prisma, userId, "cardTheme", mode)
 }
 
 export async function getQuickPaymentOptions(
@@ -319,15 +290,7 @@ export async function updateUserMonetarySettings(
     ...settings,
   })
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      preferencesJson: toInputJsonValue({
-        ...currentPreferences,
-        monetary: nextMonetary,
-      }),
-    },
-  })
+  await setUserPreferenceKey(prisma, userId, "monetary", nextMonetary)
 
   return nextMonetary
 }
@@ -347,7 +310,7 @@ export async function updateUserQuickPaymentSettings(
   }
 
   const dataOwnerId = await resolveDataOwnerId(userId)
-  const [account, status, currentPreferences] = await Promise.all([
+  const [account, status] = await Promise.all([
     prisma.account.findFirst({
       where: {
         id: nextQuickPayment.defaultAccountId,
@@ -363,7 +326,6 @@ export async function updateUserQuickPaymentSettings(
       },
       select: { code: true },
     }),
-    getUserPreferences(userId),
   ])
 
   if (!account) {
@@ -374,15 +336,7 @@ export async function updateUserQuickPaymentSettings(
     throw new Error(t("quickPaymentStatusUnavailable"))
   }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      preferencesJson: toInputJsonValue({
-        ...currentPreferences,
-        quickPayment: nextQuickPayment,
-      }),
-    },
-  })
+  await setUserPreferenceKey(prisma, userId, "quickPayment", nextQuickPayment)
 
   return nextQuickPayment
 }

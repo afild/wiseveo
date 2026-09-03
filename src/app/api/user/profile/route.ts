@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { getTranslations } from "next-intl/server"
-import { Prisma } from "@/generated/prisma_new/client"
 import { prisma } from "@/lib/prisma"
 import { getSessionUserId } from "@/lib/session"
+import { setUserPreferenceKey } from "@/features/settings/services/user-preferences-write"
 
 type JsonRecord = Record<string, unknown>
 
@@ -10,10 +10,6 @@ function ensureJsonRecord(value: unknown): JsonRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as JsonRecord)
     : {}
-}
-
-function toInputJsonValue(value: unknown): Prisma.InputJsonValue {
-  return value as Prisma.InputJsonValue
 }
 
 export async function GET() {
@@ -80,17 +76,20 @@ export async function PUT(request: Request) {
 
     const name = `${safeFirstName} ${safeLastName}`.trim()
 
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        name: name || undefined,
-        email: safeEmail || undefined,
-        phone: safePhone || undefined,
-        preferencesJson: toInputJsonValue({
-          ...(await getUserPreferences(userId)),
-          profile: extraPrefs,
-        }),
-      },
+    // Colunas e chave na mesma transação; e a resposta devolve só o que a tela usa
+    // (a linha crua carregava o hash da senha e os tokens do Google).
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id: userId },
+        data: {
+          name: name || undefined,
+          email: safeEmail || undefined,
+          phone: safePhone || undefined,
+        },
+        select: { id: true, name: true, email: true, phone: true, photo: true, role: true, status: true },
+      })
+      await setUserPreferenceKey(tx, userId, "profile", extraPrefs)
+      return user
     })
 
     return NextResponse.json({
@@ -107,12 +106,4 @@ export async function PUT(request: Request) {
       { status: 500 }
     )
   }
-}
-
-async function getUserPreferences(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { preferencesJson: true },
-  })
-  return ensureJsonRecord(user?.preferencesJson)
 }

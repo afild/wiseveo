@@ -2,6 +2,10 @@
 
 import { prisma } from "@/lib/prisma"
 import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import {
+  setUserPreferenceKey,
+  writeUserPreferenceKeys,
+} from "@/features/settings/services/user-preferences-write"
 import type { BudgetFormulaPreferences, FormulaConfig } from "../types"
 
 /**
@@ -11,19 +15,7 @@ export async function saveBudgetFormula(config: BudgetFormulaPreferences) {
   const userId = await getDefaultUserId()
   if (!userId) throw new Error("User not found") // i18n-ignore: código de erro interno do service layer (rota traduz, service retorna código estável)
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { preferencesJson: true },
-  })
-
-  const preferences = (user?.preferencesJson as Record<string, any>) || {}
-
-  preferences.budgetFormula = config
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { preferencesJson: preferences },
-  })
+  await setUserPreferenceKey(prisma, userId, "budgetFormula", config)
 }
 
 /**
@@ -53,12 +45,7 @@ export async function saveCardFormula(
     budgetFormula.perCard[cardId] = formula
   }
 
-  preferences.budgetFormula = budgetFormula
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { preferencesJson: preferences },
-  })
+  await setUserPreferenceKey(prisma, userId, "budgetFormula", budgetFormula)
 }
 
 /**
@@ -87,12 +74,8 @@ export async function saveCustomBudgetCard(
   }
 
   formula.customCards = customCards
-  preferences.budgetFormula = formula
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { preferencesJson: preferences },
-  })
+  await setUserPreferenceKey(prisma, userId, "budgetFormula", formula)
 }
 
 /**
@@ -118,17 +101,15 @@ export async function deleteBudgetCard(id: string, isCustomCard: boolean) {
       delete formula.perCard[id]
     }
 
-    preferences.budgetFormula = formula
-    
     // Check if it's in order list
     if (preferences.budgetOrder) {
       preferences.budgetOrder = preferences.budgetOrder.filter((o: string) => o !== id)
     }
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { preferencesJson: preferences },
-    })
+    await writeUserPreferenceKeys(prisma, userId, [
+      { key: "budgetFormula", value: formula },
+      { key: "budgetOrder", value: preferences.budgetOrder ?? [] },
+    ])
   } else {
     // We assume it's native. It could be grouped by categoryId or groupId 
     // Delete all budget rows for this userId matching either group or category

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import { setUserPreferenceKey } from "@/features/settings/services/user-preferences-write"
 import { revalidatePath } from "next/cache"
 
 /**
@@ -17,26 +18,8 @@ export async function updateBudgetOrder(itemIds: string[]) {
       return { success: false, error: "Unauthorized" }
     }
 
-    // Get current preferences
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { preferencesJson: true },
-    })
-
-    const preferences = (user?.preferencesJson as any) || {}
-    
     // Update only the budgetOrder key
-    const updatedPreferences = {
-      ...preferences,
-      budgetOrder: itemIds,
-    }
-
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        preferencesJson: updatedPreferences,
-      },
-    })
+    await setUserPreferenceKey(prisma, userId, "budgetOrder", itemIds)
 
     revalidatePath("/budget")
     return { success: true }
