@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl"
 import { useDateClosing } from "@/features/security/components/date-closing-provider"
 import { useDateClosingGuard } from "@/features/security/components/date-closing-guard"
 import { closedInstallments } from "@/features/security/lib/batch-loops"
+import { dayKeyOfLocal } from "@/features/security/lib/date-closing"
 import { periodFromDate } from "@/lib/financial"
 import { PAID_STATUS_NAMES } from "@/lib/paid-status"
 import type {
@@ -43,7 +44,7 @@ interface FormData {
 }
 
 function getInitialFormData(): FormData {
-  const date = new Date().toISOString().split("T")[0]
+  const date = dayKeyOfLocal(new Date())
   return {
     date,
     period: periodFromDate(date),
@@ -134,7 +135,7 @@ export function useTransactionForm({
   const openDialog = useCallback((defaultDateStr?: string | unknown) => {
     isResettingRef.current = true
 
-    let dateToUse = new Date().toISOString().split("T")[0]
+    let dateToUse = dayKeyOfLocal(new Date())
     if (typeof defaultDateStr === "string" && /^\d{4}-\d{2}-\d{2}$/.test(defaultDateStr)) {
       dateToUse = defaultDateStr
     }
@@ -321,7 +322,7 @@ export function useTransactionForm({
       setFilteredGroups(groupsForType)
       setFilteredCategories(categoriesForGroup)
       
-      const today = new Date().toISOString().split("T")[0]
+      const today = dayKeyOfLocal(new Date())
       
       setFormData({
         date: today,
@@ -437,7 +438,7 @@ export function useTransactionForm({
       rows.push({
         num: `${i + 1}`, // placeholder visual; real NUM gerado server-side
         ref,
-        date: d.toISOString().split("T")[0],
+        date: dayKeyOfLocal(d),
         amount: baseAmount.toFixed(2),
       })
     }

@@ -38,6 +38,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { dayKeyOfLocal } from "@/features/security/lib/date-closing"
 import { useDeviceClass } from "@/hooks/use-device-class"
 import { cn } from "@/lib/utils"
 
@@ -84,12 +85,12 @@ export function TransactionBatchActions<TData>({
 
   React.useEffect(() => {
     if (selectedDate) return
-    setSelectedDate(new Date().toISOString().split("T")[0])
+    setSelectedDate(dayKeyOfLocal(new Date()))
   }, [selectedDate])
 
   React.useEffect(() => {
     if (selectedCopyDate) return
-    setSelectedCopyDate(new Date().toISOString().split("T")[0])
+    setSelectedCopyDate(dayKeyOfLocal(new Date()))
   }, [selectedCopyDate])
 
   const handleQuickPaySelected = async () => {

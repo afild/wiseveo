@@ -4,6 +4,7 @@ import * as React from "react"
 import { useTranslations } from "next-intl"
 import { Play, Trash2, Pencil, RotateCcw, Filter } from "lucide-react"
 import { useDeviceClass } from "@/hooks/use-device-class"
+import { dayKeyOfLocal } from "@/features/security/lib/date-closing"
 import type { Table } from "@tanstack/react-table"
 
 import { Button } from "@/components/ui/button"
@@ -82,9 +83,7 @@ export function DataTableToolbar<TData>({
     const [showLaunchConfirm, setShowLaunchConfirm] = React.useState(false)
     const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false)
     const [showEditDateDialog, setShowEditDateDialog] = React.useState(false)
-    const [selectedDate, setSelectedDate] = React.useState(
-        new Date().toISOString().split("T")[0]
-    )
+    const [selectedDate, setSelectedDate] = React.useState(dayKeyOfLocal(new Date()))
 
     // Os filtros gravam SEMPRE arrays (contrato do multiSelectFilter). No mobile o
     // Select continua de escolha única — grava um array de um item e lê o primeiro.

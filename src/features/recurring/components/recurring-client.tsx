@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { useDateClosingGuard } from "@/features/security/components/date-closing-guard"
+import { dayKeyOfLocal } from "@/features/security/lib/date-closing"
 import {
   summarizeBatch,
   type BatchRowResult,
@@ -97,7 +98,7 @@ function getTypeAccentClass(type: TransactionType) {
 
 function getInitialEditForm(): EditFormState {
   return {
-    date: new Date().toISOString().split("T")[0],
+    date: dayKeyOfLocal(new Date()),
     note: "",
     description: "",
     reference: "",
@@ -200,7 +201,7 @@ export function RecurringClient({
     setEditForm({
       date: recurring.lastDate
         ? recurring.lastDate.slice(0, 10)
-        : new Date().toISOString().split("T")[0],
+        : dayKeyOfLocal(new Date()),
       note: recurring.note ?? "",
       description: recurring.description ?? "",
       reference: recurring.reference ?? "",

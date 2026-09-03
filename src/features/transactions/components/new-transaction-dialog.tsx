@@ -28,6 +28,9 @@ import {
   DetailPanelCloseButton,
   DetailPanelSection,
 } from "@/components/detail-panel"
+import { useDateClosing } from "@/features/security/components/date-closing-provider"
+import { isDayClosed, isDayKey } from "@/features/security/lib/date-closing"
+import { periodFromDate } from "@/lib/financial"
 import { createDateFormatter } from "@/i18n/format"
 import {
   resolveAccountLabel,
@@ -161,8 +164,30 @@ export function NewTransactionDialog({
   const tSections = useTranslations("common.formSections")
   // Raiz do next-intl: os helpers de rotulo do plano de contas usam a chave completa.
   const tRoot = useTranslations()
+  const tClosing = useTranslations("transactions.closing")
   const locale = useLocale()
+  const { state: closingState } = useDateClosing()
   const numInstallments = Number(installments || 1)
+
+  // Duas dicas discretas, nunca travas: quem grava numa data fechada segue gravando, só passa
+  // pelo PIN. O corte nasce `null` enquanto o provider não respondeu, e aí nenhuma dica aparece.
+  const closedThrough = closingState?.closedThrough ?? null
+  const isDateClosed = isDayKey(formData.date) && isDayClosed(formData.date, closedThrough)
+  // Competência digitada à mão que não bate com a data: o fechamento confere as duas, então uma
+  // data aberta com competência fechada pede o PIN do mesmo jeito. Melhor avisar antes.
+  const periodDiverges =
+    formData.period.length === 6 &&
+    isDayKey(formData.date) &&
+    formData.period !== periodFromDate(formData.date)
+  const closedThroughLabel =
+    closedThrough !== null
+      ? createDateFormatter(locale, {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          timeZone: "UTC",
+        }).format(new Date(`${closedThrough}T12:00:00.000Z`))
+      : ""
   const valueAccentClass = getTypeAccentClass(effectiveType)
   const isInstallmentProRata = numInstallments > 1 && isProRata
 
@@ -263,6 +288,11 @@ export function NewTransactionDialog({
                 onChange={(e) => updateField("date", e.target.value)}
                 required
               />
+              {isDateClosed && (
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {tClosing("dateHint", { date: closedThroughLabel })}
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
@@ -451,6 +481,11 @@ export function NewTransactionDialog({
                   disabled={isInstallmentProRata}
                   className={`text-center tabular-nums ${isInstallmentProRata ? "text-muted-foreground" : ""}`}
                 />
+                {periodDiverges && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {tClosing("periodHint")}
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">

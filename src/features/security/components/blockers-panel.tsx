@@ -42,6 +42,16 @@ export function BlockersPanel({ blockers, onClose, onViewBlockers }: BlockersPan
   const firstDate = blockers?.firstDate ?? null
   const lastDate = blockers?.lastDate ?? null
 
+  // O 409 pode chegar torto: contagem sem as datas da faixa, ou nem contagem. O painel diz o que
+  // sabe em vez de mostrar só o título — quem abriu precisa saber o que fazer para poder fechar.
+  const summary = !blockers
+    ? null
+    : firstDate && lastDate
+      ? t("blockersDescription", { count: blockers.count, firstDate: formatDay(firstDate), lastDate: formatDay(lastDate) })
+      : blockers.count > 0
+        ? t("blockersDescriptionNoDates", { count: blockers.count })
+        : t("blockersUnknown")
+
   return (
     <DetailPanel
       open={blockers !== null}
@@ -49,7 +59,7 @@ export function BlockersPanel({ blockers, onClose, onViewBlockers }: BlockersPan
         if (!next) onClose()
       }}
       title={t("blockersTitle")}
-      description={t("blockersTitle")}
+      description={t("blockersPanelDescription")}
       footer={
         <>
           <DetailPanelCloseButton onClick={onClose} />
@@ -69,15 +79,7 @@ export function BlockersPanel({ blockers, onClose, onViewBlockers }: BlockersPan
       }
     >
       <div className="flex flex-col gap-4">
-        {blockers && firstDate && lastDate && (
-          <p className="text-muted-foreground text-sm">
-            {t("blockersDescription", {
-              count: blockers.count,
-              firstDate: formatDay(firstDate),
-              lastDate: formatDay(lastDate),
-            })}
-          </p>
-        )}
+        {summary && <p className="text-muted-foreground text-sm">{summary}</p>}
 
         <ul className="flex flex-col gap-2">
           {blockers?.sample.map((row) => (

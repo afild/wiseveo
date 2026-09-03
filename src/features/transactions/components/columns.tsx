@@ -1,10 +1,13 @@
 "use client"
 
 import type { ColumnDef, FilterFn, Row } from "@tanstack/react-table"
+import { Lock } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useDateClosing } from "@/features/security/components/date-closing-provider"
+import { dayKeyOfStored, isDayClosed } from "@/features/security/lib/date-closing"
 import { formatPeriod } from "@/lib/financial"
 import type { MonetaryFormatter } from "@/lib/monetary"
 import { multiSelectFilter } from "@/lib/table-export"
@@ -261,6 +264,49 @@ export const statusSortFn = (
   return weightA > weightB ? 1 : -1
 }
 
+/**
+ * Data da linha, com cadeado quando o dia já está fechado. O corte vem do provider
+ * (`useDateClosing`), então a coluna não precisa carregá-lo por `meta`: cada célula lê o mesmo
+ * estado compartilhado, que é buscado uma vez por painel.
+ *
+ * Enquanto o estado não chegou (`state === null`) o corte é `null` e NENHUMA linha ganha
+ * cadeado — a mesma regra do switch: melhor mudo que chutado, porque um cadeado que aparece
+ * e some é pior que um cadeado que demora meio segundo.
+ *
+ * A data é guardada ao meio-dia UTC, por isso `dayKeyOfStored`: derivar pelo dia local traria
+ * o dia anterior a oeste de Greenwich e o cadeado cairia na linha errada.
+ */
+function TransactionDateCell({
+  dateStr,
+  locale,
+  isMobile,
+}: {
+  dateStr: string
+  locale: string
+  isMobile: boolean
+}) {
+  const t = useTranslations("transactions.closing")
+  const { state } = useDateClosing()
+
+  const parsed = new Date(dateStr)
+  const formatted = createDateFormatter(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: isMobile ? undefined : "numeric",
+    timeZone: "UTC",
+  }).format(parsed)
+  const locked = isDayClosed(dayKeyOfStored(parsed), state?.closedThrough ?? null)
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {locked && (
+        <Lock aria-label={t("lockedRowAria")} className="text-muted-foreground size-3 shrink-0" />
+      )}
+      <span className="truncate text-sm">{formatted}</span>
+    </div>
+  )
+}
+
 export function getTransactionColumns(
   monetary: TransactionColumnFormatter,
   isMobile: boolean = false,
@@ -337,23 +383,18 @@ export function getTransactionColumns(
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={labels.date} />
       ),
-      cell: ({ row }) => {
-        const dateStr = row.getValue("date") as string
-        const formattedDate = createDateFormatter(locale, {
-          day: "2-digit",
-          month: "2-digit",
-          year: isMobile ? undefined : "numeric",
-          timeZone: "UTC",
-        }).format(new Date(dateStr))
-
-        return (
-          <div className="truncate text-sm">
-            {formattedDate}
-          </div>
-        )
-      },
-      size: 104,
-      minSize: 96,
+      cell: ({ row }) => (
+        <TransactionDateCell
+          dateStr={row.getValue("date") as string}
+          locale={locale}
+          isMobile={isMobile}
+        />
+      ),
+      // 14px a mais que antes (104/96): o cadeado e o espaço dele comem 18px, e com a largura
+      // velha "08/01/2026" saía cortado em "08/01/2…". Data é valor curto e fixo — a mesma regra
+      // do minSize da competência: nunca corta.
+      size: 118,
+      minSize: 110,
     },
     {
       accessorKey: "reference",

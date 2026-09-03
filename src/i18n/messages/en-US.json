@@ -2767,7 +2767,10 @@
     "closing": {
       "askOwnerPin": "There is no closing PIN yet. Ask the account owner to set one.",
       "blockersDescription": "{count, plural, one {# unpaid transaction} other {# unpaid transactions}} between {firstDate} and {lastDate}. Settle them or move their dates before closing.",
+      "blockersDescriptionNoDates": "{count, plural, one {# unpaid transaction} other {# unpaid transactions}} in this range. Settle them or move their dates before closing.",
+      "blockersPanelDescription": "The unpaid transactions holding the closing back, with a shortcut to see them in the table.",
       "blockersTitle": "There are still unpaid transactions",
+      "blockersUnknown": "We could not list what is holding the closing back. Settle the unpaid transactions in this range or move their dates, then try again.",
       "closeSuccess": "Period closed.",
       "confirmCloseBody": "Any change up to that date will ask for the PIN.",
       "confirmCloseTitle": "Close transactions through {date}?",
@@ -2778,6 +2781,7 @@
       "nothingToClose": "Nothing to close. This period has not arrived yet.",
       "periodHint": "The accounting period you picked differs from the date. Closing checks both.",
       "reopenScope": "Reopens from {from} through {closedThrough}. {count, plural, one {# transaction stops being protected.} other {# transactions stop being protected.}}",
+      "reopenScopeUnavailable": "We could not load the reach of this reopening. You can still continue with the PIN.",
       "reopenSuccess": "Period reopened.",
       "reopenTitle": "Reopen transactions",
       "stateClosed": "Period closed.",

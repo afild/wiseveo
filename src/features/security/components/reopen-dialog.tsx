@@ -47,6 +47,7 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
   const guard = useDateClosingGuard()
 
   const [preview, setPreview] = React.useState<{ count: number; closedThrough: string | null } | null>(null)
+  const [scopeFailed, setScopeFailed] = React.useState(false)
   const [creating, setCreating] = React.useState(() => reopenDialogMode(permissions) === "createPin")
   const [pin, setPin] = React.useState("")
   const [confirmPin, setConfirmPin] = React.useState("")
@@ -69,6 +70,12 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
   )
 
   // O alcance é só informação: a rota de prévia não escreve nada e não pede PIN.
+  //
+  // Quando ela falha (403, rede caída) a janela DIZ que não conseguiu mostrar o alcance, em vez
+  // de ficar para sempre no "carregando" com o campo do PIN esperando. O campo continua ligado
+  // de propósito: a prévia é informação, a trava de verdade é a do servidor (que responde 423 e
+  // 401), e reabrir se desfaz fechando de novo. Barrar o PIN por causa de um tropeço de rede
+  // deixaria a pessoa sem saída, que é justamente o que esta janela promete nunca fazer.
   React.useEffect(() => {
     let active = true
     void (async () => {
@@ -76,7 +83,10 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
         const response = await fetch(`/api/security/date-closing/reopen-preview?from=${encodeURIComponent(from)}`, {
           cache: "no-store",
         })
-        if (!response.ok) return
+        if (!response.ok) {
+          if (active) setScopeFailed(true)
+          return
+        }
         const body = (await response.json()) as Record<string, unknown>
         if (!active) return
         setPreview({
@@ -84,7 +94,7 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
           closedThrough: typeof body.closedThrough === "string" ? body.closedThrough : null,
         })
       } catch {
-        // Sem a frase de alcance a reabertura ainda funciona; a trava de verdade é a do servidor.
+        if (active) setScopeFailed(true)
       }
     })()
     return () => {
@@ -205,6 +215,15 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
   // A prévia é a fonte do corte; se ela não veio, o estado do provider serve (o diálogo só
   // abre com corte definido, então uma das duas SEMPRE tem valor).
   const closedThrough = preview?.closedThrough ?? state?.closedThrough ?? null
+  // Três estados, nunca dois: alcance pronto, alcance que não veio, ou ainda carregando. A prévia
+  // que chegou sem corte cai no mesmo balde da que não chegou — o texto seria uma frase pela
+  // metade, e prometer menos é melhor que prometer errado.
+  const scopeText =
+    preview && closedThrough
+      ? t("reopenScope", { from: formatDay(from), closedThrough: formatDay(closedThrough), count: preview.count })
+      : scopeFailed || preview
+        ? t("reopenScopeUnavailable")
+        : tCommon("loading")
 
   return (
     <Dialog
@@ -224,15 +243,7 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
       >
         <DialogHeader>
           <DialogTitle>{creating ? t("createPinTitle") : t("reopenTitle")}</DialogTitle>
-          <DialogDescription>
-            {preview && closedThrough
-              ? t("reopenScope", {
-                  from: formatDay(from),
-                  closedThrough: formatDay(closedThrough),
-                  count: preview.count,
-                })
-              : tCommon("loading")}
-          </DialogDescription>
+          <DialogDescription>{scopeText}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

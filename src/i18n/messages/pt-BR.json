@@ -2767,7 +2767,10 @@
     "closing": {
       "askOwnerPin": "O PIN de fechamento ainda não existe. Peça ao dono da conta para definir um.",
       "blockersDescription": "{count, plural, one {# lançamento não pago} other {# lançamentos não pagos}} entre {firstDate} e {lastDate}. Pague ou mude a data deles antes de fechar.",
+      "blockersDescriptionNoDates": "{count, plural, one {# lançamento não pago} other {# lançamentos não pagos}} nessa faixa. Pague ou mude a data deles antes de fechar.",
+      "blockersPanelDescription": "Os lançamentos não pagos que impedem o fechamento, com um atalho para vê-los na tabela.",
       "blockersTitle": "Ainda há lançamentos não pagos",
+      "blockersUnknown": "Não deu para listar o que impede o fechamento. Pague ou mude a data dos lançamentos não pagos dessa faixa e tente de novo.",
       "closeSuccess": "Período fechado.",
       "confirmCloseBody": "Qualquer alteração até essa data vai pedir o PIN.",
       "confirmCloseTitle": "Fechar lançamentos até {date}?",
@@ -2778,6 +2781,7 @@
       "nothingToClose": "Nada a fechar. Esse período ainda não chegou.",
       "periodHint": "A competência escolhida é diferente da data. O fechamento confere as duas.",
       "reopenScope": "Reabre de {from} até {closedThrough}. {count, plural, one {# lançamento deixa de estar protegido.} other {# lançamentos deixam de estar protegidos.}}",
+      "reopenScopeUnavailable": "Não deu para carregar o alcance desta reabertura. Você ainda pode continuar com o PIN.",
       "reopenSuccess": "Período reaberto.",
       "reopenTitle": "Reabrir lançamentos",
       "stateClosed": "Período fechado.",

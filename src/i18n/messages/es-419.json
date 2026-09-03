@@ -2767,7 +2767,10 @@
     "closing": {
       "askOwnerPin": "Todavía no existe el PIN de cierre. Pídele al dueño de la cuenta que defina uno.",
       "blockersDescription": "{count, plural, one {# movimiento sin pagar} other {# movimientos sin pagar}} entre {firstDate} y {lastDate}. Resuélvelos o cambia sus fechas antes de cerrar.",
+      "blockersDescriptionNoDates": "{count, plural, one {# movimiento sin pagar} other {# movimientos sin pagar}} en ese rango. Resuélvelos o cambia sus fechas antes de cerrar.",
+      "blockersPanelDescription": "Los movimientos sin pagar que frenan el cierre, con un atajo para verlos en la tabla.",
       "blockersTitle": "Todavía hay movimientos sin pagar",
+      "blockersUnknown": "No se pudo listar lo que frena el cierre. Resuelve los movimientos sin pagar de ese rango o cambia sus fechas, y vuelve a intentar.",
       "closeSuccess": "Período cerrado.",
       "confirmCloseBody": "Cualquier cambio hasta esa fecha va a pedir el PIN.",
       "confirmCloseTitle": "¿Cerrar los movimientos hasta {date}?",
@@ -2778,6 +2781,7 @@
       "nothingToClose": "Nada que cerrar. Ese período todavía no llega.",
       "periodHint": "El período contable elegido es distinto de la fecha. El cierre revisa los dos.",
       "reopenScope": "Reabre desde {from} hasta {closedThrough}. {count, plural, one {# movimiento deja de estar protegido.} other {# movimientos dejan de estar protegidos.}}",
+      "reopenScopeUnavailable": "No se pudo cargar el alcance de esta reapertura. Aún puedes continuar con el PIN.",
       "reopenSuccess": "Período reabierto.",
       "reopenTitle": "Reabrir movimientos",
       "stateClosed": "Período cerrado.",
