@@ -39,8 +39,14 @@ function project(select?: Record<string, boolean>) {
 vi.mock("@/lib/prisma", () => {
   const client = {
     $executeRaw: async () => 1,
-    $queryRaw: async (strings: TemplateStringsArray) =>
-      strings.join("?").includes("information_schema") ? [{ data_type: "jsonb" }] : [{ prev_type: "object" }],
+    $queryRaw: async (strings: TemplateStringsArray) => {
+      const sql = strings.join("?")
+      if (sql.includes("information_schema")) return [{ data_type: "jsonb" }]
+      // A leitura do fechamento traz a chave INTEIRA do dono, com o `pinHash` dentro: é
+      // exatamente o que a rota de estado não pode deixar sair no corpo.
+      if (sql.includes("dateClosing")) return [{ dc: FULL_USER.preferencesJson.dateClosing }]
+      return [{ prev_type: "object" }]
+    },
     user: {
       findUnique: async (args: { select?: Record<string, boolean> }) => project(args?.select),
       update: async (args: { select?: Record<string, boolean> }) => project(args?.select),
@@ -69,6 +75,7 @@ import { GET as getPreferences } from "@/app/api/user/preferences/route"
 import { GET as getMonetary } from "@/app/api/user/monetary-preferences/route"
 import { GET as getGeneral } from "@/app/api/user/general-preferences/route"
 import { GET as getNotifications } from "@/app/api/user/notifications/route"
+import { GET as getDateClosing } from "@/app/api/security/date-closing/route"
 
 const SECRETS = [
   "pinHash",
@@ -122,6 +129,19 @@ const routes: Array<[string, () => Promise<Response>, Array<[string, unknown]>]>
     [
       ["data.telegramConnected", true],
       ["data.preferences.dailyDigest.time", "07:30"],
+    ],
+  ],
+  [
+    // O estado do fechamento nasce da MESMA chave onde mora o hash do PIN: a rota devolve os
+    // cinco campos do contrato, e o `hasPin` é o único vestígio que o hash pode deixar.
+    "GET /api/security/date-closing",
+    () => getDateClosing(new NextRequest("http://localhost:3000/api/security/date-closing")),
+    [
+      ["closedThrough", "2026-08-31"],
+      ["hasPin", true],
+      ["canManageClosing", true],
+      ["canManagePin", true],
+      ["showcase", false],
     ],
   ],
 ]
