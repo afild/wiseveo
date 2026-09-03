@@ -1953,6 +1953,33 @@
       "website": "Website",
       "websitePl": "https://your-site.com"
     },
+    "security": {
+      "allClosed": "Everything up to today is already closed.",
+      "askOwnerPin": "There is no closing PIN yet. Ask the account owner to set one.",
+      "closeDateLabel": "Close through",
+      "closeDescription": "Everything up to the chosen date starts asking for the PIN before any change.",
+      "closeSuccess": "Period closed.",
+      "closeThroughDate": "Close through a date",
+      "closeTitle": "Close transactions",
+      "closedThroughLabel": "Closed through {date}.",
+      "closingDescription": "How far the transactions are protected. Past the cutoff, saving asks for the PIN.",
+      "closingTitle": "Date closing",
+      "definePin": "Set PIN",
+      "definePinDescription": "Pick 4 digits. They will be asked every time someone tries to save inside the closed period.",
+      "definePinTitle": "Set the closing PIN",
+      "noClosedDates": "No closed dates.",
+      "pinDefined": "PIN set.",
+      "pinDefinedAt": "Set on {date}.",
+      "pinDescription": "The four digits asked for saving inside the closed period.",
+      "pinNotSet": "No PIN set.",
+      "pinSaved": "PIN saved.",
+      "pinTitle": "Closing PIN",
+      "readOnly": "Only whoever handles the closing can change this.",
+      "redefinePin": "Change PIN",
+      "redefinePinDescription": "Pick 4 new digits. We do not ask for the current one.",
+      "redefinePinTitle": "Change the closing PIN",
+      "reopenFromDate": "Reopen from a date"
+    },
     "tabs": {
       "account": "Account",
       "admin": "Admin",
@@ -1961,7 +1988,8 @@
       "integrations": "Integrations",
       "monetary": "Currency",
       "notifications": "Alerts",
-      "profile": "Profile"
+      "profile": "Profile",
+      "security": "Security"
     }
   },
   "setup": {
@@ -2780,6 +2808,7 @@
       "lockedRowAria": "Transaction on a closed date",
       "nothingToClose": "Nothing to close. This period has not arrived yet.",
       "periodHint": "The accounting period you picked differs from the date. Closing checks both.",
+      "reopenFromLabel": "Reopen from",
       "reopenScope": "Reopens from {from} through {closedThrough}. {count, plural, one {# transaction stops being protected.} other {# transactions stop being protected.}}",
       "reopenScopeUnavailable": "We could not load the reach of this reopening. You can still continue with the PIN.",
       "reopenSuccess": "Period reopened.",

@@ -13,8 +13,13 @@ interface BlockersPanelProps {
   /** null = painel fechado. */
   blockers: UnpaidBlockersView | null
   onClose: () => void
-  /** "Ver esses lançamentos": leva o seletor de período para a faixa dos bloqueadores. */
-  onViewBlockers: (firstDate: string, lastDate: string) => void
+  /**
+   * "Ver esses lançamentos": leva o seletor de período para a faixa dos bloqueadores. Opcional
+   * porque o seletor de período é por rota (a chave guardada é o caminho): em Configurações não
+   * há para onde mandar a faixa, e o painel prefere não oferecer o atalho a oferecer um que
+   * chegaria na tabela com outro período.
+   */
+  onViewBlockers?: (firstDate: string, lastDate: string) => void
 }
 
 /**
@@ -63,7 +68,7 @@ export function BlockersPanel({ blockers, onClose, onViewBlockers }: BlockersPan
       footer={
         <>
           <DetailPanelCloseButton onClick={onClose} />
-          {firstDate && lastDate && (
+          {firstDate && lastDate && onViewBlockers && (
             <Button
               type="button"
               className="cursor-pointer"

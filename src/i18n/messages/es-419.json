@@ -1953,6 +1953,33 @@
       "website": "Sitio Web",
       "websitePl": "https://su-sitio.com"
     },
+    "security": {
+      "allClosed": "Todo hasta hoy ya está cerrado.",
+      "askOwnerPin": "Todavía no existe el PIN de cierre. Pídele al dueño de la cuenta que defina uno.",
+      "closeDateLabel": "Cerrar hasta",
+      "closeDescription": "Todo hasta la fecha elegida pasa a pedir el PIN para cambiar.",
+      "closeSuccess": "Período cerrado.",
+      "closeThroughDate": "Cerrar hasta una fecha",
+      "closeTitle": "Cerrar movimientos",
+      "closedThroughLabel": "Cerrado hasta {date}.",
+      "closingDescription": "Hasta dónde están protegidos los movimientos. Después del corte, guardar pide el PIN.",
+      "closingTitle": "Cierre de fechas",
+      "definePin": "Definir PIN",
+      "definePinDescription": "Elige 4 dígitos. Se pedirán cada vez que alguien quiera guardar dentro del período cerrado.",
+      "definePinTitle": "Definir el PIN de cierre",
+      "noClosedDates": "Ninguna fecha cerrada.",
+      "pinDefined": "PIN definido.",
+      "pinDefinedAt": "Definido el {date}.",
+      "pinDescription": "Los cuatro dígitos que se piden para guardar dentro del período cerrado.",
+      "pinNotSet": "Ningún PIN definido.",
+      "pinSaved": "PIN guardado.",
+      "pinTitle": "PIN de cierre",
+      "readOnly": "Solo quien se ocupa del cierre puede cambiar esto.",
+      "redefinePin": "Cambiar PIN",
+      "redefinePinDescription": "Elige 4 dígitos nuevos. No pedimos el actual.",
+      "redefinePinTitle": "Cambiar el PIN de cierre",
+      "reopenFromDate": "Reabrir desde una fecha"
+    },
     "tabs": {
       "account": "Cuenta",
       "admin": "Admin",
@@ -1961,7 +1988,8 @@
       "integrations": "Integraciones",
       "monetary": "Moneda",
       "notifications": "Avisos",
-      "profile": "Perfil"
+      "profile": "Perfil",
+      "security": "Seguridad"
     }
   },
   "setup": {
@@ -2780,6 +2808,7 @@
       "lockedRowAria": "Movimiento en fecha cerrada",
       "nothingToClose": "Nada que cerrar. Ese período todavía no llega.",
       "periodHint": "El período contable elegido es distinto de la fecha. El cierre revisa los dos.",
+      "reopenFromLabel": "Reabrir desde",
       "reopenScope": "Reabre desde {from} hasta {closedThrough}. {count, plural, one {# movimiento deja de estar protegido.} other {# movimientos dejan de estar protegidos.}}",
       "reopenScopeUnavailable": "No se pudo cargar el alcance de esta reapertura. Aún puedes continuar con el PIN.",
       "reopenSuccess": "Período reabierto.",

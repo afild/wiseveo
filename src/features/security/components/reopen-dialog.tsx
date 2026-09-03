@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createDateFormatter } from "@/i18n/format"
+import { isDayKey } from "../lib/date-closing"
 import { PIN_TOKEN_HEADER } from "../lib/http"
 import { decideReopenResponse, reopenDialogMode, type ClosingPermissions } from "../lib/switch-flows"
 import { useDateClosing } from "./date-closing-provider"
@@ -27,6 +28,13 @@ interface ReopenDialogProps {
   from: string
   permissions: ClosingPermissions
   onClose: () => void
+  /**
+   * Deixa escolher o dia aqui dentro. No switch do "Registro de Transações" o dia vem do período
+   * em tela e não se discute; em Configurações não há período em tela, então a janela pergunta.
+   */
+  allowChangeFrom?: boolean
+  /** Chamado só quando a reabertura deu certo (a aba Segurança recarrega o estado do servidor). */
+  onReopened?: () => void
 }
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "").slice(0, 4)
@@ -38,7 +46,7 @@ const digitsOnly = (value: string) => value.replace(/\D/g, "").slice(0, 4)
  *
  * A janela nunca fica sem saída: erro nenhum a fecha, e cancelar/Escape sempre voltam para a tela.
  */
-export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) {
+export function ReopenDialog({ from, permissions, onClose, allowChangeFrom = false, onReopened }: ReopenDialogProps) {
   const t = useTranslations("transactions.closing")
   const tDialog = useTranslations("security.dialog")
   const tCommon = useTranslations("common")
@@ -46,6 +54,8 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
   const { state, refresh } = useDateClosing()
   const guard = useDateClosingGuard()
 
+  // O dia pedido: nasce do que o pai mandou e só muda quando a janela oferece o campo de data.
+  const [fromValue, setFromValue] = React.useState(from)
   const [preview, setPreview] = React.useState<{ count: number; closedThrough: string | null } | null>(null)
   const [scopeFailed, setScopeFailed] = React.useState(false)
   const [creating, setCreating] = React.useState(() => reopenDialogMode(permissions) === "createPin")
@@ -77,10 +87,13 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
   // 401), e reabrir se desfaz fechando de novo. Barrar o PIN por causa de um tropeço de rede
   // deixaria a pessoa sem saída, que é justamente o que esta janela promete nunca fazer.
   React.useEffect(() => {
+    // Data pela metade (o campo `type="date"` passa por "2026-0-01" enquanto se digita) não vai
+    // ao servidor: o alcance fica em branco e o botão continua desligado.
+    if (!isDayKey(fromValue)) return
     let active = true
     void (async () => {
       try {
-        const response = await fetch(`/api/security/date-closing/reopen-preview?from=${encodeURIComponent(from)}`, {
+        const response = await fetch(`/api/security/date-closing/reopen-preview?from=${encodeURIComponent(fromValue)}`, {
           cache: "no-store",
         })
         if (!response.ok) {
@@ -100,7 +113,7 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
     return () => {
       active = false
     }
-  }, [from])
+  }, [fromValue])
 
   function close() {
     if (busy) return
@@ -183,7 +196,7 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
       const response = await fetch("/api/security/date-closing/reopen", {
         method: "POST",
         headers: { "Content-Type": "application/json", [PIN_TOKEN_HEADER]: token.token },
-        body: JSON.stringify({ from }),
+        body: JSON.stringify({ from: fromValue }),
       })
       const body = (await response.json().catch(() => ({}))) as Record<string, unknown>
       const outcome = decideReopenResponse({ ok: response.ok, status: response.status, code: body.code })
@@ -191,6 +204,7 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
       if (outcome.kind === "success") {
         await refresh()
         toast.success(t("reopenSuccess"))
+        onReopened?.()
         onClose()
         return
       }
@@ -211,7 +225,7 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
     }
   }
 
-  const canSubmit = creating ? pin.length === 4 && confirmPin.length === 4 : pin.length === 4
+  const canSubmit = (creating ? pin.length === 4 && confirmPin.length === 4 : pin.length === 4) && isDayKey(fromValue)
   // A prévia é a fonte do corte; se ela não veio, o estado do provider serve (o diálogo só
   // abre com corte definido, então uma das duas SEMPRE tem valor).
   const closedThrough = preview?.closedThrough ?? state?.closedThrough ?? null
@@ -220,7 +234,7 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
   // metade, e prometer menos é melhor que prometer errado.
   const scopeText =
     preview && closedThrough
-      ? t("reopenScope", { from: formatDay(from), closedThrough: formatDay(closedThrough), count: preview.count })
+      ? t("reopenScope", { from: formatDay(fromValue), closedThrough: formatDay(closedThrough), count: preview.count })
       : scopeFailed || preview
         ? t("reopenScopeUnavailable")
         : tCommon("loading")
@@ -247,6 +261,26 @@ export function ReopenDialog({ from, permissions, onClose }: ReopenDialogProps) 
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {allowChangeFrom && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="date-closing-reopen-from">{t("reopenFromLabel")}</Label>
+              <Input
+                id="date-closing-reopen-from"
+                type="date"
+                max={closedThrough ?? undefined}
+                value={fromValue}
+                onChange={(event) => {
+                  // O alcance some junto com a data antiga: melhor em branco por um instante que
+                  // dizendo o alcance de outro dia.
+                  setError(null)
+                  setPreview(null)
+                  setScopeFailed(false)
+                  setFromValue(event.target.value)
+                }}
+              />
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="date-closing-reopen-pin">{tDialog("pinLabel")}</Label>
             <Input

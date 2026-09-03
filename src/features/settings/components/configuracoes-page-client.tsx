@@ -26,6 +26,8 @@ import type { AppSettingsStructure } from "../lib/app-settings-structure"
 import { PartyPopper } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { DemoShowcaseBanner } from "@/components/demo-showcase-banner"
+import { SecurityForm } from "@/features/security/components/security-form"
+import type { SecurityContext } from "@/features/security/lib/security-context"
 
 interface ConfiguracoesPageClientProps {
   initialTab?:
@@ -37,6 +39,7 @@ interface ConfiguracoesPageClientProps {
     | "notifications"
     | "integrations"
     | "admin"
+    | "security"
   isAdmin: boolean
   /** Demo ilustrativa: abas extras com dados fictícios e tudo somente-leitura. */
   demoShowcase?: boolean
@@ -57,6 +60,12 @@ interface ConfiguracoesPageClientProps {
     ai: AiSettingsSnapshot | null
     tick: TickSecretView | null
   }
+  /**
+   * Aba Segurança (qualquer sessão real): estado do fechamento e do PIN. Vem da SESSÃO, nunca de
+   * `demoShowcase` — a env vale tanto para a vitrine quanto para a cópia do visitante, e o
+   * visitante manda na cópia dele.
+   */
+  securityContext?: SecurityContext
   /** Contexto da aba Usuários (só quando isAdmin). */
   adminContext?: {
     currentUserId: string
@@ -78,6 +87,7 @@ export function ConfiguracoesPageClient({
   initialAdminUsers,
   notificationsContext,
   integrationsContext,
+  securityContext,
   adminContext,
 }: ConfiguracoesPageClientProps) {
   const searchParams = useSearchParams()
@@ -100,18 +110,24 @@ export function ConfiguracoesPageClient({
       )}
 
       <Tabs defaultValue={initialTab} className="space-y-6">
+        {/* `max-w-full` segura as larguras fixas do `xl`: numa tela de 1440 com a barra lateral
+            aberta o container tem ~1113px, e sem o teto as 9 abas empurrariam a página para o lado.
+            `h-auto` porque abaixo do `lg` a grade tem várias linhas e a altura fixa do TabsList
+            (h-9) deixava as últimas abas por cima do conteúdo. */}
         <TabsList
-          className={`grid w-full grid-cols-2 gap-2 sm:grid-cols-3 ${
+          className={`grid h-auto w-full max-w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:h-9 ${
             {
-              5: "lg:w-[720px] lg:grid-cols-5",
-              6: "lg:w-[840px] lg:grid-cols-6",
-              7: "lg:w-[960px] lg:grid-cols-7",
-              8: "lg:w-[1080px] lg:grid-cols-8",
+              5: "lg:w-full lg:grid-cols-5 xl:w-[720px]",
+              6: "lg:w-full lg:grid-cols-6 xl:w-[840px]",
+              7: "lg:w-full lg:grid-cols-7 xl:w-[960px]",
+              8: "lg:w-full lg:grid-cols-8 xl:w-[1080px]",
+              9: "lg:w-full lg:grid-cols-9 xl:w-[1200px]",
             }[
               5 +
                 (notificationsContext ? 1 : 0) +
                 (integrationsContext ? 1 : 0) +
-                (isAdmin ? 1 : 0)
+                (isAdmin ? 1 : 0) +
+                (securityContext ? 1 : 0)
             ]
           }`}
         >
@@ -127,6 +143,9 @@ export function ConfiguracoesPageClient({
             <TabsTrigger value="integrations" className="cursor-pointer">{t("tabs.integrations")}</TabsTrigger>
           )}
           {isAdmin && <TabsTrigger value="admin" className="cursor-pointer">{t("tabs.admin")}</TabsTrigger>}
+          {securityContext && (
+            <TabsTrigger value="security" className="cursor-pointer">{t("tabs.security")}</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="general" className="border-none p-0 mt-6 outline-none">
@@ -187,6 +206,15 @@ export function ConfiguracoesPageClient({
                 initialTick={integrationsContext.tick}
                 readOnly={demoShowcase}
               />
+            </div>
+          </TabsContent>
+        )}
+
+        {securityContext && (
+          <TabsContent value="security" className="border-none p-0 mt-6 outline-none">
+            <div className="max-w-3xl space-y-4">
+              {securityContext.showcase && <DemoShowcaseBanner />}
+              <SecurityForm {...securityContext} />
             </div>
           </TabsContent>
         )}

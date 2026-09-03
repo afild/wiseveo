@@ -21,6 +21,12 @@ import { getTickSecretStatus } from "@/features/notifications/services/tick-secr
 import { getAccountOwnership } from "@/features/settings/services/admin-users-service"
 import { listPendingInvitations } from "@/features/settings/services/invitations-service"
 import { defaultMonetarySettings } from "@/lib/monetary"
+import { getSession } from "@/lib/session"
+import { resolveDataOwnerId } from "@/lib/data-owner"
+import { buildSecurityContext, type SecurityContext } from "@/features/security/lib/security-context"
+import type { Actor } from "@/features/security/lib/permissions"
+import { getDateClosingState } from "@/features/security/services/date-closing.service"
+import { readOwnerClosing } from "@/features/security/services/read-owner-closing"
 import {
   demoAdminShowcase,
   demoAppSettingsStructure,
@@ -29,7 +35,43 @@ import {
 } from "@/features/settings/lib/demo-showcase"
 
 const baseTabs = ["general", "appearance", "monetary", "profile", "account"] as const
-type SettingsTab = (typeof baseTabs)[number] | "notifications" | "integrations" | "admin"
+type SettingsTab = (typeof baseTabs)[number] | "notifications" | "integrations" | "admin" | "security"
+
+/**
+ * Aba Segurança: a ÚNICA parte desta página que sai da sessão, e não de `getSettingsUserId`.
+ * Fechamento e PIN dependem de quem está agindo (papel, situação, vitrine) e de quem é o dono
+ * dos dados, e nada disso cabe num id de conveniência. Sem sessão real, a aba não existe.
+ *
+ * Falha de banco esconde a aba em vez de derrubar Configurações inteira: o resto da tela não tem
+ * nada a ver com o fechamento, e a trava de verdade continua sendo a do servidor.
+ */
+async function readSecurityContext(): Promise<SecurityContext | undefined> {
+  try {
+    const session = await getSession()
+    if (!session) return undefined
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { role: true, status: true },
+    })
+    if (!user) return undefined
+    const actor: Actor = {
+      actorUserId: session.userId,
+      ownerId: await resolveDataOwnerId(session.userId),
+      role: user.role,
+      status: user.status,
+      showcase: session.demoShared === true,
+    }
+    // Duas leituras da mesma linha de propósito: o estado é o contrato de cinco campos da rota
+    // (que NÃO devolve `pinUpdatedAt`, e nem deve), e o "Definido em" é só desta tela.
+    const [state, closing] = await Promise.all([
+      getDateClosingState(actor),
+      readOwnerClosing(prisma, actor.ownerId, null),
+    ])
+    return buildSecurityContext(actor, { ...state, pinUpdatedAt: closing.pinUpdatedAt })
+  } catch {
+    return undefined
+  }
+}
 
 export default async function ConfiguracoesPage({
   searchParams,
@@ -105,11 +147,14 @@ export default async function ConfiguracoesPage({
   const isDemoShowcase = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
   const demoAdmin = isDemoShowcase ? demoAdminShowcase(userId) : null
 
+  const securityContext = await readSecurityContext()
+
   const validTabs: string[] = [
     ...baseTabs,
     ...(showNotifications || isDemoShowcase ? ["notifications"] : []),
     ...(showIntegrations || isDemoShowcase ? ["integrations"] : []),
     ...(isAdmin || isDemoShowcase ? ["admin"] : []),
+    ...(securityContext ? ["security"] : []),
   ]
   const initialTab: SettingsTab =
     requestedTab && validTabs.includes(requestedTab) ? (requestedTab as SettingsTab) : "general"
@@ -119,6 +164,7 @@ export default async function ConfiguracoesPage({
       initialTab={initialTab}
       isAdmin={isAdmin || isDemoShowcase}
       demoShowcase={isDemoShowcase}
+      securityContext={securityContext}
       notificationsContext={
         isDemoShowcase
           ? {

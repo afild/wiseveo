@@ -1953,6 +1953,33 @@
       "website": "Website",
       "websitePl": "https://seu-site.com"
     },
+    "security": {
+      "allClosed": "Tudo até hoje já está fechado.",
+      "askOwnerPin": "O PIN de fechamento ainda não existe. Peça ao dono da conta para definir um.",
+      "closeDateLabel": "Fechar até",
+      "closeDescription": "Tudo até a data escolhida passa a pedir o PIN para ser alterado.",
+      "closeSuccess": "Período fechado.",
+      "closeThroughDate": "Fechar até uma data",
+      "closeTitle": "Fechar lançamentos",
+      "closedThroughLabel": "Fechado até {date}.",
+      "closingDescription": "Até onde os lançamentos estão protegidos. Depois do corte, gravar pede o PIN.",
+      "closingTitle": "Fechamento de datas",
+      "definePin": "Definir PIN",
+      "definePinDescription": "Escolha 4 dígitos. Eles serão pedidos toda vez que alguém quiser gravar dentro do período fechado.",
+      "definePinTitle": "Definir o PIN de fechamento",
+      "noClosedDates": "Nenhuma data fechada.",
+      "pinDefined": "PIN definido.",
+      "pinDefinedAt": "Definido em {date}.",
+      "pinDescription": "Os quatro dígitos pedidos para gravar dentro do período fechado.",
+      "pinNotSet": "Nenhum PIN definido.",
+      "pinSaved": "PIN salvo.",
+      "pinTitle": "PIN de fechamento",
+      "readOnly": "Só quem cuida do fechamento pode mexer aqui.",
+      "redefinePin": "Redefinir PIN",
+      "redefinePinDescription": "Escolha 4 dígitos novos. Não pedimos o PIN atual.",
+      "redefinePinTitle": "Redefinir o PIN de fechamento",
+      "reopenFromDate": "Reabrir a partir de uma data"
+    },
     "tabs": {
       "account": "Conta",
       "admin": "Admin",
@@ -1961,7 +1988,8 @@
       "integrations": "Integrações",
       "monetary": "Moeda",
       "notifications": "Avisos",
-      "profile": "Perfil"
+      "profile": "Perfil",
+      "security": "Segurança"
     }
   },
   "setup": {
@@ -2780,6 +2808,7 @@
       "lockedRowAria": "Lançamento em data fechada",
       "nothingToClose": "Nada a fechar. Esse período ainda não chegou.",
       "periodHint": "A competência escolhida é diferente da data. O fechamento confere as duas.",
+      "reopenFromLabel": "Reabrir a partir de",
       "reopenScope": "Reabre de {from} até {closedThrough}. {count, plural, one {# lançamento deixa de estar protegido.} other {# lançamentos deixam de estar protegidos.}}",
       "reopenScopeUnavailable": "Não deu para carregar o alcance desta reabertura. Você ainda pode continuar com o PIN.",
       "reopenSuccess": "Período reaberto.",
