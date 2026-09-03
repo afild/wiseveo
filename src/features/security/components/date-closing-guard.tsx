@@ -71,6 +71,17 @@ export function DateClosingGuard({ children }: { children: React.ReactNode }) {
     }),
   )
 
+  // Os desmontes adiados que ainda não venceram. Se o guard sair da tela dentro do mesmo tique,
+  // o callback rodaria contra uma árvore que não existe mais (hoje um no-op, e é assim que fica).
+  const pendingUnmounts = React.useRef(new Set<number>())
+  React.useEffect(
+    () => () => {
+      for (const timer of pendingUnmounts.current) window.clearTimeout(timer)
+      pendingUnmounts.current.clear()
+    },
+    [],
+  )
+
   const settle = React.useCallback(
     (id: number, resolve: (result: DialogResult) => void, result: DialogResult) => {
       if (result.kind === "token") opener.keepToken(result.token, result.expiresAt)
@@ -90,7 +101,15 @@ export function DateClosingGuard({ children }: { children: React.ReactNode }) {
       // Radix terminar de processar a interação atual — e o próprio atraso dele, do mesmo
       // tanto — antes de tirarmos esta camada do jogo. `settledPending` evita apagar um pedido
       // NOVO que a fila já tenha posto no lugar deste enquanto esperávamos.
-      window.setTimeout(() => setPending((current) => settledPending(current, id)), 0)
+      //
+      // NÃO troque este atraso por um `setPending` direto: é ele, sozinho, que segura o painel de
+      // baixo aberto. O `onInteractOutside` que existiu no Drawer como "segunda perna" era código
+      // morto (ver o comentário em src/components/ui/drawer.tsx).
+      const timer = window.setTimeout(() => {
+        pendingUnmounts.current.delete(timer)
+        setPending((current) => settledPending(current, id))
+      }, 0)
+      pendingUnmounts.current.add(timer)
     },
     [opener, refresh],
   )

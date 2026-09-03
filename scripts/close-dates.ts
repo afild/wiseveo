@@ -16,14 +16,25 @@
  * 3. O padrão é SIMULAÇÃO. Escrever exige `--apply`, sempre, inclusive para reverter.
  * 4. Antes de gravar, o script salva num arquivo a linha inteira que vai mudar. Se o arquivo não
  *    puder ser salvo e relido, NADA é gravado.
+ * 5. A gravação do fechamento acontece dentro de UMA transação que primeiro trava a linha do dono
+ *    (`FOR UPDATE`), relê o corte e reconta os bloqueadores ali dentro. É a mesma coreografia do
+ *    app (`closeThrough`): conferir num lugar e gravar em outro deixaria aberta a janela em que um
+ *    lançamento novo, feito do celular ou de uma aba esquecida aberta, cai dentro do período
+ *    recém-fechado, possivelmente sem estar pago.
+ * 6. Sem PIN o script recusa fechar, como o app recusa (428 `pinNotSet`): fechamento que ninguém
+ *    consegue reabrir é armadilha, porque reabrir data exige o PIN.
+ *
+ * ORDEM DE TRAVAS (desenho, seção 5): dentro da transação, `transactions` só recebe SELECT simples
+ * (ACCESS SHARE). Nunca `FOR UPDATE`, `FOR SHARE` ou `LOCK TABLE` ali, senão fecha ciclo de
+ * deadlock com o `LOCK TABLE ... EXCLUSIVE` do `createTransaction`.
  *
  * Uso:
  *   CLOSE_DATES_DATABASE_URL=... CLOSE_DATES_OWNER_EMAIL=... npm run close-dates -- --through 2026-08-31
  *   ... mesmo comando com --apply para gravar
  *   ... --revert backups/close-dates-<id>-<data>.json --apply para desfazer
  *
- * Códigos de saída: 0 sucesso ou simulação; 1 recusa (bloqueadores, reabertura, nada a fazer);
- * 2 uso ou ambiente inválido (variável faltando, data ilegível, dono não encontrado).
+ * Códigos de saída: 0 sucesso ou simulação; 1 recusa (sem PIN, bloqueadores, reabertura, nada a
+ * fazer); 2 uso ou ambiente inválido (variável faltando, data ilegível, dono não encontrado).
  */
 import fs from "node:fs"
 import path from "node:path"
@@ -34,13 +45,24 @@ import { isDayKey, dayKeyOfStored } from "../src/features/security/lib/date-clos
 import { readOwnerClosing } from "../src/features/security/services/read-owner-closing"
 import { mergeUserPreferenceKey } from "../src/features/settings/services/user-preferences-write"
 import { endOfUTCDay } from "../src/lib/financial"
-import { planCloseDates } from "./lib/close-dates-plan"
+import { planCloseDates, type ClosePlan } from "./lib/close-dates-plan"
+// Só o TIPO: `import type` some na compilação, então isto NÃO carrega o serviço (que arrasta
+// `@/lib/prisma`) antes da hora. O valor continua vindo do `import()` dinâmico lá embaixo.
+import type { UnpaidBlockers } from "../src/features/security/services/date-closing.service"
 
 /**
  * Trava 2 (ver o cabeçalho): nenhuma conexão "de ambiente" sobrevive a esta linha. Roda ANTES do
  * `import()` dinâmico do serviço lá embaixo, que é quem arrasta `@/lib/prisma`.
  */
 delete process.env.DATABASE_URL
+
+/**
+ * A transação do fechamento faz três coisas no banco do dono: trava a linha, reconta quase dois
+ * anos de lançamentos e grava. Os 5 s padrão do Prisma não dão conta disso num banco frio, e
+ * estourar no meio seria recusa por relógio, não por regra. O `maxWait` é a espera pela conexão.
+ */
+const TX_TIMEOUT_MS = 120_000
+const TX_MAX_WAIT_MS = 20_000
 
 const USAGE = `
 Uso:
@@ -179,10 +201,61 @@ function printPreferencesDiff(current: unknown, target: unknown): void {
   }
 }
 
+/** Os não pagos que impedem o fechamento, com amostra, para quem está rodando decidir. */
+function printBlockers(blockers: UnpaidBlockers): void {
+  console.log(`Bloqueadores (não pagos na faixa): ${blockers.count}`)
+  if (blockers.count === 0) return
+  console.log(`  faixa........: ${blockers.firstDate} a ${blockers.lastDate}`)
+  console.log(`  amostra (até ${blockers.sample.length}):`)
+  for (const row of blockers.sample) {
+    console.log(`    ${row.date}  ${money(row.amount).padStart(12)}  [${row.status}]  ${row.description ?? "(sem descrição)"}`)
+  }
+  if (blockers.count > blockers.sample.length) {
+    console.log(`    ... e mais ${blockers.count - blockers.sample.length} sem listar.`)
+  }
+}
+
+type RefuseReason = Extract<ClosePlan, { action: "refuse" }>["reason"]
+
+/**
+ * O MESMO texto de recusa para as duas conferências (a de fora, informativa, e a de dentro da
+ * transação, que é a que manda). Quem roda não precisa aprender dois vocabulários.
+ */
+function printRefusal(
+  reason: RefuseReason,
+  ctx: { closedThrough: string | null; through: string; blockersCount: number },
+): void {
+  if (reason === "pinNotSet") {
+    console.log("RECUSADO: não há PIN de fechamento neste banco.")
+    console.log("Fechar sem PIN tranca sem deixar a chave: reabrir uma data fechada só acontece com o PIN,")
+    console.log("e o app recusa fechar pelo mesmo motivo. Crie o PIN no app, em Configurações, aba")
+    console.log("Segurança, e rode este comando de novo.")
+    return
+  }
+  if (reason === "blockers") {
+    console.log(
+      `RECUSADO: há ${ctx.blockersCount} lançamento(s) não pago(s) até ${ctx.through}. Resolva pelo app e rode de novo.`,
+    )
+    return
+  }
+  if (reason === "wouldReopen") {
+    console.log(`RECUSADO: o corte atual é ${ctx.closedThrough} e ${ctx.through} é anterior. Reabrir data é pelo app, com PIN.`)
+    return
+  }
+  console.log(`NADA A FAZER: o corte já é ${ctx.closedThrough}.`)
+}
+
+interface CloseOutcome {
+  decision: ClosePlan
+  closedThrough: string | null
+  blockersCount: number
+}
+
 async function runClose(
   client: PrismaClient,
   owner: OwnerRow,
   closedThrough: string | null,
+  hasPin: boolean,
   args: Args,
 ): Promise<number> {
   const through = args.through as string
@@ -203,32 +276,18 @@ async function runClose(
   console.log(`  último.......: ${bounds._max.date ? dayKeyOfStored(bounds._max.date) : "(nenhum)"}`)
   console.log(`\nLançamentos que este fechamento passa a proteger: ${total}`)
 
-  // Cliente próprio no lugar da transação: só SELECT, e o serviço é o mesmo que o app usa.
+  // Serviço carregado só agora, DEPOIS de a `DATABASE_URL` do ambiente ter sido apagada.
   const { findUnpaidBlockers } = await import("../src/features/security/services/date-closing.service")
   const blockers = await findUnpaidBlockers(client, owner.id, closedThrough, through)
-  console.log(`Bloqueadores (não pagos na faixa): ${blockers.count}`)
-  if (blockers.count > 0) {
-    console.log(`  faixa........: ${blockers.firstDate} a ${blockers.lastDate}`)
-    console.log(`  amostra (até ${blockers.sample.length}):`)
-    for (const row of blockers.sample) {
-      console.log(`    ${row.date}  ${money(row.amount).padStart(12)}  [${row.status}]  ${row.description ?? "(sem descrição)"}`)
-    }
-    if (blockers.count > blockers.sample.length) {
-      console.log(`    ... e mais ${blockers.count - blockers.sample.length} sem listar.`)
-    }
-  }
+  printBlockers(blockers)
 
-  const plan = planCloseDates({ closedThrough, through, blockersCount: blockers.count, apply: args.apply })
+  // Primeira conferência: é o quadro que a pessoa lê antes de decidir. A que MANDA é a de dentro
+  // da transação, mais abaixo, com a linha do dono travada.
+  const plan = planCloseDates({ closedThrough, through, blockersCount: blockers.count, hasPin, apply: args.apply })
 
   if (plan.action === "refuse") {
     console.log("")
-    if (plan.reason === "blockers") {
-      console.log(`RECUSADO: há ${blockers.count} lançamento(s) não pago(s) até ${through}. Resolva pelo app e rode de novo.`)
-    } else if (plan.reason === "wouldReopen") {
-      console.log(`RECUSADO: o corte atual é ${closedThrough} e ${through} é anterior. Reabrir data é pelo app, com PIN.`)
-    } else {
-      console.log(`NADA A FAZER: o corte já é ${closedThrough}.`)
-    }
+    printRefusal(plan.reason, { closedThrough, through, blockersCount: blockers.count })
     console.log("Nada foi gravado.")
     return 1
   }
@@ -242,6 +301,8 @@ async function runClose(
 
   console.log("")
   console.log(`APLICANDO: corte de ${closedThrough ?? "(nenhum)"} para ${through}.`)
+  // O snapshot fica FORA da transação e ANTES dela: se o disco recusar, `saveSnapshot` lança e
+  // nem chega a abrir transação nenhuma no banco.
   const snapshot = saveSnapshot(owner, {
     kind: "before-close",
     savedAt: new Date().toISOString(),
@@ -251,7 +312,50 @@ async function runClose(
   })
   console.log(`Snapshot salvo em: ${snapshot}`)
 
-  await mergeUserPreferenceKey(client, owner.id, "dateClosing", { closedThrough: through })
+  const outcome = await client.$transaction(
+    async (tx): Promise<CloseOutcome> => {
+      // Trava a linha do dono ANTES de qualquer conferência: daqui até o commit ninguém mais muda
+      // o corte nem o PIN dele.
+      const closing = await readOwnerClosing(tx, owner.id, "update")
+      // Só SELECT simples em `transactions` aqui (ACCESS SHARE): nunca FOR UPDATE/FOR SHARE/LOCK,
+      // senão forma ciclo com o LOCK TABLE do createTransaction (ver desenho, seção 5).
+      const recount = await findUnpaidBlockers(tx, owner.id, closing.closedThrough, through)
+      // Decisão refeita com o que o banco diz AGORA: corte que andou desde a simulação, PIN que
+      // sumiu, lançamento não pago que entrou. Nenhum dos três passa em silêncio.
+      const decision = planCloseDates({
+        closedThrough: closing.closedThrough,
+        through,
+        blockersCount: recount.count,
+        hasPin: closing.pinHash !== null,
+        apply: true,
+      })
+      if (decision.action !== "apply") {
+        return { decision, closedThrough: closing.closedThrough, blockersCount: recount.count }
+      }
+      await mergeUserPreferenceKey(tx, owner.id, "dateClosing", { closedThrough: through })
+      return { decision, closedThrough: closing.closedThrough, blockersCount: recount.count }
+    },
+    { timeout: TX_TIMEOUT_MS, maxWait: TX_MAX_WAIT_MS },
+  )
+
+  if (outcome.decision.action !== "apply") {
+    console.log("")
+    console.log("O banco mudou entre o quadro acima e a gravação. A transação travou a linha do dono,")
+    console.log("conferiu de novo e desistiu:")
+    if (outcome.decision.action === "refuse") {
+      printRefusal(outcome.decision.reason, {
+        closedThrough: outcome.closedThrough,
+        through,
+        blockersCount: outcome.blockersCount,
+      })
+    } else {
+      // Impossível com `apply: true`. Se aparecer, é bug de planCloseDates, e a transação já
+      // desfez tudo: nada foi gravado de qualquer jeito.
+      console.log(`Decisão inesperada dentro da transação: ${outcome.decision.action}.`)
+    }
+    console.log("Nada foi gravado. O snapshot acima pode ser apagado.")
+    return 1
+  }
 
   const after = await readOwnerClosing(client, owner.id, null)
   console.log("\nEstado novo:")
@@ -366,8 +470,10 @@ async function main(): Promise<number> {
     console.log(`  corte atual..: ${closing.closedThrough ?? "(nenhum: tudo aberto)"}`)
     console.log(`  PIN definido.: ${closing.pinHash !== null ? "sim" : "não"}`)
 
+    // Reverter continua valendo sem PIN: é justamente o caminho de volta de um fechamento que não
+    // deveria ter acontecido.
     if (args.revert !== null) return await runRevert(client, owner, args)
-    return await runClose(client, owner, closing.closedThrough, args)
+    return await runClose(client, owner, closing.closedThrough, closing.pinHash !== null, args)
   } finally {
     await client.$disconnect()
     await pool.end()

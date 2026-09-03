@@ -43,10 +43,22 @@ function DrawerOverlay({
   )
 }
 
+/**
+ * NÃO há segunda trava aqui, e não adianta pôr: o painel que não pode fechar sozinho depende de
+ * UMA coisa só, o desmonte adiado da janela do PIN (o `setTimeout(0)` de
+ * `src/features/security/components/date-closing-guard.tsx`). Não simplifique aquele setTimeout.
+ *
+ * Já houve aqui um `onInteractOutside` que dava `preventDefault()` quando o foco caía fora. Era
+ * código morto nas versões instaladas (vaul 1.1.2 + @radix-ui/react-dialog 1.1.18): o vaul monta o
+ * `DialogPrimitive.Root` SEM passar `modal`, então o Radix é sempre modal e usa `DialogContentModal`,
+ * que já compõe `onFocusOutside` com o próprio `preventDefault()`. E o `DismissableLayer` chama
+ * `onFocusOutside` ANTES de `onInteractOutside`, então o evento chegava aqui com
+ * `defaultPrevented` já true. Pelo caminho do ponteiro o tipo do evento é "pointerdown", nunca
+ * "focusin". Ou seja: as duas condições eram impossíveis, e nenhum Drawer do app usa `modal={false}`.
+ */
 function DrawerContent({
   className,
   children,
-  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
   return (
@@ -62,18 +74,6 @@ function DrawerContent({
           "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:sm:max-w-sm",
           className
         )}
-        onInteractOutside={(event) => {
-          onInteractOutside?.(event)
-          // O vaul só recusa fechar por "foco saiu" quando o drawer NÃO é modal; no modal (o
-          // único modo usado no WISEVEO), ele deixa o Radix fechar por QUALQUER foco que caia
-          // fora — inclusive o foco revertendo para <body> porque outra coisa, sem relação
-          // nenhuma com um clique de verdade aqui fora, foi desmontada em outra árvore (ex.: a
-          // janela do PIN de fechamento de datas, que fica fora deste Drawer). Dialog/Sheet já
-          // não fecham nesse caso; isto deixa o Drawer com o mesmo comportamento.
-          if (!event.defaultPrevented && event.detail.originalEvent.type === "focusin") {
-            event.preventDefault()
-          }
-        }}
         {...props}
       >
         <div className="bg-muted mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
