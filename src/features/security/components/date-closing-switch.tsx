@@ -25,6 +25,7 @@ import {
   localDateOfDayKey,
   readUnpaidBlockers,
   resolveSwitchView,
+  retainConfirmThroughForDisplay,
   type ClosingPermissions,
   type UnpaidBlockersView,
 } from "../lib/switch-flows"
@@ -113,11 +114,20 @@ export function DateClosingSwitch() {
   const { switchState, permissions, view } = useClosingSwitch()
 
   const [confirmThrough, setConfirmThrough] = React.useState<string | null>(null)
+  // Só para EXIBIR: `confirmThrough` zera assim que a resposta do fechamento chega, mas o
+  // AlertDialog ainda está saindo (anima por um instante) — sem isto o título piscaria "Fechar
+  // lançamentos até ?" com a data vazia durante o fade-out. Mantém o último valor não nulo.
+  const [displayThrough, setDisplayThrough] = React.useState<string | null>(null)
   const [blockers, setBlockers] = React.useState<UnpaidBlockersView | null>(null)
   const [reopenFrom, setReopenFrom] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   // O estado desabilita o botão no próximo pintar; a ref recusa o segundo clique NESTE.
   const busyRef = React.useRef(false)
+
+  // Ajusta durante a própria renderização (padrão do React para "lembrar o valor anterior"):
+  // atualiza já, sem esperar um efeito, senão o título abriria um pintar atrasado.
+  const nextDisplayThrough = retainConfirmThroughForDisplay(confirmThrough, displayThrough)
+  if (nextDisplayThrough !== displayThrough) setDisplayThrough(nextDisplayThrough)
 
   const dayFormatter = React.useMemo(
     () => createDateFormatter(locale, { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }),
@@ -199,7 +209,7 @@ export function DateClosingSwitch() {
     }
   }
 
-  const closingToday = confirmThrough !== null && confirmThrough === dayKeyOfLocal(new Date())
+  const closingToday = displayThrough !== null && displayThrough === dayKeyOfLocal(new Date())
 
   return (
     <CardAction className="flex items-center">
@@ -219,7 +229,7 @@ export function DateClosingSwitch() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("confirmCloseTitle", { date: confirmThrough ? formatDay(confirmThrough) : "" })}
+              {t("confirmCloseTitle", { date: displayThrough ? formatDay(displayThrough) : "" })}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {t("confirmCloseBody")}

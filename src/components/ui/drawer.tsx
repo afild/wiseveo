@@ -46,6 +46,7 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
   return (
@@ -61,6 +62,18 @@ function DrawerContent({
           "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:sm:max-w-sm",
           className
         )}
+        onInteractOutside={(event) => {
+          onInteractOutside?.(event)
+          // O vaul só recusa fechar por "foco saiu" quando o drawer NÃO é modal; no modal (o
+          // único modo usado no WISEVEO), ele deixa o Radix fechar por QUALQUER foco que caia
+          // fora — inclusive o foco revertendo para <body> porque outra coisa, sem relação
+          // nenhuma com um clique de verdade aqui fora, foi desmontada em outra árvore (ex.: a
+          // janela do PIN de fechamento de datas, que fica fora deste Drawer). Dialog/Sheet já
+          // não fecham nesse caso; isto deixa o Drawer com o mesmo comportamento.
+          if (!event.defaultPrevented && event.detail.originalEvent.type === "focusin") {
+            event.preventDefault()
+          }
+        }}
         {...props}
       >
         <div className="bg-muted mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />

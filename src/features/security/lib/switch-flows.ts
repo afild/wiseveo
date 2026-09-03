@@ -91,6 +91,17 @@ export function decideCloseResponse(input: { ok: boolean; status: number; code?:
   return { kind: "error" }
 }
 
+/**
+ * Data exibida no título/descrição da confirmação de fechamento (`AlertDialog` de
+ * `DateClosingSwitch`). `closeThrough()` zera `confirmThrough` assim que a resposta chega, para
+ * o diálogo começar a fechar — mas a animação de saída ainda leva um instante, e nesse
+ * meio-tempo o texto não pode piscar com a data vazia ("Fechar lançamentos até ?"). Mantém o
+ * último valor não nulo até a próxima abertura, quando um valor novo chega de verdade.
+ */
+export function retainConfirmThroughForDisplay(confirmThrough: string | null, previousDisplay: string | null): string | null {
+  return confirmThrough ?? previousDisplay
+}
+
 export type ReopenOutcome = { kind: "success" } | { kind: "pinRequired" } | { kind: "error" }
 
 /**

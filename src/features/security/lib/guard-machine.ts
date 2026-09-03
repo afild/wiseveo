@@ -119,6 +119,19 @@ export function laterDayKey(a: string | null, b: string | null): string | null {
   return a >= b ? a : b
 }
 
+/**
+ * Aplica um "settle" atrasado (o guard adia o desmonte da janela com `setTimeout(0)`, para o
+ * Radix terminar de processar a interação atual antes dela sumir da árvore) sobre o estado de
+ * uma janela pendente: só apaga se NINGUÉM trocou de janela enquanto o atraso corria.
+ *
+ * Sem isto, um pedido novo que a fila já tenha posto no lugar deste (`setPending(novo)`,
+ * despachado antes do nosso `setTimeout` vencer) seria apagado pelo settle antigo por engano —
+ * a próxima pergunta de um lote sumiria da tela sem resposta.
+ */
+export function settledPending<T extends { id: number }>(current: T | null, settledId: number): T | null {
+  return current !== null && current.id === settledId ? null : current
+}
+
 export interface QueuedDialogInput {
   /** O guard desmontou: nenhuma janela pode mais aparecer na tela. */
   disposed: boolean

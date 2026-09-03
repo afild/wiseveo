@@ -9,6 +9,7 @@ import {
   readUnpaidBlockers,
   reopenDialogMode,
   resolveSwitchView,
+  retainConfirmThroughForDisplay,
   type ClosingPermissions,
 } from "@/features/security/lib/switch-flows"
 
@@ -261,5 +262,23 @@ describe("chave de dia para o seletor de período", () => {
     const date = localDateOfDayKey("2026-08-02")
     expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([2026, 7, 2])
     expect([date.getHours(), date.getMinutes()]).toEqual([0, 0])
+  })
+})
+
+/**
+ * `closeThrough()` zera `confirmThrough` assim que a resposta chega, mas o AlertDialog ainda
+ * está saindo. O texto exibido não pode piscar com a data vazia durante essa animação.
+ */
+describe("data exibida na confirmação de fechamento", () => {
+  it("mantém o valor anterior quando a data pendente zera (diálogo fechando)", () => {
+    expect(retainConfirmThroughForDisplay(null, "2026-08-31")).toBe("2026-08-31")
+  })
+
+  it("troca para o valor novo assim que uma nova confirmação abre", () => {
+    expect(retainConfirmThroughForDisplay("2026-09-30", "2026-08-31")).toBe("2026-09-30")
+  })
+
+  it("sem nada exibido antes e sem pendente agora, continua nulo", () => {
+    expect(retainConfirmThroughForDisplay(null, null)).toBeNull()
   })
 })

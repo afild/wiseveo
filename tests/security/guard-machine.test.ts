@@ -8,6 +8,7 @@ import {
   isLaunchRoute,
   laterDayKey,
   planQueuedDialog,
+  settledPending,
   type DialogRequest,
   type DialogResult,
 } from "@/features/security/lib/guard-machine"
@@ -518,5 +519,21 @@ describe("fila da janela", () => {
 
     expect(first).toEqual({ kind: "token", token: "tok-1", expiresAt })
     expect(second).toEqual({ kind: "token", token: "tok-1", expiresAt })
+  })
+})
+
+describe("settledPending", () => {
+  it("apaga quando o id resolvido ainda é o pendente", () => {
+    expect(settledPending({ id: 1 }, 1)).toBeNull()
+  })
+
+  it("preserva um pedido NOVO que já tomou o lugar do que estava sendo resolvido", () => {
+    // Simula a corrida: o settle da janela 1 foi adiado (setTimeout), e antes dele vencer a
+    // fila já trocou `pending` pela janela 2. O settle atrasado não pode apagar a janela 2.
+    expect(settledPending({ id: 2 }, 1)).toEqual({ id: 2 })
+  })
+
+  it("não faz nada quando já não há pendente nenhum", () => {
+    expect(settledPending(null, 1)).toBeNull()
   })
 })

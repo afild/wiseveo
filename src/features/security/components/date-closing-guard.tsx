@@ -7,6 +7,7 @@ import {
   createDateClosingInterceptor,
   createGuardMachine,
   createSerialDialogOpener,
+  settledPending,
   type DialogRequest,
   type DialogResult,
 } from "../lib/guard-machine"
@@ -71,13 +72,25 @@ export function DateClosingGuard({ children }: { children: React.ReactNode }) {
   )
 
   const settle = React.useCallback(
-    (resolve: (result: DialogResult) => void, result: DialogResult) => {
-      setPending(null)
+    (id: number, resolve: (result: DialogResult) => void, result: DialogResult) => {
       if (result.kind === "token") opener.keepToken(result.token, result.expiresAt)
       // O PIN pode ter nascido dentro da própria janela ("criar e prosseguir"): o provider
       // precisa saber, senão a próxima janela pediria para criar de novo.
       if (result.kind === "pinCreated" || (result.kind === "token" && result.pinCreated)) void refresh()
+      // Devolve a resposta original JÁ: quem pediu (formulário, lote) não espera esta janela
+      // sumir da tela para saber a decisão — é o painel de baixo que precisa continuar aberto.
       resolve(result)
+      // Tira esta janela da árvore só no próximo ciclo do event loop, não já dentro deste
+      // clique/Escape/X. Nesta versão do Radix, o pointerdown-outside da camada de baixo
+      // (Sheet, Drawer, qualquer Dialog) é adiado para o "click" seguinte ao pointerdown — com
+      // um `setTimeout(0)` de reforço embutido no próprio Radix. Se desmontarmos esta janela
+      // DENTRO da mesma interação que a fechou, a camada de baixo vira "a mais alta" no meio do
+      // processamento dessa MESMA interação e a lê como "fora dela", fechando-se sozinha: é
+      // exatamente o defeito (mudar a data também derruba o painel). Um `setTimeout(0)` deixa o
+      // Radix terminar de processar a interação atual — e o próprio atraso dele, do mesmo
+      // tanto — antes de tirarmos esta camada do jogo. `settledPending` evita apagar um pedido
+      // NOVO que a fila já tenha posto no lugar deste enquanto esperávamos.
+      window.setTimeout(() => setPending((current) => settledPending(current, id)), 0)
     },
     [opener, refresh],
   )
@@ -145,7 +158,7 @@ export function DateClosingGuard({ children }: { children: React.ReactNode }) {
           <DateClosingLoadingDialog
             key={pending.id}
             mode={pending.request.mode}
-            onCancel={() => settle(pending.resolve, { kind: "changeDate" })}
+            onCancel={() => settle(pending.id, pending.resolve, { kind: "changeDate" })}
           />
         ) : (
           <PinDialog
@@ -155,7 +168,7 @@ export function DateClosingGuard({ children }: { children: React.ReactNode }) {
             hasPin={state.hasPin}
             canManagePin={state.canManagePin}
             canManageClosing={state.canManageClosing}
-            onResolve={(result) => settle(pending.resolve, result)}
+            onResolve={(result) => settle(pending.id, pending.resolve, result)}
           />
         ))}
     </GuardContext.Provider>
