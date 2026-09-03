@@ -156,11 +156,34 @@ export async function writeUserPreferenceKeys(
 }
 
 /**
+ * O `lockedUntil` guardado só é comparado como instante quando tem a forma exata que o app grava
+ * (`toISOString()`, sempre em UTC com `Z`). Duas armadilhas que abortariam a instrução inteira e
+ * fariam a tentativa errada não ser contada — o mesmo lado inseguro que o `trunc`/limite do contador
+ * já evitava: um texto sem fuso (`2026-09-02T12:00:00`) estoura "cannot convert value from
+ * timestamp to timestamptz", e uma data impossível (`2026-02-31T…`) estoura no parse. O regex mata a
+ * primeira; o `silent := true` do `jsonb_path_exists` engole a segunda e devolve `false`. Qualquer
+ * valor que não passe nos dois é lido como "sem bloqueio" — quer dizer, como bloqueio vencido.
+ */
+const ISO_INSTANT_RE = "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?Z$"
+
+/**
  * Contador de erros de PIN calculado NO BANCO, numa instrução (rajada em paralelo não pula o
  * bloqueio). Devolve o contador novo e o bloqueio, se armou. O contador só é lido quando o valor
  * guardado é mesmo um número JSON, e ainda assim passa por numeric/trunc/limite: `"abc"`, `1.5` ou
  * um número gigante abortariam a instrução (`invalid input syntax for type integer`) e a tentativa
  * errada não seria contada — falha para o lado inseguro.
+ *
+ * O bloqueio VENCIDO também é decidido aqui, na mesma instrução travada. Antes quem chamava lia a
+ * linha sem trava, zerava o contador num UPDATE à parte e só então incrementava: numa rajada,
+ * `zera₁, conta₁, zera₂, conta₂, …` prendia o contador em 1 e o número de palpites de graça passava
+ * a depender do paralelismo do atacante, não do limite de cinco; pior, um pedido atrasado podia
+ * gravar o zero DEPOIS de um bloqueio novo ter armado, apagando-o.
+ *
+ * `now` é o MESMO instante que decide se o bloqueio guardado ainda vale e que monta o bloqueio novo.
+ * Bloqueio vencido zera o contador antes do incremento (a tentativa vira a 1ª de cinco novas) e o
+ * `lockedUntil` velho sai junto; bloqueio ainda de pé apenas incrementa e rearma — recusar cedo é
+ * papel de quem chama, não desta instrução. Ausência de `lockedUntil` NÃO zera nada: é assim que
+ * 1, 2, 3, 4 se acumulam.
  */
 export async function bumpPinFailure(
   executor: PreferencesExecutor,
@@ -170,6 +193,7 @@ export async function bumpPinFailure(
   now: Date = new Date(),
 ): Promise<{ count: number; lockedUntil: string | null }> {
   const type = await columnType(executor)
+  const nowIso = now.toISOString()
   const lockedUntilIso = new Date(now.getTime() + lockMinutes * 60_000).toISOString()
   // i18n-ignore: SQL bruto, não é texto de UI
   const rows = await executor.$queryRaw<
@@ -177,12 +201,22 @@ export async function bumpPinFailure(
   >`
     WITH cur AS (
       SELECT id, preferences_json AS prev, ${rootObject()} AS p FROM users WHERE id = ${userId} FOR UPDATE
+    ), lock_state AS (
+      SELECT id, prev, p,
+        COALESCE(jsonb_typeof(p -> 'dateClosing' -> 'pinFailures' -> 'lockedUntil'), 'null') <> 'null' AS had_lock,
+        CASE WHEN (p -> 'dateClosing' -> 'pinFailures' ->> 'lockedUntil') ~ ${ISO_INSTANT_RE}::text
+          THEN jsonb_path_exists(p,
+            '$.dateClosing.pinFailures.lockedUntil ? (@.datetime() > $ref.datetime())',
+            jsonb_build_object('ref', ${nowIso}::text), true)
+          ELSE false END AS still_locked
+      FROM cur
     ), calc AS (
       SELECT id, prev, p,
-        CASE WHEN jsonb_typeof(p -> 'dateClosing' -> 'pinFailures' -> 'count') = 'number'
+        CASE WHEN had_lock AND NOT still_locked THEN 0
+          WHEN jsonb_typeof(p -> 'dateClosing' -> 'pinFailures' -> 'count') = 'number'
           THEN LEAST(GREATEST(trunc((p -> 'dateClosing' -> 'pinFailures' ->> 'count')::numeric), 0), 1000000)::int
           ELSE 0 END + 1 AS c
-      FROM cur
+      FROM lock_state
     )
     UPDATE users u SET preferences_json = (
       jsonb_set(calc.p, '{dateClosing}',

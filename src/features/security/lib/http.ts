@@ -62,7 +62,9 @@ export function respondDateClosed(error: unknown, t: ApiTranslator): NextRespons
 export function respondSecurityError(error: unknown, t: ApiTranslator): NextResponse | null {
   if (!(error instanceof SecurityError)) return null
   return NextResponse.json(
-    { error: t(`security.${error.code}` as ApiKey), code: SECURITY_CODES[error.code], ...(error.extra ?? {}) },
+    // `extra` vem ANTES: espalhado depois, um `extra.code` (ou `extra.error`) trocaria em silêncio o
+    // código estável de que o cliente depende. Os dois campos do contrato ganham sempre.
+    { ...(error.extra ?? {}), error: t(`security.${error.code}` as ApiKey), code: SECURITY_CODES[error.code] },
     { status: error.status },
   )
 }

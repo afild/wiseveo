@@ -29,18 +29,25 @@ export type VerifyPinResult =
   | { ok: false; reason: "invalid"; attemptsLeft: number }
 
 /**
- * Ordem fixa: bloqueado? → (bloqueio vencido zera) → incrementa → compara. Acerto zera o contador.
+ * Ordem fixa: bloqueado? → incrementa → compara. Acerto zera o contador.
  * O incremento vem ANTES da comparação de propósito: rajada de palpites em paralelo não corre mais
  * rápido que o contador. Se a linha do dono não existir, `bumpPinFailure` lança e o erro sobe —
  * dono sumido é falha de verdade, não PIN errado.
+ *
+ * O bloqueio VENCIDO não é zerado aqui. Zerar num UPDATE à parte reabria exatamente a corrida que o
+ * contador atômico fecha: vários pedidos liam o mesmo bloqueio vencido, cada um mandava zerar e
+ * contar, e `zera₁, conta₁, zera₂, conta₂, …` deixava o contador preso em 1. Hoje a expiração é
+ * decidida dentro da própria instrução travada de `bumpPinFailure`.
+ *
+ * @param now SÓ PARA TESTES. Nunca alimentar com horário vindo de requisição: é o mesmo instante que
+ * decide se o bloqueio venceu, então um corpo de POST poderia dissolver o bloqueio. Em produção fica
+ * sempre no padrão (relógio do servidor).
  */
 export async function verifyPin(ownerId: string, pin: string, now: Date = new Date()): Promise<VerifyPinResult> {
   const closing = await readOwnerClosing(prisma, ownerId, null)
   if (!closing.pinHash) return { ok: false, reason: "pinNotSet" }
   const lockedUntil = closing.pinFailures.lockedUntil
   if (lockedUntil && new Date(lockedUntil) > now) return { ok: false, reason: "locked", lockedUntil }
-  // Bloqueio já vencido: a pessoa ganha 5 tentativas novas, não uma por 15 minutos para sempre.
-  if (lockedUntil) await mergeUserPreferenceKey(prisma, ownerId, "dateClosing", NO_FAILURES)
 
   const failure = await bumpPinFailure(prisma, ownerId, PIN_LOCK_AFTER, PIN_LOCK_MINUTES, now)
   const matches = PIN_RE.test(pin) && (await bcrypt.compare(pin, closing.pinHash))
@@ -64,7 +71,8 @@ export async function issueOverrideToken(claims: { ownerId: string; userId: stri
 
 export async function verifyOverrideToken(token: string): Promise<{ ownerId: string; userId: string } | null> {
   try {
-    const { payload } = await jwtVerify(token, await getOverrideKey())
+    // Algoritmo fixo: sem isto, um token HS512 assinado com a MESMA chave também passaria.
+    const { payload } = await jwtVerify(token, await getOverrideKey(), { algorithms: ["HS256"] })
     if (payload.purpose !== OVERRIDE_PURPOSE) return null
     if (typeof payload.ownerId !== "string" || typeof payload.userId !== "string") return null
     if (typeof payload.iat !== "number" || typeof payload.exp !== "number") return null

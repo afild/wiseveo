@@ -29,7 +29,8 @@ export async function createSessionToken(
 
 export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, await getSessionKey())
+    // Algoritmo fixo: todo token daqui nasce HS256; sem isto um HS512 com a MESMA chave passaria.
+    const { payload } = await jwtVerify(token, await getSessionKey(), { algorithms: ["HS256"] })
     // Token de outro domínio (override do fechamento de datas) nunca vale como sessão.
     if (payload.purpose !== undefined) return null
     // Falha fechado: token assinado com a MESMA chave mas sem userId existe de

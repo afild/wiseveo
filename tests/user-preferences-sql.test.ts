@@ -233,6 +233,59 @@ for (const columnType of ["jsonb", "json"] as const) {
         expect((after?.dateClosing as Record<string, unknown>).closedThrough).toBe("2026-08-31")
         expect(after?.locale).toBe("pt-BR")
       })
+      /**
+       * Expiração decidida DENTRO da instrução travada. Antes quem chamava lia a linha sem trava e
+       * mandava um UPDATE só para zerar: `zera₁, conta₁, zera₂, conta₂, …` prendia o contador em 1 e
+       * o número de palpites de graça virava o paralelismo do atacante. Aqui a mesma instrução que
+       * incrementa é a que resolve o bloqueio vencido.
+       */
+      const NOW = new Date("2026-09-02T12:00:00.000Z")
+      const PAST = `"2026-09-02T11:59:59.999Z"`
+      const FUTURE = `"2026-09-02T12:00:00.001Z"`
+      const seedFailures = (id: string, count: number, lockedUntil: string) =>
+        seed(id, `{"dateClosing":{"pinHash":"segredo","pinFailures":{"count":${count},"lockedUntil":${lockedUntil}}}}`)
+
+      it("bloqueio VENCIDO reinicia o contador na própria instrução: 5 vira 1 e o lockedUntil velho sai", async () => {
+        await seedFailures("u-exp", 5, PAST)
+        expect(await bumpPinFailure(ex, "u-exp", 5, 15, NOW)).toEqual({ count: 1, lockedUntil: null })
+        expect(updates(log).length).toBe(1)
+        const dc = (await prefs("u-exp"))?.dateClosing as Record<string, unknown>
+        expect(dc.pinFailures).toEqual({ count: 1, lockedUntil: null })
+        expect(dc.pinHash).toBe("segredo")
+      })
+      it("bloqueio AINDA DE PÉ só incrementa e rearma: quem recusa cedo é quem chama, não o SQL", async () => {
+        await seedFailures("u-live", 5, FUTURE)
+        expect(await bumpPinFailure(ex, "u-live", 5, 15, NOW)).toEqual({
+          count: 6,
+          lockedUntil: "2026-09-02T12:15:00.000Z",
+        })
+      })
+      const UNPARSEABLE: Array<[string, string]> = [
+        ["texto solto", `"soon"`],
+        ["sem fuso (abortava o cast)", `"2026-09-02T12:00:00"`],
+        ["data impossível", `"2026-02-31T00:00:00.000Z"`],
+        ["número no lugar do instante", `7`],
+      ]
+      for (const [name, raw] of UNPARSEABLE) {
+        it(`lockedUntil ${name} não aborta a instrução e vale como bloqueio vencido`, async () => {
+          await seedFailures(`u-bad-lock-${name.slice(0, 4)}`, 5, raw)
+          const res = await bumpPinFailure(ex, `u-bad-lock-${name.slice(0, 4)}`, 5, 15, NOW)
+          expect(res).toEqual({ count: 1, lockedUntil: null })
+        })
+      }
+      it("depois de vencer, cinco tentativas seguidas rearmam o bloqueio EXATAMENTE na quinta", async () => {
+        await seedFailures("u-again", 5, PAST)
+        const seen: Array<{ count: number; lockedUntil: string | null }> = []
+        for (let i = 0; i < 5; i++) seen.push(await bumpPinFailure(ex, "u-again", 5, 15, NOW))
+        expect(seen.map((s) => s.count)).toEqual([1, 2, 3, 4, 5])
+        expect(seen.map((s) => s.lockedUntil)).toEqual([null, null, null, null, "2026-09-02T12:15:00.000Z"])
+      })
+      it("sem lockedUntil nenhum, o contador NÃO reinicia (é assim que 1,2,3,4 se acumulam)", async () => {
+        await seed("u-nolock", `{"dateClosing":{"pinFailures":{"count":3,"lockedUntil":null}}}`)
+        expect((await bumpPinFailure(ex, "u-nolock", 5, 15, NOW)).count).toBe(4)
+        await seed("u-nolock2", `{"dateClosing":{"pinFailures":{"count":3}}}`)
+        expect((await bumpPinFailure(ex, "u-nolock2", 5, 15, NOW)).count).toBe(4)
+      })
       const BAD: Array<[string, string, number]> = [
         ["texto", `"abc"`, 1],
         ["decimal", `1.5`, 2],
