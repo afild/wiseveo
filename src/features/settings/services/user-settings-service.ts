@@ -115,6 +115,8 @@ export async function updateUserAppearance(userId: string, settings: AppearanceS
     const user = await tx.user.update({
       where: { id: userId },
       data: { themePreferences: toInputJsonValue(nextAppearance) },
+      // Projeção explícita: a linha crua carrega hash de senha e tokens do Google.
+      select: { id: true, themePreferences: true },
     })
     await setUserPreferenceKey(tx, userId, "appearance", nextAppearance)
     return user
@@ -151,6 +153,16 @@ export async function updateUserProfile(userId: string, data: ProfileSettings) {
     const user = await tx.user.update({
       where: { id: userId },
       data: { name, email: data.email, phone: data.phone },
+      // Mesma projeção que a rota PUT /api/user/profile devolve: nada de linha crua.
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        photo: true,
+        role: true,
+        status: true,
+      },
     })
     await setUserPreferenceKey(tx, userId, "profile", profile)
     return user

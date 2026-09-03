@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { NextRequest } from "next/server"
 
 /**
  * Catraca dos escritores de `users.preferences_json`: nenhum deles pode mandar o objeto
@@ -34,6 +35,7 @@ vi.mock("@/lib/prisma", () => {
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }))
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }))
 vi.mock("@/lib/data-owner", () => ({ resolveDataOwnerId: async (id: string) => id }))
+vi.mock("@/lib/session", () => ({ getSession: async () => ({ userId: "u1" }), getSessionUserId: async () => "u1" }))
 vi.mock("@/features/transactions/services/get-default-user-id", () => ({ getDefaultUserId: async () => "dono" }))
 
 import {
@@ -52,6 +54,7 @@ import {
   saveCustomBudgetCard,
 } from "@/features/budget/services/save-budget-formula"
 import { updateBudgetOrder } from "@/features/budget/services/update-budget-order"
+import { PUT as putProfile } from "@/app/api/user/profile/route"
 
 beforeEach(() => {
   m.raw = []
@@ -108,6 +111,18 @@ describe("escritores de preferences_json gravam só a própria chave", () => {
   })
   it("updateUserProfile grava as colunas e a chave 'profile' sem o JSON inteiro", async () => {
     await updateUserProfile("u1", { firstName: "A", lastName: "B", email: "a@b.c" })
+    expect(keysWritten()).toContain("profile")
+    expect(sentPreferencesJson()).toBe(false)
+  })
+  it("PUT /api/user/profile (a rota, não o serviço) grava a chave 'profile' sem o JSON inteiro", async () => {
+    const res = await putProfile(
+      new NextRequest("http://localhost:3000/api/user/profile", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ firstName: "A", lastName: "B", email: "a@b.c", company: "Wiseveo" }),
+      }),
+    )
+    expect(res.status).toBe(200)
     expect(keysWritten()).toContain("profile")
     expect(sentPreferencesJson()).toBe(false)
   })

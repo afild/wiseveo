@@ -22,7 +22,8 @@ const FULL_USER = {
     locale: "pt-BR",
     profile: { company: "Wiseveo" },
     monetary: { currency: "USD" },
-    notifications: {},
+    notifications: { dailyDigest: { enabled: true, time: "07:30" } },
+    appearance: { themeMode: "dark", selectedTheme: "wiseveo" },
     quickPayment: { defaultAccountId: 1, defaultStatusCode: 1 },
     dateClosing: { closedThrough: "2026-08-31", pinHash: "$2a$10$pin-hash" },
   },
@@ -77,7 +78,18 @@ const SECRETS = [
   "googleRefreshToken",
 ]
 
-const routes: Array<[string, () => Promise<Response>]> = [
+/** Caminho tipo "data.quickPayment.defaultAccountId" dentro do corpo já desserializado. */
+function at(body: unknown, path: string): unknown {
+  return path
+    .split(".")
+    .reduce<unknown>((value, key) => (value as Record<string, unknown> | null | undefined)?.[key], body)
+}
+
+/**
+ * Cada rota diz também o que o corpo TEM de trazer. Sem isso a varredura passaria
+ * numa rota que devolvesse `{ success: true }` e mais nada: sem segredo, e sem serventia.
+ */
+const routes: Array<[string, () => Promise<Response>, Array<[string, unknown]>]> = [
   [
     "PUT /api/user/profile",
     () =>
@@ -88,19 +100,42 @@ const routes: Array<[string, () => Promise<Response>]> = [
           body: JSON.stringify({ firstName: "Ana", lastName: "Souza", email: "ana@example.com", company: "Wiseveo" }),
         }),
       ),
+    [
+      ["data.id", FULL_USER.id],
+      ["data.email", FULL_USER.email],
+      ["data.role", FULL_USER.role],
+    ],
   ],
-  ["GET /api/user/preferences", () => getPreferences()],
-  ["GET /api/user/monetary-preferences", () => getMonetary()],
-  ["GET /api/user/general-preferences", () => getGeneral()],
-  ["GET /api/user/notifications", () => getNotifications()],
+  ["GET /api/user/preferences", () => getPreferences(), [["data.themeMode", "dark"]]],
+  ["GET /api/user/monetary-preferences", () => getMonetary(), [["data.currency", "USD"]]],
+  [
+    "GET /api/user/general-preferences",
+    () => getGeneral(),
+    [
+      ["data.quickPayment.defaultAccountId", 1],
+      ["data.options.accounts.0.name", "Checking"],
+    ],
+  ],
+  [
+    "GET /api/user/notifications",
+    () => getNotifications(),
+    [
+      ["data.telegramConnected", true],
+      ["data.preferences.dailyDigest.time", "07:30"],
+    ],
+  ],
 ]
 
 describe("nenhuma rota de perfil/preferências devolve segredo do usuário", () => {
-  for (const [name, call] of routes) {
-    it(`${name} responde sem segredo no corpo`, async () => {
+  for (const [name, call, payload] of routes) {
+    it(`${name} responde sem segredo no corpo, e ainda com o corpo de verdade`, async () => {
       const res = await call()
       expect(res.status).toBe(200)
-      const serialized = JSON.stringify(await res.json())
+      const body = await res.json()
+      for (const [path, value] of payload) {
+        expect(at(body, path)).toEqual(value)
+      }
+      const serialized = JSON.stringify(body)
       for (const secret of SECRETS) {
         expect(serialized).not.toContain(secret)
       }
