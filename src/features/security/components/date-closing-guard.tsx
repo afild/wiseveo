@@ -6,11 +6,12 @@ import { DATE_CLOSING_ORDER, installFetchInterceptor } from "@/lib/fetch-interce
 import {
   createDateClosingInterceptor,
   createGuardMachine,
+  createSerialDialogOpener,
   type DialogRequest,
   type DialogResult,
 } from "../lib/guard-machine"
 import { useDateClosing } from "./date-closing-provider"
-import { PinDialog } from "./pin-dialog"
+import { DateClosingLoadingDialog, PinDialog } from "./pin-dialog"
 
 export interface DateClosingGuardValue {
   /** Abre a janela do PIN de propósito (parcelas). true = token obtido. */
@@ -35,138 +36,128 @@ const FALLBACK: DateClosingGuardValue = {
 
 const GuardContext = React.createContext<DateClosingGuardValue>(FALLBACK)
 
+/** Só serve de `key`: garante remontagem mesmo se React juntar o fechar de uma janela com o abrir da seguinte. */
+let dialogSeq = 0
+
+interface PendingDialog {
+  id: number
+  request: DialogRequest
+  resolve: (result: DialogResult) => void
+}
+
 /**
  * Registra o handler de fetch do fechamento (DATE_CLOSING_ORDER), monta a janela do PIN e entrega o
  * contexto para toda a subárvore do painel.
  *
  * O handler devolve uma promise que só resolve quando a pessoa responde a janela, então a
  * chamada original fica esperando — é isso que faz o laço de lote continuar de onde parou.
- * A janela é serializada: duas escritas paralelas que voltem 423 entram numa fila, e a
- * segunda aproveita o token da primeira em vez de perguntar de novo.
+ * A fila e a decisão de cada pedido moram em `createSerialDialogOpener` (parte pura, testada sem
+ * DOM); aqui ficam só o `show` (pôr a janela na tela) e o `dispose` do desmonte.
  */
 export function DateClosingGuard({ children }: { children: React.ReactNode }) {
   const { state, refresh } = useDateClosing()
   const [machine] = React.useState(createGuardMachine)
+  const [pending, setPending] = React.useState<PendingDialog | null>(null)
 
-  // `id` faz a janela remontar a cada pedido: estado inicial limpo, sem efeito de limpeza.
-  const [pending, setPending] = React.useState<{ id: number; request: DialogRequest } | null>(null)
-  const resolverRef = React.useRef<((result: DialogResult) => void) | null>(null)
-  const queueRef = React.useRef<Promise<unknown>>(Promise.resolve())
-  const tokenRef = React.useRef<{ token: string; expiresAt: string } | null>(null)
-  const generationRef = React.useRef(0)
-  const nextIdRef = React.useRef(0)
-
-  const keepToken = React.useCallback(
-    (token: string, expiresAt: string) => {
-      machine.setToken(token, Date.parse(expiresAt))
-      tokenRef.current = { token, expiresAt }
-      generationRef.current += 1
-    },
-    [machine],
+  const [opener] = React.useState(() =>
+    createSerialDialogOpener({
+      machine,
+      show: (request) =>
+        new Promise<DialogResult>((resolve) => {
+          dialogSeq += 1
+          setPending({ id: dialogSeq, request, resolve })
+        }),
+    }),
   )
 
   const settle = React.useCallback(
-    (result: DialogResult) => {
-      const resolve = resolverRef.current
-      resolverRef.current = null
+    (resolve: (result: DialogResult) => void, result: DialogResult) => {
       setPending(null)
-      if (result.kind === "token") keepToken(result.token, result.expiresAt)
+      if (result.kind === "token") opener.keepToken(result.token, result.expiresAt)
       // O PIN pode ter nascido dentro da própria janela ("criar e prosseguir"): o provider
       // precisa saber, senão a próxima janela pediria para criar de novo.
       if (result.kind === "pinCreated" || (result.kind === "token" && result.pinCreated)) void refresh()
-      resolve?.(result)
+      resolve(result)
     },
-    [keepToken, refresh],
-  )
-
-  const open = React.useCallback(
-    (request: DialogRequest): Promise<DialogResult> => {
-      const generation = generationRef.current
-      const run = queueRef.current.then(() => {
-        const held = tokenRef.current
-        // Ganhou token enquanto esperava a vez na fila: não pergunta de novo.
-        if (
-          request.mode === "pin" &&
-          held !== null &&
-          generationRef.current !== generation &&
-          machine.hasValidToken(Date.now())
-        ) {
-          return { kind: "token", token: held.token, expiresAt: held.expiresAt } satisfies DialogResult
-        }
-        return new Promise<DialogResult>((resolve) => {
-          resolverRef.current = resolve
-          nextIdRef.current += 1
-          setPending({ id: nextIdRef.current, request })
-        })
-      })
-      queueRef.current = run.then(
-        () => undefined,
-        () => undefined,
-      )
-      return run
-    },
-    [machine],
+    [opener, refresh],
   )
 
   React.useEffect(
-    () => installFetchInterceptor(createDateClosingInterceptor({ machine, open }), DATE_CLOSING_ORDER),
-    [machine, open],
+    () =>
+      installFetchInterceptor(
+        createDateClosingInterceptor({ machine, open: opener.open }),
+        DATE_CLOSING_ORDER,
+      ),
+    [machine, opener],
   )
 
-  // Sair do painel com a janela aberta não pode deixar a escrita pendurada para sempre.
-  React.useEffect(
-    () => () => {
-      resolverRef.current?.({ kind: "changeDate" })
-      resolverRef.current = null
-    },
-    [],
-  )
+  // Sair do painel não pode deixar NENHUMA escrita pendurada: solta a janela que está na tela,
+  // solta quem ainda esperava a vez na fila e recusa quem chegar depois. Sem isso, um pedido que
+  // ainda estava na fila criava janela numa árvore desmontada e o fetch dele esperava para sempre.
+  React.useEffect(() => opener.mount(), [opener])
+
+  // Estado ainda não chegou e há janela para mostrar: pede de novo em vez de chutar permissão.
+  React.useEffect(() => {
+    if (pending && state === null) void refresh()
+  }, [pending, refresh, state])
 
   const closedThrough = state?.closedThrough ?? null
-  const canManageClosing = state?.canManageClosing ?? true
 
   const value = React.useMemo<DateClosingGuardValue>(
     () => ({
       requestOverride: async (days) => {
-        const result = await open({
+        const result = await opener.open({
           days,
           periods: [],
           closedThrough,
-          canOverride: canManageClosing,
+          // Sem 423 não há palavra do servidor sobre permissão: quem decide é o estado vivo,
+          // lido pela janela na hora de desenhar.
+          canOverride: true,
           mode: "pin",
         })
         return result.kind === "token"
       },
       requestPinCreation: async () => {
-        const result = await open({
+        const result = await opener.open({
           days: [],
           periods: [],
           closedThrough,
-          canOverride: canManageClosing,
+          canOverride: true,
           mode: "createPin",
         })
         return result.kind === "pinCreated"
       },
-      adoptToken: keepToken,
+      adoptToken: opener.keepToken,
       hasValidToken: () => machine.hasValidToken(Date.now()),
       beginBatch: () => machine.beginBatch(),
       endBatch: () => machine.endBatch(),
     }),
-    [canManageClosing, closedThrough, keepToken, machine, open],
+    [closedThrough, machine, opener],
   )
 
   return (
     <GuardContext.Provider value={value}>
       {children}
-      {pending && (
-        <PinDialog
-          key={pending.id}
-          request={pending.request}
-          hasPin={state?.hasPin ?? true}
-          canManagePin={state?.canManagePin ?? false}
-          onResolve={settle}
-        />
-      )}
+      {pending &&
+        (state === null ? (
+          // Sem estado não dá para desenhar a janela: um campo de PIN para quem não pode liberar
+          // seria um controle que só falha. Espera o estado; fechar continua resolvendo a promise.
+          <DateClosingLoadingDialog
+            key={pending.id}
+            mode={pending.request.mode}
+            onCancel={() => settle(pending.resolve, { kind: "changeDate" })}
+          />
+        ) : (
+          <PinDialog
+            key={pending.id}
+            request={pending.request}
+            closedThrough={state.closedThrough}
+            hasPin={state.hasPin}
+            canManagePin={state.canManagePin}
+            canManageClosing={state.canManageClosing}
+            onResolve={(result) => settle(pending.resolve, result)}
+          />
+        ))}
     </GuardContext.Provider>
   )
 }

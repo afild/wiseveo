@@ -17,17 +17,26 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createDateFormatter } from "@/i18n/format"
 import { dayKeyOfLocal } from "../lib/date-closing"
-import type { DialogRequest, DialogResult } from "../lib/guard-machine"
+import { firstOpenDayKey, isClosedDay, laterDayKey } from "../lib/guard-machine"
+import type { DialogMode, DialogRequest, DialogResult } from "../lib/guard-machine"
 
 interface PinDialogProps {
   request: DialogRequest
+  /** Corte do provider (estado vivo da sessão); o do 423 vem em `request.closedThrough`. */
+  closedThrough: string | null
   /** Se existe PIN e se esta pessoa pode criar um; vem do estado do provider. */
   hasPin: boolean
   canManagePin: boolean
+  /** Permissão VIVA de liberar data fechada. Só abre o campo de PIN se ela e o 423 concordarem. */
+  canManageClosing: boolean
   onResolve: (result: DialogResult) => void
 }
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "").slice(0, 4)
+
+function dialogTitleKey(mode: DialogMode): "createPinTitle" | "chooseAnotherDate" | "title" {
+  return mode === "createPin" ? "createPinTitle" : mode === "chooseDate" ? "chooseAnotherDate" : "title"
+}
 
 /**
  * A janela que aparece quando o servidor recusa a escrita com 423, e também quando alguém pede
@@ -37,16 +46,31 @@ const digitsOnly = (value: string) => value.replace(/\D/g, "").slice(0, 4)
  * Monta uma vez por pedido (o guard passa `key`), então o estado inicial vem direto das props:
  * não existe efeito de limpeza, nem campo preenchido do pedido anterior.
  */
-export function PinDialog({ request, hasPin, canManagePin, onResolve }: PinDialogProps) {
+export function PinDialog({
+  request,
+  closedThrough,
+  hasPin,
+  canManagePin,
+  canManageClosing,
+  onResolve,
+}: PinDialogProps) {
   const t = useTranslations("security.dialog")
   const tCommon = useTranslations("common")
   const locale = useLocale()
 
   const mode = request.mode
 
+  // O corte do 423 e o do provider podem discordar por segundos: vale o mais tarde dos dois.
+  const closedCut = laterDayKey(closedThrough, request.closedThrough)
+  const openFloor = firstOpenDayKey(closedCut)
+
   const [pin, setPin] = React.useState("")
   const [confirmPin, setConfirmPin] = React.useState("")
-  const [date, setDate] = React.useState(() => dayKeyOfLocal(new Date()))
+  // Já nasce fora do fechamento: o campo nunca começa numa data que a janela vai recusar.
+  const [date, setDate] = React.useState(() => {
+    const today = dayKeyOfLocal(new Date())
+    return openFloor !== null && today < openFloor ? openFloor : today
+  })
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   // Começa true quando ainda não existe PIN; também vira true se o servidor avisar (428) no meio
@@ -133,6 +157,12 @@ export function PinDialog({ request, hasPin, canManagePin, onResolve }: PinDialo
 
     if (mode === "chooseDate") {
       if (!date) return
+      // Recusar aqui é o único jeito honesto: a repetição com a data nova pula a cadeia de
+      // handlers, então uma data ainda fechada voltaria como 423 cru, com a janela já fechada.
+      if (isClosedDay(date, closedCut) && openFloor !== null) {
+        setError(t("dateInsideClosedPeriod", { date: formatDay(openFloor) }))
+        return
+      }
       onResolve({ kind: "chooseDate", date })
       return
     }
@@ -162,7 +192,10 @@ export function PinDialog({ request, hasPin, canManagePin, onResolve }: PinDialo
     }
   }
 
-  const askOwner = mode === "pin" && (!request.canOverride || (mustCreatePin && !canManagePin))
+  // O servidor manda (`request.canOverride`) e o estado vivo confirma: as duas pontas do mesmo
+  // "esta pessoa cuida do fechamento". Sem a segunda, quem não pode liberar via campo de PIN.
+  const canOverride = request.canOverride && canManageClosing
+  const askOwner = mode === "pin" && (!canOverride || (mustCreatePin && !canManagePin))
   const showPinFields = !askOwner && mode !== "chooseDate"
   const canSubmit =
     mode === "chooseDate"
@@ -171,10 +204,13 @@ export function PinDialog({ request, hasPin, canManagePin, onResolve }: PinDialo
         ? pin.length === 4 && confirmPin.length === 4
         : pin.length === 4
 
-  const title =
-    mode === "createPin" ? t("createPinTitle") : mode === "chooseDate" ? t("chooseAnotherDate") : t("title")
+  const title = t(dialogTitleKey(mode))
   const description =
-    mode === "createPin" ? t("createPinDescription") : mode === "chooseDate" ? t("recurringDateMoves") : t("description")
+    mode === "createPin"
+      ? t("createPinDescription")
+      : mode === "chooseDate"
+        ? t("recurringDateMoves", { date: date ? formatDay(date) : "--" })
+        : t("description")
   const cancelLabel = mode === "pin" ? t("changeDate") : tCommon("cancel")
   const submitLabel =
     mode === "createPin"
@@ -214,13 +250,13 @@ export function PinDialog({ request, hasPin, canManagePin, onResolve }: PinDialo
             {request.periods.length > 0 && (
               <p>{t("periodsLabel", { periods: request.periods.map(formatPeriodKey).join(", ") })}</p>
             )}
-            {request.closedThrough && (
-              <p>{t("closedThroughLabel", { date: formatDay(request.closedThrough) })}</p>
-            )}
+            {closedCut && <p>{t("closedThroughLabel", { date: formatDay(closedCut) })}</p>}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* `noValidate`: o balão nativo do `min` sai no idioma do navegador, não no do app, e
+            engoliria a mensagem traduzida. O botão só liga com data preenchida, então nada escapa. */}
+        <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
           {mode === "chooseDate" && (
             <div className="flex flex-col gap-2">
               <Label htmlFor="date-closing-new-date">{t("chooseDateLabel")}</Label>
@@ -228,8 +264,12 @@ export function PinDialog({ request, hasPin, canManagePin, onResolve }: PinDialo
                 id="date-closing-new-date"
                 type="date"
                 required
+                min={openFloor ?? undefined}
                 value={date}
-                onChange={(event) => setDate(event.target.value)}
+                onChange={(event) => {
+                  setError(null)
+                  setDate(event.target.value)
+                }}
               />
             </div>
           )}
@@ -294,6 +334,46 @@ export function PinDialog({ request, hasPin, canManagePin, onResolve }: PinDialo
             )}
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/**
+ * Enquanto o estado do fechamento não chegou, a janela ESPERA em vez de supor permissão.
+ * Mostrar o campo de PIN para quem não pode liberar seria oferecer um controle que só falha; o
+ * botão de fechar continua vivo, então nada fica pendurado esperando essa resposta.
+ */
+export function DateClosingLoadingDialog({ mode, onCancel }: { mode: DialogMode; onCancel: () => void }) {
+  const t = useTranslations("security.dialog")
+  const tCommon = useTranslations("common")
+
+  const loadingLabel = tCommon("loading")
+  const cancelLabel = mode === "pin" ? t("changeDate") : tCommon("cancel")
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onCancel()
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t(dialogTitleKey(mode))}</DialogTitle>
+          <DialogDescription>{t("checkingPermissions")}</DialogDescription>
+        </DialogHeader>
+
+        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+          <Loader2 className="size-4 animate-spin" />
+          <span>{loadingLabel}</span>
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {cancelLabel}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

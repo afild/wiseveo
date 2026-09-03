@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from "vitest"
 import {
   createDateClosingInterceptor,
   createGuardMachine,
+  createSerialDialogOpener,
+  firstOpenDayKey,
+  isClosedDay,
   isLaunchRoute,
+  laterDayKey,
+  planQueuedDialog,
   type DialogRequest,
   type DialogResult,
 } from "@/features/security/lib/guard-machine"
@@ -262,6 +267,49 @@ describe("interceptador de data fechada", () => {
     expect(new Headers(calls[1][1]?.headers).get("content-type")).toBe("application/json")
   })
 
+  it("423 no meio do lote com token vivo repete com o token, sem abrir janela", async () => {
+    // O servidor recusou o token nesta linha (ou ela é de outra competência): a resposta é 423
+    // mesmo com o cabeçalho na primeira tentativa. A repetição é o único caminho aqui.
+    const machine = createGuardMachine()
+    machine.beginBatch()
+    machine.setToken("tok-lote", Date.now() + 120_000)
+    machine.decide("token")
+    const open = vi.fn(async (): Promise<DialogResult> => ({ kind: "changeDate" }))
+    const { target, calls } = fakeTarget([lockedResponse, () => new Response("{}", { status: 200 })])
+    createInterceptorHost(target).install(
+      createDateClosingInterceptor({ machine, open, origin: ORIGIN }),
+      20,
+    )
+
+    const res = await target.fetch("/api/transactions/1/quick-pay", { method: "POST" })
+
+    expect(open).not.toHaveBeenCalled()
+    expect(res.status).toBe(200)
+    expect(calls.length).toBe(2)
+    expect(new Headers(calls[1][1]?.headers).get(PIN_TOKEN_HEADER)).toBe("tok-lote")
+  })
+
+  it("dois 423 em paralelo no mesmo lote abrem UMA janela só", async () => {
+    const machine = createGuardMachine()
+    machine.beginBatch()
+    const show = vi.fn(async (): Promise<DialogResult> => ({ kind: "changeDate" }))
+    const opener = createSerialDialogOpener({ machine, show })
+    const { target } = fakeTarget([lockedResponse])
+    createInterceptorHost(target).install(
+      createDateClosingInterceptor({ machine, open: opener.open, origin: ORIGIN }),
+      20,
+    )
+
+    const [first, second] = await Promise.all([
+      target.fetch("/api/transactions", { method: "POST", body: "{}" }),
+      target.fetch("/api/transactions/2", { method: "PATCH", body: "{}" }),
+    ])
+
+    expect(first.status).toBe(423)
+    expect(second.status).toBe(423)
+    expect(show).toHaveBeenCalledTimes(1)
+  })
+
   it("resposta que não é 423, ou sem o cabeçalho, passa intacta", async () => {
     const machine = createGuardMachine()
     const open = vi.fn(async (): Promise<DialogResult> => ({ kind: "changeDate" }))
@@ -275,5 +323,167 @@ describe("interceptador de data fechada", () => {
 
     expect(res.status).toBe(423)
     expect(open).not.toHaveBeenCalled()
+  })
+})
+
+describe("piso de data da janela", () => {
+  it("o primeiro dia aberto é o seguinte ao corte", () => {
+    expect(firstOpenDayKey("2026-08-31")).toBe("2026-09-01")
+    expect(firstOpenDayKey("2026-02-28")).toBe("2026-03-01")
+  })
+
+  it("sem corte legível não existe piso", () => {
+    expect(firstOpenDayKey(null)).toBeNull()
+    expect(firstOpenDayKey("31/08/2026")).toBeNull()
+    expect(firstOpenDayKey("2026-02-31")).toBeNull()
+  })
+
+  it("data dentro do período fechado é recusada, a do dia seguinte passa", () => {
+    expect(isClosedDay("2026-08-31", "2026-08-31")).toBe(true)
+    expect(isClosedDay("2026-01-02", "2026-08-31")).toBe(true)
+    expect(isClosedDay("2026-09-01", "2026-08-31")).toBe(false)
+    expect(isClosedDay("2026-09-10", "2026-08-31")).toBe(false)
+    expect(isClosedDay("2026-08-31", null)).toBe(false)
+    expect(isClosedDay("", "2026-08-31")).toBe(false)
+  })
+
+  it("entre o corte do 423 e o do provider vale o mais tarde", () => {
+    expect(laterDayKey("2026-08-31", "2026-09-30")).toBe("2026-09-30")
+    expect(laterDayKey("2026-09-30", "2026-08-31")).toBe("2026-09-30")
+    expect(laterDayKey(null, "2026-08-31")).toBe("2026-08-31")
+    expect(laterDayKey("2026-08-31", null)).toBe("2026-08-31")
+    expect(laterDayKey(null, null)).toBeNull()
+  })
+})
+
+describe("plano da fila da janela", () => {
+  const base = {
+    disposed: false,
+    mode: "pin",
+    heldToken: null,
+    tokenIsNewer: false,
+    tokenStillValid: false,
+    lockedAction: "ask",
+  } satisfies Parameters<typeof planQueuedDialog>[0]
+
+  it("desmontado resolve como recusa em vez de abrir janela nenhuma", () => {
+    expect(planQueuedDialog({ ...base, disposed: true })).toEqual({
+      kind: "resolved",
+      result: { kind: "changeDate" },
+    })
+  })
+
+  it("token que chegou na espera dispensa perguntar de novo", () => {
+    expect(
+      planQueuedDialog({
+        ...base,
+        heldToken: { token: "tok", expiresAt: "2026-09-03T12:02:00.000Z" },
+        tokenIsNewer: true,
+        tokenStillValid: true,
+      }),
+    ).toEqual({ kind: "resolved", result: { kind: "token", token: "tok", expiresAt: "2026-09-03T12:02:00.000Z" } })
+  })
+
+  it("token velho (do lote anterior) não dispensa a pergunta", () => {
+    expect(
+      planQueuedDialog({
+        ...base,
+        heldToken: { token: "tok", expiresAt: "2026-09-03T12:02:00.000Z" },
+        tokenIsNewer: false,
+        tokenStillValid: true,
+      }),
+    ).toEqual({ kind: "show" })
+  })
+
+  it("lote já recusado resolve na hora, sem segunda janela", () => {
+    expect(planQueuedDialog({ ...base, lockedAction: "pass" })).toEqual({
+      kind: "resolved",
+      result: { kind: "changeDate" },
+    })
+    expect(planQueuedDialog({ ...base, mode: "chooseDate", lockedAction: "pass" })).toEqual({
+      kind: "resolved",
+      result: { kind: "changeDate" },
+    })
+  })
+
+  it("criar PIN não é escrita: recusa de lote não bloqueia", () => {
+    expect(planQueuedDialog({ ...base, mode: "createPin", lockedAction: "pass" })).toEqual({ kind: "show" })
+  })
+
+  it("no caminho normal, abre", () => {
+    expect(planQueuedDialog(base)).toEqual({ kind: "show" })
+  })
+})
+
+describe("fila da janela", () => {
+  it("desmontar solta a janela na tela E a que ainda esperava a vez", async () => {
+    const machine = createGuardMachine()
+    // A primeira janela nunca responde sozinha: é a que fica na tela quando o painel some.
+    const show = vi.fn((): Promise<DialogResult> => new Promise<DialogResult>(() => {}))
+    const opener = createSerialDialogOpener({ machine, show })
+    const request: DialogRequest = {
+      days: [],
+      periods: [],
+      closedThrough: null,
+      canOverride: true,
+      mode: "pin",
+    }
+
+    const dispose = opener.mount()
+    const first = opener.open(request)
+    const second = opener.open(request)
+    await Promise.resolve()
+
+    dispose()
+
+    await expect(first).resolves.toEqual({ kind: "changeDate" })
+    await expect(second).resolves.toEqual({ kind: "changeDate" })
+    // A segunda nem chegou a virar janela, e depois do desmonte nada mais abre.
+    expect(show).toHaveBeenCalledTimes(1)
+    await expect(opener.open(request)).resolves.toEqual({ kind: "changeDate" })
+    expect(show).toHaveBeenCalledTimes(1)
+  })
+
+  it("remontar (modo estrito do React) devolve a fila ao trabalho", async () => {
+    const machine = createGuardMachine()
+    const show = vi.fn(async (): Promise<DialogResult> => ({ kind: "changeDate" }))
+    const opener = createSerialDialogOpener({ machine, show })
+    const request: DialogRequest = {
+      days: [],
+      periods: [],
+      closedThrough: null,
+      canOverride: true,
+      mode: "pin",
+    }
+
+    opener.mount()()
+    opener.mount()
+
+    await expect(opener.open(request)).resolves.toEqual({ kind: "changeDate" })
+    expect(show).toHaveBeenCalledTimes(1)
+  })
+
+  it("token obtido na primeira janela serve a segunda sem perguntar", async () => {
+    const machine = createGuardMachine()
+    const expiresAt = new Date(Date.now() + 120_000).toISOString()
+    const opener = createSerialDialogOpener({
+      machine,
+      show: vi.fn(async (): Promise<DialogResult> => {
+        opener.keepToken("tok-1", expiresAt)
+        return { kind: "token", token: "tok-1", expiresAt }
+      }),
+    })
+    const request: DialogRequest = {
+      days: [],
+      periods: [],
+      closedThrough: null,
+      canOverride: true,
+      mode: "pin",
+    }
+
+    const [first, second] = await Promise.all([opener.open(request), opener.open(request)])
+
+    expect(first).toEqual({ kind: "token", token: "tok-1", expiresAt })
+    expect(second).toEqual({ kind: "token", token: "tok-1", expiresAt })
   })
 })
