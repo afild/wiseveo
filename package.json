@@ -23,6 +23,7 @@
     "db:reset": "prisma migrate reset --force",
     "demo:fix-statuses": "tsx --env-file=.env.local scripts/fix-demo-statuses.ts",
     "demo:regen": "tsx --env-file=.env.local scripts/regen-demo-user.ts",
+    "close-dates": "tsx scripts/close-dates.ts",
     "test": "vitest run"
   },
   "dependencies": {

@@ -58,3 +58,6 @@ docs/commit-catalog.local.md
 clean-demo-visitors.log
 progresso-demo.log
 recover-demo-db.log
+
+# Snapshots do fechamento de datas (scripts/close-dates.ts) — a linha do dono, nunca versionar
+backups/
