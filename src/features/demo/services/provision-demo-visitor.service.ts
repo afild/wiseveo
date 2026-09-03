@@ -6,6 +6,9 @@ import { materializeDataset } from "@/lib/demo-data/materialize"
 import { DEMO_DEFAULT_LOCALE } from "@/i18n/config"
 import { demoMonetarySettings } from "@/lib/monetary"
 import { DEMO_DISPLAY_NAME } from "@/lib/demo-identity"
+import { computeDemoClosedThrough } from "@/lib/demo-data/demo-closing"
+import { isPaidStatusName } from "@/lib/paid-status"
+import { mergeUserPreferenceKey } from "@/features/settings/services/user-preferences-write"
 
 /**
  * Cria UM visitante da demo com o conjunto completo (~2.647 linhas) numa única
@@ -102,6 +105,33 @@ export async function provisionDemoVisitor(): Promise<{ userId: string }> {
         await tx.account.update({ where: { id: Number(accountId) }, data: { balance } })
       }
     }
+
+    // 8. Corte de fechamento inicial — só agora, com as linhas já criadas, dá para saber qual é o
+    //    não pago mais antigo. Vai DENTRO desta transação (nunca no `user.create` do passo 1):
+    //    a cópia nasce inteira ou não nasce.
+    //
+    //    O nome do status vem do lookup, nunca do código: `isPaidStatusName` é a regra ÚNICA do
+    //    sistema. A busca é por CÓDIGO e não por `userId` porque `TransactionStatusLookup.code` é
+    //    `@unique` GLOBAL — as quatro linhas são compartilhadas e o `userId` delas é só o dono de
+    //    referência (o `upsert` de initializeUserData para phantom traz `update: {}`, de propósito).
+    //    Filtrar pelo id do visitante devolveria vazio, TODA linha viraria "não pago" e o corte
+    //    desabaria para o dia anterior ao primeiro lançamento do dataset.
+    const usedStatusCodes = [...new Set(rows.transactions.map((t) => t.statusCode))]
+    const nameByCode = Object.fromEntries(
+      (
+        await tx.transactionStatusLookup.findMany({
+          where: { code: { in: usedStatusCodes } },
+          select: { code: true, name: true },
+        })
+      ).map((s) => [s.code, s.name]),
+    )
+    const unpaid = rows.transactions
+      .filter((t) => !isPaidStatusName(nameByCode[t.statusCode]))
+      .map((t) => t.date)
+    await mergeUserPreferenceKey(tx, userId, "dateClosing", {
+      closedThrough: computeDemoClosedThrough(unpaid, new Date()),
+      pinHash: null,
+    })
   }, {
     timeout: 55_000, // 55s (below Vercel's 60s maxDuration)
   })

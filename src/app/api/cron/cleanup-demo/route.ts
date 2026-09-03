@@ -61,10 +61,12 @@ export async function GET(request: Request) {
 
   // Uma vez por dia, pegando carona na batida de 15 min: a vitrine não pode
   // envelhecer (o corte pago/pendente dela é recalculado aqui).
-  const refreshed = await refreshVitrineCutoffIfDue().catch((e) => {
-    console.error("Vitrine cutoff refresh failed:", e)
-    return false
-  })
+  const vitrineCutoff: "refreshed" | "skipped" | "failed" = await refreshVitrineCutoffIfDue().catch(
+    (e) => {
+      console.error("Vitrine cutoff refresh failed:", e)
+      return "failed" as const
+    },
+  )
 
   const startedAt = Date.now()
   const cutoff = new Date(Date.now() - STALE_HOURS * 60 * 60 * 1000)
@@ -125,7 +127,7 @@ export async function GET(request: Request) {
     // O que sobrou vai no relatório: fila encolhendo em silêncio é o que
     // escondeu o problema por semanas.
     // i18n-ignore: relatório interno do cron
-    return NextResponse.json({ success: true, deleted, batches, remaining, refreshed, dbSizeMb })
+    return NextResponse.json({ success: true, deleted, batches, remaining, vitrineCutoff, dbSizeMb })
   } catch (error) {
     console.error("Cron Cleanup Error:", error)
     // i18n-ignore: resposta de máquina para máquina
