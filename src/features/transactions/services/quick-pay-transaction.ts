@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server"
 import { getUserQuickPaymentSettings } from "@/features/settings/services/user-settings-service"
 import { prisma } from "@/lib/prisma"
+import { findTransactionStatusByCode } from "./transaction-status-lookup"
 import { dayKeyOfStored } from "@/features/security/lib/date-closing"
 import { assertWritable } from "@/features/security/services/date-closing.service"
 import type { WriteContext } from "@/features/security/services/write-context"
@@ -37,13 +38,8 @@ export async function quickPayTransaction(
       },
       select: { id: true },
     }),
-    prisma.transactionStatusLookup.findFirst({
-      where: {
-        code: quickPayment.defaultStatusCode,
-        userId,
-      },
-      select: { code: true },
-    }),
+    // Catálogo compartilhado: a conferência é só pelo código.
+    findTransactionStatusByCode(quickPayment.defaultStatusCode),
   ])
 
   if (!account || !status) {

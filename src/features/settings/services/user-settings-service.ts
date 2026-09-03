@@ -6,6 +6,10 @@ import { prisma } from "@/lib/prisma"
 import { resolveDataOwnerId } from "@/lib/data-owner"
 import { setUserPreferenceKey } from "@/features/settings/services/user-preferences-write"
 import {
+  findTransactionStatusByCode,
+  listTransactionStatuses,
+} from "@/features/transactions/services/transaction-status-lookup"
+import {
   resolveMonetarySettings,
   type MonetarySettings,
 } from "@/lib/monetary"
@@ -274,22 +278,22 @@ export async function setUserCardTheme(userId: string, mode: CardThemeMode): Pro
 export async function getQuickPaymentOptions(
   userId: string,
 ): Promise<QuickPaymentOptions> {
-  // Conta compartilhada: a preferência é da pessoa, mas contas e status são do dono.
+  // Conta compartilhada: a preferência é da pessoa, mas as contas são do dono.
+  // O catálogo de status não tem dono nenhum (ver transaction-status-lookup).
   const dataOwnerId = await resolveDataOwnerId(userId)
-  const [accounts, statuses] = await Promise.all([
+  const [accounts, statusRows] = await Promise.all([
     prisma.account.findMany({
       where: { userId: dataOwnerId, active: true },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
-    prisma.transactionStatusLookup.findMany({
-      where: { userId: dataOwnerId },
-      select: { code: true, name: true },
-      orderBy: { name: "asc" },
-    }),
+    listTransactionStatuses(),
   ])
 
-  return { accounts, statuses }
+  return {
+    accounts,
+    statuses: statusRows.map(({ code, name }) => ({ code, name })),
+  }
 }
 
 export async function updateUserMonetarySettings(
@@ -331,13 +335,8 @@ export async function updateUserQuickPaymentSettings(
       },
       select: { id: true },
     }),
-    prisma.transactionStatusLookup.findFirst({
-      where: {
-        code: nextQuickPayment.defaultStatusCode,
-        userId: dataOwnerId,
-      },
-      select: { code: true },
-    }),
+    // Catálogo compartilhado: a conferência é só pelo código.
+    findTransactionStatusByCode(nextQuickPayment.defaultStatusCode),
   ])
 
   if (!account) {

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { listTransactionStatuses } from "./transaction-status-lookup"
 import type { TransactionFormOptions } from "../types"
 
 export async function getFormOptions(
@@ -26,11 +27,8 @@ export async function getFormOptions(
       },
       orderBy: { name: "asc" },
     }),
-    prisma.transactionStatusLookup.findMany({
-      where: { userId },
-      select: { id: true, code: true, name: true },
-      orderBy: { name: "asc" },
-    }),
+    // Catálogo compartilhado: sem filtro por usuário, de propósito.
+    listTransactionStatuses(),
     prisma.payee.findMany({
       where: { userId },
       select: { id: true, name: true },
