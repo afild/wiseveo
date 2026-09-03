@@ -29,6 +29,22 @@ async function columnType(executor: PreferencesExecutor): Promise<ColumnType> {
 
 const castBack = (type: ColumnType) => Prisma.raw(type === "json" ? "::json\n" : "::jsonb\n")
 
+/**
+ * A expressão como OBJETO garantido. `COALESCE` só cobre NULL do SQL: se a coluna guardar JSON
+ * `null`, um escalar ou um array, `||` trata escalar como array de um item e a raiz inteira vira
+ * `[null, {...}]` sem erro nenhum, e `jsonb_set` estoura "cannot set path in scalar". Aqui qualquer
+ * coisa que não seja objeto vira `{}` — mesma recuperação que o COALESCE já dava para NULL.
+ * Os `${}` daqui são só fragmentos SQL (Prisma.raw); todo valor continua parâmetro.
+ */
+const asObject = (expr: Prisma.Sql) =>
+  Prisma.sql`(CASE WHEN jsonb_typeof(${expr}) = 'object' THEN ${expr} ELSE '{}'::jsonb END)`
+
+/** Raiz da coluna já normalizada para objeto. */
+const rootObject = () => asObject(Prisma.raw("preferences_json::jsonb"))
+
+/** `JSON.stringify` devolve `undefined` para função/símbolo; NULL no parâmetro apagaria a coluna. */
+const toJson = (value: unknown): string => JSON.stringify(value ?? null) ?? "null"
+
 /** Mescla de um nível dentro da chave (só `dateClosing` usa: seus escritores gravam subcampos diferentes). */
 export async function mergeUserPreferenceKey(
   executor: PreferencesExecutor,
@@ -37,14 +53,15 @@ export async function mergeUserPreferenceKey(
   patch: Record<string, unknown>,
 ): Promise<void> {
   const type = await columnType(executor)
-  const json = JSON.stringify(patch)
+  const json = toJson(patch)
+  const root = rootObject()
   // i18n-ignore: SQL bruto, não é texto de UI
   const affected = await executor.$executeRaw`
     UPDATE users SET preferences_json = (
-      COALESCE(preferences_json::jsonb, '{}'::jsonb)
+      ${root}
       || jsonb_build_object(${key}::text,
-        CASE WHEN jsonb_typeof(COALESCE(preferences_json::jsonb, '{}'::jsonb) -> ${key}::text) = 'object'
-          THEN (preferences_json::jsonb -> ${key}::text) || ${json}::jsonb
+        CASE WHEN jsonb_typeof(${root} -> ${key}::text) = 'object'
+          THEN (${root} -> ${key}::text) || ${json}::jsonb
           ELSE ${json}::jsonb
         END)
     )${castBack(type)}
@@ -61,11 +78,11 @@ export async function setUserPreferenceKey(
   value: unknown,
 ): Promise<void> {
   const type = await columnType(executor)
-  const json = JSON.stringify(value ?? null)
+  const json = toJson(value)
   // i18n-ignore: SQL bruto, não é texto de UI
   const affected = await executor.$executeRaw`
     UPDATE users SET preferences_json = jsonb_set(
-      COALESCE(preferences_json::jsonb, '{}'::jsonb), ARRAY[${key}::text], ${json}::jsonb, true
+      ${rootObject()}, ARRAY[${key}::text], ${json}::jsonb, true
     )${castBack(type)}
     WHERE id = ${userId}
   `
@@ -80,10 +97,10 @@ export async function writeUserPreferenceKeys(
 ): Promise<void> {
   if (ops.length === 0) return
   const type = await columnType(executor)
-  const json = JSON.stringify(Object.fromEntries(ops.map((op) => [op.key, op.value ?? null])))
+  const json = toJson(Object.fromEntries(ops.map((op) => [op.key, op.value ?? null])))
   // i18n-ignore: SQL bruto, não é texto de UI
   const affected = await executor.$executeRaw`
-    UPDATE users SET preferences_json = (COALESCE(preferences_json::jsonb, '{}'::jsonb) || ${json}::jsonb)${castBack(type)}
+    UPDATE users SET preferences_json = (${rootObject()} || ${json}::jsonb)${castBack(type)}
     WHERE id = ${userId}
   `
   if (affected === 0) throw new Error(`preferences not written for ${userId}`) // i18n-ignore: erro interno
@@ -91,7 +108,10 @@ export async function writeUserPreferenceKeys(
 
 /**
  * Contador de erros de PIN calculado NO BANCO, numa instrução (rajada em paralelo não pula o
- * bloqueio). Devolve o contador novo e o bloqueio, se armou.
+ * bloqueio). Devolve o contador novo e o bloqueio, se armou. O contador só é lido quando o valor
+ * guardado é mesmo um número JSON, e ainda assim passa por numeric/trunc/limite: `"abc"`, `1.5` ou
+ * um número gigante abortariam a instrução (`invalid input syntax for type integer`) e a tentativa
+ * errada não seria contada — falha para o lado inseguro.
  */
 export async function bumpPinFailure(
   executor: PreferencesExecutor,
@@ -105,13 +125,17 @@ export async function bumpPinFailure(
   // i18n-ignore: SQL bruto, não é texto de UI
   const rows = await executor.$queryRaw<Array<{ count: number; locked_until: string | null }>>`
     WITH cur AS (
-      SELECT id, COALESCE(preferences_json::jsonb, '{}'::jsonb) AS p FROM users WHERE id = ${userId} FOR UPDATE
+      SELECT id, ${rootObject()} AS p FROM users WHERE id = ${userId} FOR UPDATE
     ), calc AS (
-      SELECT id, p, COALESCE((p -> 'dateClosing' -> 'pinFailures' ->> 'count')::int, 0) + 1 AS c FROM cur
+      SELECT id, p,
+        CASE WHEN jsonb_typeof(p -> 'dateClosing' -> 'pinFailures' -> 'count') = 'number'
+          THEN LEAST(GREATEST(trunc((p -> 'dateClosing' -> 'pinFailures' ->> 'count')::numeric), 0), 1000000)::int
+          ELSE 0 END + 1 AS c
+      FROM cur
     )
     UPDATE users u SET preferences_json = (
       jsonb_set(calc.p, '{dateClosing}',
-        (CASE WHEN jsonb_typeof(calc.p -> 'dateClosing') = 'object' THEN calc.p -> 'dateClosing' ELSE '{}'::jsonb END)
+        ${asObject(Prisma.raw("calc.p -> 'dateClosing'"))}
         || jsonb_build_object('pinFailures',
           jsonb_build_object('count', calc.c,
             'lockedUntil', CASE WHEN calc.c >= ${lockAfter}::int THEN ${lockedUntilIso}::text ELSE NULL END)))
@@ -120,7 +144,9 @@ export async function bumpPinFailure(
     RETURNING (u.preferences_json::jsonb -> 'dateClosing' -> 'pinFailures' ->> 'count')::int AS count,
               u.preferences_json::jsonb -> 'dateClosing' -> 'pinFailures' ->> 'lockedUntil' AS locked_until
   `
-  return { count: Number(rows[0]?.count ?? 0), lockedUntil: rows[0]?.locked_until ?? null }
+  const row = rows[0]
+  if (!row) throw new Error(`preferences not written for ${userId}`) // i18n-ignore: erro interno
+  return { count: Number(row.count ?? 0), lockedUntil: row.locked_until ?? null }
 }
 
 /** Só para testes. */

@@ -23,6 +23,28 @@ function fakeExecutor(columnType: "json" | "jsonb", bumpRow = { count: 1, locked
   return { executor, calls }
 }
 
+/** Executor que nunca acha a linha: UPDATE afeta 0 e o RETURNING volta vazio. */
+function deadExecutor() {
+  return {
+    $queryRaw: async (strings: TemplateStringsArray, ...values: unknown[]) =>
+      sqlText(strings, values).includes("information_schema.columns") ? [{ data_type: "jsonb" }] : [],
+    $executeRaw: async () => 0,
+  } as unknown as PreferencesExecutor
+}
+
+/** A raiz normalizada para objeto: o mesmo texto tem de aparecer nas QUATRO instruções. */
+const ROOT_GUARD =
+  "CASE WHEN jsonb_typeof(preferences_json::jsonb) = 'object' THEN preferences_json::jsonb ELSE '{}'::jsonb END"
+
+async function allFourStatements() {
+  const { executor, calls } = fakeExecutor("jsonb")
+  await mergeUserPreferenceKey(executor, "u1", "dateClosing", { a: 1 })
+  await setUserPreferenceKey(executor, "u1", "locale", "pt-BR")
+  await writeUserPreferenceKeys(executor, "u1", [{ key: "a", value: 1 }])
+  await bumpPinFailure(executor, "u1", 5, 15)
+  return calls.filter((c) => !c.sql.includes("information_schema"))
+}
+
 describe("mergeUserPreferenceKey", () => {
   it("mescla só a chave pedida e protege o lado existente com jsonb_typeof", async () => {
     const { executor, calls } = fakeExecutor("jsonb")
@@ -75,5 +97,63 @@ describe("bumpPinFailure", () => {
     expect(stmt.sql).toContain("+ 1")
     expect(stmt.sql).toContain("jsonb_typeof(calc.p -> 'dateClosing')")
     expect(result).toEqual({ count: 5, lockedUntil: "2026-09-02T12:00:00.000Z" })
+  })
+})
+
+describe("raiz de preferences_json protegida", () => {
+  it("as QUATRO instruções normalizam a raiz para objeto antes de mexer nela", async () => {
+    const stmts = await allFourStatements()
+    expect(stmts.length).toBe(4)
+    for (const stmt of stmts) expect(stmt.sql).toContain(ROOT_GUARD)
+  })
+  it("nenhuma instrução confia mais só no COALESCE da raiz (JSON null, escalar e array escapavam)", async () => {
+    const stmts = await allFourStatements()
+    for (const stmt of stmts) expect(stmt.sql).not.toContain("COALESCE(preferences_json")
+  })
+  it("bumpPinFailure também protege a chave dateClosing, não só a raiz", async () => {
+    const stmts = await allFourStatements()
+    const bump = stmts.find((c) => c.sql.includes("RETURNING"))!
+    expect(bump.sql).toContain("jsonb_typeof(calc.p -> 'dateClosing')")
+    expect(bump.sql).toContain(`SELECT id, (${ROOT_GUARD}) AS p`)
+  })
+})
+
+describe("bumpPinFailure: contador à prova de valor inválido", () => {
+  it("só converte o contador quando o valor guardado é mesmo um número JSON", async () => {
+    const { executor, calls } = fakeExecutor("jsonb")
+    await bumpPinFailure(executor, "u1", 5, 15)
+    const stmt = calls.find((c) => c.sql.includes("RETURNING"))!
+    expect(stmt.sql).toContain("jsonb_typeof(p -> 'dateClosing' -> 'pinFailures' -> 'count') = 'number'")
+    expect(stmt.sql).toContain("::numeric")
+    expect(stmt.sql).not.toContain("COALESCE((p -> 'dateClosing' -> 'pinFailures' ->> 'count')::int, 0)")
+  })
+  it("decimal e número gigante não abortam a instrução (trunc + limite antes do ::int)", async () => {
+    const { executor, calls } = fakeExecutor("jsonb")
+    await bumpPinFailure(executor, "u1", 5, 15)
+    const stmt = calls.find((c) => c.sql.includes("RETURNING"))!
+    expect(stmt.sql).toContain("LEAST(GREATEST(trunc(")
+  })
+})
+
+describe("escrita falha alto quando a linha não existe", () => {
+  it("as QUATRO lançam: bumpPinFailure não devolve mais 'zero falhas' silencioso", async () => {
+    const executor = deadExecutor()
+    await expect(mergeUserPreferenceKey(executor, "some", "dateClosing", { a: 1 }))
+      .rejects.toThrow("preferences not written for some")
+    await expect(setUserPreferenceKey(executor, "some", "locale", "pt-BR"))
+      .rejects.toThrow("preferences not written for some")
+    await expect(writeUserPreferenceKeys(executor, "some", [{ key: "a", value: 1 }]))
+      .rejects.toThrow("preferences not written for some")
+    await expect(bumpPinFailure(executor, "some", 5, 15))
+      .rejects.toThrow("preferences not written for some")
+  })
+})
+
+describe("serialização do valor", () => {
+  it("valor que JSON.stringify não serializa vira null, nunca NULL de SQL (apagaria a coluna)", async () => {
+    const { executor, calls } = fakeExecutor("jsonb")
+    await setUserPreferenceKey(executor, "u1", "callback", () => 1)
+    expect(calls[1].values).toContain("null")
+    expect(calls[1].values).not.toContain(undefined)
   })
 })
