@@ -2761,6 +2761,28 @@
       "periodLabel": "Período:",
       "refLabel": "REF:"
     },
+    "closing": {
+      "askOwnerPin": "Todavía no existe el PIN de cierre. Pídele al dueño de la cuenta que defina uno.",
+      "blockersDescription": "{count, plural, one {# movimiento sin pagar} other {# movimientos sin pagar}} entre {firstDate} y {lastDate}. Resuélvelos o cambia sus fechas antes de cerrar.",
+      "blockersTitle": "Todavía hay movimientos sin pagar",
+      "closeSuccess": "Período cerrado.",
+      "confirmCloseBody": "Cualquier cambio hasta esa fecha va a pedir el PIN.",
+      "confirmCloseTitle": "¿Cerrar los movimientos hasta {date}?",
+      "confirmCloseToday": "Los movimientos de hoy también van a pedir el PIN.",
+      "createPinTitle": "Crear el PIN de cierre",
+      "dateHint": "El período está cerrado hasta {date}. Guardar en esa fecha va a pedir el PIN.",
+      "lockedRowAria": "Movimiento en fecha cerrada",
+      "nothingToClose": "Nada que cerrar. Ese período todavía no llega.",
+      "periodHint": "El período contable elegido es distinto de la fecha. El cierre revisa los dos.",
+      "reopenScope": "Reabre desde {from} hasta {closedThrough}. {count, plural, one {# movimiento deja de estar protegido.} other {# movimientos dejan de estar protegidos.}}",
+      "reopenSuccess": "Período reabierto.",
+      "reopenTitle": "Reabrir movimientos",
+      "stateClosed": "Período cerrado.",
+      "stateClosedThrough": "Cerrado hasta {date}.",
+      "stateOpen": "Período abierto.",
+      "switchAria": "Cerrar los movimientos del período",
+      "viewBlockers": "Ver esos movimientos"
+    },
     "columns": {
       "account": "BANCO",
       "actions": "ACCIONES",

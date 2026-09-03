@@ -2761,6 +2761,28 @@
       "periodLabel": "Period:",
       "refLabel": "REF:"
     },
+    "closing": {
+      "askOwnerPin": "There is no closing PIN yet. Ask the account owner to set one.",
+      "blockersDescription": "{count, plural, one {# unpaid transaction} other {# unpaid transactions}} between {firstDate} and {lastDate}. Settle them or move their dates before closing.",
+      "blockersTitle": "There are still unpaid transactions",
+      "closeSuccess": "Period closed.",
+      "confirmCloseBody": "Any change up to that date will ask for the PIN.",
+      "confirmCloseTitle": "Close transactions through {date}?",
+      "confirmCloseToday": "Today's transactions will start asking for the PIN too.",
+      "createPinTitle": "Create the closing PIN",
+      "dateHint": "The period is closed through {date}. Saving on this date will ask for the PIN.",
+      "lockedRowAria": "Transaction on a closed date",
+      "nothingToClose": "Nothing to close. This period has not arrived yet.",
+      "periodHint": "The accounting period you picked differs from the date. Closing checks both.",
+      "reopenScope": "Reopens from {from} through {closedThrough}. {count, plural, one {# transaction stops being protected.} other {# transactions stop being protected.}}",
+      "reopenSuccess": "Period reopened.",
+      "reopenTitle": "Reopen transactions",
+      "stateClosed": "Period closed.",
+      "stateClosedThrough": "Closed through {date}.",
+      "stateOpen": "Period open.",
+      "switchAria": "Close the transactions in this period",
+      "viewBlockers": "See these transactions"
+    },
     "columns": {
       "account": "BANK",
       "actions": "ACTIONS",

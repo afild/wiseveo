@@ -16,6 +16,10 @@ import {
 import { useDateRange } from "@/contexts/date-range-context"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { formatAppDate } from "@/i18n/format"
+import {
+  DateClosingSwitch,
+  useDateClosingLabel,
+} from "@/features/security/components/date-closing-switch"
 import type { AccountWithBalance } from "@/features/accounts/types"
 import type { FinancialSummary } from "@/features/shared/services/get-financial-summary"
 
@@ -65,6 +69,8 @@ export function TransactionsClient({
   const tRoot = useTranslations()
   const locale = useLocale()
   const { dateRange, setDateRange } = useDateRange()
+  // Texto de estado do fechamento; o switch em si mora no CardAction do mesmo cabeçalho.
+  const closingLabel = useDateClosingLabel()
   const pathname = usePathname()
   const [transactions, setTransactions] = useState(initialTransactions)
   const [filterOptions, setFilterOptions] = useState(initialFilterOptions)
@@ -583,7 +589,9 @@ export function TransactionsClient({
             <CardTitle>{t("table.title")}</CardTitle>
             <CardDescription>
               {t("table.description", { count: transactions.length })}
+              {closingLabel && <span className="mt-0.5 block">{closingLabel}</span>}
             </CardDescription>
+            <DateClosingSwitch />
           </CardHeader>
           <CardContent>
             <DataTable

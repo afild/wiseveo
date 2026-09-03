@@ -2761,6 +2761,28 @@
       "periodLabel": "Período:",
       "refLabel": "REF:"
     },
+    "closing": {
+      "askOwnerPin": "O PIN de fechamento ainda não existe. Peça ao dono da conta para definir um.",
+      "blockersDescription": "{count, plural, one {# lançamento não pago} other {# lançamentos não pagos}} entre {firstDate} e {lastDate}. Pague ou mude a data deles antes de fechar.",
+      "blockersTitle": "Ainda há lançamentos não pagos",
+      "closeSuccess": "Período fechado.",
+      "confirmCloseBody": "Qualquer alteração até essa data vai pedir o PIN.",
+      "confirmCloseTitle": "Fechar lançamentos até {date}?",
+      "confirmCloseToday": "Os lançamentos de hoje também passam a pedir o PIN.",
+      "createPinTitle": "Criar o PIN de fechamento",
+      "dateHint": "O período está fechado até {date}. Gravar nessa data vai pedir o PIN.",
+      "lockedRowAria": "Lançamento em data fechada",
+      "nothingToClose": "Nada a fechar. Esse período ainda não chegou.",
+      "periodHint": "A competência escolhida é diferente da data. O fechamento confere as duas.",
+      "reopenScope": "Reabre de {from} até {closedThrough}. {count, plural, one {# lançamento deixa de estar protegido.} other {# lançamentos deixam de estar protegidos.}}",
+      "reopenSuccess": "Período reaberto.",
+      "reopenTitle": "Reabrir lançamentos",
+      "stateClosed": "Período fechado.",
+      "stateClosedThrough": "Fechado até {date}.",
+      "stateOpen": "Período aberto.",
+      "switchAria": "Fechar lançamentos do período",
+      "viewBlockers": "Ver esses lançamentos"
+    },
     "columns": {
       "account": "BANCO",
       "actions": "AÇÕES",
