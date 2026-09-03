@@ -63,8 +63,37 @@ describe("assertWritable", () => {
     m.closing = {}
     await expect(assertWritable(tx, owner, { days: ["1999-01-01"], periods: ["199901"] })).resolves.toMatchObject({ closedThrough: null })
   })
-  it("dia inválido ou vazio é ignorado, não vira bloqueio", async () => {
-    await expect(assertWritable(tx, owner, { days: [null, undefined, "não é dia"], periods: ["20260"] })).resolves.toBeDefined()
+  it("dia ausente ou vazio é ignorado: é o caso legítimo de período não informado", async () => {
+    await expect(assertWritable(tx, owner, { days: [null, undefined, ""], periods: [null, undefined, ""] })).resolves.toBeDefined()
+  })
+  /**
+   * Filtrar chave ilegível em silêncio fazia a trava falhar ABERTA: sobrava nada para conferir e a
+   * escrita passava. Cada um destes textos vira um dia real depois; nenhum é a chave.
+   */
+  it("dia ilegível estoura na hora, em vez de deixar a escrita passar", async () => {
+    for (const bad of ["2026-08-15T00:00:00Z", "2026/08/15", "Aug 15 2026 UTC", "2026-02-31", "não é dia"]) {
+      await expect(assertWritable(tx, owner, { days: [bad] })).rejects.toThrow(/assertWritable: invalid day key/)
+    }
+  })
+  it("competência ilegível estoura na hora", async () => {
+    for (const bad of ["20260", "2026-08", "202613"]) {
+      await expect(assertWritable(tx, owner, { days: [], periods: [bad] })).rejects.toThrow(/assertWritable: invalid period key/)
+    }
+  })
+  /** Vale mesmo sem nada fechado: a recusa é da entrada, não do estado da conta. */
+  it("dia ilegível estoura também em conta sem fechamento nenhum", async () => {
+    m.closing = {}
+    await expect(assertWritable(tx, owner, { days: ["2026/08/15"] })).rejects.toThrow(/assertWritable: invalid day key/)
+  })
+  /** Matriz da seção 3: "prosseguir com PIN" é do dono e do ADMIN convidado, nunca do USER convidado. */
+  it("token na mão de quem não pode fechar não vale: continua recusado", async () => {
+    await expect(assertWritable(tx, guest, { days: ["2026-08-31"] })).rejects.toMatchObject({ code: "DATE_CLOSED", canOverride: false })
+    await expect(assertWritable(tx, { ...guest, override: { ownerId: "dono", userId: "convidado" } }, { days: ["2026-08-31"] }))
+      .rejects.toMatchObject({ code: "DATE_CLOSED", canOverride: false })
+  })
+  it("ADMIN convidado com token prossegue", async () => {
+    await expect(assertWritable(tx, { ...guest, role: "ADMIN", override: { ownerId: "dono", userId: "convidado" } }, { days: ["2026-08-31"] }))
+      .resolves.toBeDefined()
   })
 })
 
@@ -130,6 +159,14 @@ describe("reopenFrom", () => {
     const ctx = { ...owner, override: { ownerId: "dono", userId: "dono" } }
     expect(await reopenFrom(ctx, "2026-08-01")).toEqual({ closedThrough: "2026-07-31", changed: true })
     expect(await reopenFrom(ctx, "2024-10-03")).toEqual({ closedThrough: null, changed: true })
+  })
+  /**
+   * A borda: D-1 CAI EM CIMA do dia do lançamento mais antigo (03/10/2024). Esse dia ainda existe,
+   * então o corte fica nele; trocar o `>=` por `>` deixaria de proteger o primeiro lançamento.
+   */
+  it("D-1 igual ao dia do lançamento mais antigo mantém esse dia fechado", async () => {
+    const ctx = { ...owner, override: { ownerId: "dono", userId: "dono" } }
+    expect(await reopenFrom(ctx, "2024-10-04")).toEqual({ closedThrough: "2024-10-03", changed: true })
   })
   it("quem não pode fechar também não reabre", async () => {
     await expect(reopenFrom({ ...guest, override: { ownerId: "dono", userId: "convidado" } }, "2026-08-01")).rejects.toMatchObject({ code: "forbidden", status: 403 })
