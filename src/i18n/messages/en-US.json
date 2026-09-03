@@ -356,6 +356,7 @@
       "recurrentFailed": "Failed to create recurring transaction",
       "saveAttachmentsFailed": "Failed to save attachments",
       "saveMessageFailed": "Failed to save message",
+      "tooManyFiles": "Upload at most {max} files at a time",
       "updateDateFailed": "Failed to update transaction date",
       "updateFailed": "Failed to update transaction",
       "updatePeriodFailed": "Failed to update transaction period"

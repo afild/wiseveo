@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   addDays, computeSwitchState, dayKeyOfLocal, dayKeyOfStored, isDayClosed, isDayKey, isPeriodClosed,
-  lastDayOfPeriod, resolveDateClosingPreferences, toDayKeyInput, toPeriodInput,
+  lastDayOfPeriod, resolveDateClosingPreferences, storedPeriod, toDayKeyInput, toPeriodInput,
 } from "@/features/security/lib/date-closing"
 
 /**
@@ -41,6 +41,36 @@ describe("entrada de rota", () => {
     }
     // O porquê do piso, preto no branco: sem ele, este valor passaria por mês já fechado.
     expect(lastDayOfPeriod("000012")).toBe("1900-12-31")
+  })
+})
+
+/**
+ * Competência já GRAVADA (coluna `char(6)`, com anos de histórico): o que não for legível vira
+ * null, e a trava simplesmente pula a competência. O dia da própria linha continua conferido.
+ */
+describe("competência lida do banco", () => {
+  it("storedPeriod aceita YYYYMM e tolera o padding de espaço da coluna char(6)", () => {
+    expect(storedPeriod("202608")).toBe("202608")
+    expect(storedPeriod(" 202608 ")).toBe("202608")
+  })
+  it("storedPeriod devolve null para lixo antigo, vazio e ausente", () => {
+    for (const bad of ["20268 ", "      ", "000000", "202613", "2026-08", "", null, undefined]) {
+      expect(storedPeriod(bad), String(bad)).toBeNull()
+    }
+  })
+  /**
+   * Mesmo piso do `toPeriodInput`, e pela mesma razão: `Date.UTC` joga os anos 0-99 para os anos
+   * 1900, então "000112" viraria 31/12/1901 em `lastDayOfPeriod` e uma edição comum voltaria com
+   * "data fechada" (423). Ano absurdo é lixo antigo: null, e a competência sai da conta.
+   */
+  it("storedPeriod recusa ano abaixo do piso e aceita o primeiro ano válido", () => {
+    expect(storedPeriod("190001")).toBe("190001")
+    for (const bad of ["000112", "000012", "000101", "189912"]) {
+      expect(storedPeriod(bad), String(bad)).toBeNull()
+    }
+    // O que aconteceria sem o piso: um mês nos anos 1900, anterior a qualquer corte real.
+    expect(lastDayOfPeriod("000112")).toBe("1901-12-31")
+    expect(isPeriodClosed("000112", "2026-08-31")).toBe(true)
   })
 })
 

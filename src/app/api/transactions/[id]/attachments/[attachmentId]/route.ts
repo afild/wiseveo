@@ -66,28 +66,34 @@ export async function DELETE(
   const { id: transactionId, attachmentId } = await params
 
   try {
-    // A data entra na busca: é o dia que a trava confere antes de deixar apagar o anexo.
-    const transaction = await prisma.transaction.findFirst({
-      where: { id: transactionId, userId },
-      select: { id: true, date: true },
-    })
-    if (!transaction) {
-      return NextResponse.json({ error: t("errors.transactionNotFound") }, { status: 404 })
-    }
+    // Tudo DENTRO da transação que apaga: a linha (com a DATA) e o anexo. Lida antes dela, a data
+    // pode já não ser a da linha, e a trava aprovaria um dia que acabou de ser fechado. A busca do
+    // anexo continua antes da conferência para manter a ordem de sempre: "não encontrado" ganha de
+    // "data fechada". Mesma regra do quickPayTransaction.
+    const outcome = await prisma.$transaction(async (tx) => {
+      const transaction = await tx.transaction.findFirst({
+        where: { id: transactionId, userId },
+        select: { id: true, date: true },
+      })
+      if (!transaction) return "transactionNotFound" as const
 
-    const attachment = await prisma.transactionAttachment.findFirst({
-      where: { id: attachmentId, transactionId },
-      select: { id: true },
-    })
-    if (!attachment) {
-      return NextResponse.json({ error: t("transactions.attachmentNotFound") }, { status: 404 })
-    }
+      const attachment = await tx.transactionAttachment.findFirst({
+        where: { id: attachmentId, transactionId },
+        select: { id: true },
+      })
+      if (!attachment) return "attachmentNotFound" as const
 
-    // A conferência corre DENTRO da transação que apaga, nunca antes dela.
-    await prisma.$transaction(async (tx) => {
       await assertWritable(tx, ctx, { days: [dayKeyOfStored(transaction.date)] })
       await tx.transactionAttachment.delete({ where: { id: attachmentId } })
+      return "deleted" as const
     })
+
+    if (outcome === "transactionNotFound") {
+      return NextResponse.json({ error: t("errors.transactionNotFound") }, { status: 404 })
+    }
+    if (outcome === "attachmentNotFound") {
+      return NextResponse.json({ error: t("transactions.attachmentNotFound") }, { status: 404 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

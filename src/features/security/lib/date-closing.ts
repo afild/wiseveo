@@ -53,10 +53,14 @@ export function toDayKeyInput(value: unknown): string | null {
  * lançar: sem isto, uma linha velha derrubaria uma edição comum com 500. O DIA da própria linha
  * continua conferido, que é a proteção de verdade. Vale só para o que já está gravado; competência
  * vinda da requisição segue barrada com 400 na rota (`toPeriodInput`).
+ * O piso de ano é o mesmo do `toPeriodInput` (1900), e pela mesma razão: `Date.UTC` joga os anos
+ * 0-99 para os anos 1900, então um "000112" gravado viraria 31/01/1900 em `lastDayOfPeriod`,
+ * anterior a qualquer corte real, e uma edição comum voltaria com "data fechada" (423). Ano
+ * absurdo é lixo antigo como qualquer outro: vira null e a trava pula a competência.
  */
 export function storedPeriod(value: string | null | undefined): string | null {
   const raw = typeof value === "string" ? value.trim() : ""
-  return PERIOD_RE.test(raw) ? raw : null
+  return isValidPeriod(raw) ? raw : null
 }
 
 /**

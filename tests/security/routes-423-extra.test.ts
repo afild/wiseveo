@@ -17,7 +17,11 @@ const m = vi.hoisted(() => ({
   recurring: null as Record<string, unknown> | null,
   /** Cada conferência com o cliente por onde saiu ("tx" só existe dentro de $transaction). */
   guardCalls: [] as Array<{ via: unknown; days: unknown; periods: unknown }>,
+  /** Cada LEITURA com o cliente por onde saiu: é assim que a data velha aparece no teste. */
+  reads: [] as string[],
   writes: [] as string[],
+  /** Opções de cada prisma.$transaction: o envio de anexos precisa de prazo próprio. */
+  txOptions: [] as unknown[],
   recurringUpdates: [] as Record<string, unknown>[],
   launchArgs: [] as Record<string, unknown>[],
 }))
@@ -50,7 +54,11 @@ vi.mock("@/features/transactions/services/create-transaction", () => ({
 }))
 
 vi.mock("@/lib/prisma", () => {
-  /** Cliente MARCADO: o de dentro da transação é outro objeto, e cada escrita diz por onde saiu. */
+  /**
+   * Cliente MARCADO: o de dentro da transação é outro objeto, e cada passo diz por onde saiu. As
+   * LEITURAS também registram, e não é detalhe: sem isso, a linha (com a DATA que a guarda depois
+   * confere) podia ser lida pelo cliente global sem que teste nenhum reclamasse.
+   */
   const make = (via: "global" | "tx") => ({
     __via: via,
     $queryRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => {
@@ -61,13 +69,21 @@ vi.mock("@/lib/prisma", () => {
         ? [{ id: "msg1" }]
         : [{ id: "msg1", content: "oi", createdAt: new Date("2026-08-20T12:00:00.000Z"), userId: "dono", userName: "Dono" }]
     },
-    transaction: { findFirst: async () => m.row },
+    transaction: {
+      findFirst: async () => {
+        m.reads.push(`${via}:transaction.findFirst`)
+        return m.row
+      },
+    },
     transactionAttachment: {
       create: async ({ data }: { data: Record<string, unknown> }) => {
         m.writes.push(`${via}:attachment.create`)
         return { id: data.id, fileName: data.fileName, mimeType: data.mimeType, fileSize: data.fileSize }
       },
-      findFirst: async () => ({ id: "a1" }),
+      findFirst: async () => {
+        m.reads.push(`${via}:attachment.findFirst`)
+        return { id: "a1" }
+      },
       delete: async () => {
         m.writes.push(`${via}:attachment.delete`)
         return { id: "a1" }
@@ -83,7 +99,15 @@ vi.mock("@/lib/prisma", () => {
   })
   const client = make("global")
   const txClient = make("tx")
-  return { prisma: { ...client, $transaction: async (fn: (tx: typeof txClient) => unknown) => fn(txClient) } }
+  return {
+    prisma: {
+      ...client,
+      $transaction: async (fn: (tx: typeof txClient) => unknown, options?: unknown) => {
+        m.txOptions.push(options)
+        return fn(txClient)
+      },
+    },
+  }
 })
 
 import { DATE_CLOSED_HEADER, DateClosedError } from "@/features/security/lib/http"
@@ -155,6 +179,17 @@ function expectGuardInsideTransaction() {
   expect(m.writes.map((w) => w.split(":")[0])).toEqual(m.writes.map(() => "tx"))
 }
 
+/**
+ * Conferir na transação certa não basta: a DATA conferida também tem de sair do cliente da
+ * transação, e a leitura tem de vir ANTES da conferência. Lida pelo cliente global, ela pode chegar
+ * velha (outra requisição move a linha entre a leitura e a escrita) e o dia fechado passa batido.
+ */
+function expectRowReadInsideTransaction() {
+  const reads = m.reads.filter((r) => r.endsWith(":transaction.findFirst"))
+  expect(reads.length).toBeGreaterThan(0)
+  expect(reads.map((r) => r.split(":")[0])).toEqual(reads.map(() => "tx"))
+}
+
 beforeEach(() => {
   m.ctx = OWNER
   m.ctxOpts = []
@@ -175,7 +210,9 @@ beforeEach(() => {
     lastDate: new Date("2026-07-05T12:00:00.000Z"),
   }
   m.guardCalls = []
+  m.reads = []
   m.writes = []
+  m.txOptions = []
   m.recurringUpdates = []
   m.launchArgs = []
 })
@@ -200,6 +237,15 @@ describe("POST /api/transactions/[id]/messages", () => {
     expect(m.guardCalls).toHaveLength(1)
     expect(m.guardCalls[0].days).toEqual([ROW_DAY])
     expectGuardInsideTransaction()
+    expectRowReadInsideTransaction()
+  })
+
+  it("lançamento inexistente responde 404, sem gravar nada", async () => {
+    m.row = null
+    const res = await messagePost(jsonReq("/api/transactions/t1/messages", { content: "oi" }), txRoute)
+    expect(res.status).toBe(404)
+    expect(m.guardCalls).toEqual([])
+    expect(m.writes).toEqual([])
   })
 })
 
@@ -223,6 +269,15 @@ describe("DELETE /api/transactions/[id]/messages/[messageId]", () => {
     expect(m.guardCalls[0].days).toEqual([ROW_DAY])
     expect(m.writes).toEqual(["tx:message.delete"])
     expectGuardInsideTransaction()
+    expectRowReadInsideTransaction()
+  })
+
+  it("lançamento inexistente responde 404, sem apagar nada", async () => {
+    m.row = null
+    const res = await messageDelete(deleteReq("/api/transactions/t1/messages/msg1"), messageRoute)
+    expect(res.status).toBe(404)
+    expect(m.guardCalls).toEqual([])
+    expect(m.writes).toEqual([])
   })
 })
 
@@ -247,6 +302,42 @@ describe("POST /api/transactions/[id]/attachments", () => {
     expect(m.guardCalls[0].days).toEqual([ROW_DAY])
     expect(m.writes).toEqual(["tx:attachment.create", "tx:attachment.create"])
     expectGuardInsideTransaction()
+    expectRowReadInsideTransaction()
+  })
+
+  it("lançamento inexistente responde 404, sem gravar arquivo nenhum", async () => {
+    m.row = null
+    const res = await attachmentPost(filesReq(["a.png"]), txRoute)
+    expect(res.status).toBe(404)
+    expect(m.guardCalls).toEqual([])
+    expect(m.writes).toEqual([])
+  })
+
+  /**
+   * Os 5 s padrão do Prisma valem para a transação INTEIRA, e aqui ela carrega os arquivos: sem
+   * prazo próprio, um punhado de anexos grandes num banco remoto vira 500.
+   */
+  it("abre a transação com prazo próprio, não com os 5 s padrão", async () => {
+    await attachmentPost(filesReq(["a.png", "b.png"]), txRoute)
+    expect(m.txOptions).toHaveLength(1)
+    const options = m.txOptions[0] as { timeout?: number; maxWait?: number } | undefined
+    expect(options?.timeout).toBeGreaterThan(5_000)
+    expect(options?.maxWait).toBeGreaterThan(2_000)
+  })
+
+  /** Os bytes de todos os arquivos ficam na memória até a gravação terminar: leva grande é recusa. */
+  it("passar do teto de arquivos responde 400 antes de ler qualquer byte", async () => {
+    const res = await attachmentPost(filesReq(Array.from({ length: 11 }, (_, i) => `f${i}.png`)), txRoute)
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe("transactions.tooManyFiles")
+    expect(m.writes).toEqual([])
+    expect(m.guardCalls).toEqual([])
+  })
+
+  it("o teto de arquivos deixa passar a leva cheia", async () => {
+    const res = await attachmentPost(filesReq(Array.from({ length: 10 }, (_, i) => `f${i}.png`)), txRoute)
+    expect(res.status).toBe(201)
+    expect(m.writes).toHaveLength(10)
   })
 })
 
@@ -270,6 +361,21 @@ describe("DELETE /api/transactions/[id]/attachments/[attachmentId]", () => {
     expect(m.guardCalls[0].days).toEqual([ROW_DAY])
     expect(m.writes).toEqual(["tx:attachment.delete"])
     expectGuardInsideTransaction()
+    expectRowReadInsideTransaction()
+  })
+
+  it("lançamento inexistente responde 404, sem apagar nada", async () => {
+    m.row = null
+    const res = await attachmentDelete(deleteReq("/api/transactions/t1/attachments/a1"), attachmentRoute)
+    expect(res.status).toBe(404)
+    expect(m.guardCalls).toEqual([])
+    expect(m.writes).toEqual([])
+  })
+
+  /** A busca do anexo também corre na transação, e antes da guarda: "não encontrado" ganha de 423. */
+  it("lê o anexo dentro da transação, antes da conferência", async () => {
+    await attachmentDelete(deleteReq("/api/transactions/t1/attachments/a1"), attachmentRoute)
+    expect(m.reads).toEqual(["tx:transaction.findFirst", "tx:attachment.findFirst"])
   })
 })
 

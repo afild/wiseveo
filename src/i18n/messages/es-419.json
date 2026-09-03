@@ -356,6 +356,7 @@
       "recurrentFailed": "Error al crear la transacción recurrente",
       "saveAttachmentsFailed": "Error al guardar los adjuntos",
       "saveMessageFailed": "Error al guardar el mensaje",
+      "tooManyFiles": "Sube como máximo {max} archivos a la vez",
       "updateDateFailed": "Error al actualizar la fecha de la transacción",
       "updateFailed": "Error al actualizar la transacción",
       "updatePeriodFailed": "Error al actualizar el período de la transacción"

@@ -86,16 +86,6 @@ export async function POST(
 
   const { id: transactionId } = await params
 
-  // A data entra na busca: é o dia que a trava confere antes de deixar a nota entrar.
-  const transaction = await prisma.transaction.findFirst({
-    where: { id: transactionId, userId },
-    select: { id: true, date: true },
-  })
-
-  if (!transaction) {
-    return NextResponse.json({ error: t("errors.transactionNotFound") }, { status: 404 })
-  }
-
   let body: Record<string, unknown>
   try {
     body = await request.json()
@@ -118,9 +108,15 @@ export async function POST(
 
   try {
     const messageId = crypto.randomUUID()
-    // A conferência corre DENTRO da transação que grava: fora dela, o fechamento poderia cair
-    // entre a checagem e a escrita.
+    // A linha (com a DATA) é lida DENTRO da transação que grava, e a conferência vem logo depois:
+    // lida antes dela, a data pode já não ser a da linha, e a trava aprovaria um dia que acabou de
+    // ser fechado. Mesma regra do quickPayTransaction.
     const rows = await prisma.$transaction(async (tx) => {
+      const transaction = await tx.transaction.findFirst({
+        where: { id: transactionId, userId },
+        select: { id: true, date: true },
+      })
+      if (!transaction) return null
       await assertWritable(tx, ctx, { days: [dayKeyOfStored(transaction.date)] })
       return tx.$queryRaw<
         Array<{
@@ -160,6 +156,10 @@ export async function POST(
         INNER JOIN public.users u ON u.id = i.user_id
       `
     })
+
+    if (rows === null) {
+      return NextResponse.json({ error: t("errors.transactionNotFound") }, { status: 404 })
+    }
 
     const row = rows[0]
     if (!row) {

@@ -10,6 +10,19 @@ import { assertWritable } from "@/features/security/services/date-closing.servic
 import { getWriteContext } from "@/features/security/services/write-context"
 
 const MAX_FILE_SIZE = 3 * 1024 * 1024 // 3 MB
+/**
+ * Teto de arquivos por envio. Os bytes de todos eles ficam na memória do servidor até a gravação
+ * terminar, então sem teto um único envio derruba o processo. Dez comprovantes de uma vez cobrem o
+ * uso real de sobra; o resto volta com 400 e a pessoa envia em duas levas.
+ */
+const MAX_FILES = 10
+/**
+ * O padrão do Prisma para transação interativa é 5 s, e aqui a transação carrega os arquivos: o
+ * pior caso realista é MAX_FILES x MAX_FILE_SIZE (10 x 3 MB = 30 MB) gravados num banco remoto.
+ * 60 s dão folga larga para isso e ainda põem um teto, em vez de deixar a transação presa. O
+ * maxWait maior é para o pool ocupado não recusar o envio antes mesmo de começar.
+ */
+const UPLOAD_TX_OPTIONS = { maxWait: 10_000, timeout: 60_000 }
 const ALLOWED_MIME = [
     "image/jpeg",
     "image/png",
@@ -34,16 +47,6 @@ export async function POST(
     const { id: transactionId } = await params
 
     try {
-        // Verify the transaction belongs to this user
-        // A data entra na busca: é o dia que a trava confere antes de aceitar o anexo.
-        const transaction = await prisma.transaction.findFirst({
-            where: { id: transactionId, userId },
-            select: { id: true, date: true },
-        })
-        if (!transaction) {
-            return NextResponse.json({ error: t("errors.transactionNotFound") }, { status: 404 })
-        }
-
         let formData: FormData
         try {
             formData = await request.formData()
@@ -54,6 +57,13 @@ export async function POST(
         const files = formData.getAll("files") as File[]
         if (!files || files.length === 0) {
             return NextResponse.json({ error: t("transactions.noFilesUploaded") }, { status: 400 })
+        }
+        // Antes de ler byte nenhum: passar do teto é recusa da leva inteira, não meia gravação.
+        if (files.length > MAX_FILES) {
+            return NextResponse.json(
+                { error: t("transactions.tooManyFiles", { max: MAX_FILES }) },
+                { status: 400 }
+            )
         }
 
         const errors: string[] = []
@@ -82,6 +92,14 @@ export async function POST(
         }
 
         const saved = await prisma.$transaction(async (tx) => {
+            // A linha (com a DATA) é lida DENTRO da transação que grava, e a conferência vem logo
+            // depois: lida antes dela, a data pode já não ser a da linha, e a trava aprovaria um dia
+            // que acabou de ser fechado. Mesma regra do quickPayTransaction.
+            const transaction = await tx.transaction.findFirst({
+                where: { id: transactionId, userId },
+                select: { id: true, date: true },
+            })
+            if (!transaction) return null
             // UMA conferência, antes do laço: o dia é o mesmo para todos os arquivos, e a transação
             // é a mesma que grava.
             await assertWritable(tx, ctx, { days: [dayKeyOfStored(transaction.date)] })
@@ -95,7 +113,11 @@ export async function POST(
                 )
             }
             return rows
-        })
+        }, UPLOAD_TX_OPTIONS)
+
+        if (saved === null) {
+            return NextResponse.json({ error: t("errors.transactionNotFound") }, { status: 404 })
+        }
 
         return NextResponse.json(
             { saved, errors: errors.length > 0 ? errors : undefined },

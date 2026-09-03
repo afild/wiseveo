@@ -22,19 +22,16 @@ export async function DELETE(
 
   const { id: transactionId, messageId } = await params
 
-  // A data entra na busca: é o dia que a trava confere antes de deixar apagar a nota.
-  const transaction = await prisma.transaction.findFirst({
-    where: { id: transactionId, userId },
-    select: { id: true, date: true },
-  })
-
-  if (!transaction) {
-    return NextResponse.json({ error: t("errors.transactionNotFound") }, { status: 404 })
-  }
-
   try {
-    // A conferência corre DENTRO da transação que apaga, nunca antes dela.
+    // A linha (com a DATA) é lida DENTRO da transação que apaga, e a conferência vem logo depois:
+    // lida antes dela, a data pode já não ser a da linha, e a trava aprovaria um dia que acabou de
+    // ser fechado. Mesma regra do quickPayTransaction.
     const deleted = await prisma.$transaction(async (tx) => {
+      const transaction = await tx.transaction.findFirst({
+        where: { id: transactionId, userId },
+        select: { id: true, date: true },
+      })
+      if (!transaction) return null
       await assertWritable(tx, ctx, { days: [dayKeyOfStored(transaction.date)] })
       return tx.$queryRaw<Array<{ id: string }>>`
         DELETE FROM public.transaction_messages
@@ -43,6 +40,10 @@ export async function DELETE(
         RETURNING id
       `
     })
+
+    if (deleted === null) {
+      return NextResponse.json({ error: t("errors.transactionNotFound") }, { status: 404 })
+    }
 
     if (deleted.length === 0) {
       return NextResponse.json({ error: t("transactions.messageNotFound") }, { status: 404 })
