@@ -1533,6 +1533,31 @@
       "requiredFields": "Complete todos los campos obligatorios"
     }
   },
+  "security": {
+    "dialog": {
+      "askOwner": "Solo quien cuida el cierre puede liberar esta fecha. Habla con esa persona.",
+      "attemptsLeft": "PIN incorrecto. Todavía puedes intentar {count, plural, one {# vez} other {# veces}}.",
+      "changeDate": "Cambiar la fecha",
+      "chooseAnotherDate": "Elige otra fecha",
+      "chooseDateLabel": "Nueva fecha",
+      "closedThroughLabel": "Cerrado hasta {date}.",
+      "confirmPinLabel": "Repite el PIN",
+      "createAndProceed": "Crear PIN y continuar",
+      "createPinDescription": "Elige 4 dígitos. Se pedirán cada vez que alguien quiera guardar dentro del período cerrado.",
+      "createPinTitle": "Crear el PIN de cierre",
+      "daysLabel": "Días cerrados: {days}.",
+      "description": "Esta fecha está dentro del período cerrado. Para guardar igual, escribe el PIN.",
+      "genericError": "No se pudo verificar el PIN ahora. Intenta de nuevo.",
+      "locked": "Demasiados intentos fallidos. Intenta de nuevo después de las {time}.",
+      "periodsLabel": "Períodos cerrados: {periods}.",
+      "pinLabel": "PIN de 4 dígitos",
+      "pinMismatch": "Los dos PIN no son iguales.",
+      "pinPlaceholder": "0000",
+      "proceed": "Continuar",
+      "recurringDateMoves": "Lanzar una recurrente no pasa con el PIN. Elige una fecha fuera del período cerrado.",
+      "title": "Fecha cerrada"
+    }
+  },
   "settings": {
     "account": {
       "accessDataDesc": "Actualice sus credenciales básicas de acceso y visualización.",

@@ -1533,6 +1533,31 @@
       "requiredFields": "Fill in all required fields"
     }
   },
+  "security": {
+    "dialog": {
+      "askOwner": "Only whoever handles the closing can unlock this date. Talk to that person.",
+      "attemptsLeft": "Wrong PIN. You can still try {count, plural, one {# time} other {# times}}.",
+      "changeDate": "Change the date",
+      "chooseAnotherDate": "Pick another date",
+      "chooseDateLabel": "New date",
+      "closedThroughLabel": "Closed through {date}.",
+      "confirmPinLabel": "Repeat the PIN",
+      "createAndProceed": "Create PIN and continue",
+      "createPinDescription": "Pick 4 digits. They will be asked every time someone writes inside the closed period.",
+      "createPinTitle": "Create the closing PIN",
+      "daysLabel": "Closed days: {days}.",
+      "description": "This date is inside the closed period. To save it anyway, type the PIN.",
+      "genericError": "The PIN could not be checked right now. Try again.",
+      "locked": "Too many wrong tries. Try again after {time}.",
+      "periodsLabel": "Closed periods: {periods}.",
+      "pinLabel": "4 digit PIN",
+      "pinMismatch": "The two PINs are not the same.",
+      "pinPlaceholder": "0000",
+      "proceed": "Continue",
+      "recurringDateMoves": "Launching a recurring entry does not go through with the PIN. Pick a date outside the closed period.",
+      "title": "Closed date"
+    }
+  },
   "settings": {
     "account": {
       "accessDataDesc": "Update your basic access and display credentials.",

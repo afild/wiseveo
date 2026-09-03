@@ -1533,6 +1533,31 @@
       "requiredFields": "Preencha todos os campos obrigatórios"
     }
   },
+  "security": {
+    "dialog": {
+      "askOwner": "Só quem cuida do fechamento pode liberar essa data. Fale com essa pessoa.",
+      "attemptsLeft": "PIN errado. Ainda dá para tentar {count, plural, one {# vez} other {# vezes}}.",
+      "changeDate": "Alterar a data",
+      "chooseAnotherDate": "Escolha outra data",
+      "chooseDateLabel": "Nova data",
+      "closedThroughLabel": "Fechado até {date}.",
+      "confirmPinLabel": "Repita o PIN",
+      "createAndProceed": "Criar PIN e prosseguir",
+      "createPinDescription": "Escolha 4 dígitos. Eles serão pedidos toda vez que alguém quiser gravar dentro do período fechado.",
+      "createPinTitle": "Criar o PIN de fechamento",
+      "daysLabel": "Dias fechados: {days}.",
+      "description": "Essa data está dentro do período fechado. Para gravar assim mesmo, digite o PIN.",
+      "genericError": "Não deu para conferir o PIN agora. Tente de novo.",
+      "locked": "Muitas tentativas erradas. Tente de novo depois das {time}.",
+      "periodsLabel": "Competências fechadas: {periods}.",
+      "pinLabel": "PIN de 4 dígitos",
+      "pinMismatch": "Os dois PINs não são iguais.",
+      "pinPlaceholder": "0000",
+      "proceed": "Prosseguir",
+      "recurringDateMoves": "Lançar uma recorrente não passa com o PIN. Escolha uma data fora do período fechado.",
+      "title": "Data fechada"
+    }
+  },
   "settings": {
     "account": {
       "accessDataDesc": "Atualize suas credenciais básicas de acesso e exibição.",

@@ -3,6 +3,8 @@
 import React from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { DemoWriteGuard } from "@/components/demo-write-guard"
+import { DateClosingGuard } from "@/features/security/components/date-closing-guard"
+import { DateClosingProvider } from "@/features/security/components/date-closing-provider"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { ThemeCustomizer } from "@/components/theme-customizer"
@@ -121,8 +123,12 @@ export default function DashboardLayout({
       <MonetaryPreferencesProvider>
         <DateRangeProvider>
           <ApplyDashboardPreferences />
-          <DashboardContent>{children}</DashboardContent>
-          <DemoWriteGuard />
+          <DateClosingProvider>
+            <DateClosingGuard>
+              <DashboardContent>{children}</DashboardContent>
+            </DateClosingGuard>
+            <DemoWriteGuard />
+          </DateClosingProvider>
           <Toaster />
         </DateRangeProvider>
       </MonetaryPreferencesProvider>
