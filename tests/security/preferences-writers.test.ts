@@ -26,8 +26,16 @@ vi.mock("@/lib/prisma", () => {
     const sql = strings.join("?"); m.raw.push({ sql, values: flat(values) })
     return sql.includes("information_schema") ? [{ data_type: "jsonb" }] : [{ prev_type: "object" }]
   }
+  /**
+   * As escritas em preferences_json chegam como TEXTO + array de valores, nunca como template com
+   * fragmento aninhado: os valores já vêm simples e o texto já traz os `$n`.
+   */
+  const queryUnsafe = async (sql: string, ...values: unknown[]) => {
+    m.raw.push({ sql, values })
+    return sql.includes("information_schema") ? [{ data_type: "jsonb" }] : [{ prev_type: "object" }]
+  }
   const client = {
-    $executeRaw: exec, $queryRaw: query,
+    $executeRaw: exec, $queryRaw: query, $queryRawUnsafe: queryUnsafe,
     user: {
       findUnique: async () => ({ preferencesJson: m.prefs, themePreferences: null }),
       update: async (args: unknown) => { m.updates.push(args); return {} },

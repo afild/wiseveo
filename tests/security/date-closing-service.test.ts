@@ -11,7 +11,7 @@ const m = vi.hoisted(() => ({
   raw: [] as Array<{ sql: string; values: unknown[] }>,
   countWhere: null as unknown,
 }))
-import { sqlText } from "./helpers/sql-text"
+import { sqlText, unsafeSqlText } from "./helpers/sql-text"
 
 const NOW = new Date("2026-09-02T12:00:00.000Z")
 
@@ -23,6 +23,11 @@ vi.mock("@/lib/prisma", () => {
       return [{ dc: m.closing }]
     },
     $executeRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => { m.raw.push({ sql: sqlText(strings, values), values }); return 1 },
+    // As escritas em preferences_json são texto + parâmetros (nunca template com fragmento).
+    $queryRawUnsafe: async (query: string, ...values: unknown[]) => {
+      m.raw.push({ sql: unsafeSqlText(query, values), values })
+      return query.includes("information_schema") ? [{ data_type: "jsonb" }] : [{ prev_type: "object" }]
+    },
     transaction: {
       count: async (args: unknown) => { m.countWhere = args; return m.unpaidCount },
       findMany: async () => [],

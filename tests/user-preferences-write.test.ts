@@ -1,10 +1,11 @@
+import { readFile } from "node:fs/promises"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   bumpPinFailure, mergeUserPreferenceKey, setUserPreferenceKey, writeUserPreferenceKeys,
   type PreferencesExecutor,
 } from "@/features/settings/services/user-preferences-write"
 
-import { sqlText } from "./security/helpers/sql-text"
+import { assertPlainStatement, unsafeSqlText } from "./security/helpers/sql-text"
 
 type FakeRow = { count: number; locked_until: string | null; prev_type: string | null }
 const OK_ROW: FakeRow = { count: 1, locked_until: null, prev_type: "object" }
@@ -12,15 +13,11 @@ const OK_ROW: FakeRow = { count: 1, locked_until: null, prev_type: "object" }
 function fakeExecutor(columnType: "json" | "jsonb", row: FakeRow = OK_ROW) {
   const calls: Array<{ sql: string; values: unknown[] }> = []
   const executor = {
-    $queryRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => {
-      const sql = sqlText(strings, values)
-      calls.push({ sql, values })
-      if (sql.includes("information_schema.columns")) return [{ data_type: columnType }]
+    $queryRawUnsafe: async (query: string, ...values: unknown[]) => {
+      assertPlainStatement(query, values)
+      calls.push({ sql: unsafeSqlText(query, values), values })
+      if (query.includes("information_schema.columns")) return [{ data_type: columnType }]
       return [row]
-    },
-    $executeRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => {
-      calls.push({ sql: sqlText(strings, values), values })
-      return 1
     },
   } as unknown as PreferencesExecutor
   return { executor, calls }
@@ -29,9 +26,10 @@ function fakeExecutor(columnType: "json" | "jsonb", row: FakeRow = OK_ROW) {
 /** Executor que nunca acha a linha: o RETURNING das QUATRO volta vazio. */
 function deadExecutor() {
   return {
-    $queryRaw: async (strings: TemplateStringsArray, ...values: unknown[]) =>
-      sqlText(strings, values).includes("information_schema.columns") ? [{ data_type: "jsonb" }] : [],
-    $executeRaw: async () => 0,
+    $queryRawUnsafe: async (query: string, ...values: unknown[]) => {
+      assertPlainStatement(query, values)
+      return query.includes("information_schema.columns") ? [{ data_type: "jsonb" }] : []
+    },
   } as unknown as PreferencesExecutor
 }
 
@@ -39,15 +37,10 @@ function deadExecutor() {
 const ROOT_GUARD =
   "CASE WHEN jsonb_typeof(users.preferences_json::jsonb) = 'object' THEN users.preferences_json::jsonb ELSE '{}'::jsonb END"
 
-/** Os `${}` agora carregam fragmentos `Prisma.sql` aninhados: achata para ver os valores de fato. */
-type SqlLike = { strings?: readonly string[]; values?: unknown[] }
+/** Os valores chegam JÁ simples (o executor falso reprova qualquer fragmento aninhado). */
 function flatValues(values: unknown[]): unknown[] {
-  return values.flatMap((v) => {
-    const s = v as SqlLike
-    return v && typeof v === "object" && Array.isArray(s.strings) && Array.isArray(s.values)
-      ? flatValues(s.values)
-      : [v]
-  })
+  assertPlainStatement("", values)
+  return values
 }
 
 const isBump = (sql: string) => sql.includes("FOR UPDATE")
@@ -241,5 +234,44 @@ describe("raiz corrompida deixa rastro", () => {
       await bumpPinFailure(executor, "u1", 5, 15)
     }
     expect(warn).not.toHaveBeenCalled()
+  })
+})
+
+/**
+ * O bug que fechou este capítulo só aparecia DENTRO do Next: fragmento `Prisma.sql`/`Prisma.raw`
+ * aninhado num `${}` só entra no texto do SQL se passar num `instanceof` contra a classe da cópia
+ * do cliente Prisma que montou o template, e o Next carrega o módulo gerado mais de uma vez (a
+ * camada dos Server Components e a das rotas são bundles separados). Quando as cópias não batem,
+ * o fragmento vira PARÂMETRO: o banco recebia `)$9` e recusava com `syntax error at or near "$9"`.
+ * Nem o teste de unidade nem o de PGlite viam isso, porque nos dois só existe uma cópia do módulo.
+ * A defesa é não depender de emenda de fragmento: texto fixo + `$n`, valores no array.
+ */
+describe("transporte: texto puro e parâmetros, nunca fragmento aninhado", () => {
+  it("as QUATRO mandam a instrução como string e os valores como escalares", async () => {
+    const seen: Array<{ query: unknown; values: unknown[] }> = []
+    const executor = {
+      $queryRawUnsafe: async (query: string, ...values: unknown[]) => {
+        seen.push({ query, values })
+        return query.includes("information_schema.columns") ? [{ data_type: "jsonb" }] : [OK_ROW]
+      },
+    } as unknown as PreferencesExecutor
+    await mergeUserPreferenceKey(executor, "u1", "dateClosing", { a: 1 })
+    await setUserPreferenceKey(executor, "u1", "locale", "pt-BR")
+    await writeUserPreferenceKeys(executor, "u1", [{ key: "a", value: 1 }])
+    await bumpPinFailure(executor, "u1", 5, 15)
+    expect(seen.length).toBe(5) // a sonda da coluna + as quatro escritas
+    for (const { query, values } of seen) {
+      expect(typeof query).toBe("string")
+      // `strings`/`values` é a forma de um Prisma.sql: nenhum valor pode ter isso.
+      for (const value of values) expect(["string", "number", "boolean"]).toContain(typeof value)
+    }
+  })
+  it("o módulo publicado não usa mais template marcado nem Prisma.sql/Prisma.raw", async () => {
+    const body = await readFile("src/features/settings/services/user-preferences-write.ts", "utf8")
+    const code = body.replace(/^\s*\*.*$/gm, "") // tira as linhas de comentário (elas explicam o bug)
+    expect(code).not.toMatch(/Prisma\.(sql|raw|join|empty)\b/)
+    expect(code).not.toMatch(/\$(query|execute)Raw\s*</) // `$queryRaw<T>` marcado
+    expect(code).not.toMatch(/\$(query|execute)Raw\s*`/) // `$queryRaw` com crase
+    expect(code).toContain("$queryRawUnsafe")
   })
 })

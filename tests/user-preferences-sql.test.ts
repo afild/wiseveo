@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
-import { Prisma } from "@/generated/prisma_new/client"
+import { assertPlainStatement } from "./security/helpers/sql-text"
 import {
   bumpPinFailure,
   mergeUserPreferenceKey,
@@ -34,22 +34,24 @@ try {
 }
 const describeWithDb = PGliteCtor ? describe : describe.skip
 
-/** Renderiza o template do Prisma como SQL parametrizado: `Prisma.raw` inline, `Prisma.sql` emendado e $n renumerado. */
-const render = (strings: readonly string[], values: unknown[]) =>
-  Prisma.sql(strings, ...(values as Prisma.Sql[]))
-
 type Statement = { text: string; values: unknown[] }
 
+/**
+ * O executor entrega ao Postgres EXATAMENTE o que o módulo mandou: o texto e o array de valores,
+ * sem nenhuma etapa de montagem no meio. A versão antiga tinha essa etapa (remontava o template do
+ * Prisma) e era justamente ela que escondia o bug: dentro do Next não existe segunda montagem, e o
+ * fragmento aninhado que aqui era emendado no texto lá virava parâmetro. `assertPlainStatement`
+ * reprova qualquer volta desse formato.
+ */
 function makeExecutor(db: PGliteLike, log: Statement[]): PreferencesExecutor {
-  const run = async (strings: readonly string[], values: unknown[]) => {
-    const stmt = render(strings, values)
-    log.push({ text: stmt.text, values: [...stmt.values] })
-    const res = await db.query<Record<string, unknown>>(stmt.text, [...stmt.values])
+  const run = async (query: string, values: unknown[]) => {
+    assertPlainStatement(query, values)
+    log.push({ text: query, values: [...values] })
+    const res = await db.query<Record<string, unknown>>(query, [...values])
     return res.rows
   }
   return {
-    $queryRaw: (strings: readonly string[], ...values: unknown[]) => run(strings, values),
-    $executeRaw: async (strings: readonly string[], ...values: unknown[]) => (await run(strings, values)).length,
+    $queryRawUnsafe: (query: string, ...values: unknown[]) => run(query, values),
   } as unknown as PreferencesExecutor
 }
 

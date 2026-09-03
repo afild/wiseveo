@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from "@/generated/prisma_new/client"
+import { type PrismaClient } from "@/generated/prisma_new/client"
 
 /**
  * ÚNICO jeito de gravar em users.preferences_json: sempre por CHAVE, nunca o objeto inteiro.
@@ -8,8 +8,19 @@ import { Prisma, type PrismaClient } from "@/generated/prisma_new/client"
  *
  * Executor injetável: serve ao app (prisma), ao Setup (cliente próprio antes de DATABASE_URL
  * existir) e à vitrine da demo (dentro da transação licenciada). NUNCA importa "@/lib/prisma".
+ *
+ * TRANSPORTE: texto de SQL montado aqui + array de valores (`$queryRawUnsafe`). NUNCA um template
+ * marcado com fragmentos `Prisma.sql`/`Prisma.raw` dentro dos `${}`. Fragmento aninhado só é
+ * emendado no texto quando passa num `instanceof Sql`, e esse teste compara com a classe da CÓPIA
+ * do cliente Prisma que montou o template. Dentro do Next há mais de uma cópia do módulo gerado
+ * (a camada dos Server Components e a das rotas são bundles distintos, com `Prisma.raw` diferentes),
+ * e o cliente é um só, memorizado em globalThis: se quem criou o cliente não foi a mesma cópia que
+ * montou o fragmento, o `instanceof` dá falso e o FRAGMENTO VIRA PARÂMETRO. O banco então recebia
+ * `)$9` no lugar do `::jsonb` e devolvia `syntax error at or near "$9"` — o PIN nunca era gravado
+ * dentro do app, embora o mesmo código passasse no tsx e nos testes (uma cópia só do módulo).
+ * Aqui não há fragmento nenhum: o texto é fixo deste arquivo e tudo que varia é parâmetro.
  */
-export type PreferencesExecutor = Pick<PrismaClient, "$executeRaw" | "$queryRaw">
+export type PreferencesExecutor = Pick<PrismaClient, "$executeRaw" | "$queryRaw" | "$queryRawUnsafe">
 
 type ColumnType = "json" | "jsonb"
 const columnTypeCache = new WeakMap<object, ColumnType>()
@@ -18,16 +29,18 @@ const columnTypeCache = new WeakMap<object, ColumnType>()
 async function columnType(executor: PreferencesExecutor): Promise<ColumnType> {
   const cached = columnTypeCache.get(executor)
   if (cached) return cached
-  const rows = await executor.$queryRaw<Array<{ data_type: string }>>`
-    SELECT data_type FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'preferences_json'
-  `
+  const rows = await executor.$queryRawUnsafe<Array<{ data_type: string }>>(
+    // i18n-ignore: SQL bruto, não é texto de UI
+    `SELECT data_type FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'preferences_json'`,
+  )
   const type: ColumnType = rows[0]?.data_type?.toLowerCase() === "json" ? "json" : "jsonb"
   columnTypeCache.set(executor, type)
   return type
 }
 
-const castBack = (type: ColumnType) => Prisma.raw(type === "json" ? "::json\n" : "::jsonb\n")
+/** Único texto escolhido em tempo de execução — e a escolha é entre DOIS literais deste arquivo. */
+const castBack = (type: ColumnType): string => (type === "json" ? "::json\n" : "::jsonb\n")
 
 /**
  * A expressão como OBJETO garantido. `COALESCE` só cobre NULL do SQL: se a coluna guardar JSON
@@ -35,16 +48,16 @@ const castBack = (type: ColumnType) => Prisma.raw(type === "json" ? "::json\n" :
  * `[null, {...}]` sem erro nenhum, e `jsonb_set` estoura "cannot set path in scalar". Aqui qualquer
  * coisa que não seja objeto vira `{}` — mesma recuperação que o COALESCE já dava para NULL.
  * Vale para os DOIS lados do `||`: a coluna E o parâmetro (um patch array concatenava de verdade).
- * Os `${}` de fragmento são SQL (Prisma.raw/Prisma.sql); todo valor continua parâmetro.
+ *
+ * O argumento é uma UNIÃO FECHADA de literais escritos aqui: o TypeScript recusa qualquer texto
+ * vindo de fora, então nada derivado de entrada do usuário chega a ser concatenado no SQL.
  */
-const asObject = (expr: Prisma.Sql) =>
-  Prisma.sql`(CASE WHEN jsonb_typeof(${expr}) = 'object' THEN ${expr} ELSE '{}'::jsonb END)`
+type FixedExpr = "users.preferences_json::jsonb" | "calc.p -> 'dateClosing'" | "$2::jsonb" | "$3::jsonb"
+const asObject = (expr: FixedExpr) =>
+  `(CASE WHEN jsonb_typeof(${expr}) = 'object' THEN ${expr} ELSE '{}'::jsonb END)`
 
 /** Raiz da coluna já normalizada para objeto. */
-const rootObject = () => asObject(Prisma.raw("users.preferences_json::jsonb"))
-
-/** O JSON do parâmetro já normalizado para objeto (só onde ele entra num `||`). */
-const paramObject = (json: string) => asObject(Prisma.sql`${json}::jsonb`)
+const ROOT = asObject("users.preferences_json::jsonb")
 
 type WriteRow = { prev_type: string | null }
 
@@ -52,10 +65,9 @@ type WriteRow = { prev_type: string | null }
  * Rabicho comum das três escritas simples: a MESMA instrução tira a foto de ANTES. O `FROM`
  * enxerga a linha no estado velho, então o `RETURNING` consegue dizer que tipo a raiz tinha antes
  * de o guarda trocá-la por `{}`. Continua UMA instrução por escrita: um segundo comando abriria
- * janela para outra escrita entrar no meio.
+ * janela para outra escrita entrar no meio. Nas três, o id do usuário é sempre `$1`.
  */
-const withPreviousRoot = (userId: string) =>
-  Prisma.sql`FROM (SELECT id, preferences_json AS prev FROM users WHERE id = ${userId}) src
+const WITH_PREVIOUS_ROOT = `FROM (SELECT id, preferences_json AS prev FROM users WHERE id = $1) src
     WHERE users.id = src.id
     RETURNING jsonb_typeof(src.prev::jsonb) AS prev_type`
 
@@ -102,20 +114,24 @@ export async function mergeUserPreferenceKey(
     throw new Error(`preferences patch must be an object for ${userId}`) // i18n-ignore: erro interno
   }
   const type = await columnType(executor)
-  const root = rootObject()
-  const patchObject = paramObject(toJson(patch))
-  // i18n-ignore: SQL bruto, não é texto de UI
-  const rows = await executor.$queryRaw<WriteRow[]>`
+  const patchObject = asObject("$3::jsonb")
+  // $1 = userId, $2 = chave, $3 = patch em JSON. i18n-ignore: SQL bruto, não é texto de UI
+  const rows = await executor.$queryRawUnsafe<WriteRow[]>(
+    `
     UPDATE users SET preferences_json = (
-      ${root}
-      || jsonb_build_object(${key}::text,
-        CASE WHEN jsonb_typeof(${root} -> ${key}::text) = 'object'
-          THEN (${root} -> ${key}::text) || ${patchObject}
+      ${ROOT}
+      || jsonb_build_object($2::text,
+        CASE WHEN jsonb_typeof(${ROOT} -> $2::text) = 'object'
+          THEN (${ROOT} -> $2::text) || ${patchObject}
           ELSE ${patchObject}
         END)
     )${castBack(type)}
-    ${withPreviousRoot(userId)}
-  `
+    ${WITH_PREVIOUS_ROOT}
+  `,
+    userId,
+    key,
+    toJson(patch),
+  )
   assertWritten(rows, userId, "mergeUserPreferenceKey")
 }
 
@@ -127,14 +143,18 @@ export async function setUserPreferenceKey(
   value: unknown,
 ): Promise<void> {
   const type = await columnType(executor)
-  const json = toJson(value)
-  // i18n-ignore: SQL bruto, não é texto de UI
-  const rows = await executor.$queryRaw<WriteRow[]>`
+  // $1 = userId, $2 = chave, $3 = valor em JSON. i18n-ignore: SQL bruto, não é texto de UI
+  const rows = await executor.$queryRawUnsafe<WriteRow[]>(
+    `
     UPDATE users SET preferences_json = jsonb_set(
-      ${rootObject()}, ARRAY[${key}::text], ${json}::jsonb, true
+      ${ROOT}, ARRAY[$2::text], $3::jsonb, true
     )${castBack(type)}
-    ${withPreviousRoot(userId)}
-  `
+    ${WITH_PREVIOUS_ROOT}
+  `,
+    userId,
+    key,
+    toJson(value),
+  )
   assertWritten(rows, userId, "setUserPreferenceKey")
 }
 
@@ -146,12 +166,15 @@ export async function writeUserPreferenceKeys(
 ): Promise<void> {
   if (ops.length === 0) return
   const type = await columnType(executor)
-  const json = toJson(Object.fromEntries(ops.map((op) => [op.key, op.value])))
-  // i18n-ignore: SQL bruto, não é texto de UI
-  const rows = await executor.$queryRaw<WriteRow[]>`
-    UPDATE users SET preferences_json = (${rootObject()} || ${paramObject(json)})${castBack(type)}
-    ${withPreviousRoot(userId)}
-  `
+  // $1 = userId, $2 = as chaves num objeto JSON. i18n-ignore: SQL bruto, não é texto de UI
+  const rows = await executor.$queryRawUnsafe<WriteRow[]>(
+    `
+    UPDATE users SET preferences_json = (${ROOT} || ${asObject("$2::jsonb")})${castBack(type)}
+    ${WITH_PREVIOUS_ROOT}
+  `,
+    userId,
+    toJson(Object.fromEntries(ops.map((op) => [op.key, op.value]))),
+  )
   assertWritten(rows, userId, "writeUserPreferenceKeys")
 }
 
@@ -195,19 +218,23 @@ export async function bumpPinFailure(
   const type = await columnType(executor)
   const nowIso = now.toISOString()
   const lockedUntilIso = new Date(now.getTime() + lockMinutes * 60_000).toISOString()
+  // $1 = userId, $2 = regex do instante, $3 = agora, $4 = limite, $5 = novo bloqueio.
+  // O `$ref` e o `$.dateClosing` abaixo moram DENTRO de literais de texto do SQL: o Postgres só lê
+  // `$n` como parâmetro fora de aspas, então eles continuam sendo caminho de jsonpath.
   // i18n-ignore: SQL bruto, não é texto de UI
-  const rows = await executor.$queryRaw<
+  const rows = await executor.$queryRawUnsafe<
     Array<{ count: number; locked_until: string | null; prev_type: string | null }>
-  >`
+  >(
+    `
     WITH cur AS (
-      SELECT id, preferences_json AS prev, ${rootObject()} AS p FROM users WHERE id = ${userId} FOR UPDATE
+      SELECT id, preferences_json AS prev, ${ROOT} AS p FROM users WHERE id = $1 FOR UPDATE
     ), lock_state AS (
       SELECT id, prev, p,
         COALESCE(jsonb_typeof(p -> 'dateClosing' -> 'pinFailures' -> 'lockedUntil'), 'null') <> 'null' AS had_lock,
-        CASE WHEN (p -> 'dateClosing' -> 'pinFailures' ->> 'lockedUntil') ~ ${ISO_INSTANT_RE}::text
+        CASE WHEN (p -> 'dateClosing' -> 'pinFailures' ->> 'lockedUntil') ~ $2::text
           THEN jsonb_path_exists(p,
             '$.dateClosing.pinFailures.lockedUntil ? (@.datetime() > $ref.datetime())',
-            jsonb_build_object('ref', ${nowIso}::text), true)
+            jsonb_build_object('ref', $3::text), true)
           ELSE false END AS still_locked
       FROM cur
     ), calc AS (
@@ -220,16 +247,22 @@ export async function bumpPinFailure(
     )
     UPDATE users u SET preferences_json = (
       jsonb_set(calc.p, '{dateClosing}',
-        ${asObject(Prisma.raw("calc.p -> 'dateClosing'"))}
+        ${asObject("calc.p -> 'dateClosing'")}
         || jsonb_build_object('pinFailures',
           jsonb_build_object('count', calc.c,
-            'lockedUntil', CASE WHEN calc.c >= ${lockAfter}::int THEN ${lockedUntilIso}::text ELSE NULL END)))
+            'lockedUntil', CASE WHEN calc.c >= $4::int THEN $5::text ELSE NULL END)))
     )${castBack(type)}
     FROM calc WHERE u.id = calc.id
     RETURNING (u.preferences_json::jsonb -> 'dateClosing' -> 'pinFailures' ->> 'count')::int AS count,
               u.preferences_json::jsonb -> 'dateClosing' -> 'pinFailures' ->> 'lockedUntil' AS locked_until,
               jsonb_typeof(calc.prev::jsonb) AS prev_type
-  `
+  `,
+    userId,
+    ISO_INSTANT_RE,
+    nowIso,
+    lockAfter,
+    lockedUntilIso,
+  )
   const row = rows[0]
   if (!row) throw new Error(`preferences not written for ${userId}`) // i18n-ignore: erro interno
   warnCorruptRoot("bumpPinFailure", userId, row.prev_type ?? null)

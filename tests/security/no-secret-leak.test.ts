@@ -47,6 +47,9 @@ vi.mock("@/lib/prisma", () => {
       if (sql.includes("dateClosing")) return [{ dc: FULL_USER.preferencesJson.dateClosing }]
       return [{ prev_type: "object" }]
     },
+    // As escritas em preferences_json são texto + parâmetros (nunca template com fragmento).
+    $queryRawUnsafe: async (query: string) =>
+      query.includes("information_schema") ? [{ data_type: "jsonb" }] : [{ prev_type: "object" }],
     user: {
       findUnique: async (args: { select?: Record<string, boolean> }) => project(args?.select),
       update: async (args: { select?: Record<string, boolean> }) => project(args?.select),

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { sqlText } from "./helpers/sql-text"
+import { sqlText, unsafeSqlText } from "./helpers/sql-text"
 
 /**
  * PIN do fechamento de datas: o contador de erros mora no BANCO (rajada em paralelo não pula o
@@ -20,6 +20,12 @@ vi.mock("@/lib/prisma", () => ({
       return [{ dc: m.prefs.dateClosing ?? null }]
     },
     $executeRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => { m.raw.push(sqlText(strings, values)); return 1 },
+    // As escritas em preferences_json são texto + parâmetros (nunca template com fragmento).
+    $queryRawUnsafe: async (query: string, ...values: unknown[]) => {
+      const sql = unsafeSqlText(query, values); m.raw.push(sql)
+      if (sql.includes("information_schema")) return [{ data_type: "jsonb" }]
+      return [m.bump]
+    },
   },
 }))
 
