@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { DEMO_FORK_PATH, DEMO_FORK_REQUIRED_HEADER } from "@/lib/demo-shared"
+import { installFetchInterceptor } from "@/lib/fetch-interceptors"
 import { hasSharedDemoMarker } from "@/lib/demo-shared-client"
 import { isValidLeadEmail, isValidLeadName } from "@/lib/demo-lead"
 
@@ -36,7 +37,8 @@ function getServerSnapshot() {
  * Interceptor global de escrita da vitrine + janela de "crie sua cópia".
  * Ausente em sessão normal e em sessão já "forkada" — a claim (cookie-marcador)
  * é quem decide, nunca a rota atual. Não há cliente central de fetch (98
- * chamadas cruas em 45 arquivos), então embrulhamos window.fetch: qualquer
+ * chamadas cruas em 45 arquivos), então um host único embrulha window.fetch e
+ * este componente só registra um handler nele: qualquer
  * tentativa de escrita (inclusive as server actions de orçamento, que POSTam
  * na própria página) volta 409 + DEMO_FORK_REQUIRED_HEADER do middleware, e é
  * aqui que a janela abre — no momento em que a pessoa TENTA editar, não antes.
@@ -53,22 +55,25 @@ export function DemoWriteGuard() {
 
   React.useEffect(() => {
     if (!shared) return
-    const original = window.fetch
-    // Embrulha window.fetch (não há cliente central): toda tentativa de escrita da
-    // vitrine volta 409 + cabeçalho; aí a janela assume e a resposta original é
-    // descartada com uma promise que NUNCA resolve — quem chamou fica pendurado de
-    // propósito, porque sair da janela SEMPRE recarrega/navega (tela limpa).
-    window.fetch = async (...args: Parameters<typeof fetch>) => {
-      const res = await original(...args)
-      if (res.status === 409 && res.headers.get(DEMO_FORK_REQUIRED_HEADER) === "1") {
-        setOpen(true)
-        return new Promise<Response>(() => {})
-      }
-      return res
-    }
-    return () => {
-      window.fetch = original
-    }
+    // Registra um handler no host único de fetch (src/lib/fetch-interceptors.ts) em vez de
+    // embrulhar window.fetch aqui: o cleanup antigo restaurava o fetch anterior e apagaria o
+    // embrulho do fechamento de datas. Ordem 10 = primeiro da fila; na vitrine a cerca
+    // responde 409 antes de qualquer 423. Toda tentativa de escrita da vitrine volta 409 +
+    // cabeçalho; aí a janela assume e a resposta original é descartada com uma promise que
+    // NUNCA resolve — quem chamou fica pendurado de propósito, porque sair da janela SEMPRE
+    // recarrega/navega (tela limpa).
+    return installFetchInterceptor(
+      {
+        after: async (res) => {
+          if (res.status === 409 && res.headers.get(DEMO_FORK_REQUIRED_HEADER) === "1") {
+            setOpen(true)
+            return new Promise<Response>(() => {})
+          }
+          return null
+        },
+      },
+      10,
+    )
   }, [shared])
 
   if (!shared) return null
