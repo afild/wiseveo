@@ -28,7 +28,7 @@ export async function quickPayTransaction(
     }
   }
 
-  const [account, status, existing] = await Promise.all([
+  const [account, status] = await Promise.all([
     prisma.account.findFirst({
       where: {
         id: quickPayment.defaultAccountId,
@@ -44,10 +44,6 @@ export async function quickPayTransaction(
       },
       select: { code: true },
     }),
-    prisma.transaction.findFirst({
-      where: { id, userId },
-      select: { id: true, date: true },
-    }),
   ])
 
   if (!account || !status) {
@@ -57,13 +53,19 @@ export async function quickPayTransaction(
     }
   }
 
-  if (!existing) return { success: false, error: t("transactionNotFound") }
-
   // Fora do closure: dentro dele o tsc perde o estreitamento feito acima.
   const { defaultAccountId, defaultStatusCode } = quickPayment
 
-  // Transação curta só para a escrita: a guarda lê a linha do dono e grava sem soltar.
-  await prisma.$transaction(async (tx) => {
+  // Transação curta só para a escrita: a data da linha é lida DENTRO dela, senão a guarda
+  // conferiria uma data velha, movida por outra requisição entre a leitura e a escrita.
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.transaction.findFirst({
+      where: { id, userId },
+      select: { id: true, date: true },
+    })
+
+    if (!existing) return { success: false, error: t("transactionNotFound") }
+
     await assertWritable(tx, ctx, { days: [dayKeyOfStored(existing.date)] })
 
     await tx.transaction.update({
@@ -73,7 +75,7 @@ export async function quickPayTransaction(
         statusCode: defaultStatusCode,
       },
     })
-  })
 
-  return { success: true }
+    return { success: true }
+  })
 }

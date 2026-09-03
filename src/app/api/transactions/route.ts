@@ -4,6 +4,8 @@ import { getTranslations } from "next-intl/server"
 
 import { createTransaction } from "@/features/transactions/services/create-transaction"
 import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import { respondDateClosed } from "@/features/security/lib/http"
+import { toDayKeyInput, toPeriodInput } from "@/features/security/lib/date-closing"
 import { getWriteContext } from "@/features/security/services/write-context"
 import { getTransactions } from "@/features/transactions/services/get-transactions"
 import { getAccountsWithBalance } from "@/features/accounts/services/get-accounts"
@@ -62,8 +64,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const t = await getTranslations("api")
-  // Tarefa 8a: o contexto de escrita (ator + dono + token de PIN) substitui o userId solto.
-  // A resposta 423 do DATE_CLOSED entra na Tarefa 8b.
+  // O contexto de escrita (ator + dono + token de PIN) substitui o userId solto.
   const ctx = await getWriteContext(request)
   if (!ctx) {
     return NextResponse.json(
@@ -105,12 +106,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: t("transactions.invalidType") }, { status: 400 })
   }
 
+  // Data e competência ilegíveis param aqui: a trava de datas recusa chave fora do formato, e
+  // deixar passar virava 500. O que já vem em "YYYY-MM-DD" segue intacto.
+  const day = toDayKeyInput(date)
+  if (!day) {
+    return NextResponse.json(
+      { error: t("errors.invalidDateFormat") },
+      { status: 400 }
+    )
+  }
+
+  let period: string | undefined
+  if (body.period) {
+    const parsed = toPeriodInput(body.period)
+    if (!parsed) {
+      return NextResponse.json(
+        { error: t("errors.invalidPeriod") },
+        { status: 400 }
+      )
+    }
+    period = parsed
+  }
+
   try {
     const transaction = await createTransaction(
       {
         userId,
-        date: String(date),
-        period: body.period ? String(body.period) : undefined,
+        date: day,
+        period,
         reference: body.reference ? String(body.reference) : undefined,
         note: body.note ? String(body.note) : undefined,
         description: body.description ? String(body.description) : undefined,
@@ -131,6 +154,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ transaction }, { status: 201 })
   } catch (error) {
+    const locked = respondDateClosed(error, t)
+    if (locked) return locked
     console.error("Error creating transaction:", error)
     return NextResponse.json(
       { error: t("transactions.createFailed") },

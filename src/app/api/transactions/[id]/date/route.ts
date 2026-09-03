@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getTranslations } from "next-intl/server"
 
+import { respondDateClosed } from "@/features/security/lib/http"
+import { toDayKeyInput } from "@/features/security/lib/date-closing"
 import { getWriteContext } from "@/features/security/services/write-context"
 import { updateTransactionDate } from "@/features/transactions/services/update-transaction-date"
 
@@ -9,8 +11,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const t = await getTranslations("api")
-  // Tarefa 8a: o contexto de escrita (ator + dono + token de PIN) substitui o userId solto.
-  // A resposta 423 do DATE_CLOSED entra na Tarefa 8b.
+  // O contexto de escrita (ator + dono + token de PIN) substitui o userId solto.
   const ctx = await getWriteContext(request)
   if (!ctx) {
     return NextResponse.json(
@@ -36,8 +37,18 @@ export async function PATCH(
     )
   }
 
+  // Data ilegível para aqui: a trava de datas recusa chave fora do formato, e deixar passar
+  // virava 500. O que já vem em "YYYY-MM-DD" segue intacto.
+  const day = toDayKeyInput(body.date)
+  if (!day) {
+    return NextResponse.json(
+      { error: t("errors.invalidDateFormat") },
+      { status: 400 }
+    )
+  }
+
   try {
-    const transaction = await updateTransactionDate(id, userId, String(body.date), ctx)
+    const transaction = await updateTransactionDate(id, userId, day, ctx)
 
     if (!transaction) {
       return NextResponse.json(
@@ -48,6 +59,8 @@ export async function PATCH(
 
     return NextResponse.json({ transaction })
   } catch (error) {
+    const locked = respondDateClosed(error, t)
+    if (locked) return locked
     console.error("Error updating transaction date:", error)
     return NextResponse.json(
       { error: t("transactions.updateDateFailed") },

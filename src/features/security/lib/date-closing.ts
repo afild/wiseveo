@@ -23,6 +23,35 @@ export function isDayKey(value: unknown): value is string {
   return dayKeyOfStored(new Date(Date.UTC(y, m - 1, d, 12))) === value
 }
 
+/**
+ * Forma mínima de uma data vinda do corpo da requisição: "YYYY-M-D", com hora opcional depois de
+ * um "T" ou de um espaço. Barra o que nem parece data ("202609", "31/08/2026") antes do `Date`.
+ */
+const DAY_INPUT_RE = /^\d{4}-\d{1,2}-\d{1,2}(?:[T\s].*)?$/
+
+/**
+ * Entrada de rota para chave de dia, ou null quando é ilegível (a rota responde 400). Uma chave
+ * "YYYY-MM-DD" passa intacta; um instante ISO completo é reduzido ao dia UTC, exatamente o dia que
+ * `normalizeDate` gravaria. Sem isto, texto ilegível chegava como "NaN-NaN-NaN" e morria em 500.
+ */
+export function toDayKeyInput(value: unknown): string | null {
+  if (typeof value !== "string") return null
+  const raw = value.trim()
+  if (isDayKey(raw)) return raw
+  if (!DAY_INPUT_RE.test(raw)) return null
+  const parsed = new Date(raw)
+  if (Number.isNaN(parsed.getTime())) return null
+  const key = dayKeyOfStored(parsed)
+  return isDayKey(key) ? key : null
+}
+
+/** Entrada de rota para competência, ou null quando não é exatamente "YYYYMM" (a rota responde 400). */
+export function toPeriodInput(value: unknown): string | null {
+  const raw =
+    typeof value === "string" ? value.trim() : typeof value === "number" && Number.isInteger(value) ? String(value) : null
+  return raw !== null && PERIOD_RE.test(raw) ? raw : null
+}
+
 export function addDays(key: string, days: number): string {
   const [y, m, d] = key.split("-").map(Number)
   return dayKeyOfStored(new Date(Date.UTC(y, m - 1, d + days, 12)))

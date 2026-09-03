@@ -1,8 +1,35 @@
 import { describe, expect, it } from "vitest"
 import {
   addDays, computeSwitchState, dayKeyOfLocal, dayKeyOfStored, isDayClosed, isDayKey, isPeriodClosed,
-  lastDayOfPeriod, resolveDateClosingPreferences,
+  lastDayOfPeriod, resolveDateClosingPreferences, toDayKeyInput, toPeriodInput,
 } from "@/features/security/lib/date-closing"
+
+/**
+ * Porta de entrada das rotas: a guarda recusa chave fora do formato, então o que não for data
+ * (ou competência) legível tem de virar null ali, e não 500 lá dentro.
+ */
+describe("entrada de rota", () => {
+  it("toDayKeyInput deixa a chave de dia passar intacta", () => {
+    expect(toDayKeyInput("2026-08-31")).toBe("2026-08-31")
+    expect(toDayKeyInput(" 2026-08-31 ")).toBe("2026-08-31")
+  })
+  it("toDayKeyInput reduz um instante ISO ao dia UTC que seria gravado", () => {
+    expect(toDayKeyInput("2026-08-31T00:00:00.000Z")).toBe("2026-08-31")
+    expect(toDayKeyInput("2026-08-31T23:00:00-05:00")).toBe("2026-09-01")
+  })
+  it("toDayKeyInput recusa o que não é data", () => {
+    for (const bad of ["31/08/2026", "202608", "ontem", "", "2026-13-01", 20260831, null, undefined]) {
+      expect(toDayKeyInput(bad), String(bad)).toBeNull()
+    }
+  })
+  it("toPeriodInput só aceita YYYYMM, como texto ou número", () => {
+    expect(toPeriodInput("202608")).toBe("202608")
+    expect(toPeriodInput(202608)).toBe("202608")
+    for (const bad of ["2026-08", "20268", "202613", "", 2026.5, null, undefined]) {
+      expect(toPeriodInput(bad), String(bad)).toBeNull()
+    }
+  })
+})
 
 describe("chaves de dia", () => {
   it("dayKeyOfStored lê os componentes UTC do meio-dia UTC", () => {

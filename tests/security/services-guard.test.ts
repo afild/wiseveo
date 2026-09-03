@@ -8,7 +8,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const m = vi.hoisted(() => ({
   closing: {} as Record<string, unknown>,
   existing: null as Record<string, unknown> | null,
-  calls: [] as string[],
+  /** Cada passo do banco com o cliente por onde saiu: "tx" só existe dentro de $transaction. */
+  calls: [] as Array<{ via: "global" | "tx"; op: string }>,
   created: [] as Record<string, unknown>[],
   updated: [] as Record<string, unknown>[],
 }))
@@ -35,34 +36,38 @@ const ROW = {
 }
 
 vi.mock("@/lib/prisma", () => {
-  const client = {
+  /**
+   * Cliente MARCADO: o de dentro da transação é outro objeto, e cada passo registra por onde
+   * saiu. Com um cliente só, uma guarda movida para fora da transação passaria despercebida.
+   */
+  const makeClient = (via: "global" | "tx") => ({
     $queryRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => {
       const sql = sqlText(strings, values)
-      m.calls.push(sql)
+      m.calls.push({ via, op: sql })
       if (sql.includes("dateClosing")) return [{ dc: m.closing }]
       if (sql.includes("next_num")) return [{ next_num: 41 }]
       if (sql.includes("next_id")) return [{ next_id: 7 }]
       return []
     },
     $executeRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => {
-      m.calls.push(sqlText(strings, values))
+      m.calls.push({ via, op: sqlText(strings, values) })
       return 1
     },
     transaction: {
       findFirst: async () => m.existing,
       findUnique: async () => m.existing,
       create: async ({ data }: { data: Record<string, unknown> }) => {
-        m.calls.push("transaction.create")
+        m.calls.push({ via, op: "transaction.create" })
         m.created.push(data)
         return data
       },
       update: async ({ data }: { data: Record<string, unknown> }) => {
-        m.calls.push("transaction.update")
+        m.calls.push({ via, op: "transaction.update" })
         m.updated.push(data)
         return { ...m.existing, ...data }
       },
       delete: async () => {
-        m.calls.push("transaction.delete")
+        m.calls.push({ via, op: "transaction.delete" })
         return m.existing
       },
     },
@@ -74,14 +79,16 @@ vi.mock("@/lib/prisma", () => {
     excludedTransaction: {
       deleteMany: async () => ({ count: 0 }),
       create: async () => {
-        m.calls.push("excluded.create")
+        m.calls.push({ via, op: "excluded.create" })
         return {}
       },
     },
     account: { findFirst: async () => ({ id: 1 }) },
     transactionStatusLookup: { findFirst: async () => ({ code: 2 }) },
-  }
-  return { prisma: { ...client, $transaction: async (fn: (tx: typeof client) => unknown) => fn(client) } }
+  })
+  const client = makeClient("global")
+  const txClient = makeClient("tx")
+  return { prisma: { ...client, $transaction: async (fn: (tx: typeof txClient) => unknown) => fn(txClient) } }
 })
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }))
 vi.mock("@/features/settings/services/user-settings-service", () => ({
@@ -101,6 +108,18 @@ import { updateTransactionPeriod } from "@/features/transactions/services/update
 
 const owner: WriteContext = { actorUserId: "dono", ownerId: "dono", role: "SUPERADMIN", status: "ACTIVE", showcase: false, override: null }
 const withPin: WriteContext = { ...owner, override: { ownerId: "dono", userId: "dono" } }
+
+const ops = () => m.calls.map((c) => c.op)
+
+/**
+ * A conferência só é atômica se sair pelo cliente da TRANSAÇÃO. Se alguém passar o cliente global
+ * para `assertWritable`, o tipo aceita (é estrutural) e o teste é o único que enxerga.
+ */
+function expectGuardInsideTransaction() {
+  const guard = m.calls.filter((c) => c.op.includes("FOR SHARE"))
+  expect(guard.length).toBeGreaterThan(0)
+  expect(guard.map((c) => c.via)).toEqual(guard.map(() => "tx"))
+}
 
 const CLOSED = "2026-08-20"
 const OPEN = "2026-09-05"
@@ -134,6 +153,7 @@ describe("createTransaction", () => {
     await expect(createTransaction(createInput(OPEN), owner)).resolves.toBeDefined()
     await expect(createTransaction(createInput(CLOSED), withPin)).resolves.toBeDefined()
     expect(m.created).toHaveLength(2)
+    expectGuardInsideTransaction()
   })
 
   it("competência fechada lança mesmo com o dia aberto", async () => {
@@ -144,9 +164,9 @@ describe("createTransaction", () => {
   /** LOCK TABLE primeiro, linha do dono depois: inverter fecha o ciclo do impasse (desenho, seção 5). */
   it("a guarda roda DEPOIS do LOCK TABLE, na mesma transação", async () => {
     await createTransaction(createInput(OPEN), owner)
-    const lock = m.calls.findIndex((c) => c.includes("LOCK TABLE"))
-    const share = m.calls.findIndex((c) => c.includes("FOR SHARE"))
-    const write = m.calls.indexOf("transaction.create")
+    const lock = m.calls.findIndex((c) => c.op.includes("LOCK TABLE"))
+    const share = m.calls.findIndex((c) => c.op.includes("FOR SHARE"))
+    const write = ops().indexOf("transaction.create")
     expect(lock).toBeGreaterThanOrEqual(0)
     expect(share).toBeGreaterThan(lock)
     expect(write).toBeGreaterThan(share)
@@ -172,6 +192,7 @@ describe("updateTransaction", () => {
     m.existing = { ...ROW }
     await expect(updateTransaction(updateInput(CLOSED), withPin)).resolves.toBeDefined()
     expect(m.updated).toHaveLength(2)
+    expectGuardInsideTransaction()
   })
 
   /** Tirar um lançamento de um mês fechado é escrita no mês fechado: a competência atual conta. */
@@ -193,6 +214,7 @@ describe("updateTransactionDate", () => {
     await expect(updateTransactionDate("t1", "dono", OPEN, owner)).resolves.toBeDefined()
     await expect(updateTransactionDate("t1", "dono", CLOSED, withPin)).resolves.toBeDefined()
     expect(m.updated).toHaveLength(2)
+    expectGuardInsideTransaction()
   })
 })
 
@@ -209,6 +231,7 @@ describe("updateTransactionPeriod", () => {
     await expect(updateTransactionPeriod("t1", "dono", "202609", owner)).resolves.toBeDefined()
     await expect(updateTransactionPeriod("t1", "dono", "202608", withPin)).resolves.toBeDefined()
     expect(m.updated).toHaveLength(2)
+    expectGuardInsideTransaction()
   })
 })
 
@@ -220,15 +243,17 @@ describe("quickPayTransaction", () => {
     m.existing = openRow()
     await expect(quickPayTransaction("t1", "dono", owner)).resolves.toMatchObject({ success: true })
     expect(m.updated).toHaveLength(2)
+    expectGuardInsideTransaction()
   })
 })
 
 describe("excludeTransaction", () => {
   it("dia fechado lança e não apaga; dia aberto e PIN apagam", async () => {
     await expect(excludeTransaction("t1", "dono", owner)).rejects.toBeInstanceOf(DateClosedError)
-    expect(m.calls).not.toContain("transaction.delete")
+    expect(ops()).not.toContain("transaction.delete")
     await expect(excludeTransaction("t1", "dono", withPin)).resolves.toMatchObject({ success: true })
-    expect(m.calls).toContain("transaction.delete")
+    expect(ops()).toContain("transaction.delete")
+    expectGuardInsideTransaction()
   })
 })
 
@@ -239,5 +264,6 @@ describe("copyTransaction", () => {
     await expect(copyTransaction("t1", OPEN, "dono", owner)).resolves.toBeDefined()
     await expect(copyTransaction("t1", CLOSED, "dono", withPin)).resolves.toBeDefined()
     expect(m.created).toHaveLength(2)
+    expectGuardInsideTransaction()
   })
 })
