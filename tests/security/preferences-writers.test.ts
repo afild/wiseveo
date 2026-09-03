@@ -14,11 +14,17 @@ const m = vi.hoisted(() => ({
 }))
 vi.mock("@/lib/prisma", () => {
   const exec = async (strings: TemplateStringsArray, ...values: unknown[]) => {
-    m.raw.push({ sql: strings.join("?"), values }); return 1
+    m.raw.push({ sql: strings.join("?"), values: flat(values) }); return 1
   }
+  // Os `${}` das instruções carregam fragmentos Prisma.sql aninhados: achata para ver os valores.
+  const flat = (values: unknown[]): unknown[] =>
+    values.flatMap((v) => {
+      const s = v as { strings?: readonly string[]; values?: unknown[] }
+      return v && typeof v === "object" && Array.isArray(s.strings) && Array.isArray(s.values) ? flat(s.values) : [v]
+    })
   const query = async (strings: TemplateStringsArray, ...values: unknown[]) => {
-    const sql = strings.join("?"); m.raw.push({ sql, values })
-    return sql.includes("information_schema") ? [{ data_type: "jsonb" }] : []
+    const sql = strings.join("?"); m.raw.push({ sql, values: flat(values) })
+    return sql.includes("information_schema") ? [{ data_type: "jsonb" }] : [{ prev_type: "object" }]
   }
   const client = {
     $executeRaw: exec, $queryRaw: query,

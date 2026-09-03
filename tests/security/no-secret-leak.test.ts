@@ -40,7 +40,7 @@ vi.mock("@/lib/prisma", () => {
   const client = {
     $executeRaw: async () => 1,
     $queryRaw: async (strings: TemplateStringsArray) =>
-      strings.join("?").includes("information_schema") ? [{ data_type: "jsonb" }] : [],
+      strings.join("?").includes("information_schema") ? [{ data_type: "jsonb" }] : [{ prev_type: "object" }],
     user: {
       findUnique: async (args: { select?: Record<string, boolean> }) => project(args?.select),
       update: async (args: { select?: Record<string, boolean> }) => project(args?.select),

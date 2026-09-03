@@ -34,16 +34,61 @@ const castBack = (type: ColumnType) => Prisma.raw(type === "json" ? "::json\n" :
  * `null`, um escalar ou um array, `||` trata escalar como array de um item e a raiz inteira vira
  * `[null, {...}]` sem erro nenhum, e `jsonb_set` estoura "cannot set path in scalar". Aqui qualquer
  * coisa que não seja objeto vira `{}` — mesma recuperação que o COALESCE já dava para NULL.
- * Os `${}` daqui são só fragmentos SQL (Prisma.raw); todo valor continua parâmetro.
+ * Vale para os DOIS lados do `||`: a coluna E o parâmetro (um patch array concatenava de verdade).
+ * Os `${}` de fragmento são SQL (Prisma.raw/Prisma.sql); todo valor continua parâmetro.
  */
 const asObject = (expr: Prisma.Sql) =>
   Prisma.sql`(CASE WHEN jsonb_typeof(${expr}) = 'object' THEN ${expr} ELSE '{}'::jsonb END)`
 
 /** Raiz da coluna já normalizada para objeto. */
-const rootObject = () => asObject(Prisma.raw("preferences_json::jsonb"))
+const rootObject = () => asObject(Prisma.raw("users.preferences_json::jsonb"))
 
-/** `JSON.stringify` devolve `undefined` para função/símbolo; NULL no parâmetro apagaria a coluna. */
-const toJson = (value: unknown): string => JSON.stringify(value ?? null) ?? "null"
+/** O JSON do parâmetro já normalizado para objeto (só onde ele entra num `||`). */
+const paramObject = (json: string) => asObject(Prisma.sql`${json}::jsonb`)
+
+type WriteRow = { prev_type: string | null }
+
+/**
+ * Rabicho comum das três escritas simples: a MESMA instrução tira a foto de ANTES. O `FROM`
+ * enxerga a linha no estado velho, então o `RETURNING` consegue dizer que tipo a raiz tinha antes
+ * de o guarda trocá-la por `{}`. Continua UMA instrução por escrita: um segundo comando abriria
+ * janela para outra escrita entrar no meio.
+ */
+const withPreviousRoot = (userId: string) =>
+  Prisma.sql`FROM (SELECT id, preferences_json AS prev FROM users WHERE id = ${userId}) src
+    WHERE users.id = src.id
+    RETURNING jsonb_typeof(src.prev::jsonb) AS prev_type`
+
+/**
+ * A recuperação silenciosa (raiz não-objeto vira `{}`) apaga TODAS as chaves, PIN e corte junto.
+ * No banco do dono isso não pode passar sem rastro. Raiz NULL do SQL não avisa: não havia nada
+ * para perder — era exatamente o caso que o COALESCE antigo já cobria.
+ */
+function warnCorruptRoot(fn: string, userId: string, prevType: string | null): void {
+  if (prevType === null || prevType === "object") return
+  console.warn(
+    `[preferences] ${fn}: users.preferences_json for ${userId} was ${prevType}, not an object; every key was reset to {}`,
+  )
+}
+
+/** Sem linha devolvida = nada foi gravado. Mensagem idêntica à de antes. */
+function assertWritten(rows: WriteRow[], userId: string, fn: string): void {
+  const row = rows[0]
+  if (!row) throw new Error(`preferences not written for ${userId}`) // i18n-ignore: erro interno
+  warnCorruptRoot(fn, userId, row.prev_type ?? null)
+}
+
+/**
+ * `JSON.stringify` OMITE a propriedade cujo valor é função, símbolo ou `undefined`: a chave sumia
+ * da instrução e a escrita "dava certo" sem gravar nada, enquanto `setUserPreferenceKey` com o
+ * MESMO valor gravava `null`. Aqui os três viram `null` em qualquer profundidade, e as quatro
+ * funções passam a gravar sempre.
+ */
+const nullForUnserializable = (_key: string, value: unknown) =>
+  value === undefined || typeof value === "function" || typeof value === "symbol" ? null : value
+
+/** Valor de topo sem serialização ainda cairia em `undefined`; NULL no parâmetro apagaria a coluna. */
+const toJson = (value: unknown): string => JSON.stringify(value, nullForUnserializable) ?? "null"
 
 /** Mescla de um nível dentro da chave (só `dateClosing` usa: seus escritores gravam subcampos diferentes). */
 export async function mergeUserPreferenceKey(
@@ -52,22 +97,26 @@ export async function mergeUserPreferenceKey(
   key: string,
   patch: Record<string, unknown>,
 ): Promise<void> {
+  // `[1,2] as any` chegava até o `||` e concatenava de verdade: dateClosing virava [{...},1,2].
+  if (patch === null || typeof patch !== "object" || Array.isArray(patch)) {
+    throw new Error(`preferences patch must be an object for ${userId}`) // i18n-ignore: erro interno
+  }
   const type = await columnType(executor)
-  const json = toJson(patch)
   const root = rootObject()
+  const patchObject = paramObject(toJson(patch))
   // i18n-ignore: SQL bruto, não é texto de UI
-  const affected = await executor.$executeRaw`
+  const rows = await executor.$queryRaw<WriteRow[]>`
     UPDATE users SET preferences_json = (
       ${root}
       || jsonb_build_object(${key}::text,
         CASE WHEN jsonb_typeof(${root} -> ${key}::text) = 'object'
-          THEN (${root} -> ${key}::text) || ${json}::jsonb
-          ELSE ${json}::jsonb
+          THEN (${root} -> ${key}::text) || ${patchObject}
+          ELSE ${patchObject}
         END)
     )${castBack(type)}
-    WHERE id = ${userId}
+    ${withPreviousRoot(userId)}
   `
-  if (affected === 0) throw new Error(`preferences not written for ${userId}`) // i18n-ignore: erro interno
+  assertWritten(rows, userId, "mergeUserPreferenceKey")
 }
 
 /** Troca o valor inteiro da chave (todas as outras chaves: escalar, array ou objeto completo). */
@@ -80,13 +129,13 @@ export async function setUserPreferenceKey(
   const type = await columnType(executor)
   const json = toJson(value)
   // i18n-ignore: SQL bruto, não é texto de UI
-  const affected = await executor.$executeRaw`
+  const rows = await executor.$queryRaw<WriteRow[]>`
     UPDATE users SET preferences_json = jsonb_set(
       ${rootObject()}, ARRAY[${key}::text], ${json}::jsonb, true
     )${castBack(type)}
-    WHERE id = ${userId}
+    ${withPreviousRoot(userId)}
   `
-  if (affected === 0) throw new Error(`preferences not written for ${userId}`) // i18n-ignore: erro interno
+  assertWritten(rows, userId, "setUserPreferenceKey")
 }
 
 /** Várias chaves de uma vez, num único UPDATE (deleteBudgetCard mexe em duas). */
@@ -97,13 +146,13 @@ export async function writeUserPreferenceKeys(
 ): Promise<void> {
   if (ops.length === 0) return
   const type = await columnType(executor)
-  const json = toJson(Object.fromEntries(ops.map((op) => [op.key, op.value ?? null])))
+  const json = toJson(Object.fromEntries(ops.map((op) => [op.key, op.value])))
   // i18n-ignore: SQL bruto, não é texto de UI
-  const affected = await executor.$executeRaw`
-    UPDATE users SET preferences_json = (${rootObject()} || ${json}::jsonb)${castBack(type)}
-    WHERE id = ${userId}
+  const rows = await executor.$queryRaw<WriteRow[]>`
+    UPDATE users SET preferences_json = (${rootObject()} || ${paramObject(json)})${castBack(type)}
+    ${withPreviousRoot(userId)}
   `
-  if (affected === 0) throw new Error(`preferences not written for ${userId}`) // i18n-ignore: erro interno
+  assertWritten(rows, userId, "writeUserPreferenceKeys")
 }
 
 /**
@@ -123,11 +172,13 @@ export async function bumpPinFailure(
   const type = await columnType(executor)
   const lockedUntilIso = new Date(now.getTime() + lockMinutes * 60_000).toISOString()
   // i18n-ignore: SQL bruto, não é texto de UI
-  const rows = await executor.$queryRaw<Array<{ count: number; locked_until: string | null }>>`
+  const rows = await executor.$queryRaw<
+    Array<{ count: number; locked_until: string | null; prev_type: string | null }>
+  >`
     WITH cur AS (
-      SELECT id, ${rootObject()} AS p FROM users WHERE id = ${userId} FOR UPDATE
+      SELECT id, preferences_json AS prev, ${rootObject()} AS p FROM users WHERE id = ${userId} FOR UPDATE
     ), calc AS (
-      SELECT id, p,
+      SELECT id, prev, p,
         CASE WHEN jsonb_typeof(p -> 'dateClosing' -> 'pinFailures' -> 'count') = 'number'
           THEN LEAST(GREATEST(trunc((p -> 'dateClosing' -> 'pinFailures' ->> 'count')::numeric), 0), 1000000)::int
           ELSE 0 END + 1 AS c
@@ -142,10 +193,12 @@ export async function bumpPinFailure(
     )${castBack(type)}
     FROM calc WHERE u.id = calc.id
     RETURNING (u.preferences_json::jsonb -> 'dateClosing' -> 'pinFailures' ->> 'count')::int AS count,
-              u.preferences_json::jsonb -> 'dateClosing' -> 'pinFailures' ->> 'lockedUntil' AS locked_until
+              u.preferences_json::jsonb -> 'dateClosing' -> 'pinFailures' ->> 'lockedUntil' AS locked_until,
+              jsonb_typeof(calc.prev::jsonb) AS prev_type
   `
   const row = rows[0]
   if (!row) throw new Error(`preferences not written for ${userId}`) // i18n-ignore: erro interno
+  warnCorruptRoot("bumpPinFailure", userId, row.prev_type ?? null)
   return { count: Number(row.count ?? 0), lockedUntil: row.locked_until ?? null }
 }
 

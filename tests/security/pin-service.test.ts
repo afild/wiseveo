@@ -49,14 +49,14 @@ describe("verifyPin", () => {
   it("bloqueado não compara nem incrementa", async () => {
     m.prefs = { dateClosing: { pinHash: "h", pinFailures: { count: 5, lockedUntil: "2099-01-01T00:00:00.000Z" } } }
     expect(await verifyPin("dono", "1234")).toMatchObject({ ok: false, reason: "locked" })
-    expect(m.raw.some((s) => s.includes("RETURNING"))).toBe(false)
+    expect(m.raw.some((s) => s.includes("calc.p"))).toBe(false)
   })
   it("bloqueio vencido zera o contador antes de contar a nova tentativa (5 tentativas de novo)", async () => {
     m.prefs = { dateClosing: { pinHash: await bcrypt.hash("1234", 4), pinFailures: { count: 5, lockedUntil: "2000-01-01T00:00:00.000Z" } } }
     m.bump = { count: 1, locked_until: null }
     expect(await verifyPin("dono", "0000")).toEqual({ ok: false, reason: "invalid", attemptsLeft: 4 })
     const zeroIndex = m.raw.findIndex((s) => s.includes(JSON.stringify({ pinFailures: { count: 0, lockedUntil: null } })))
-    const bumpIndex = m.raw.findIndex((s) => s.includes("RETURNING"))
+    const bumpIndex = m.raw.findIndex((s) => s.includes("calc.p"))
     expect(zeroIndex).toBeGreaterThan(-1)
     expect(zeroIndex).toBeLessThan(bumpIndex)
   })
