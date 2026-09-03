@@ -84,6 +84,28 @@ export function isDayClosed(day: string, closedThrough: string | null): boolean 
   return closedThrough !== null && day <= closedThrough
 }
 
+/**
+ * Piso do campo de data das telas de fechamento. Abaixo de 1900 o `Date.UTC` joga os anos 0-99
+ * para os anos 1900, então "0026-09-01" nem passa por `isDayKey` e a rota devolve 400: o seletor
+ * não deve nem oferecer o que o servidor vai recusar. Mesmo piso do `isValidPeriod`.
+ */
+export const MIN_DAY_KEY = "1900-01-01"
+
+/**
+ * A linha está dentro do período fechado? É a decisão do cadeado da tabela e do cartão, e mora
+ * aqui (pura) porque nenhum componente é testável neste projeto: o vitest é só Node.
+ *
+ * A data da linha vem do banco gravada ao meio-dia UTC (`normalizeDate`), então o dia sai dos
+ * componentes UTC. Derivar pelo dia LOCAL escorrega para o dia vizinho em qualquer linha que não
+ * esteja exatamente ao meio-dia (histórico antigo gravado à meia-noite), e o cadeado cai na
+ * linha errada.
+ */
+export function lockedForRow(storedDate: Date | string, closedThrough: string | null): boolean {
+  const parsed = storedDate instanceof Date ? storedDate : new Date(storedDate)
+  if (Number.isNaN(parsed.getTime())) return false
+  return isDayClosed(dayKeyOfStored(parsed), closedThrough)
+}
+
 export function lastDayOfPeriod(period: string): string {
   const y = Number(period.slice(0, 4))
   const m = Number(period.slice(4, 6))

@@ -168,6 +168,9 @@ export function NewTransactionDialog({
   const locale = useLocale()
   const { state: closingState } = useDateClosing()
   const numInstallments = Number(installments || 1)
+  // Parcelado com pró-rata: a competência de cada parcela é calculada, o campo aparece vazio e
+  // desligado, e o que a pessoa tinha digitado deixa de valer.
+  const isInstallmentProRata = numInstallments > 1 && isProRata
 
   // Duas dicas discretas, nunca travas: quem grava numa data fechada segue gravando, só passa
   // pelo PIN. O corte nasce `null` enquanto o provider não respondeu, e aí nenhuma dica aparece.
@@ -175,7 +178,10 @@ export function NewTransactionDialog({
   const isDateClosed = isDayKey(formData.date) && isDayClosed(formData.date, closedThrough)
   // Competência digitada à mão que não bate com a data: o fechamento confere as duas, então uma
   // data aberta com competência fechada pede o PIN do mesmo jeito. Melhor avisar antes.
+  // A dica some junto com o campo: com o campo vazio e desligado, avisar sobre um valor que a
+  // pessoa não vê nem pode corrigir seria falar de algo que não está na tela.
   const periodDiverges =
+    !isInstallmentProRata &&
     formData.period.length === 6 &&
     isDayKey(formData.date) &&
     formData.period !== periodFromDate(formData.date)
@@ -189,7 +195,6 @@ export function NewTransactionDialog({
         }).format(new Date(`${closedThrough}T12:00:00.000Z`))
       : ""
   const valueAccentClass = getTypeAccentClass(effectiveType)
-  const isInstallmentProRata = numInstallments > 1 && isProRata
 
   const isFormValid =
     formData.date?.trim() !== "" &&

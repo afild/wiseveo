@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
   addDays, computeSwitchState, dayKeyOfLocal, dayKeyOfStored, isDayClosed, isDayKey, isPeriodClosed,
-  lastDayOfPeriod, resolveDateClosingPreferences, storedPeriod, toDayKeyInput, toPeriodInput,
+  lastDayOfPeriod, lockedForRow, MIN_DAY_KEY, resolveDateClosingPreferences, storedPeriod, toDayKeyInput,
+  toPeriodInput,
 } from "@/features/security/lib/date-closing"
 
 /**
@@ -108,6 +109,46 @@ describe("dia e competência fechados", () => {
     expect(isPeriodClosed("202608", "2026-08-31")).toBe(true)
     expect(isPeriodClosed("202609", "2026-09-15")).toBe(false)
     expect(isPeriodClosed("2026xx", "2026-09-15")).toBe(false)
+  })
+})
+
+/**
+ * O CADEADO da tabela e do cartão do celular. A decisão saiu de dentro da célula para cá porque
+ * nenhum componente é testável neste projeto (o vitest é só Node): uma troca de `dayKeyOfStored`
+ * por `dayKeyOfLocal` na célula passou batida por toda a suíte.
+ *
+ * O caso que segura a regra é a linha que NÃO está ao meio-dia UTC — histórico antigo gravado à
+ * meia-noite. Com o fuso do processo em America/New_York (fixado no vitest.config.ts), meia-noite
+ * UTC do dia 02 é ainda o dia 01 na tela: derivar pelo dia local jogaria essa linha para dentro do
+ * corte e ela apareceria trancada sem estar.
+ */
+describe("lockedForRow (o cadeado da linha)", () => {
+  it("sem corte, nenhuma linha tranca", () => {
+    expect(lockedForRow("2020-01-01T12:00:00.000Z", null)).toBe(false)
+  })
+  it("linha gravada ao meio-dia UTC: dentro do corte tranca, depois dele não", () => {
+    expect(lockedForRow("2026-08-31T12:00:00.000Z", "2026-08-31")).toBe(true)
+    expect(lockedForRow("2026-09-01T12:00:00.000Z", "2026-08-31")).toBe(false)
+  })
+  it("linha à meia-noite UTC segue o dia UTC, não o dia de quem olha", () => {
+    // 2026-09-02T00:00Z é 01/09 às 20h em Nova York: pelo dia local esta linha entraria no corte.
+    expect(dayKeyOfStored(new Date("2026-09-02T00:00:00.000Z"))).toBe("2026-09-02")
+    expect(dayKeyOfLocal(new Date("2026-09-02T00:00:00.000Z"))).toBe("2026-09-01")
+    expect(lockedForRow("2026-09-02T00:00:00.000Z", "2026-09-01")).toBe(false)
+    expect(lockedForRow(new Date("2026-09-01T00:00:00.000Z"), "2026-08-31")).toBe(false)
+  })
+  it("data ilegível não tranca nada", () => {
+    expect(lockedForRow("ontem", "2026-08-31")).toBe(false)
+  })
+})
+
+/** O piso do seletor de data: abaixo dele a rota nem lê a chave (400), então nem é oferecido. */
+describe("MIN_DAY_KEY", () => {
+  it("é chave de dia válida e o ano é o mesmo piso da competência", () => {
+    expect(isDayKey(MIN_DAY_KEY)).toBe(true)
+    expect(MIN_DAY_KEY).toBe("1900-01-01")
+    expect(toPeriodInput("190001")).toBe("190001")
+    expect(isDayKey("0026-09-01")).toBe(false)
   })
 })
 

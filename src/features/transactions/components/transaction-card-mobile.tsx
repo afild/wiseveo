@@ -1,7 +1,10 @@
 "use client"
 
+import { Lock } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useDateClosing } from "@/features/security/components/date-closing-provider"
+import { lockedForRow } from "@/features/security/lib/date-closing"
 import { cn } from "@/lib/utils"
 import { createDateFormatter } from "@/i18n/format"
 import {
@@ -42,8 +45,10 @@ export function TransactionCardMobile({
   onNotes,
 }: TransactionCardMobileProps) {
   const t = useTranslations("transactions.card")
+  const tClosing = useTranslations("transactions.closing")
   const tRoot = useTranslations()
   const locale = useLocale()
+  const { state: closingState } = useDateClosing()
   const amountColor = transaction.amount < 0 ? "text-destructive" : "text-positive"
 
   // Format date as dd/MM
@@ -53,6 +58,10 @@ export function TransactionCardMobile({
     month: "2-digit",
     timeZone: "UTC",
   }).format(new Date(dateStr))
+  // Abaixo de `lg` a lista vira cartões e a tabela some junto com o cadeado dela: sem isto, no
+  // celular ninguém via que a linha está dentro do período fechado. Mesma regra pura e mesmo
+  // rótulo da tabela, no tamanho do resto da linha da data.
+  const locked = lockedForRow(dateStr, closingState?.closedThrough ?? null)
 
   return (
     <div 
@@ -74,8 +83,17 @@ export function TransactionCardMobile({
           {/* Row 1: Date & Description (Secondary) & Amount */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[11px] font-medium text-muted-foreground tabular-nums whitespace-nowrap">
-                {formattedDate}
+              <span className="flex items-center gap-1 whitespace-nowrap">
+                {locked && (
+                  <Lock
+                    role="img"
+                    aria-label={tClosing("lockedRowAria")}
+                    className="text-muted-foreground/70 size-2.5 shrink-0"
+                  />
+                )}
+                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                  {formattedDate}
+                </span>
               </span>
               <span className="text-[13px] text-muted-foreground/80 truncate italic font-medium uppercase tracking-tight">
                 {transaction.description || "—"}

@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useDateClosing } from "@/features/security/components/date-closing-provider"
-import { dayKeyOfStored, isDayClosed } from "@/features/security/lib/date-closing"
+import { lockedForRow } from "@/features/security/lib/date-closing"
 import { formatPeriod } from "@/lib/financial"
 import type { MonetaryFormatter } from "@/lib/monetary"
 import { multiSelectFilter } from "@/lib/table-export"
@@ -273,8 +273,8 @@ export const statusSortFn = (
  * cadeado — a mesma regra do switch: melhor mudo que chutado, porque um cadeado que aparece
  * e some é pior que um cadeado que demora meio segundo.
  *
- * A data é guardada ao meio-dia UTC, por isso `dayKeyOfStored`: derivar pelo dia local traria
- * o dia anterior a oeste de Greenwich e o cadeado cairia na linha errada.
+ * Quem decide é `lockedForRow` (regra pura, com teste): a data é guardada ao meio-dia UTC e o dia
+ * sai dos componentes UTC. O cartão do celular chama a MESMA função, então os dois nunca discordam.
  */
 function TransactionDateCell({
   dateStr,
@@ -295,12 +295,16 @@ function TransactionDateCell({
     year: isMobile ? undefined : "numeric",
     timeZone: "UTC",
   }).format(parsed)
-  const locked = isDayClosed(dayKeyOfStored(parsed), state?.closedThrough ?? null)
+  const locked = lockedForRow(parsed, state?.closedThrough ?? null)
 
   return (
     <div className="flex items-center gap-1.5">
       {locked && (
-        <Lock aria-label={t("lockedRowAria")} className="text-muted-foreground size-3 shrink-0" />
+        <Lock
+          role="img"
+          aria-label={t("lockedRowAria")}
+          className="text-muted-foreground size-3 shrink-0"
+        />
       )}
       <span className="truncate text-sm">{formatted}</span>
     </div>
@@ -390,11 +394,15 @@ export function getTransactionColumns(
           isMobile={isMobile}
         />
       ),
-      // 14px a mais que antes (104/96): o cadeado e o espaço dele comem 18px, e com a largura
-      // velha "08/01/2026" saía cortado em "08/01/2…". Data é valor curto e fixo — a mesma regra
-      // do minSize da competência: nunca corta.
+      // Largura medida, não chutada. A data mais larga dos três idiomas entre 1900 e 2099 é
+      // "04/04/2000" (igual nos três) e ocupa 80,95px em Figtree 400 a 14px; o cadeado come 12px
+      // (size-3), o gap-1.5 mais 6px e a célula tem 16px de padding (p-2 dos dois lados).
+      // 81+12+6+16 = 115px, e o piso fica em 116 (1px de folga para arredondamento subpixel).
+      // O piso é o que importa: no layout "cabe no contêiner" o `size` é peso e o `minSize` é a
+      // única garantia de não cortar — com o piso velho (110) sobravam 94px de conteúdo, 5px a
+      // menos do que a data mais larga precisa, e ela saía com reticências.
       size: 118,
-      minSize: 110,
+      minSize: 116,
     },
     {
       accessorKey: "reference",

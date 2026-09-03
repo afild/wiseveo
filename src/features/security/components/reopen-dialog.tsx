@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createDateFormatter } from "@/i18n/format"
-import { isDayKey } from "../lib/date-closing"
+import { isDayKey, MIN_DAY_KEY } from "../lib/date-closing"
 import { PIN_TOKEN_HEADER } from "../lib/http"
 import { decideReopenResponse, reopenDialogMode, type ClosingPermissions } from "../lib/switch-flows"
 import { useDateClosing } from "./date-closing-provider"
@@ -267,6 +267,9 @@ export function ReopenDialog({ from, permissions, onClose, allowChangeFrom = fal
               <Input
                 id="date-closing-reopen-from"
                 type="date"
+                // Teto e piso: acima do corte não há o que reabrir (409), e abaixo de 1900 a
+                // chave nem é lida como data (400). O seletor não oferece nem um nem outro.
+                min={MIN_DAY_KEY}
                 max={closedThrough ?? undefined}
                 value={fromValue}
                 onChange={(event) => {

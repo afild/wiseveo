@@ -27,6 +27,7 @@ export interface GuardMachine {
   setToken(token: string, expiresAtMs: number): void
   hasValidToken(nowMs: number): boolean
   tokenValue(nowMs: number): string | null
+  /** Abre um escopo de lote. Aninha: só o `endBatch` do escopo MAIS DE FORA fecha de verdade. */
   beginBatch(): void
   endBatch(): void
   /** O que fazer com um 423: "pass" (devolver a resposta original), "retry" (repetir com o token) ou "ask" (abrir a janela). */
@@ -37,7 +38,13 @@ export interface GuardMachine {
 
 export function createGuardMachine(): GuardMachine {
   let token: { value: string; expiresAtMs: number } | null = null
-  let batch: { active: boolean; decision: Decision | null } = { active: false, decision: null }
+  /**
+   * `depth` em vez de um liga/desliga: há DOIS tipos de laço (os lotes da tabela de lançamentos e
+   * o laço de parcelas do formulário), e eles podem se cruzar. Com uma bandeira só, salvar um
+   * formulário parcelado no meio de um lote longo fazia o `endBatch()` do formulário apagar o
+   * escopo do lote, e as linhas restantes voltavam a pedir o PIN uma a uma.
+   */
+  const batch: { depth: number; decision: Decision | null } = { depth: 0, decision: null }
   const valid = (nowMs: number) => token !== null && token.expiresAtMs > nowMs
   return {
     setToken: (value, expiresAtMs) => {
@@ -46,18 +53,24 @@ export function createGuardMachine(): GuardMachine {
     hasValidToken: valid,
     tokenValue: (nowMs) => (valid(nowMs) ? token!.value : null),
     beginBatch: () => {
-      batch = { active: true, decision: null }
+      batch.depth += 1
+      // Só o escopo mais de fora zera: um laço aninhado não pode apagar a decisão de quem o cerca.
+      if (batch.depth === 1) batch.decision = null
     },
     endBatch: () => {
-      batch = { active: false, decision: null }
+      // `endBatch` sem `beginBatch` (um `finally` que rodou duas vezes) não pode virar profundidade
+      // negativa, senão o próximo lote nasceria fora de escopo.
+      if (batch.depth === 0) return
+      batch.depth -= 1
+      if (batch.depth === 0) batch.decision = null
     },
     onLocked: (nowMs) => {
-      if (batch.active && batch.decision === "declined") return "pass"
-      if (batch.active && batch.decision === "token" && valid(nowMs)) return "retry"
+      if (batch.depth > 0 && batch.decision === "declined") return "pass"
+      if (batch.depth > 0 && batch.decision === "token" && valid(nowMs)) return "retry"
       return "ask"
     },
     decide: (decision) => {
-      if (batch.active) batch.decision = decision
+      if (batch.depth > 0) batch.decision = decision
     },
   }
 }

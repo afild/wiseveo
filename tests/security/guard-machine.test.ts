@@ -115,6 +115,39 @@ describe("máquina do guard", () => {
     machine.beginBatch()
     expect(machine.onLocked(NOW)).toBe("ask")
   })
+
+  /**
+   * Dois laços que se cruzam: o lote da tabela (cinco ações em lote) e o laço de parcelas do
+   * formulário. Salvar um formulário parcelado no meio de um lote longo NÃO pode encerrar o escopo
+   * do lote — se encerrasse, as linhas que faltavam voltariam a pedir o PIN uma a uma.
+   */
+  it("lote aninhado: o fim do de dentro não encerra o de fora", () => {
+    const machine = createGuardMachine()
+    machine.beginBatch()
+    machine.decide("declined")
+    expect(machine.onLocked(NOW)).toBe("pass")
+
+    machine.beginBatch()
+    // O de dentro nem apaga a decisão de quem o cerca ao abrir...
+    expect(machine.onLocked(NOW)).toBe("pass")
+    machine.endBatch()
+    // ...nem ao fechar.
+    expect(machine.onLocked(NOW)).toBe("pass")
+
+    machine.endBatch()
+    expect(machine.onLocked(NOW)).toBe("ask")
+  })
+
+  it("endBatch a mais não deixa o contador negativo", () => {
+    const machine = createGuardMachine()
+    machine.endBatch()
+    machine.endBatch()
+    machine.beginBatch()
+    machine.decide("declined")
+    expect(machine.onLocked(NOW)).toBe("pass")
+    machine.endBatch()
+    expect(machine.onLocked(NOW)).toBe("ask")
+  })
 })
 
 describe("isLaunchRoute", () => {

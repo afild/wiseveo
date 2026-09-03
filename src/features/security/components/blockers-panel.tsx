@@ -46,6 +46,13 @@ export function BlockersPanel({ blockers, onClose, onViewBlockers }: BlockersPan
 
   const firstDate = blockers?.firstDate ?? null
   const lastDate = blockers?.lastDate ?? null
+  // O atalho só existe quando há faixa E quem abriu o painel tem para onde mandar o período. Em
+  // Configurações não tem, e a descrição não pode prometer um botão que a tela não mostra: uma
+  // decisão só, usada pela descrição e pelo rodapé, para as duas nunca discordarem.
+  const shortcut =
+    firstDate !== null && lastDate !== null && onViewBlockers
+      ? { firstDate, lastDate, go: onViewBlockers }
+      : null
 
   // O 409 pode chegar torto: contagem sem as datas da faixa, ou nem contagem. O painel diz o que
   // sabe em vez de mostrar só o título — quem abriu precisa saber o que fazer para poder fechar.
@@ -64,16 +71,16 @@ export function BlockersPanel({ blockers, onClose, onViewBlockers }: BlockersPan
         if (!next) onClose()
       }}
       title={t("blockersTitle")}
-      description={t("blockersPanelDescription")}
+      description={shortcut ? t("blockersPanelDescriptionWithShortcut") : t("blockersPanelDescription")}
       footer={
         <>
           <DetailPanelCloseButton onClick={onClose} />
-          {firstDate && lastDate && onViewBlockers && (
+          {shortcut && (
             <Button
               type="button"
               className="cursor-pointer"
               onClick={() => {
-                onViewBlockers(firstDate, lastDate)
+                shortcut.go(shortcut.firstDate, shortcut.lastDate)
                 onClose()
               }}
             >

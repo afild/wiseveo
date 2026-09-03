@@ -22,11 +22,10 @@ import { getAccountOwnership } from "@/features/settings/services/admin-users-se
 import { listPendingInvitations } from "@/features/settings/services/invitations-service"
 import { defaultMonetarySettings } from "@/lib/monetary"
 import { getSession } from "@/lib/session"
-import { resolveDataOwnerId } from "@/lib/data-owner"
 import { buildSecurityContext, type SecurityContext } from "@/features/security/lib/security-context"
-import type { Actor } from "@/features/security/lib/permissions"
 import { getDateClosingState } from "@/features/security/services/date-closing.service"
 import { readOwnerClosing } from "@/features/security/services/read-owner-closing"
+import { buildActor } from "@/features/security/services/write-context"
 import {
   demoAdminShowcase,
   demoAppSettingsStructure,
@@ -43,24 +42,16 @@ type SettingsTab = (typeof baseTabs)[number] | "notifications" | "integrations" 
  * dos dados, e nada disso cabe num id de conveniência. Sem sessão real, a aba não existe.
  *
  * Falha de banco esconde a aba em vez de derrubar Configurações inteira: o resto da tela não tem
- * nada a ver com o fechamento, e a trava de verdade continua sendo a do servidor.
+ * nada a ver com o fechamento, e a trava de verdade continua sendo a do servidor. Some da tela,
+ * mas nunca em silêncio: uma aba que desaparece sem rastro no log é impossível de investigar.
  */
 async function readSecurityContext(): Promise<SecurityContext | undefined> {
   try {
     const session = await getSession()
     if (!session) return undefined
-    const user = await prisma.user.findUnique({
-      where: { id: session.userId },
-      select: { role: true, status: true },
-    })
-    if (!user) return undefined
-    const actor: Actor = {
-      actorUserId: session.userId,
-      ownerId: await resolveDataOwnerId(session.userId),
-      role: user.role,
-      status: user.status,
-      showcase: session.demoShared === true,
-    }
+    // Mesmo ator das rotas de escrita (`getWriteContext`), montado pela mesma função.
+    const actor = await buildActor(session)
+    if (!actor) return undefined
     // Duas leituras da mesma linha de propósito: o estado é o contrato de cinco campos da rota
     // (que NÃO devolve `pinUpdatedAt`, e nem deve), e o "Definido em" é só desta tela.
     const [state, closing] = await Promise.all([
@@ -68,7 +59,8 @@ async function readSecurityContext(): Promise<SecurityContext | undefined> {
       readOwnerClosing(prisma, actor.ownerId, null),
     ])
     return buildSecurityContext(actor, { ...state, pinUpdatedAt: closing.pinUpdatedAt })
-  } catch {
+  } catch (error) {
+    console.error("Error reading security context:", error)
     return undefined
   }
 }

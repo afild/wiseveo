@@ -61,6 +61,8 @@ const ARQUIVOS = [
   "transactions/components/new-transaction-dialog.tsx",
   "recurring/components/recurring-client.tsx",
   "recurring/components/data-table-toolbar.tsx",
+  "transactions/components/transactions-client.tsx",
+  "security/components/date-closing-switch.tsx",
 ]
 const AGULHAS = ["split", "slice", "substring"].map((corte) => "toISOString()." + corte)
 const derivaDiaDeIso = (texto: string) => AGULHAS.some((agulha) => texto.includes(agulha))
