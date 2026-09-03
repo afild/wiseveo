@@ -2204,11 +2204,26 @@
       },
       "title": "Optional Integrations"
     },
+    "security": {
+      "confirmLabel": "Repeat the PIN",
+      "description": "Once you close a period, the PIN is asked for anything written inside it. It is 4 digits.",
+      "errors": {
+        "pinInvalid": "The PIN must have 4 digits.",
+        "pinMismatch": "The two PINs are not the same."
+      },
+      "laterHint": "You can create or change the PIN later, in Settings, on the Security tab.",
+      "pinLabel": "4 digit PIN",
+      "pinPlaceholder": "0000",
+      "skip": "Skip",
+      "subtitle": "Optional step. Create the PIN now or leave it for later.",
+      "title": "Create a closing PIN"
+    },
     "stepper": {
       "admin": "Admin",
       "chartOfAccounts": "Accounts",
       "database": "Database",
       "integrations": "Integrations",
+      "security": "Security",
       "summary": "Summary",
       "welcome": "Welcome"
     },
@@ -2231,10 +2246,13 @@
       "keepExisting": "Keep Existing Data",
       "none": "None",
       "openai": "OpenAI",
+      "pinNotSet": "Not set",
+      "pinSet": "Set",
       "sectionAdmin": "Administrator",
       "sectionChart": "Chart of Accounts",
       "sectionDatabase": "Database",
       "sectionIntegrations": "Integrations",
+      "sectionPin": "Closing PIN",
       "subtitle": "Review your settings before initializing the system.",
       "telegram": "Telegram",
       "title": "All Set!"

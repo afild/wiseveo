@@ -6,11 +6,12 @@ import { WizardStepper } from "./wizard-stepper"
 import { WelcomeStep } from "./steps/welcome-step"
 import { DatabaseStep } from "./steps/database-step"
 import { AdminStep, type SetupIdentitySummary } from "./steps/admin-step"
+import { SecurityStep } from "./steps/security-step"
 import { IntegrationsStep } from "./steps/integrations-step"
 import { ChartOfAccountsStep } from "./steps/chart-of-accounts-step"
 import { SummaryStep } from "./steps/summary-step"
 import { FinishPanel, type SetupFinishState } from "./steps/finish-panel"
-import { Globe, Database, UserPlus, Puzzle, LayoutList, CheckCircle2 } from "lucide-react"
+import { Globe, Database, UserPlus, ShieldCheck, Puzzle, LayoutList, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { useLocale, useTranslations } from "next-intl"
 import { resolveAppLocale, type AppLocale } from "@/i18n/config"
@@ -50,6 +51,10 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
     password: "",
     confirmPassword: "",
   })
+  // PIN de fechamento (passo opcional): só vira payload quando tem 4 dígitos e os
+  // dois campos batem. Em branco = "Pular", e o Finalizar não encosta no PIN existente.
+  const [security, setSecurity] = useState({ pin: "", confirm: "" })
+  const pinReady = /^\d{4}$/.test(security.pin) && security.pin === security.confirm
   const [integrations, setIntegrations] = useState({
     google: { enabled: false, clientId: "", clientSecret: "" },
     // Telegram: só o token — o app descobre o resto (getMe, segredo, webhook).
@@ -63,6 +68,7 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
     { label: t("stepper.welcome"), icon: <Globe className="w-5 h-5" /> },
     { label: t("stepper.database"), icon: <Database className="w-5 h-5" /> },
     { label: t("stepper.admin"), icon: <UserPlus className="w-5 h-5" /> },
+    { label: t("stepper.security"), icon: <ShieldCheck className="w-5 h-5" /> },
     { label: t("stepper.integrations"), icon: <Puzzle className="w-5 h-5" /> },
     { label: t("stepper.chartOfAccounts"), icon: <LayoutList className="w-5 h-5" /> },
     { label: t("stepper.summary"), icon: <CheckCircle2 className="w-5 h-5" /> },
@@ -85,6 +91,16 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
     setAdmin((prev) => ({ ...prev, [field]: value }))
   }
 
+  const handleSecurityChange = (field: "pin" | "confirm", value: string) => {
+    setSecurity((prev) => ({ ...prev, [field]: value }))
+  }
+
+  /** Pular: o que estiver meio digitado sai do estado antes de avançar. */
+  const handleSkipSecurity = () => {
+    setSecurity({ pin: "", confirm: "" })
+    handleNext()
+  }
+
   const handleFinish = async () => {
     setIsConfiguring(true)
     try {
@@ -94,6 +110,9 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
         admin,
         locale,
         integrations,
+        // Sem PIN pronto a chave nem existe: a rota lê isso como "Pular" e deixa
+        // intacto o `pinHash` de quem já tinha um.
+        ...(pinReady ? { security: { pin: security.pin } } : {}),
         // The backend will generate authSecret
       }
 
@@ -110,6 +129,7 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
         // nada deles sobra no estado do wizard.
         setConnectionString("")
         setAdmin((prev) => ({ ...prev, password: "", confirmPassword: "" }))
+        setSecurity({ pin: "", confirm: "" })
         setIntegrations({
           google: { enabled: false, clientId: "", clientSecret: "" },
           telegram: { enabled: false, botToken: "", botUsername: "" },
@@ -185,6 +205,15 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
           <AdminStep admin={admin} onAdminChange={handleAdminChange} onNext={handleNext} onBack={handleBack} identity={identity} />
         )}
         {currentStep === 3 && (
+          <SecurityStep
+            security={security}
+            onSecurityChange={handleSecurityChange}
+            onSkip={handleSkipSecurity}
+            onNext={handleNext}
+            onBack={handleBack}
+          />
+        )}
+        {currentStep === 4 && (
           <IntegrationsStep 
             integrations={integrations} 
             onIntegrationChange={handleIntegrationChange} 
@@ -192,7 +221,7 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
             onBack={handleBack} 
           />
         )}
-        {currentStep === 4 && (
+        {currentStep === 5 && (
           <ChartOfAccountsStep
             hasData={hasData}
             owner={connection?.owner ?? null}
@@ -205,11 +234,12 @@ export function SetupWizard({ reconfiguring = false, identity }: SetupWizardProp
             onBack={handleBack} 
           />
         )}
-        {currentStep === 5 && (
+        {currentStep === 6 && (
           <SummaryStep 
             useExistingData={useExistingData}
             adminName={admin.name}
             adminEmail={admin.email}
+            pinSet={pinReady}
             integrations={{
               google: integrations.google.enabled,
               telegram: integrations.telegram.enabled,

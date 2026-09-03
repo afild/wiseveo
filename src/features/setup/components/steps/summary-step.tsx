@@ -2,12 +2,14 @@
 
 import { Button } from "@/components/ui/button"
 import { useTranslations } from "next-intl"
-import { CheckCircle2, Server, User, Puzzle, LayoutList, Loader2 } from "lucide-react"
+import { CheckCircle2, Server, User, ShieldCheck, Puzzle, LayoutList, Loader2 } from "lucide-react"
 
 interface SummaryStepProps {
   useExistingData: boolean
   adminName: string
   adminEmail: string
+  /** PIN de fechamento pronto para ir no Finalizar (4 dígitos e confirmação igual). */
+  pinSet: boolean
   integrations: {
     google: boolean
     telegram: boolean
@@ -23,6 +25,7 @@ export function SummaryStep({
   useExistingData,
   adminName,
   adminEmail,
+  pinSet,
   integrations,
   isConfiguring,
   onNext,
@@ -72,6 +75,20 @@ export function SummaryStep({
               <p className="text-xs text-muted-foreground">
                 {adminName} ({adminEmail})
               </p>
+            </div>
+          </div>
+          <CheckCircle2 className="w-4 h-4 text-primary" />
+        </div>
+
+        {/* PIN Summary */}
+        <div className="flex items-center justify-between p-3 rounded-lg border border-muted bg-background/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-muted rounded-md text-foreground">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">{t("sectionPin")}</p>
+              <p className="text-xs text-muted-foreground">{pinSet ? t("pinSet") : t("pinNotSet")}</p>
             </div>
           </div>
           <CheckCircle2 className="w-4 h-4 text-primary" />

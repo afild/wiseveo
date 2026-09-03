@@ -2204,11 +2204,26 @@
       },
       "title": "Integraciones Opcionales"
     },
+    "security": {
+      "confirmLabel": "Repite el PIN",
+      "description": "Cuando cierres un período, se pedirá el PIN para guardar cualquier cosa dentro de él. Son 4 dígitos.",
+      "errors": {
+        "pinInvalid": "El PIN debe tener 4 dígitos.",
+        "pinMismatch": "Los dos PIN no son iguales."
+      },
+      "laterHint": "Puedes crear o cambiar el PIN después, en Configuración, en la pestaña Seguridad.",
+      "pinLabel": "PIN de 4 dígitos",
+      "pinPlaceholder": "0000",
+      "skip": "Omitir",
+      "subtitle": "Paso opcional. Crea el PIN ahora o déjalo para después.",
+      "title": "Crea un PIN de cierre"
+    },
     "stepper": {
       "admin": "Admin",
       "chartOfAccounts": "Cuentas",
       "database": "Base",
       "integrations": "Integraciones",
+      "security": "Seguridad",
       "summary": "Resumen",
       "welcome": "Bienvenido"
     },
@@ -2231,10 +2246,13 @@
       "keepExisting": "Mantener Datos Existentes",
       "none": "Ninguna",
       "openai": "OpenAI",
+      "pinNotSet": "No definido",
+      "pinSet": "Definido",
       "sectionAdmin": "Administrador",
       "sectionChart": "Plan de Cuentas",
       "sectionDatabase": "Base de Datos",
       "sectionIntegrations": "Integraciones",
+      "sectionPin": "PIN de cierre",
       "subtitle": "Revisa tu configuración antes de inicializar el sistema.",
       "telegram": "Telegram",
       "title": "¡Todo Listo!"

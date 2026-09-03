@@ -30,6 +30,7 @@ import { applyPrismaMigrations, loadMigrationFiles } from "@/features/setup/serv
 import { detectHostingProvider, detectSetupPersistence } from "@/features/setup/services/setup-environment"
 import { checkUsersSchema } from "@/features/setup/lib/schema-check"
 import { readUsersColumns } from "@/features/setup/services/db-connection.service"
+import { PIN_RE, setPin } from "@/features/security/services/pin.service"
 
 // Nada que saia daqui em log pode conter a senha do banco.
 const redact = (value: unknown) => redactConnectionUrl(String(value ?? ""))
@@ -61,6 +62,20 @@ export async function POST(req: Request) {
 
     if (!databaseUrl || typeof databaseUrl !== "string" || !adminInput.email || (!identity && !adminPassword)) {
       return NextResponse.json({ success: false, message: t("missingFields") }, { status: 400 })
+    }
+
+    // PIN de fechamento do passo "Segurança": opcional, viaja em claro neste corpo (o crachá
+    // do primeiro acesso é emitido no cadastro, antes deste passo, e não o carrega). Vazio ou
+    // ausente quer dizer "Pular": nada é gravado — e numa reconfiguração isso é o que protege
+    // o `pinHash` de uma instalação que já roda. Fora dos 4 dígitos recusa AQUI, antes das
+    // migrações: nenhuma escrita acontece por causa de um PIN mal digitado.
+    const pin = typeof payload.security?.pin === "string" ? payload.security.pin.trim() : ""
+    if (pin !== "" && !PIN_RE.test(pin)) {
+      const tSecurity = await getTranslations("api.security")
+      return NextResponse.json(
+        { success: false, code: "pinInvalid", message: tSecurity("pinInvalid") },
+        { status: 400 },
+      )
     }
 
     // Idioma escolhido no wizard vira o padrão da instalação (env) e a
@@ -197,6 +212,11 @@ export async function POST(req: Request) {
           status: "ACTIVE",
         },
       })
+
+      // PIN do passo "Segurança": só agora, com a linha do administrador já existindo. O
+      // executor é o cliente do próprio Setup (a DATABASE_URL ainda não vale neste processo),
+      // e o `setPin` mescla dentro de `dateClosing` — o resto das preferências fica de pé.
+      if (pin) await setPin(client, userId, pin)
 
       // Initialize the default chart of accounts unless reusing an existing database
       if (!useExistingData && !existing) {

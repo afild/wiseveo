@@ -2204,11 +2204,26 @@
       },
       "title": "Integrações Opcionais"
     },
+    "security": {
+      "confirmLabel": "Repita o PIN",
+      "description": "Quando você fechar um período, o PIN será pedido para gravar qualquer coisa dentro dele. São 4 dígitos.",
+      "errors": {
+        "pinInvalid": "O PIN precisa ter 4 dígitos.",
+        "pinMismatch": "Os dois PINs não são iguais."
+      },
+      "laterHint": "Dá para criar ou trocar o PIN depois, em Configurações, na aba Segurança.",
+      "pinLabel": "PIN de 4 dígitos",
+      "pinPlaceholder": "0000",
+      "skip": "Pular",
+      "subtitle": "Passo opcional. Crie o PIN agora ou deixe para depois.",
+      "title": "Crie um PIN de fechamento"
+    },
     "stepper": {
       "admin": "Admin",
       "chartOfAccounts": "Contas",
       "database": "Banco",
       "integrations": "Integrações",
+      "security": "Segurança",
       "summary": "Resumo",
       "welcome": "Bem-vindo"
     },
@@ -2231,10 +2246,13 @@
       "keepExisting": "Manter Dados Existentes",
       "none": "Nenhuma",
       "openai": "OpenAI",
+      "pinNotSet": "Não definido",
+      "pinSet": "Definido",
       "sectionAdmin": "Administrador",
       "sectionChart": "Plano de Contas",
       "sectionDatabase": "Banco de Dados",
       "sectionIntegrations": "Integrações",
+      "sectionPin": "PIN de fechamento",
       "subtitle": "Revise suas configurações antes de inicializar o sistema.",
       "telegram": "Telegram",
       "title": "Tudo Pronto!"

@@ -15,6 +15,9 @@ const m = vi.hoisted(() => ({
   upsert: vi.fn<(args: { where: { email: string } }) => Promise<Record<string, never>>>(async () => ({})),
   findUnique: vi.fn(async () => null),
   initializeUserData: vi.fn(async () => ({})),
+  setPin: vi.fn(async () => {}),
+  /** Cada `new PrismaClient()` da rota entra aqui: o PIN tem de ser gravado com ESSE cliente. */
+  clients: [] as unknown[],
 }))
 
 vi.mock("pg", () => ({
@@ -33,8 +36,15 @@ vi.mock("@prisma/adapter-pg", () => ({ PrismaPg: class {} }))
 vi.mock("@/generated/prisma_new/client", () => ({
   PrismaClient: class {
     user = { findUnique: m.findUnique, upsert: m.upsert }
+    constructor() {
+      m.clients.push(this)
+    }
     async $disconnect() {}
   },
+}))
+vi.mock("@/features/security/services/pin.service", () => ({
+  PIN_RE: /^\d{4}$/,
+  setPin: (...args: unknown[]) => m.setPin(...(args as [])),
 }))
 vi.mock("@/lib/user-init", () => ({ initializeUserData: (...args: unknown[]) => m.initializeUserData(...(args as [])) }))
 vi.mock("@/lib/setup-access", () => ({ canAccessSetup: async () => true }))
@@ -84,6 +94,8 @@ describe("POST /api/setup/configure — banco com dados", () => {
     m.upsert.mockClear()
     m.findUnique.mockClear()
     m.initializeUserData.mockClear()
+    m.setPin.mockClear()
+    m.clients.length = 0
   })
 
   it("falha ao ler as colunas → erro próprio (não 'migração falhou') e nenhuma escrita", async () => {
@@ -147,6 +159,8 @@ describe("POST /api/setup/configure — banco vazio (sem regressão)", () => {
     m.columns = []
     m.upsert.mockClear()
     m.initializeUserData.mockClear()
+    m.setPin.mockClear()
+    m.clients.length = 0
   })
 
   it("modelo padrão → cria o admin e inicializa o plano de contas", async () => {
@@ -154,5 +168,78 @@ describe("POST /api/setup/configure — banco vazio (sem regressão)", () => {
     expect(res.status).toBe(200)
     expect(m.upsert).toHaveBeenCalledTimes(1)
     expect(m.initializeUserData).toHaveBeenCalledTimes(1)
+  })
+})
+
+/**
+ * Passo "Segurança" do wizard: o PIN é opcional e viaja em claro no Finalizar.
+ * A rota valida ANTES de qualquer escrita e grava DEPOIS do administrador existir.
+ * Pular (sem `security`, ou PIN vazio) não pode encostar em `preferences_json` —
+ * numa reconfiguração isso apagaria o PIN de uma instalação que já roda.
+ */
+describe("POST /api/setup/configure — PIN de fechamento (passo Segurança)", () => {
+  beforeEach(() => {
+    m.migrations = { ok: true, applied: ["20260816000000_init"], alreadyApplied: 0, skippedExistingSchema: false }
+    m.columns = []
+    m.columnsError = null
+    m.upsert.mockClear()
+    m.findUnique.mockClear()
+    m.initializeUserData.mockClear()
+    m.setPin.mockClear()
+    m.clients.length = 0
+  })
+
+  it("sem a chave `security` → nada é gravado em preferences_json", async () => {
+    const res = await configure({ useExistingData: false })
+    expect(res.status).toBe(200)
+    expect(m.upsert).toHaveBeenCalledTimes(1)
+    expect(m.setPin).not.toHaveBeenCalled()
+  })
+
+  it("PIN vazio (Pular) → nada é gravado, o PIN existente fica intacto", async () => {
+    const res = await configure({ useExistingData: false, security: { pin: "   " } })
+    expect(res.status).toBe(200)
+    expect(m.setPin).not.toHaveBeenCalled()
+  })
+
+  it("reconfiguração de banco com dados, sem PIN novo → não encosta no PIN já gravado", async () => {
+    m.migrations = { ok: true, applied: [], alreadyApplied: 0, skippedExistingSchema: true }
+    m.columns = [...REQUIRED_USERS_COLUMNS]
+    const res = await configure({ useExistingData: true, security: {} })
+    expect(res.status).toBe(200)
+    expect(m.upsert).toHaveBeenCalledTimes(1)
+    expect(m.setPin).not.toHaveBeenCalled()
+  })
+
+  it("PIN fora de 4 dígitos → 400 antes de qualquer escrita", async () => {
+    const res = await configure({ useExistingData: false, security: { pin: "12a4" } })
+    const json = await res.json()
+    expect(res.status).toBe(400)
+    expect(json).toMatchObject({ success: false, code: "pinInvalid" })
+    expect(m.upsert).not.toHaveBeenCalled()
+    expect(m.initializeUserData).not.toHaveBeenCalled()
+    expect(m.setPin).not.toHaveBeenCalled()
+  })
+
+  it("PIN curto → 400 e nenhuma escrita", async () => {
+    const res = await configure({ useExistingData: false, security: { pin: "123" } })
+    expect(res.status).toBe(400)
+    expect(m.upsert).not.toHaveBeenCalled()
+    expect(m.setPin).not.toHaveBeenCalled()
+  })
+
+  it("PIN válido → setPin com o cliente do Setup e o id do administrador, depois do upsert", async () => {
+    const res = await configure({ useExistingData: false, security: { pin: " 4321 " } })
+    expect(res.status).toBe(200)
+    expect(m.setPin).toHaveBeenCalledTimes(1)
+    const [executor, ownerId, pin] = m.setPin.mock.calls[0] as unknown as [unknown, string, string]
+    // O executor é o cliente que o próprio Setup criou (a DATABASE_URL ainda não existe no processo).
+    expect(executor).toBe(m.clients[0])
+    expect(typeof ownerId).toBe("string")
+    expect(ownerId.length).toBeGreaterThan(0)
+    expect(pin).toBe("4321")
+    // Ordem: o administrador existe antes de a preferência ser gravada.
+    expect(m.upsert).toHaveBeenCalledTimes(1)
+    expect(m.upsert.mock.invocationCallOrder[0]).toBeLessThan(m.setPin.mock.invocationCallOrder[0])
   })
 })

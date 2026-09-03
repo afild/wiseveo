@@ -9,15 +9,16 @@ interface WizardStepperProps {
 }
 
 export function WizardStepper({ steps, currentStep }: WizardStepperProps) {
+  // Sete passos não cabem em tela estreita: a trilha rola na horizontal em vez de espremer os círculos.
   return (
-    <div className="flex items-center justify-center gap-0 w-full max-w-2xl mx-auto py-6 px-4">
+    <div className="flex items-center justify-center gap-0 w-full max-w-2xl mx-auto py-6 px-4 overflow-x-auto">
       {steps.map((step, index) => {
         const isCompleted = index < currentStep
         const isCurrent = index === currentStep
         const isLast = index === steps.length - 1
 
         return (
-          <div key={index} className="flex items-center">
+          <div key={index} className="flex items-center shrink-0">
             {/* Step circle */}
             <div className="flex flex-col items-center gap-2 min-w-[60px]">
               <div
@@ -50,7 +51,7 @@ export function WizardStepper({ steps, currentStep }: WizardStepperProps) {
             {!isLast && (
               <div
                 className={cn(
-                  "h-0.5 w-8 sm:w-12 mx-1 transition-all duration-500",
+                  "h-0.5 w-8 sm:w-12 mx-1 shrink-0 transition-all duration-500",
                   isCompleted ? "bg-primary" : "bg-muted-foreground/20"
                 )}
               />
