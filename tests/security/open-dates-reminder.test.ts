@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
 /**
  * O aviso de "datas abertas": o lembrete que chega no Telegram quando alguém
@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
  */
 
 const m = vi.hoisted(() => ({
-  closing: { closedThrough: null as string | null },
+  closing: { closedThrough: null as string | null, pinHash: null as string | null },
   between: {
     total: 0,
     unpaid: 0,
@@ -57,6 +57,14 @@ const parts: ZonedParts = {
   minutesOfDay: 480,
 }
 
+/**
+ * O relógio do servidor fica LONGE do dia de quem recebe, e de propósito: o
+ * recorte tem de sair de `parts`. Com o relógio solto, a data do dublê batia com
+ * o dia UTC de hoje por acaso, e trocar `localDateKey(parts)` pelo dia do
+ * servidor passaria por estes testes sem ninguém ver.
+ */
+const SERVER_NOW = new Date("2026-12-25T13:00:00.000Z")
+
 const owner: Actor = {
   actorUserId: "dono",
   ownerId: "dono",
@@ -65,9 +73,20 @@ const owner: Actor = {
   showcase: false,
 }
 const guest: Actor = { ...owner, actorUserId: "convidado", role: "USER" }
+/** Convidado que FECHA datas mas não cria PIN: a chave da casa é do dono. */
+const invitedAdmin: Actor = { ...owner, actorUserId: "convidado", role: "ADMIN" }
+
+beforeAll(() => {
+  vi.useFakeTimers()
+  vi.setSystemTime(SERVER_NOW)
+})
+
+afterAll(() => {
+  vi.useRealTimers()
+})
 
 beforeEach(() => {
-  m.closing = { closedThrough: "2026-09-01" }
+  m.closing = { closedThrough: "2026-09-01", pinHash: "$2a$10$hash" }
   m.between = { total: 0, unpaid: 0, firstDate: null, lastDate: null }
   m.betweenArgs = []
 })
@@ -84,6 +103,7 @@ describe("buildOpenDatesReminder", () => {
     expect(text).toContain("25/08/2026")
     expect(text).not.toContain("openDates.stale")
     expect(text).not.toContain("openDates.unpaid")
+    expect(text).not.toContain("openDates.noPin")
   })
 
   it("conta a partir do corte, até o dia do prazo", async () => {
@@ -95,8 +115,19 @@ describe("buildOpenDatesReminder", () => {
     expect(m.betweenArgs).toEqual(["dono", "2026-09-01", "2026-08-27"])
   })
 
+  it("o dia é o de quem recebe, não o do servidor", async () => {
+    // Relógio do servidor parado em 25/12/2026 (UTC); quem recebe está num fuso
+    // onde já é dia 26. O prazo tem de sair do calendário DELA — usar o dia do
+    // servidor aqui erraria o recorte por um dia inteiro.
+    const ahead: ZonedParts = { ...parts, year: 2026, month: 12, day: 26, weekday: 6 }
+
+    await buildOpenDatesReminder({ actor: owner, parts: ahead, days: 7, ctx })
+
+    expect(m.betweenArgs).toEqual(["dono", "2026-09-01", "2026-12-19"])
+  })
+
   it("dispara por corte parado além do prazo, mesmo sem lançamento nenhum", async () => {
-    m.closing = { closedThrough: "2026-08-10" }
+    m.closing = { closedThrough: "2026-08-10", pinHash: "$2a$10$hash" }
 
     const text = await buildOpenDatesReminder({ actor: owner, parts, days: 7, ctx })
 
@@ -110,17 +141,17 @@ describe("buildOpenDatesReminder", () => {
   })
 
   it("cala na borda: corte exatamente no dia do prazo ainda não está parado", async () => {
-    m.closing = { closedThrough: "2026-08-27" }
+    m.closing = { closedThrough: "2026-08-27", pinHash: "$2a$10$hash" }
     expect(await buildOpenDatesReminder({ actor: owner, parts, days: 7, ctx })).toBeNull()
 
-    m.closing = { closedThrough: "2026-08-26" }
+    m.closing = { closedThrough: "2026-08-26", pinHash: "$2a$10$hash" }
     expect(await buildOpenDatesReminder({ actor: owner, parts, days: 7, ctx })).toContain(
       "openDates.stale",
     )
   })
 
   it("cala na instalação que nunca fechou nada e não tem lançamento antigo", async () => {
-    m.closing = { closedThrough: null }
+    m.closing = { closedThrough: null, pinHash: "$2a$10$hash" }
     expect(await buildOpenDatesReminder({ actor: owner, parts, days: 7, ctx })).toBeNull()
   })
 
@@ -148,7 +179,7 @@ describe("buildOpenDatesReminder", () => {
   })
 
   it("o prazo escolhido manda no recorte", async () => {
-    m.closing = { closedThrough: "2026-08-20" }
+    m.closing = { closedThrough: "2026-08-20", pinHash: "$2a$10$hash" }
     m.between = { total: 0, unpaid: 0, firstDate: null, lastDate: null }
 
     // Com 60 dias de prazo, um corte de 14 dias atrás ainda está em dia.
@@ -159,5 +190,60 @@ describe("buildOpenDatesReminder", () => {
     expect(await buildOpenDatesReminder({ actor: owner, parts, days: 1, ctx })).toContain(
       "openDates.stale",
     )
+  })
+
+  describe("tudo num dia só", () => {
+    it("um dia só vira 'em {date}', não 'entre a mesma data e ela mesma'", async () => {
+      m.between = { total: 4, unpaid: 0, firstDate: "2026-08-20", lastDate: "2026-08-20" }
+
+      const text = await buildOpenDatesReminder({ actor: owner, parts, days: 7, ctx })
+
+      expect(text).toContain('openDates.pendingSameDay:{"count":4,"date":"20/08/2026"}')
+      expect(text).not.toContain("openDates.pending:")
+    })
+
+    it("dias diferentes continuam com o intervalo", async () => {
+      m.between = { total: 4, unpaid: 0, firstDate: "2026-08-20", lastDate: "2026-08-21" }
+
+      const text = await buildOpenDatesReminder({ actor: owner, parts, days: 7, ctx })
+
+      expect(text).toContain("openDates.pending:")
+      expect(text).not.toContain("openDates.pendingSameDay")
+    })
+  })
+
+  describe("sem PIN gravado", () => {
+    it("o dono é avisado de que precisa criar o PIN antes", async () => {
+      m.closing = { closedThrough: "2026-08-10", pinHash: null }
+
+      const text = await buildOpenDatesReminder({ actor: owner, parts, days: 7, ctx })
+
+      expect(text).toContain("openDates.stale")
+      // A frase do PIN vem por último: o motivo do aviso é a linha de cima.
+      expect(text?.endsWith("openDates.noPin")).toBe(true)
+    })
+
+    it("convidado ADMIN não é cobrado por uma tecla que não é dele", async () => {
+      m.closing = { closedThrough: "2026-08-10", pinHash: null }
+      m.between = { total: 9, unpaid: 4, firstDate: "2026-08-20", lastDate: "2026-08-25" }
+
+      expect(await buildOpenDatesReminder({ actor: invitedAdmin, parts, days: 7, ctx })).toBeNull()
+      // Cala antes até de contar lançamento: nada a dizer, nada a consultar.
+      expect(m.betweenArgs).toEqual([])
+    })
+
+    it("com PIN gravado, o convidado ADMIN recebe normalmente", async () => {
+      m.closing = { closedThrough: "2026-08-10", pinHash: "$2a$10$hash" }
+
+      const text = await buildOpenDatesReminder({ actor: invitedAdmin, parts, days: 7, ctx })
+
+      expect(text).toContain("openDates.stale")
+      expect(text).not.toContain("openDates.noPin")
+    })
+
+    it("sem PIN e sem nada aberto continua calado", async () => {
+      m.closing = { closedThrough: "2026-09-01", pinHash: null }
+      expect(await buildOpenDatesReminder({ actor: owner, parts, days: 7, ctx })).toBeNull()
+    })
   })
 })

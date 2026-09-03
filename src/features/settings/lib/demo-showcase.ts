@@ -22,7 +22,11 @@ export function demoNotificationPreferences(): NotificationPreferences {
     monthlyDigest: { enabled: true, time: "09:00", day: 1 },
     sentinel: { enabled: false, time: "20:00" },
     billsReminder: { enabled: true, time: "08:30", daysAhead: 3 },
-    openDatesReminder: { enabled: true, time: "09:00", days: 7 },
+    // Desligado de propósito: sessão de vitrine nunca recebe este aviso. Ele nasce do tique, que
+    // lê conexões de Telegram do banco, e estas preferências são ficção de código — nada aqui
+    // chega ao banco da demo. Ligado, o interruptor prometeria uma mensagem que nunca chega; o
+    // horário e o prazo continuam à mostra, que é o que a aba ilustra.
+    openDatesReminder: { enabled: false, time: "09:00", days: 7 },
   }
 }
 

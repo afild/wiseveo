@@ -299,6 +299,7 @@
       "nothingToReopen": "Nothing is closed from that date on.",
       "pinInvalid": "Wrong PIN.",
       "pinLocked": "Too many tries. Wait a few minutes.",
+      "pinMalformed": "The PIN must have 4 digits.",
       "pinMismatch": "The two PINs do not match.",
       "pinNotSet": "Set a PIN before closing dates.",
       "pinRequired": "Enter the PIN to reopen.",
@@ -1396,7 +1397,9 @@
       "vsAverage": "Average left over across the {months} months on record: {average}."
     },
     "openDates": {
-      "pending": "You have {count, plural, one {# entry} other {# entries}} between {from} and {to} still not closed.",
+      "noPin": "To close, set a PIN in Settings, on the Security tab.",
+      "pending": "You have {count, plural, one {# entry still not closed} other {# entries still not closed}} between {from} and {to}.",
+      "pendingSameDay": "You have {count, plural, one {# entry still not closed} other {# entries still not closed}} on {date}.",
       "stale": "No date closed since {date}.",
       "unpaid": "{unpaid, plural, one {# of them is still unpaid} other {# of them are still unpaid}}, and the closing stops there."
     },

@@ -299,6 +299,7 @@
       "nothingToReopen": "Não há nada fechado a partir dessa data.",
       "pinInvalid": "PIN incorreto.",
       "pinLocked": "Muitas tentativas. Aguarde alguns minutos.",
+      "pinMalformed": "O PIN precisa ter 4 dígitos.",
       "pinMismatch": "Os dois PINs não conferem.",
       "pinNotSet": "Defina um PIN antes de fechar datas.",
       "pinRequired": "Digite o PIN para reabrir.",
@@ -1396,7 +1397,9 @@
       "vsAverage": "Média de sobra dos {months} meses já registrados: {average}."
     },
     "openDates": {
-      "pending": "Você tem {count, plural, one {# lançamento} other {# lançamentos}} entre {from} e {to} ainda não fechados.",
+      "noPin": "Para fechar, defina um PIN em Configurações, na aba Segurança.",
+      "pending": "Você tem {count, plural, one {# lançamento ainda não fechado} other {# lançamentos ainda não fechados}} entre {from} e {to}.",
+      "pendingSameDay": "Você tem {count, plural, one {# lançamento ainda não fechado} other {# lançamentos ainda não fechados}} em {date}.",
       "stale": "Nenhuma data fechada desde {date}.",
       "unpaid": "{unpaid, plural, one {# deles ainda não está pago} other {# deles ainda não estão pagos}}, e o fechamento vai parar aí."
     },

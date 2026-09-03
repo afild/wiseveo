@@ -134,8 +134,10 @@ describe("verifyPin", () => {
 })
 
 describe("setPin", () => {
+  // `pinMalformed`, e não `pinInvalid`: quem manda três dígitos não errou um PIN, mandou o que
+  // nem tem forma de PIN — e `pinInvalid` traduz para "PIN incorreto.", que é outra conversa.
   it("recusa o que não é 4 dígitos", async () => {
-    await expect(setPin({ $queryRaw: async () => [{ data_type: "jsonb" }], $executeRaw: async () => 1 } as never, "dono", "12a4")).rejects.toMatchObject({ code: "pinInvalid" })
+    await expect(setPin({ $queryRaw: async () => [{ data_type: "jsonb" }], $executeRaw: async () => 1 } as never, "dono", "12a4")).rejects.toMatchObject({ code: "pinMalformed" })
   })
 })
 

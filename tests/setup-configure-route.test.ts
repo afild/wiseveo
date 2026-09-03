@@ -215,7 +215,9 @@ describe("POST /api/setup/configure — PIN de fechamento (passo Segurança)", (
     const res = await configure({ useExistingData: false, security: { pin: "12a4" } })
     const json = await res.json()
     expect(res.status).toBe(400)
-    expect(json).toMatchObject({ success: false, code: "pinInvalid" })
+    // `pinMalformed`, nunca `pinInvalid`: o texto de `pinInvalid` é "PIN incorreto.", e no Setup
+    // ainda não existe PIN nenhum para estar incorreto.
+    expect(json).toMatchObject({ success: false, code: "pinMalformed" })
     expect(m.upsert).not.toHaveBeenCalled()
     expect(m.initializeUserData).not.toHaveBeenCalled()
     expect(m.setPin).not.toHaveBeenCalled()

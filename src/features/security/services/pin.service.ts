@@ -15,7 +15,9 @@ const OVERRIDE_PURPOSE = "date-closing-override"
 const NO_FAILURES = { pinFailures: { count: 0, lockedUntil: null } }
 
 export async function setPin(executor: PreferencesExecutor, ownerId: string, pin: string): Promise<void> {
-  if (!PIN_RE.test(pin)) throw new SecurityError("pinInvalid", 400)
+  // `pinMalformed`, não `pinInvalid`: aqui não existe PIN certo para errar — o que chegou nem tem
+  // a forma de PIN. "PIN incorreto." faria quem digitou três dígitos procurar o quarto errado.
+  if (!PIN_RE.test(pin)) throw new SecurityError("pinMalformed", 400)
   const pinHash = await bcrypt.hash(pin, 10)
   await mergeUserPreferenceKey(executor, ownerId, "dateClosing", {
     pinHash, pinUpdatedAt: new Date().toISOString(), pinFailures: { count: 0, lockedUntil: null },

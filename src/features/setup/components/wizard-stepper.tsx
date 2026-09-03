@@ -10,8 +10,11 @@ interface WizardStepperProps {
 
 export function WizardStepper({ steps, currentStep }: WizardStepperProps) {
   // Sete passos não cabem em tela estreita: a trilha rola na horizontal em vez de espremer os círculos.
+  // O centramento é `safe`: com `justify-center` puro, o que sobra do lado ESQUERDO fica fora do
+  // alcance da rolagem (a barra só anda para a direita) e os primeiros passos somem para sempre.
+  // `safe center` centraliza enquanto cabe e passa a alinhar pela esquerda quando não cabe.
   return (
-    <div className="flex items-center justify-center gap-0 w-full max-w-2xl mx-auto py-6 px-4 overflow-x-auto">
+    <div className="flex items-center justify-center-safe gap-0 w-full max-w-2xl mx-auto py-6 px-4 overflow-x-auto">
       {steps.map((step, index) => {
         const isCompleted = index < currentStep
         const isCurrent = index === currentStep

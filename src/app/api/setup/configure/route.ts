@@ -69,11 +69,13 @@ export async function POST(req: Request) {
     // ausente quer dizer "Pular": nada é gravado — e numa reconfiguração isso é o que protege
     // o `pinHash` de uma instalação que já roda. Fora dos 4 dígitos recusa AQUI, antes das
     // migrações: nenhuma escrita acontece por causa de um PIN mal digitado.
+    // `pinMalformed` e não `pinInvalid`: quem mandou três dígitos não errou um PIN existente, e
+    // "PIN incorreto." o mandaria procurar um PIN certo que ainda nem foi criado.
     const pin = typeof payload.security?.pin === "string" ? payload.security.pin.trim() : ""
     if (pin !== "" && !PIN_RE.test(pin)) {
       const tSecurity = await getTranslations("api.security")
       return NextResponse.json(
-        { success: false, code: "pinInvalid", message: tSecurity("pinInvalid") },
+        { success: false, code: "pinMalformed", message: tSecurity("pinMalformed") },
         { status: 400 },
       )
     }
@@ -216,6 +218,16 @@ export async function POST(req: Request) {
       // PIN do passo "Segurança": só agora, com a linha do administrador já existindo. O
       // executor é o cliente do próprio Setup (a DATABASE_URL ainda não vale neste processo),
       // e o `setPin` mescla dentro de `dateClosing` — o resto das preferências fica de pé.
+      //
+      // `userId` é o ADMINISTRADOR, enquanto todo leitor do fechamento usa o DONO DOS DADOS
+      // (`readOwnerClosing(..., actor.ownerId)`). A assimetria é segura AQUI, e por dois
+      // motivos: no modelo de instalação pessoal quem roda o wizard é o dono, e esta é
+      // justamente a linha que o Setup acabou de criar (ou promover a SUPERADMIN) — só quem
+      // for convidado DEPOIS por ele passa a ter outro dono. Resolver o dono chegaria neste
+      // mesmo id e ainda seria impossível daqui: `resolveDataOwnerId` fala pelo cliente global
+      // (a DATABASE_URL só passa a valer no redeploy) e lê `users.data_owner_id`, coluna que a
+      // instalação nova nem tem. Se um dia o Setup criar alguém que NÃO é o dono, esta linha
+      // precisa resolver o dono antes de gravar.
       if (pin) await setPin(client, userId, pin)
 
       // Initialize the default chart of accounts unless reusing an existing database

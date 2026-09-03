@@ -93,7 +93,7 @@ export interface TickResult {
   snapshots: number
 }
 
-interface QueuedJob {
+export interface QueuedJob {
   userId: string
   chatId: TelegramChatId
   kind: NotificationKind
@@ -110,7 +110,7 @@ interface QueuedJob {
 }
 
 /** Pronto para sair: nada aqui depende mais de banco, de IA nem de desenho. */
-type BuiltNotification =
+export type BuiltNotification =
   | { send: "blocks"; blocks: ResponseBlock[]; detail?: string }
   | { send: "text"; text: string; detail?: string }
   | { send: "nothing"; reason: string }
@@ -204,8 +204,11 @@ async function buildBillsJob(
  * O aviso de datas abertas. O ator é montado AQUI, com `showcase: false` — um
  * despertador nunca é sessão de vitrine — e com o dono já resolvido, para que a
  * regra de quem-pode-fechar seja exatamente a mesma das telas e das rotas.
+ *
+ * Exportado para o teste: montar este ator é a regra que o tique acrescenta, e
+ * conferir isso pelo tique inteiro custaria dublar banco, IA e Telegram.
  */
-async function buildOpenDatesJob(
+export async function buildOpenDatesJob(
   job: QueuedJob,
   dataOwnerId: string,
   ctx: NotificationContext,

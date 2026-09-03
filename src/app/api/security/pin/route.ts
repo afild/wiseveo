@@ -31,7 +31,7 @@ export async function PUT(request: NextRequest) {
     const confirm = typeof body.confirm === "string" ? body.confirm : ""
     if (pin !== confirm) throw new SecurityError("pinMismatch", 400)
 
-    // Quatro dígitos e o bcrypt são do serviço; PIN fora do formato volta como 400 `PIN_INVALID`.
+    // Quatro dígitos e o bcrypt são do serviço; PIN fora do formato volta como 400 `PIN_MALFORMED`.
     await setPin(prisma, ctx.ownerId, pin)
 
     return NextResponse.json({ success: true })

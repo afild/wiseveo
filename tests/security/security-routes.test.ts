@@ -333,14 +333,16 @@ describe("PUT /api/security/pin", () => {
     expect(m.setPin).not.toHaveBeenCalled()
   })
 
-  it("400 PIN_INVALID quando não são quatro dígitos", async () => {
-    m.setPin.mockRejectedValue(new SecurityError("pinInvalid", 400))
-    await expectCode(await call({ pin: "12", confirm: "12" }), 400, "PIN_INVALID")
+  // PIN mal formado tem código próprio: `PIN_INVALID` é o PIN ERRADO (rota de conferência), e o
+  // texto dele diz "PIN incorreto." — quem digitou três dígitos iria procurar o quarto errado.
+  it("400 PIN_MALFORMED quando não são quatro dígitos", async () => {
+    m.setPin.mockRejectedValue(new SecurityError("pinMalformed", 400))
+    await expectCode(await call({ pin: "12", confirm: "12" }), 400, "PIN_MALFORMED")
   })
 
   it("corpo vazio não quebra a rota", async () => {
-    m.setPin.mockRejectedValue(new SecurityError("pinInvalid", 400))
-    await expectCode(await call(), 400, "PIN_INVALID")
+    m.setPin.mockRejectedValue(new SecurityError("pinMalformed", 400))
+    await expectCode(await call(), 400, "PIN_MALFORMED")
     expect(m.setPin).toHaveBeenCalledWith(prisma, "dono", "")
   })
 

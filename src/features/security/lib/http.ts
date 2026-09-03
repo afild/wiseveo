@@ -13,8 +13,11 @@ export const SECURITY_CODES = {
   forbidden: "FORBIDDEN",
   invalidToday: "INVALID_TODAY",
   nothingToReopen: "NOTHING_TO_REOPEN",
+  // `pinInvalid` é o PIN ERRADO (existe um certo); `pinMalformed` é o PIN mal formado (não são
+  // quatro dígitos). Um código só para os dois fazia quem digitou três dígitos ler "PIN incorreto".
   pinInvalid: "PIN_INVALID",
   pinLocked: "PIN_LOCKED",
+  pinMalformed: "PIN_MALFORMED",
   pinMismatch: "PIN_MISMATCH",
   pinNotSet: "PIN_NOT_SET",
   pinRequired: "PIN_REQUIRED",
