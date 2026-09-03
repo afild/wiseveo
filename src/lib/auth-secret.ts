@@ -23,11 +23,16 @@ export function sessionSecretSource(env: NodeJS.ProcessEnv = process.env): strin
   return env.AUTH_SECRET || env.DATABASE_URL || DEV_FALLBACK
 }
 
-/** Chave de 32 bytes a partir de um segredo qualquer (URL do banco, AUTH_SECRET…). */
-export async function deriveSessionKey(source: string): Promise<Uint8Array> {
-  const data = new TextEncoder().encode(`${DERIVATION_LABEL}:${source}`)
+/** Chave de 32 bytes a partir de um rótulo e de um segredo. Rótulo diferente = chave diferente. */
+export async function deriveKey(label: string, source: string): Promise<Uint8Array> {
+  const data = new TextEncoder().encode(`${label}:${source}`)
   const digest = await crypto.subtle.digest("SHA-256", data)
   return new Uint8Array(digest)
+}
+
+/** Chave de 32 bytes a partir de um segredo qualquer (URL do banco, AUTH_SECRET…). */
+export async function deriveSessionKey(source: string): Promise<Uint8Array> {
+  return deriveKey(DERIVATION_LABEL, source)
 }
 
 let cache: { source: string; key: Uint8Array } | null = null
@@ -39,6 +44,18 @@ export async function getSessionKey(env: NodeJS.ProcessEnv = process.env): Promi
     cache = { source, key: await deriveSessionKey(source) }
   }
   return cache.key
+}
+
+/** Token de autorização do fechamento de datas (2 minutos). Chave própria: nunca verifica como sessão. */
+export const OVERRIDE_DERIVATION_LABEL = "wiseveo-date-closing-override-v1"
+let overrideCache: { source: string; key: Uint8Array } | null = null
+
+export async function getOverrideKey(env: NodeJS.ProcessEnv = process.env): Promise<Uint8Array> {
+  const source = sessionSecretSource(env)
+  if (overrideCache?.source !== source) {
+    overrideCache = { source, key: await deriveKey(OVERRIDE_DERIVATION_LABEL, source) }
+  }
+  return overrideCache.key
 }
 
 /**

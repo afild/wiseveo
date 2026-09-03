@@ -30,6 +30,8 @@ export async function createSessionToken(
 export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, await getSessionKey())
+    // Token de outro domínio (override do fechamento de datas) nunca vale como sessão.
+    if (payload.purpose !== undefined) return null
     // Falha fechado: token assinado com a MESMA chave mas sem userId existe de
     // verdade (setup-identity) — `String(undefined)` viraria o usuário "undefined".
     if (typeof payload.userId !== "string" || !payload.userId) return null
