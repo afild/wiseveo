@@ -29,6 +29,19 @@ describe("entrada de rota", () => {
       expect(toPeriodInput(bad), String(bad)).toBeNull()
     }
   })
+  /**
+   * Ano abaixo de 1900 é entrada INVÁLIDA (400), nunca competência fechada (423): `Date.UTC` joga
+   * os anos 0-99 para os anos 1900, então "000012" cai em 31/12/1900, antes de qualquer corte real.
+   */
+  it("toPeriodInput recusa ano abaixo do piso e aceita o primeiro ano válido", () => {
+    expect(toPeriodInput("190001")).toBe("190001")
+    expect(toPeriodInput(190012)).toBe("190012")
+    for (const bad of ["189912", "000012", "000101", 189912]) {
+      expect(toPeriodInput(bad), String(bad)).toBeNull()
+    }
+    // O porquê do piso, preto no branco: sem ele, este valor passaria por mês já fechado.
+    expect(lastDayOfPeriod("000012")).toBe("1900-12-31")
+  })
 })
 
 describe("chaves de dia", () => {

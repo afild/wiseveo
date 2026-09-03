@@ -39,6 +39,8 @@ vi.mock("@/lib/prisma", () => {
   /**
    * Cliente MARCADO: o de dentro da transação é outro objeto, e cada passo registra por onde
    * saiu. Com um cliente só, uma guarda movida para fora da transação passaria despercebida.
+   * As LEITURAS também registram: sem isso, a data lida fora da transação (que a guarda depois
+   * confere) escapava do teste, porque só as escritas apareciam em `m.calls`.
    */
   const makeClient = (via: "global" | "tx") => ({
     $queryRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => {
@@ -54,8 +56,14 @@ vi.mock("@/lib/prisma", () => {
       return 1
     },
     transaction: {
-      findFirst: async () => m.existing,
-      findUnique: async () => m.existing,
+      findFirst: async () => {
+        m.calls.push({ via, op: "transaction.findFirst" })
+        return m.existing
+      },
+      findUnique: async () => {
+        m.calls.push({ via, op: "transaction.findUnique" })
+        return m.existing
+      },
       create: async ({ data }: { data: Record<string, unknown> }) => {
         m.calls.push({ via, op: "transaction.create" })
         m.created.push(data)
@@ -71,20 +79,44 @@ vi.mock("@/lib/prisma", () => {
         return m.existing
       },
     },
-    category: { findUnique: async () => ({ type: "EXPENSE" }) },
+    category: {
+      findUnique: async () => {
+        m.calls.push({ via, op: "category.findUnique" })
+        return { type: "EXPENSE" }
+      },
+    },
     payee: {
-      findFirst: async () => null,
-      create: async ({ data }: { data: Record<string, unknown> }) => data,
+      findFirst: async () => {
+        m.calls.push({ via, op: "payee.findFirst" })
+        return null
+      },
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        m.calls.push({ via, op: "payee.create" })
+        return data
+      },
     },
     excludedTransaction: {
-      deleteMany: async () => ({ count: 0 }),
+      deleteMany: async () => {
+        m.calls.push({ via, op: "excluded.deleteMany" })
+        return { count: 0 }
+      },
       create: async () => {
         m.calls.push({ via, op: "excluded.create" })
         return {}
       },
     },
-    account: { findFirst: async () => ({ id: 1 }) },
-    transactionStatusLookup: { findFirst: async () => ({ code: 2 }) },
+    account: {
+      findFirst: async () => {
+        m.calls.push({ via, op: "account.findFirst" })
+        return { id: 1 }
+      },
+    },
+    transactionStatusLookup: {
+      findFirst: async () => {
+        m.calls.push({ via, op: "statusLookup.findFirst" })
+        return { code: 2 }
+      },
+    },
   })
   const client = makeClient("global")
   const txClient = makeClient("tx")
@@ -119,6 +151,17 @@ function expectGuardInsideTransaction() {
   const guard = m.calls.filter((c) => c.op.includes("FOR SHARE"))
   expect(guard.length).toBeGreaterThan(0)
   expect(guard.map((c) => c.via)).toEqual(guard.map(() => "tx"))
+}
+
+/**
+ * Conferir na transação certa não basta: a DATA conferida também tem de sair do cliente da
+ * transação. Lida pelo cliente global, ela pode chegar velha — outra requisição move a linha entre
+ * a leitura e a escrita — e o dia fechado passa batido.
+ */
+function expectRowReadInsideTransaction() {
+  const reads = m.calls.filter((c) => c.op === "transaction.findFirst" || c.op === "transaction.findUnique")
+  expect(reads.length).toBeGreaterThan(0)
+  expect(reads.map((c) => c.via)).toEqual(reads.map(() => "tx"))
 }
 
 const CLOSED = "2026-08-20"
@@ -193,6 +236,7 @@ describe("updateTransaction", () => {
     await expect(updateTransaction(updateInput(CLOSED), withPin)).resolves.toBeDefined()
     expect(m.updated).toHaveLength(2)
     expectGuardInsideTransaction()
+    expectRowReadInsideTransaction()
   })
 
   /** Tirar um lançamento de um mês fechado é escrita no mês fechado: a competência atual conta. */
@@ -229,6 +273,7 @@ describe("updateTransactionDate", () => {
     await expect(updateTransactionDate("t1", "dono", CLOSED, withPin)).resolves.toBeDefined()
     expect(m.updated).toHaveLength(2)
     expectGuardInsideTransaction()
+    expectRowReadInsideTransaction()
   })
 })
 
@@ -246,6 +291,7 @@ describe("updateTransactionPeriod", () => {
     await expect(updateTransactionPeriod("t1", "dono", "202608", withPin)).resolves.toBeDefined()
     expect(m.updated).toHaveLength(2)
     expectGuardInsideTransaction()
+    expectRowReadInsideTransaction()
   })
 
   /** Mesma tolerância do `updateTransaction`: competência legada do banco não vira erro interno. */
@@ -265,6 +311,22 @@ describe("quickPayTransaction", () => {
     await expect(quickPayTransaction("t1", "dono", owner)).resolves.toMatchObject({ success: true })
     expect(m.updated).toHaveLength(2)
     expectGuardInsideTransaction()
+    expectRowReadInsideTransaction()
+  })
+
+  /**
+   * O detalhe que o teste antes não via: a linha é lida DENTRO da transação que grava. Ler antes
+   * dela devolve uma data que pode não valer mais, e a guarda aprova um dia que já foi fechado.
+   */
+  it("lê a data da linha dentro da transação da escrita, e antes da guarda", async () => {
+    m.existing = openRow()
+    await quickPayTransaction("t1", "dono", owner)
+    const read = m.calls.findIndex((c) => c.op === "transaction.findFirst")
+    const share = m.calls.findIndex((c) => c.op.includes("FOR SHARE"))
+    expect(read).toBeGreaterThanOrEqual(0)
+    expect(m.calls[read].via).toBe("tx")
+    expect(share).toBeGreaterThan(read)
+    expect(ops().indexOf("transaction.update")).toBeGreaterThan(share)
   })
 })
 
@@ -275,6 +337,7 @@ describe("excludeTransaction", () => {
     await expect(excludeTransaction("t1", "dono", withPin)).resolves.toMatchObject({ success: true })
     expect(ops()).toContain("transaction.delete")
     expectGuardInsideTransaction()
+    expectRowReadInsideTransaction()
   })
 })
 
@@ -285,6 +348,17 @@ describe("copyTransaction", () => {
     await expect(copyTransaction("t1", OPEN, "dono", owner)).resolves.toBeDefined()
     await expect(copyTransaction("t1", CLOSED, "dono", withPin)).resolves.toBeDefined()
     expect(m.created).toHaveLength(2)
+    expectGuardInsideTransaction()
+  })
+
+  /**
+   * Exceção consciente: a cópia lê a ORIGINAL pelo cliente global, fora de transação. Não é furo —
+   * a data da original não entra na conta da guarda; quem manda é o dia de DESTINO, conferido
+   * dentro da transação do createTransaction.
+   */
+  it("a leitura da original fica fora da transação de propósito: vale o dia de destino", async () => {
+    await copyTransaction("t1", OPEN, "dono", owner)
+    expect(m.calls.filter((c) => c.op === "transaction.findUnique").map((c) => c.via)).toEqual(["global"])
     expectGuardInsideTransaction()
   })
 })

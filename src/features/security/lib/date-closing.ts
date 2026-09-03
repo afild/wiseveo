@@ -4,6 +4,8 @@
  * - dayKeyOfStored: componentes UTC (lançamentos guardam meio-dia UTC, ver normalizeDate);
  * - dayKeyOfLocal: componentes locais (Dates que vieram da tela: useDateRange, seletor, hoje).
  */
+import { isValidPeriod } from "@/lib/financial"
+
 export const DAY_KEY_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
 export const PERIOD_RE = /^\d{4}(0[1-9]|1[0-2])$/
 
@@ -57,11 +59,16 @@ export function storedPeriod(value: string | null | undefined): string | null {
   return PERIOD_RE.test(raw) ? raw : null
 }
 
-/** Entrada de rota para competência, ou null quando não é exatamente "YYYYMM" (a rota responde 400). */
+/**
+ * Entrada de rota para competência, ou null quando não é exatamente "YYYYMM" (a rota responde 400).
+ * O piso de ano é o mesmo do `isValidPeriod` (1900), e não é enfeite: `Date.UTC` joga os anos 0-99
+ * para os anos 1900, então "000012" viraria 31/12/1900 em `lastDayOfPeriod` — anterior a qualquer
+ * corte real — e a rota recusaria com "data fechada" (423) uma competência que é só inválida (400).
+ */
 export function toPeriodInput(value: unknown): string | null {
   const raw =
     typeof value === "string" ? value.trim() : typeof value === "number" && Number.isInteger(value) ? String(value) : null
-  return raw !== null && PERIOD_RE.test(raw) ? raw : null
+  return raw !== null && isValidPeriod(raw) ? raw : null
 }
 
 export function addDays(key: string, days: number): string {
