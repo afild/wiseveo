@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import { getWriteActor } from "@/features/security/services/write-context"
 import { randomUUID } from "crypto"
 
 interface CreateBudgetInput {
@@ -16,8 +16,9 @@ interface CreateBudgetInput {
  * Uses the current month/year.
  */
 export async function createBudgetItem(input: CreateBudgetInput) {
-  const userId = await getDefaultUserId()
-  if (!userId) throw new Error("User not found") // i18n-ignore: código de erro interno do service layer (rota traduz, service retorna código estável)
+  // Mesmo ator das rotas de lançamento: o orçamento é da CONTA (actor.ownerId), não da pessoa.
+  const actor = await getWriteActor()
+  if (!actor) throw new Error("User not found") // i18n-ignore: código de erro interno do service layer (rota traduz, service retorna código estável)
 
   const now = new Date()
   const month = now.getMonth() + 1
@@ -36,7 +37,7 @@ export async function createBudgetItem(input: CreateBudgetInput) {
         spent: -1, // Marker flag for isolated category budgets
         categoryId: input.categoryId,
         groupId: input.groupId,
-        userId,
+        userId: actor.ownerId,
         customName,
       },
     })
@@ -49,7 +50,7 @@ export async function createBudgetItem(input: CreateBudgetInput) {
         month,
         year,
         groupId: input.groupId,
-        userId,
+        userId: actor.ownerId,
         customName,
       },
     })

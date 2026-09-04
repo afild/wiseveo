@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import { getWriteActor } from "@/features/security/services/write-context"
 import { setUserPreferenceKey } from "@/features/settings/services/user-preferences-write"
 import { revalidatePath } from "next/cache"
 
@@ -13,13 +13,14 @@ export async function updateBudgetOrder(itemIds: string[]) {
   try {
     // Dado da CONTA, não da pessoa: a ordem é LIDA pelo dono (get-budget-data), então
     // gravar na sessão faria o arrastar de quem entrou por convite não surtir efeito.
-    const userId = await getDefaultUserId()
-    if (!userId) {
+    // `actor.ownerId` é exatamente esse dono, o mesmo das rotas de lançamento.
+    const actor = await getWriteActor()
+    if (!actor) {
       return { success: false, error: "Unauthorized" }
     }
 
     // Update only the budgetOrder key
-    await setUserPreferenceKey(prisma, userId, "budgetOrder", itemIds)
+    await setUserPreferenceKey(prisma, actor.ownerId, "budgetOrder", itemIds)
 
     revalidatePath("/budget")
     return { success: true }

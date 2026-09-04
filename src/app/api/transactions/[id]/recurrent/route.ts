@@ -1,18 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getTranslations } from "next-intl/server"
 
-import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import { getWriteContext } from "@/features/security/services/write-context"
 import { makeRecurring } from "@/features/transactions/services/make-recurring"
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const t = await getTranslations("api")
-  const userId = await getDefaultUserId()
-  if (!userId) {
+  // Mesmo ator das rotas de lançamento. Fora da trava de datas de propósito (cria o modelo, não
+  // grava lançamento), então o token de PIN não tem sentido e é descartado sem verificar.
+  const ctx = await getWriteContext(request, { allowOverride: false })
+  if (!ctx) {
     return NextResponse.json(
-      { error: t("errors.userNotFound") },
+      { error: t("errors.notAuthenticated") },
       { status: 401 }
     )
   }
@@ -20,7 +22,7 @@ export async function POST(
   const { id } = await params
 
   try {
-    const recurring = await makeRecurring(id, userId)
+    const recurring = await makeRecurring(id, ctx.ownerId)
 
     if (!recurring) {
       return NextResponse.json(

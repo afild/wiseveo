@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getTranslations } from "next-intl/server"
 import { prisma } from "@/lib/prisma"
 import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import { getWriteContext } from "@/features/security/services/write-context"
 import { periodFromDate, isValidPeriod } from "@/lib/financial"
 
 export async function GET() {
@@ -25,15 +26,17 @@ export async function GET() {
     return NextResponse.json(recurring)
 }
 
-export async function POST(req: Request) {
-    const userId = await getDefaultUserId()
+export async function POST(request: Request) {
+    // Mesmo ator das rotas de lançamento. Sem trava de datas aqui (é o modelo, não um lançamento),
+    // então o token de PIN não tem sentido e é descartado sem verificar.
+    const ctx = await getWriteContext(request, { allowOverride: false })
 
-    if (!userId) {
+    if (!ctx) {
         const t = await getTranslations("api.errors")
-        return NextResponse.json({ error: t("userNotFound") }, { status: 401 })
+        return NextResponse.json({ error: t("notAuthenticated") }, { status: 401 })
     }
 
-    const body = await req.json()
+    const body = await request.json()
 
     const period =
         body?.period && isValidPeriod(String(body.period))
@@ -49,7 +52,7 @@ export async function POST(req: Request) {
         data: {
             ...body,
             period,
-            userId,
+            userId: ctx.ownerId,
         }
     })
 

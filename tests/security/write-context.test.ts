@@ -21,7 +21,7 @@ vi.mock("@/features/security/services/pin.service", () => ({
 }))
 
 import { PIN_TOKEN_HEADER } from "@/features/security/lib/http"
-import { getWriteContext } from "@/features/security/services/write-context"
+import { getWriteActor, getWriteContext } from "@/features/security/services/write-context"
 
 const request = (token?: string) =>
   new Request("https://app.wiseveo.com/api/transactions", { headers: token ? { [PIN_TOKEN_HEADER]: token } : {} })
@@ -74,5 +74,28 @@ describe("getWriteContext", () => {
   it("sessão de vitrine sai marcada como showcase", async () => {
     m.session = { userId: "visitante", demoShared: true }
     expect(await getWriteContext(request())).toMatchObject({ actorUserId: "visitante", showcase: true })
+  })
+})
+
+/** A contraparte para server actions (orçamento): o MESMO ator, sem cabeçalho e sem token. */
+describe("getWriteActor", () => {
+  it("sem sessão devolve null (a action falha do jeito documentado)", async () => {
+    m.session = null
+    expect(await getWriteActor()).toBeNull()
+  })
+  it("sessão de usuário que sumiu do banco devolve null", async () => {
+    m.user = null
+    expect(await getWriteActor()).toBeNull()
+  })
+  it("monta o mesmo ator de getWriteContext, sem override e sem verificar token nenhum", async () => {
+    m.session = { userId: "convidado" }
+    const actor = await getWriteActor()
+    expect(actor).toEqual({ actorUserId: "convidado", ownerId: "dono", role: "SUPERADMIN", status: "ACTIVE", showcase: false })
+    expect(actor).not.toHaveProperty("override")
+    expect(m.verified).toEqual([])
+  })
+  it("sessão de vitrine sai marcada como showcase", async () => {
+    m.session = { userId: "visitante", demoShared: true }
+    expect(await getWriteActor()).toMatchObject({ showcase: true })
   })
 })

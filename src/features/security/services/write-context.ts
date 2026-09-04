@@ -32,6 +32,18 @@ export async function buildActor(session: SessionPayload): Promise<Actor | null>
   }
 }
 
+/**
+ * Contraparte de getWriteContext para SERVER ACTIONS (orçamento): o mesmo ator, sem cabeçalho de
+ * PIN, porque uma server action não carrega cabeçalho nenhum. Sem sessão real, null (a action falha
+ * do jeito que já falhava). É por aqui que a escrita fora de /api deixa de cair no resolvedor de
+ * leitura, que fora de produção devolvia o usuário mais antigo do banco quando não havia sessão.
+ */
+export async function getWriteActor(): Promise<Actor | null> {
+  const session = await getSession()
+  if (!session) return null
+  return buildActor(session)
+}
+
 /** Substitui getDefaultUserId nas rotas de escrita: sem sessão real, null (a rota devolve 401). */
 export async function getWriteContext(request: Request, opts: { allowOverride?: boolean } = {}): Promise<WriteContext | null> {
   const session = await getSession()

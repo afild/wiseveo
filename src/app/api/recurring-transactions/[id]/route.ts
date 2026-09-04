@@ -1,22 +1,24 @@
 import { NextResponse } from "next/server"
 import { getTranslations } from "next-intl/server"
 import { prisma } from "@/lib/prisma"
-import { getDefaultUserId } from "@/features/transactions/services/get-default-user-id"
+import { getWriteContext } from "@/features/security/services/write-context"
 import { normalizeDate, periodFromDate, isValidPeriod } from "@/lib/financial"
 
 export async function PATCH(
-    req: Request,
+    request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     const t = await getTranslations("api.errors")
-    const userId = await getDefaultUserId()
+    // Mesmo ator das rotas de lançamento. Sem trava de datas aqui (é o modelo, não um lançamento),
+    // então o token de PIN não tem sentido e é descartado sem verificar.
+    const ctx = await getWriteContext(request, { allowOverride: false })
 
-    if (!userId) {
-        return NextResponse.json({ error: t("userNotFound") }, { status: 401 })
+    if (!ctx) {
+        return NextResponse.json({ error: t("notAuthenticated") }, { status: 401 })
     }
 
     const { id } = await params
-    const body = await req.json()
+    const body = await request.json()
     const data = { ...body } as Record<string, unknown>
     const isUpdatingLastDate =
         typeof data.lastDate === "string" && data.lastDate.trim().length > 0
@@ -55,14 +57,14 @@ export async function PATCH(
 
         if (incomingPayeeId) {
             const existingPayee = await prisma.payee.findFirst({
-                where: { id: incomingPayeeId, userId },
+                where: { id: incomingPayeeId, userId: ctx.ownerId },
                 select: { id: true },
             })
             resolvedPayeeId = existingPayee?.id ?? null
         } else if (payeeName) {
             const existingByName = await prisma.payee.findFirst({
                 where: {
-                    userId,
+                    userId: ctx.ownerId,
                     name: { equals: payeeName, mode: "insensitive" },
                 },
                 select: { id: true },
@@ -80,7 +82,7 @@ export async function PATCH(
                     data: {
                         id: nextPayeeId,
                         name: payeeName,
-                        userId,
+                        userId: ctx.ownerId,
                     },
                     select: { id: true },
                 })
@@ -93,7 +95,7 @@ export async function PATCH(
     }
 
     const existing = await prisma.recurringTransaction.findFirst({
-        where: { id, userId },
+        where: { id, userId: ctx.ownerId },
         select: { id: true },
     })
 
@@ -113,20 +115,20 @@ export async function PATCH(
 }
 
 export async function DELETE(
-    _req: Request,
+    request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     const t = await getTranslations("api.errors")
-    const userId = await getDefaultUserId()
+    const ctx = await getWriteContext(request, { allowOverride: false })
 
-    if (!userId) {
-        return NextResponse.json({ error: t("userNotFound") }, { status: 401 })
+    if (!ctx) {
+        return NextResponse.json({ error: t("notAuthenticated") }, { status: 401 })
     }
 
     const { id } = await params
 
     const existing = await prisma.recurringTransaction.findFirst({
-        where: { id, userId },
+        where: { id, userId: ctx.ownerId },
         select: { id: true },
     })
 
