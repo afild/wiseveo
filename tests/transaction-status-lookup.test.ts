@@ -147,6 +147,7 @@ describe("quem pode falar com a tabela de status", () => {
     return out
   }
 
+  // Anda por todo o src/: sob carga (servidor de dev compilando ao lado) já estourou os 5 s padrão.
   it("nenhum outro arquivo do app toca transactionStatusLookup", () => {
     const offenders = walk(path.join(ROOT, "src"))
       .filter((file) => fs.readFileSync(file, "utf8").includes("transactionStatusLookup."))
@@ -154,7 +155,7 @@ describe("quem pode falar com a tabela de status", () => {
       .filter((file) => !ALLOWED.includes(file))
 
     expect(offenders).toEqual([])
-  })
+  }, 30_000)
 
   it("o módulo compartilhado não menciona userId", () => {
     const source = fs.readFileSync(

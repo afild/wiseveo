@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getTranslations } from "next-intl/server"
 import crypto from "crypto"
 import { prisma } from "@/lib/prisma"
-import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id"
+import { getSessionUserId } from "@/lib/session"
 import { getTelegramBotConfig } from "@/features/telegram/services/telegram-config.service"
 
 export async function POST() {
@@ -14,7 +14,8 @@ export async function POST() {
   }
 
   try {
-    const userId = await getSettingsUserId()
+    // Escrita de dados da pessoa: identidade só da sessão. O atalho de leitura cai no usuário mais antigo fora de produção.
+    const userId = await getSessionUserId()
     if (!userId) {
       return NextResponse.json({ error: t("errors.notAuthenticated") }, { status: 401 })
     }

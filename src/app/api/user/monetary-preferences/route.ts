@@ -5,16 +5,13 @@ import {
   updateUserMonetarySettings,
 } from "@/features/settings/services/user-settings-service"
 import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id"
+import { getSessionUserId } from "@/lib/session"
 
 export const dynamic = "force-dynamic"
 
-async function getResolvedUserId() {
-  return getSettingsUserId()
-}
-
 export async function GET() {
   const t = await getTranslations("api.errors")
-  const userId = await getResolvedUserId()
+  const userId = await getSettingsUserId()
   if (!userId) {
     return NextResponse.json(
       { success: false, message: t("userNotFound") },
@@ -32,7 +29,8 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   const t = await getTranslations("api.errors")
-  const userId = await getResolvedUserId()
+  // Escrita de dados da pessoa: identidade só da sessão. O atalho de leitura cai no usuário mais antigo fora de produção.
+  const userId = await getSessionUserId()
   if (!userId) {
     return NextResponse.json(
       { success: false, message: t("userNotFound") },

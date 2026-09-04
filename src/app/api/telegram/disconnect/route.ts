@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id"
+import { getSessionUserId } from "@/lib/session"
 import { forgetTelegramConversation } from "@/features/telegram/services/conversation-history.service"
 
 export async function DELETE() {
-  const userId = await getSettingsUserId()
+  // Escrita de dados da pessoa: identidade só da sessão. O atalho de leitura cai no usuário mais antigo fora de produção.
+  const userId = await getSessionUserId()
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   // deleteMany: desconectar sem vínculo existente é um sucesso vazio, não um erro

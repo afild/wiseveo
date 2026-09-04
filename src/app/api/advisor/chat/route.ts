@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getTranslations } from "next-intl/server"
-import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id"
+import { getSessionUserId } from "@/lib/session"
 import { getUserLocale, getUserMonetarySettings } from "@/features/settings/services/user-settings-service"
 import { resolveDataOwnerId } from "@/lib/data-owner"
 import { createMonetaryFormatter } from "@/lib/monetary"
@@ -30,7 +30,8 @@ export async function POST(req: Request) {
 
   const t = await getTranslations("api.advisor")
 
-  const userId = await getSettingsUserId()
+  // Escrita de dados da pessoa: identidade só da sessão. O atalho de leitura cai no usuário mais antigo fora de produção.
+  const userId = await getSessionUserId()
   if (!userId) {
     const tErrors = await getTranslations("api.errors")
     return NextResponse.json({ success: false, message: tErrors("notAuthenticated") }, { status: 401 })

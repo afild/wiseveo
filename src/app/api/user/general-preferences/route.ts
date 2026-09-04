@@ -6,6 +6,7 @@ import {
   updateUserQuickPaymentSettings,
 } from "@/features/settings/services/user-settings-service"
 import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id"
+import { getSessionUserId } from "@/lib/session"
 
 export const dynamic = "force-dynamic"
 
@@ -36,7 +37,8 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   const t = await getTranslations("api")
-  const userId = await getSettingsUserId()
+  // Escrita de dados da pessoa: identidade só da sessão. O atalho de leitura cai no usuário mais antigo fora de produção.
+  const userId = await getSessionUserId()
 
   if (!userId) {
     return NextResponse.json(

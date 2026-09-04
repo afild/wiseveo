@@ -6,6 +6,7 @@ import {
   updateUserAppearance,
 } from "@/features/settings/services/user-settings-service"
 import { getSettingsUserId } from "@/features/settings/services/get-settings-user-id"
+import { getSessionUserId } from "@/lib/session"
 import { normalizeThemePreferences } from "@/lib/theme-preferences"
 import { isAppLocale } from "@/i18n/config"
 
@@ -32,7 +33,8 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   const t = await getTranslations("api.errors")
-  const userId = await getSettingsUserId()
+  // Escrita de dados da pessoa: identidade só da sessão. O atalho de leitura cai no usuário mais antigo fora de produção.
+  const userId = await getSessionUserId()
 
   if (!userId) {
     return NextResponse.json(
@@ -59,7 +61,8 @@ export async function PUT(request: Request) {
  * can resolve it via getUserLocale(). Invalid/missing locales are ignored.
  */
 export async function PATCH(request: Request) {
-  const userId = await getSettingsUserId()
+  // Escrita de dados da pessoa: identidade só da sessão. O atalho de leitura cai no usuário mais antigo fora de produção.
+  const userId = await getSessionUserId()
 
   if (!userId) {
     const t = await getTranslations("api.errors")

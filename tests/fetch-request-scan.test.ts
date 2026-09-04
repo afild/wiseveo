@@ -45,6 +45,7 @@ function arquivosDeCodigo(dir: string): string[] {
 }
 
 describe("varredura: nenhuma chamada que o interceptador não consiga repetir", () => {
+  // Anda por todo o src/: sob carga (servidor de dev compilando ao lado) já estourou os 5 s padrão.
   it("src/ não tem Request pronto nem corpo em stream", () => {
     const arquivos = arquivosDeCodigo(RAIZ)
     expect(arquivos.length).toBeGreaterThan(100)
@@ -56,7 +57,7 @@ describe("varredura: nenhuma chamada que o interceptador não consiga repetir", 
       }
     }
     expect(ofensores).toEqual([])
-  })
+  }, 30_000)
   it("a própria varredura não casa consigo mesma", () => {
     const conteudo = readFileSync(ESTE_ARQUIVO, "utf8")
     expect(AGULHAS.filter((agulha) => agulha.re.test(conteudo)).map((agulha) => agulha.nome)).toEqual([])
