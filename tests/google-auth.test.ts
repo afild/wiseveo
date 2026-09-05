@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest"
 import {
   GOOGLE_CALENDAR_SCOPE,
+  GOOGLE_DRIVE_FILE_SCOPE,
   GOOGLE_LOGIN_SCOPES,
   getGoogleAuthUrl,
   getGoogleCalendarAuthUrl,
+  getGoogleDriveAuthUrl,
 } from "../src/lib/google-auth"
 import { getGoogleRedirectUris } from "../src/lib/google-redirect-uris"
 
@@ -44,6 +46,11 @@ describe("getGoogleAuthUrl (login)", () => {
     expect(p.get("response_type")).toBe("code")
     expect(p.get("state")).toBe("state-123")
   })
+
+  it("não pede o Drive nem soma escopos (o login continua só identidade)", () => {
+    expect(p.get("scope")).not.toContain("drive")
+    expect(p.get("include_granted_scopes")).toBeNull()
+  })
 })
 
 describe("getGoogleCalendarAuthUrl (conectar Agenda)", () => {
@@ -62,6 +69,27 @@ describe("getGoogleCalendarAuthUrl (conectar Agenda)", () => {
   })
 })
 
+describe("getGoogleDriveAuthUrl (conectar Drive para o backup)", () => {
+  const p = paramsOf(getGoogleDriveAuthUrl("state-789.backup", APP_URL))
+
+  it("pede só drive.file (arquivos que o app criar), nunca o Drive inteiro", () => {
+    expect(p.get("scope")).toBe(GOOGLE_DRIVE_FILE_SCOPE)
+    expect(GOOGLE_DRIVE_FILE_SCOPE).toBe("https://www.googleapis.com/auth/drive.file")
+    expect(p.get("scope")).not.toContain("calendar")
+  })
+
+  it("é incremental: soma ao que a pessoa já concedeu, para a Agenda não cair", () => {
+    expect(p.get("include_granted_scopes")).toBe("true")
+    expect(p.get("access_type")).toBe("offline")
+    expect(p.get("prompt")).toBe("consent")
+  })
+
+  it("volta pelo callback da Agenda, com o state inteiro", () => {
+    expect(p.get("redirect_uri")).toBe(`${APP_URL}/api/calendar/connect-google/callback`)
+    expect(p.get("state")).toBe("state-789.backup")
+  })
+})
+
 describe("getGoogleRedirectUris (fonte única: fluxo OAuth e guia da tela de primeiro acesso)", () => {
   it("gera os dois endereços de retorno a partir da origem, com ou sem barra final", () => {
     expect(getGoogleRedirectUris(APP_URL)).toEqual({
@@ -76,5 +104,6 @@ describe("getGoogleRedirectUris (fonte única: fluxo OAuth e guia da tela de pri
     const uris = getGoogleRedirectUris(APP_URL)
     expect(paramsOf(getGoogleAuthUrl("s", APP_URL)).get("redirect_uri")).toBe(uris.login)
     expect(paramsOf(getGoogleCalendarAuthUrl("s", APP_URL)).get("redirect_uri")).toBe(uris.calendar)
+    expect(paramsOf(getGoogleDriveAuthUrl("s", APP_URL)).get("redirect_uri")).toBe(uris.calendar)
   })
 })

@@ -11,6 +11,8 @@ import { encryptGoogleToken, isLegacyPlainToken, readGoogleToken } from "@/lib/g
  */
 export const GOOGLE_LOGIN_SCOPES = ["openid", "email", "profile"] as const
 export const GOOGLE_CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events"
+/** Só os arquivos que o próprio app criar. Nunca `drive` (o Drive inteiro). */
+export const GOOGLE_DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file"
 const LOGIN_SCOPE = GOOGLE_LOGIN_SCOPES.join(" ")
 
 /**
@@ -60,6 +62,8 @@ interface GoogleTokens {
   refresh_token?: string
   expires_in: number
   token_type: string
+  /** Escopos cobertos pelo token, separados por espaço. Vem na resposta do Google. */
+  scope?: string
 }
 
 export async function exchangeCodeForTokens(code: string, appUrl?: string): Promise<GoogleTokens> {
@@ -111,6 +115,28 @@ export function getGoogleCalendarAuthUrl(state: string, appUrl?: string): string
     redirect_uri: redirectUri,
     response_type: "code",
     scope: GOOGLE_CALENDAR_SCOPE,
+    access_type: "offline",
+    prompt: "consent",
+    state,
+  })
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+}
+
+/**
+ * Consentimento do Google Drive para o backup. Volta pelo MESMO callback da Agenda
+ * (sem endereço novo para cadastrar no Google Cloud) e é INCREMENTAL:
+ * `include_granted_scopes=true` faz o token novo cobrir também o que a pessoa já tinha
+ * concedido (a Agenda), porque existe um único conjunto de tokens por pessoa.
+ */
+export function getGoogleDriveAuthUrl(state: string, appUrl?: string): string {
+  const { clientId } = getConfig()
+  const redirectUri = getGoogleRedirectUris(appUrl || getAppUrl()).calendar
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: GOOGLE_DRIVE_FILE_SCOPE,
+    include_granted_scopes: "true",
     access_type: "offline",
     prompt: "consent",
     state,
