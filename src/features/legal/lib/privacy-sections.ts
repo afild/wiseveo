@@ -9,7 +9,6 @@
  */
 export const PRIVACY_SECTION_IDS = [
   "who",
-  "versions",
   "stored",
   "googleLogin",
   "calendar",
