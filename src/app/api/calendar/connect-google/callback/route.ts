@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { exchangeCalendarCodeForTokens, isGoogleConfigured } from "@/lib/google-auth"
+import { encryptGoogleToken } from "@/lib/google-token-cipher"
 import { getSessionUserId } from "@/lib/session"
 import { getAppUrl } from "@/lib/app-url"
 
@@ -42,8 +43,10 @@ export async function GET(request: NextRequest) {
     await prisma.user.update({
       where: { id: userId },
       data: {
-        googleAccessToken: tokens.access_token,
-        googleRefreshToken: tokens.refresh_token ?? undefined,
+        // Cifrados: dão acesso ao calendário da pessoa e nunca vão em claro para o banco
+        // (ver src/lib/google-token-cipher.ts).
+        googleAccessToken: encryptGoogleToken(tokens.access_token),
+        googleRefreshToken: tokens.refresh_token ? encryptGoogleToken(tokens.refresh_token) : undefined,
         googleTokenExpiresAt: new Date(
           Date.now() + tokens.expires_in * 1000,
         ),

@@ -6,6 +6,7 @@ import { routing } from "./i18n/routing"
 import { isSetupComplete } from "@/lib/setup-check"
 import { DEMO_UNAVAILABLE_PATH } from "@/lib/demo-routes"
 import { isBlockedSharedWrite, DEMO_FORK_REQUIRED_HEADER } from "@/lib/demo-shared"
+import { isLegalRoute } from "@/lib/legal-routes"
 
 const publicRoutes = ["/login", "/signup", "/cadastro-pendente"]
 // Página de aceite de convite (/convite/<token>) é pública por prefixo: quem foi
@@ -41,6 +42,11 @@ export async function middleware(request: NextRequest) {
   // /api atendido: o resto do middleware (setup gate, redirects de auth) NUNCA
   // se aplica a /api — contrato histórico do matcher antigo.
   if (isApi) return NextResponse.next()
+
+  // Páginas legais (política de privacidade): passam antes de tudo. Não podem cair no
+  // gate de setup, no provisionamento da demo nem no "logado vai para o dashboard" —
+  // a tela de consentimento do Google aponta para cá e exige acesso sem login.
+  if (isLegalRoute(pathname)) return NextResponse.next()
 
   // ─── Setup Wizard Gate ─────────────────────────────────────────────
   const setupComplete = isSetupComplete()

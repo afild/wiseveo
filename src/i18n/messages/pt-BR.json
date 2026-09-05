@@ -1342,6 +1342,81 @@
       }
     }
   },
+  "legal": {
+    "backHome": "Ir para o WISEVEO",
+    "privacy": {
+      "title": "Política de Privacidade",
+      "effectiveDate": "Vigente desde 5 de setembro de 2026.",
+      "metaDescription": "Como o WISEVEO trata seus dados: o que guarda, com quem compartilha e como apagar.",
+      "intro": "O WISEVEO é um app de finanças pessoais. Você registra o que ganha e o que gasta, e o app organiza isso para você. Seus lançamentos são seus. A gente não vende seus dados, não usa eles para anúncios e nenhuma pessoa da nossa equipe fica lendo suas finanças. Esta página explica, em português claro, o que o app guarda, com quem ele conversa e como você apaga tudo.",
+      "sections": {
+        "who": {
+          "title": "Quem somos",
+          "body": "O WISEVEO é um produto operado pela WISEVEO, com sede em Orlando, Flórida, Estados Unidos.\n\nPara qualquer dúvida sobre privacidade, escreva para **wiseveoapp@gmail.com**. A gente responde no mesmo e-mail."
+        },
+        "versions": {
+          "title": "Existem duas versões do WISEVEO",
+          "body": "Elas guardam dados diferentes, então vale saber em qual você está.\n\n**A demonstração** (wiseveo.com e demo.wiseveo.com) é aberta a qualquer pessoa. Os números que aparecem lá são fictícios, criados pelo app.\n\n**O app** (app.wiseveo.com) é uma instalação particular, com finanças de verdade. O acesso é só por convite, e cada instalação tem o próprio banco de dados.\n\nEsta política vale para as duas. Quando algo valer só para uma, a gente avisa."
+        },
+        "stored": {
+          "title": "O que o app guarda",
+          "body": "**Sua conta:** nome, e-mail, telefone (se você preencher) e o endereço da sua foto de perfil do Google. Se você criou conta com senha, guardamos a senha embaralhada, num formato que não pode ser revertido. Ninguém, nem a gente, consegue ler sua senha.\n\n**Suas finanças:** contas, saldos, lançamentos com data, valor, descrição, categoria e favorecido, comentários, orçamentos e lançamentos recorrentes.\n\n**Um histórico de exclusões:** quando você exclui um lançamento, ele sai das suas telas e dos seus saldos, mas o app guarda uma cópia dele num registro interno, com a data da exclusão. Isso serve para recuperar algo apagado por engano. Essa cópia some quando a conta é apagada, ou se você pedir a limpeza pelo e-mail da seção 1.\n\n**Seus anexos:** notas fiscais, comprovantes e imagens que você anexa a um lançamento. Eles ficam guardados dentro do banco de dados da sua instalação, não num serviço de arquivos de terceiros. Cada arquivo pode ter até 3 MB.\n\n**Suas preferências:** idioma, moeda, tema, fuso horário, horários dos avisos e o que você configurou nas telas.\n\n**Um resumo mensal:** quando o mês fecha, o app guarda alguns totais (entradas, saídas, saldo) para comparar meses. São só números, sem detalhe de lançamento."
+        },
+        "googleLogin": {
+          "title": "Entrar com o Google",
+          "body": "Quando você entra com o Google, recebemos do Google apenas seu nome, seu e-mail, seu identificador de conta e o endereço da sua foto. Guardamos isso para criar e reconhecer sua conta.\n\nNão recebemos e não pedimos sua senha do Google."
+        },
+        "calendar": {
+          "title": "Google Agenda (opcional)",
+          "body": "Se você conectar a Agenda, o app pede permissão para ver e criar eventos no seu calendário. Ele usa isso para escrever seus lançamentos como eventos de dia inteiro, com valor, categoria, conta e favorecido, e para mostrar o saldo do período.\n\nDuas coisas importantes:\n\n- Esses eventos ficam no **seu** calendário. Ou seja, seus dados financeiros passam a existir também dentro do Google Agenda, sujeitos à política de privacidade do Google.\n- O app só apaga eventos que ele mesmo criou. Ele reconhece esses eventos por uma marca própria. Compromissos seus nunca são tocados.\n\nA autorização que o Google nos dá fica guardada cifrada no banco. Conectar a Agenda é opcional, e o app funciona inteiro sem ela."
+        },
+        "drive": {
+          "title": "Backup no Google Drive (opcional)",
+          "body": "Quando você ativar o backup automático, o app pede uma permissão limitada do Google Drive: ele só consegue mexer nos arquivos que ele mesmo criar. Ele não enxerga nem toca no resto do seu Drive.\n\nCom isso, o app envia uma cópia dos seus dados para uma pasta no seu próprio Google Drive, no horário que você escolher. A cópia é sua, fica na sua conta Google, e você pode apagar quando quiser."
+        },
+        "googleData": {
+          "title": "Como usamos os dados que vêm do Google",
+          "body": "O uso e a transferência, pelo WISEVEO, das informações recebidas das APIs do Google seguem a [Política de Dados do Usuário dos Serviços de API do Google](https://developers.google.com/terms/api-services-user-data-policy), incluindo os requisitos de Uso Limitado.\n\nNa prática, isso quer dizer que:\n\n- usamos os dados do Google apenas para os recursos que você ativou (entrar na conta, sincronizar a agenda, guardar o backup);\n- não vendemos, não repassamos e não usamos esses dados para anúncios;\n- não enviamos dados vindos do Google para provedores de inteligência artificial, nem os usamos para treinar modelos;\n- nenhuma pessoa lê esses dados, exceto se você pedir ajuda e autorizar, se for necessário por segurança, ou se a lei exigir.\n\nVocê pode retirar essas permissões a qualquer momento em [myaccount.google.com/permissions](https://myaccount.google.com/permissions)."
+        },
+        "ai": {
+          "title": "Assistente de inteligência artificial (opcional)",
+          "body": "Se o responsável pela instalação ativar o assistente, suas perguntas e os dados necessários para respondê-las são enviados ao provedor de inteligência artificial escolhido por ele. Isso inclui lançamentos, saldos, nomes de contas e categorias, além do seu primeiro nome e das últimas mensagens da conversa.\n\nOu seja, com o assistente ligado, dados financeiros saem do app e vão para uma empresa terceira. Os provedores possíveis hoje são OpenAI, Anthropic, Google, DeepSeek, Moonshot ou um endereço próprio definido pelo responsável. O tratamento desses dados passa a seguir também os termos do provedor escolhido.\n\nSe você mandar um áudio pelo Telegram, o arquivo é enviado para transcrição e depois descartado. O texto transcrito entra na conversa.\n\nO assistente só lê. Ele não cria nem altera lançamentos.\n\nGuardamos suas conversas com o assistente para você poder voltar nelas, e você pode apagar a conversa quando quiser. Guardamos também contadores de uso (quantas chamadas, quantos tokens, custo estimado) para controlar gastos. Esses contadores não têm o conteúdo das perguntas.\n\nSe o assistente estiver desligado, nada disso acontece e nenhum dado financeiro sai do app."
+        },
+        "telegram": {
+          "title": "Telegram (opcional)",
+          "body": "Se você conectar o Telegram, guardamos o identificador do seu chat, seu nome de usuário e as últimas mensagens trocadas com o bot, para ele manter o fio da conversa.\n\nO bot responde com textos e imagens que contêm seus dados financeiros. Essas mensagens passam pelos servidores do Telegram, sujeitas à política de privacidade deles.\n\nVocê desconecta na tela do Telegram dentro do app. Ao desconectar, apagamos o vínculo e a memória da conversa."
+        },
+        "demo": {
+          "title": "A demonstração pública",
+          "body": "Se você só olha a demonstração, nada seu é gravado. Você recebe uma sessão temporária que enxerga dados fictícios e não pode alterar nada.\n\nSe você quiser mexer nos números, o app pede seu **nome e e-mail** e cria uma cópia editável só sua. Guardamos esse nome e esse e-mail para saber quem se interessou pelo WISEVEO e para eventualmente falar sobre novidades do produto. Não enviamos e-mails hoje, e você pode pedir a remoção do seu contato pelo e-mail da seção 1.\n\nA cópia editável, com tudo o que você digitar nela, é apagada automaticamente depois de cerca de 25 horas."
+        },
+        "cookies": {
+          "title": "Cookies e o que fica no seu navegador",
+          "body": "O WISEVEO **não usa nenhuma ferramenta de rastreamento, medição de audiência ou publicidade**. Não há Google Analytics, pixel de rede social nem scripts de terceiros. Nenhuma página carrega conteúdo de outro site, com uma exceção: sua foto de perfil, que o navegador busca no servidor do Google.\n\nOs cookies que usamos são de funcionamento:\n\n- um cookie de sessão, que mantém você logado por 7 dias;\n- um cookie de idioma, que lembra o idioma escolhido;\n- cookies temporários de segurança durante o login com o Google, que duram 10 minutos e são apagados em seguida;\n- na demonstração, cookies curtos que controlam a sessão de visitante.\n\nSeu navegador também guarda, só no seu aparelho, preferências como filtros de tela e o tema claro ou escuro. Isso não é enviado para a gente."
+        },
+        "hosting": {
+          "title": "Onde os dados ficam e como protegemos",
+          "body": "O app é hospedado na Vercel e o banco de dados fica na Supabase, ambos com servidores nos Estados Unidos. Se você está no Brasil, isso significa que seus dados são transferidos e armazenados fora do país.\n\nNossas proteções: todo o acesso é por conexão criptografada (HTTPS); senhas são guardadas embaralhadas e não podem ser lidas; chaves de integrações e autorizações do Google ficam cifradas no banco; anexos só são entregues para quem está logado e tem direito a eles; e o app registra apenas mensagens técnicas de erro, sem seus dados financeiros.\n\nNenhum sistema é perfeito. Se acontecer um incidente que ponha seus dados em risco, avisamos você pelo e-mail da conta."
+        },
+        "retention": {
+          "title": "Por quanto tempo guardamos",
+          "body": "Enquanto sua conta existir, seus dados ficam. Alguns prazos específicos:\n\n- o histórico de lançamentos excluídos fica guardado enquanto a conta existir;\n- o registro de avisos enviados é apagado depois de 120 dias;\n- convites vencem em 7 dias;\n- cópias de visitante da demonstração são apagadas em cerca de 25 horas;\n- nome e e-mail deixados na demonstração ficam guardados até você pedir a remoção."
+        },
+        "deletion": {
+          "title": "Como apagar seus dados",
+          "body": "**Apagar tudo:** escreva para wiseveoapp@gmail.com pedindo a exclusão da sua conta. Apagamos o cadastro e, junto com ele, lançamentos, anexos, orçamentos, conversas com o assistente e vínculos com Telegram e Agenda. A exclusão é definitiva.\n\n**Apagar parte:** você mesmo apaga anexos e conversas do assistente dentro do app. Lançamentos excluídos saem das telas na hora, e a cópia guardada no histórico de exclusões some quando você apaga a conta ou pede a limpeza por e-mail.\n\n**Cortar as permissões do Google:** [myaccount.google.com/permissions](https://myaccount.google.com/permissions). Isso encerra o acesso à Agenda e ao Drive na hora.\n\n**Desconectar o Telegram:** pelo próprio app, em Configurações."
+        },
+        "rights": {
+          "title": "Seus direitos",
+          "body": "Se a Lei Geral de Proteção de Dados se aplica a você, você tem direito de saber quais dados temos, pedir uma cópia, corrigir o que está errado, pedir a exclusão, retirar seu consentimento e saber com quem compartilhamos.\n\nPara exercer qualquer um deles, basta escrever para wiseveoapp@gmail.com. Não cobramos por isso.\n\nTratamos seus dados porque você pediu para usar o app, e apenas para fazer o app funcionar.\n\nO WISEVEO não é destinado a menores de 18 anos."
+        },
+        "changes": {
+          "title": "Mudanças nesta política",
+          "body": "Se algo mudar, atualizamos esta página e a data no topo. Se a mudança for importante, avisamos dentro do app."
+        }
+      }
+    }
+  },
   "mail": {
     "addLabel": "Adicionar etiqueta",
     "allMail": "Todos os e-mails",

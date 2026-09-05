@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto"
 import { getAppUrl } from "@/lib/app-url"
 import { getGoogleRedirectUris } from "@/lib/google-redirect-uris"
+import { encryptGoogleToken, isLegacyPlainToken, readGoogleToken } from "@/lib/google-token-cipher"
 
 /**
  * Login = só identidade (openid/email/profile): escopos não sensíveis, publicáveis
@@ -192,13 +193,25 @@ export async function getValidAccessToken(
 
   if (!user?.googleRefreshToken) return null
 
+  // Os tokens são guardados cifrados; `readGoogleToken` também aceita os antigos, que
+  // ficaram em claro no banco antes desta mudança.
+  const refreshToken = readGoogleToken(user.googleRefreshToken)
+  if (!refreshToken) {
+    // O que está guardado não abre (senha do banco trocada, valor adulterado). Mesmo
+    // desfecho de um token revogado: desconecta, e a página Calendário volta a
+    // oferecer "Conectar". Insistir aqui só produziria erro do Google a cada acesso.
+    await disconnectGoogleCalendar(userId)
+    return null
+  }
+  const accessToken = readGoogleToken(user.googleAccessToken)
+
   // If token is still valid (with 5-minute buffer)
   if (
-    user.googleAccessToken &&
+    accessToken &&
     user.googleTokenExpiresAt &&
     user.googleTokenExpiresAt > new Date(Date.now() + 5 * 60 * 1000)
   ) {
-    return user.googleAccessToken
+    return accessToken
   }
 
   // Refresh. Se o Google responder invalid_grant (refresh token expirado — 7 dias
@@ -208,14 +221,11 @@ export async function getValidAccessToken(
   // este é o único caminho de recuperação.
   let refreshed: { access_token: string; expires_in: number }
   try {
-    refreshed = await refreshAccessToken(user.googleRefreshToken)
+    refreshed = await refreshAccessToken(refreshToken)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     if (message.includes("invalid_grant")) {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { googleAccessToken: null, googleRefreshToken: null, googleTokenExpiresAt: null },
-      })
+      await disconnectGoogleCalendar(userId)
       return null
     }
     throw err
@@ -224,10 +234,25 @@ export async function getValidAccessToken(
   await prisma.user.update({
     where: { id: userId },
     data: {
-      googleAccessToken: access_token,
+      googleAccessToken: encryptGoogleToken(access_token),
       googleTokenExpiresAt: new Date(Date.now() + expires_in * 1000),
+      // Aproveita a renovação para trocar um refresh token legado (em claro) pelo
+      // cifrado. Como o acesso vence a cada hora, o banco se limpa sozinho no primeiro
+      // uso, sem migração de dados.
+      ...(isLegacyPlainToken(user.googleRefreshToken)
+        ? { googleRefreshToken: encryptGoogleToken(refreshToken) }
+        : {}),
     },
   })
 
   return access_token
+}
+
+/** Apaga as três colunas de uma vez. Único jeito de "desconectar" a Agenda hoje. */
+async function disconnectGoogleCalendar(userId: string): Promise<void> {
+  const { prisma } = await import("@/lib/prisma")
+  await prisma.user.update({
+    where: { id: userId },
+    data: { googleAccessToken: null, googleRefreshToken: null, googleTokenExpiresAt: null },
+  })
 }

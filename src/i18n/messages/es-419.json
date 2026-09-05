@@ -1342,6 +1342,81 @@
       }
     }
   },
+  "legal": {
+    "backHome": "Ir a WISEVEO",
+    "privacy": {
+      "title": "Política de Privacidad",
+      "effectiveDate": "Vigente desde el 5 de septiembre de 2026.",
+      "metaDescription": "Cómo WISEVEO trata tus datos: qué guarda, con quién los comparte y cómo borrarlos.",
+      "intro": "WISEVEO es una app de finanzas personales. Tú registras lo que ganas y lo que gastas, y la app lo organiza para ti. Tus registros son tuyos. No vendemos tus datos, no los usamos para publicidad y nadie de nuestro lado se pone a leer tus finanzas. Esta página explica, en palabras sencillas, qué guarda la app, con quién habla y cómo borras todo.",
+      "sections": {
+        "who": {
+          "title": "Quiénes somos",
+          "body": "WISEVEO es un producto operado por WISEVEO, con sede en Orlando, Florida, Estados Unidos.\n\nPara cualquier duda sobre privacidad, escribe a **wiseveoapp@gmail.com**. Respondemos desde esa misma dirección."
+        },
+        "versions": {
+          "title": "Existen dos versiones de WISEVEO",
+          "body": "Guardan datos distintos, así que conviene saber en cuál estás.\n\n**La demostración** (wiseveo.com y demo.wiseveo.com) está abierta a cualquiera. Los números que aparecen ahí son ficticios, creados por la app.\n\n**La app** (app.wiseveo.com) es una instalación privada, con finanzas reales. El acceso es solo por invitación, y cada instalación tiene su propia base de datos.\n\nEsta política vale para las dos. Cuando algo aplique solo a una, lo decimos."
+        },
+        "stored": {
+          "title": "Qué guarda la app",
+          "body": "**Tu cuenta:** nombre, correo, teléfono (si lo completas) y la dirección de tu foto de perfil de Google. Si creaste la cuenta con contraseña, la guardamos revuelta, en un formato que no se puede revertir. Nadie, ni nosotros, puede leer tu contraseña.\n\n**Tus finanzas:** cuentas, saldos, movimientos con fecha, monto, descripción, categoría y beneficiario, comentarios, presupuestos y movimientos recurrentes.\n\n**Un historial de eliminaciones:** cuando borras un movimiento, sale de tus pantallas y de tus saldos, pero la app guarda una copia en un registro interno, con la fecha de la eliminación. Sirve para recuperar algo borrado por error. Esa copia desaparece cuando se borra la cuenta, o si pides la limpieza al correo de la sección 1.\n\n**Tus adjuntos:** facturas, comprobantes e imágenes que adjuntas a un movimiento. Se guardan dentro de la base de datos de tu instalación, no en un servicio de archivos de terceros. Cada archivo puede pesar hasta 3 MB.\n\n**Tus preferencias:** idioma, moneda, tema, zona horaria, horarios de los avisos y lo que hayas configurado en las pantallas.\n\n**Un resumen mensual:** cuando el mes cierra, la app guarda algunos totales (entradas, salidas, saldo) para comparar meses. Solo números, sin detalle de movimientos."
+        },
+        "googleLogin": {
+          "title": "Entrar con Google",
+          "body": "Cuando entras con Google, de Google recibimos únicamente tu nombre, tu correo, tu identificador de cuenta y la dirección de tu foto. Guardamos eso para crear y reconocer tu cuenta.\n\nNo recibimos ni pedimos tu contraseña de Google."
+        },
+        "calendar": {
+          "title": "Google Calendar (opcional)",
+          "body": "Si conectas Calendar, la app pide permiso para ver y crear eventos en tu calendario. Lo usa para escribir tus movimientos como eventos de día completo, con monto, categoría, cuenta y beneficiario, y para mostrar el saldo del período.\n\nDos cosas importantes:\n\n- Esos eventos quedan en **tu** calendario. Es decir, tus datos financieros pasan a existir también dentro de Google Calendar, sujetos a la política de privacidad de Google.\n- La app solo borra eventos que ella misma creó. Los reconoce por una marca propia. Tus compromisos nunca se tocan.\n\nLa autorización que Google nos da queda guardada cifrada en la base de datos. Conectar Calendar es opcional, y la app funciona completa sin eso."
+        },
+        "drive": {
+          "title": "Copia de seguridad en Google Drive (opcional)",
+          "body": "Cuando actives la copia automática, la app pide un permiso limitado de Google Drive: solo puede tocar los archivos que ella misma cree. No ve ni toca el resto de tu Drive.\n\nCon eso, la app envía una copia de tus datos a una carpeta en tu propio Google Drive, en el horario que elijas. La copia es tuya, queda en tu cuenta de Google, y puedes borrarla cuando quieras."
+        },
+        "googleData": {
+          "title": "Cómo usamos los datos que vienen de Google",
+          "body": "El uso y la transferencia, por parte de WISEVEO, de la información recibida de las APIs de Google se rigen por la [Política de Datos de Usuario de los Servicios de API de Google](https://developers.google.com/terms/api-services-user-data-policy), incluidos los requisitos de Uso Limitado.\n\nEn la práctica, eso quiere decir que:\n\n- usamos los datos de Google solo para las funciones que activaste (entrar a la cuenta, sincronizar el calendario, guardar la copia);\n- no los vendemos, no los cedemos y no los usamos para publicidad;\n- no enviamos datos venidos de Google a proveedores de inteligencia artificial, ni los usamos para entrenar modelos;\n- ninguna persona lee estos datos, salvo que pidas ayuda y lo autorices, que sea necesario por seguridad, o que la ley lo exija.\n\nPuedes retirar estos permisos cuando quieras en [myaccount.google.com/permissions](https://myaccount.google.com/permissions)."
+        },
+        "ai": {
+          "title": "Asistente de inteligencia artificial (opcional)",
+          "body": "Si el responsable de la instalación activa el asistente, tus preguntas y los datos necesarios para responderlas se envían al proveedor de inteligencia artificial que él eligió. Eso incluye movimientos, saldos, nombres de cuentas y categorías, además de tu primer nombre y los últimos mensajes de la conversación.\n\nEs decir, con el asistente activo, datos financieros salen de la app y van a una empresa externa. Los proveedores posibles hoy son OpenAI, Anthropic, Google, DeepSeek, Moonshot o una dirección propia definida por el responsable. El tratamiento de esos datos pasa a seguir también los términos del proveedor elegido.\n\nSi mandas un audio por Telegram, el archivo se envía para transcripción y después se descarta. El texto transcrito entra en la conversación.\n\nEl asistente solo lee. No crea ni modifica movimientos.\n\nGuardamos tus conversaciones con el asistente para que puedas volver a ellas, y puedes borrar la conversación cuando quieras. Guardamos también contadores de uso (cuántas llamadas, cuántos tokens, costo estimado) para controlar gastos. Esos contadores no tienen el contenido de las preguntas.\n\nSi el asistente está apagado, nada de esto ocurre y ningún dato financiero sale de la app."
+        },
+        "telegram": {
+          "title": "Telegram (opcional)",
+          "body": "Si conectas Telegram, guardamos el identificador de tu chat, tu nombre de usuario y los últimos mensajes intercambiados con el bot, para que mantenga el hilo de la conversación.\n\nEl bot responde con textos e imágenes que contienen tus datos financieros. Esos mensajes pasan por los servidores de Telegram, sujetos a su política de privacidad.\n\nTe desconectas en la pantalla de Telegram dentro de la app. Al desconectar, borramos el vínculo y la memoria de la conversación."
+        },
+        "demo": {
+          "title": "La demostración pública",
+          "body": "Si solo miras la demostración, nada tuyo se guarda. Recibes una sesión temporal que ve datos ficticios y no puede cambiar nada.\n\nSi quieres tocar los números, la app pide tu **nombre y correo** y crea una copia editable solo para ti. Guardamos ese nombre y ese correo para saber quién se interesó por WISEVEO y para eventualmente hablar de novedades del producto. Hoy no enviamos correos, y puedes pedir que borremos tu contacto escribiendo al correo de la sección 1.\n\nLa copia editable, con todo lo que escribas en ella, se borra automáticamente después de unas 25 horas."
+        },
+        "cookies": {
+          "title": "Cookies y lo que queda en tu navegador",
+          "body": "WISEVEO **no usa ninguna herramienta de rastreo, medición de audiencia o publicidad**. No hay Google Analytics, ni píxel de red social, ni scripts de terceros. Ninguna página carga contenido de otro sitio, con una excepción: tu foto de perfil, que el navegador busca en el servidor de Google.\n\nLas cookies que usamos son de funcionamiento:\n\n- una cookie de sesión, que te mantiene conectado por 7 días;\n- una cookie de idioma, que recuerda el idioma elegido;\n- cookies temporales de seguridad durante el ingreso con Google, que duran 10 minutos y se borran enseguida;\n- en la demostración, cookies cortas que controlan la sesión de visitante.\n\nTu navegador también guarda, solo en tu dispositivo, preferencias como filtros de pantalla y el tema claro u oscuro. Eso no se envía a nosotros."
+        },
+        "hosting": {
+          "title": "Dónde están los datos y cómo los protegemos",
+          "body": "La app está alojada en Vercel y la base de datos está en Supabase, ambas con servidores en Estados Unidos. Si estás fuera de Estados Unidos, esto significa que tus datos se transfieren y almacenan en el exterior.\n\nNuestras protecciones: todo el acceso es por conexión cifrada (HTTPS); las contraseñas se guardan revueltas y no se pueden leer; las claves de integraciones y las autorizaciones de Google quedan cifradas en la base de datos; los adjuntos solo se entregan a quien está conectado y tiene derecho a ellos; y la app registra únicamente mensajes técnicos de error, sin tus datos financieros.\n\nNingún sistema es perfecto. Si ocurre un incidente que ponga tus datos en riesgo, te avisamos al correo de la cuenta."
+        },
+        "retention": {
+          "title": "Por cuánto tiempo guardamos",
+          "body": "Mientras exista tu cuenta, tus datos permanecen. Algunos plazos específicos:\n\n- el historial de movimientos eliminados se guarda mientras exista la cuenta;\n- el registro de avisos enviados se borra después de 120 días;\n- las invitaciones vencen en 7 días;\n- las copias de visitante de la demostración se borran después de unas 25 horas;\n- el nombre y el correo dejados en la demostración se guardan hasta que pidas su eliminación."
+        },
+        "deletion": {
+          "title": "Cómo borrar tus datos",
+          "body": "**Borrar todo:** escribe a wiseveoapp@gmail.com pidiendo la eliminación de tu cuenta. Borramos el registro y, junto con él, movimientos, adjuntos, presupuestos, conversaciones con el asistente y vínculos con Telegram y Calendar. La eliminación es definitiva.\n\n**Borrar una parte:** tú mismo borras adjuntos y conversaciones del asistente dentro de la app. Los movimientos eliminados salen de las pantallas al instante, y la copia guardada en el historial de eliminaciones desaparece cuando borras la cuenta o pides la limpieza por correo.\n\n**Cortar los permisos de Google:** [myaccount.google.com/permissions](https://myaccount.google.com/permissions). Eso termina el acceso a Calendar y Drive de inmediato.\n\n**Desconectar Telegram:** en la propia app, en Configuración."
+        },
+        "rights": {
+          "title": "Tus derechos",
+          "body": "Si te aplica la Ley General de Protección de Datos de Brasil, tienes derecho a saber qué datos tenemos, pedir una copia, corregir lo que esté mal, pedir la eliminación, retirar tu consentimiento y saber con quién compartimos.\n\nPara ejercer cualquiera de ellos, basta escribir a wiseveoapp@gmail.com. No cobramos por eso.\n\nTratamos tus datos porque pediste usar la app, y solo para que la app funcione.\n\nWISEVEO no está dirigido a menores de 18 años."
+        },
+        "changes": {
+          "title": "Cambios en esta política",
+          "body": "Si algo cambia, actualizamos esta página y la fecha de arriba. Si el cambio es importante, te avisamos dentro de la app."
+        }
+      }
+    }
+  },
   "mail": {
     "addLabel": "Agregar etiqueta",
     "allMail": "Todo el correo",
