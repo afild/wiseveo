@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  serverExternalPackages: ['@resvg/resvg-js', 'node-telegram-bot-api'],
+  serverExternalPackages: ['@resvg/resvg-js', 'node-telegram-bot-api', '@vercel/sandbox'],
   // O Setup Wizard aplica as migrações lendo prisma/migrations/*/migration.sql
   // em runtime (sem o CLI do Prisma). Sem isto a pasta não vai no bundle da
   // função na Vercel e o wizard não teria o que aplicar.
