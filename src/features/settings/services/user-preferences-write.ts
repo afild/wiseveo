@@ -102,7 +102,7 @@ const nullForUnserializable = (_key: string, value: unknown) =>
 /** Valor de topo sem serialização ainda cairia em `undefined`; NULL no parâmetro apagaria a coluna. */
 const toJson = (value: unknown): string => JSON.stringify(value, nullForUnserializable) ?? "null"
 
-/** Mescla de um nível dentro da chave (só `dateClosing` usa: seus escritores gravam subcampos diferentes). */
+/** Mescla de um nível dentro da chave (`dateClosing` e `backup`: seus escritores gravam subcampos diferentes). */
 export async function mergeUserPreferenceKey(
   executor: PreferencesExecutor,
   userId: string,
