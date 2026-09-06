@@ -16,7 +16,23 @@
  */
 export const SANDBOX_PREFERS_DIRECT = false
 
-export function resolveDumpUrl(env: NodeJS.ProcessEnv, preferDirect: boolean = SANDBOX_PREFERS_DIRECT): string {
+/**
+ * Só o que esta função lê do ambiente. Estreito de propósito: quem chama monta objetos
+ * mínimos sem precisar carregar NODE_ENV junto (o Next aumenta `NodeJS.ProcessEnv` com
+ * NODE_ENV obrigatório e sem `?`).
+ *
+ * A assinatura de índice não é enfeite: sem ela, um tipo de propriedades todas opcionais
+ * é "fraco" para o TypeScript, e `process.env` deixa de ser atribuível com o erro
+ * TS2559 ("no properties in common"). Com ela, `process.env` passa e os testes continuam
+ * montando objetos mínimos.
+ */
+export interface DumpUrlEnv {
+  DATABASE_URL?: string
+  DIRECT_URL?: string
+  [key: string]: string | undefined
+}
+
+export function resolveDumpUrl(env: DumpUrlEnv, preferDirect: boolean = SANDBOX_PREFERS_DIRECT): string {
   if (preferDirect && env.DIRECT_URL) return env.DIRECT_URL
   const base = env.DATABASE_URL
   if (!base) throw new Error("DATABASE_URL ausente") // i18n-ignore: erro interno

@@ -112,10 +112,8 @@ async function main() {
     const ipv6 = await sandbox.runCommand({ cmd: "bash", args: ["-c", "curl -6 -s --max-time 8 https://api64.ipify.org || echo SEM-IPV6"] })
     console.log(`saída IPv6 do sandbox: ${(await ipv6.stdout()).trim()}`)
 
-    // O Next aumenta NodeJS.ProcessEnv com NODE_ENV obrigatório, então o objeto
-    // mínimo do plano precisa carregar NODE_ENV junto. DIRECT_URL fica de fora de
-    // propósito: esta chamada é a do pooler.
-    const pooler = resolveDumpUrl({ NODE_ENV: process.env.NODE_ENV, DATABASE_URL: databaseUrl })
+    // DIRECT_URL fica de fora de propósito: esta chamada é a do pooler.
+    const pooler = resolveDumpUrl({ DATABASE_URL: databaseUrl })
     const results = {
       direct: direct ? await tryDump(sandbox, "direto", direct) : null,
       pooler: await tryDump(sandbox, "pooler", pooler),
