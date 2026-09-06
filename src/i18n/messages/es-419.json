@@ -1445,6 +1445,10 @@
     "description": "Aceleración Financiera"
   },
   "notifications": {
+    "backup": {
+      "failed": "La copia de seguridad de WISEVEO falló hoy: {reason}. La copia anterior en Drive sigue ahí.",
+      "ok": "Copia de seguridad de WISEVEO lista: {file}, {size}, {objects} objetos, enviada a Google Drive."
+    },
     "bills": {
       "line": "• {title} — {amount} ({date})",
       "more": "• y {count} más.",

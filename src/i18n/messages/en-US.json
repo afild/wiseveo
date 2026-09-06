@@ -1445,6 +1445,10 @@
     "description": "Financial Acceleration"
   },
   "notifications": {
+    "backup": {
+      "failed": "WISEVEO backup failed today: {reason}. The previous copy in Drive is still there.",
+      "ok": "WISEVEO backup done: {file}, {size}, {objects} objects, sent to Google Drive."
+    },
     "bills": {
       "line": "• {title} — {amount} ({date})",
       "more": "• and {count} more.",
