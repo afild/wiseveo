@@ -1895,6 +1895,7 @@
         "restoreToggle": "Se um dia precisar restaurar",
         "runNow": "Fazer backup agora",
         "runNowDone": "Backup feito: {file}, {size}.",
+        "runNowSkipped": "Nada foi gerado agora. Confira a conexão do Drive e tente de novo daqui a um minuto.",
         "running": "Gerando a cópia e enviando ao Drive. Pode levar alguns minutos.",
         "save": "Salvar",
         "saved": "Backup configurado.",

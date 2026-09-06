@@ -1895,6 +1895,7 @@
         "restoreToggle": "If you ever need to restore",
         "runNow": "Back up now",
         "runNowDone": "Backup done: {file}, {size}.",
+        "runNowSkipped": "Nothing was created just now. Check the Drive connection and try again in a minute.",
         "running": "Creating the copy and sending it to Drive. This can take a few minutes.",
         "save": "Save",
         "saved": "Backup configured.",

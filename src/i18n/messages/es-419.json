@@ -1895,6 +1895,7 @@
         "restoreToggle": "Si algún día necesitas restaurar",
         "runNow": "Hacer copia ahora",
         "runNowDone": "Copia hecha: {file}, {size}.",
+        "runNowSkipped": "No se generó nada ahora. Revisa la conexión de Drive e intenta de nuevo en un minuto.",
         "running": "Generando la copia y enviándola a Drive. Puede tardar unos minutos.",
         "save": "Guardar",
         "saved": "Copia configurada.",

@@ -107,7 +107,14 @@ export function BackupSettingsCard({ structureReady, tickConfigured, initial, re
       const response = await fetch("/api/admin/backup", { method: "POST" })
       const payload = await response.json().catch(() => null)
       if (!response.ok || !payload?.success) throw new Error(payload?.message ?? t("error"))
-      const data = payload.data as { fileName?: string; sizeBytes?: number }
+      // A rota devolve 200 tambem quando nada foi gerado (`outcome: "skipped"`), por
+      // exemplo em dois cliques no mesmo minuto, que colidem na reserva do dia. Sem esta
+      // checagem o cartao anunciava "Backup feito: , 0 KB".
+      const data = payload.data as { outcome?: string; fileName?: string; sizeBytes?: number }
+      if (data.outcome !== "sent") {
+        toast.warning(t("runNowSkipped"))
+        return
+      }
       toast.success(t("runNowDone", { file: data.fileName ?? "", size: size(data.sizeBytes ?? 0) }))
       await load()
     } catch (error) {
