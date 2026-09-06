@@ -26,8 +26,10 @@ function mix(target: string, base: string, ratio: number): string {
 
 /**
  * Cor do ponto para um saldo. Trava nas pontas: abaixo do piso não escurece mais, acima do
- * teto não clareia mais. Saldo negativo é vermelho puro sempre, independente do piso, porque
- * conta estourada não é questão de gosto.
+ * teto não clareia mais. Saldo negativo sai vermelho puro por declaração de intenção. Na
+ * prática a validação já recusa piso negativo, então um saldo abaixo de zero cairia no
+ * vermelho de qualquer jeito pela trava do piso; a guarda explícita existe para o dia em
+ * que o piso puder ser negativo.
  */
 export function radarColorFor(
   balance: number | null,
