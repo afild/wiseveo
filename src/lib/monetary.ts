@@ -249,3 +249,41 @@ export function createMonetaryFormatter(settings?: Partial<MonetarySettings> | n
 }
 
 export type MonetaryFormatter = ReturnType<typeof createMonetaryFormatter>
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+/**
+ * Caminho inverso de `formatNumberValue`: lê o que a pessoa digitou no formato da MOEDA
+ * escolhida (pt-BR para BRL, en-US para USD, de-DE para EUR) e devolve número. Devolve `null`
+ * para vazio e para o que não é número; quem decide se `null` é erro é o formulário.
+ *
+ * O separador de milhar só é descartado quando vem seguido de exatamente três dígitos. Sem essa
+ * regra, um dono de BRL que digita "10.50" por hábito receberia 1050 em vez de 10,50.
+ */
+export function parseMonetaryInput(
+  text: string,
+  settings?: Partial<MonetarySettings> | null,
+): number | null {
+  if (typeof text !== "string") return null
+  const trimmed = text.trim()
+  if (trimmed === "") return null
+
+  const parts = new Intl.NumberFormat(getMonetaryLocale(settings)).formatToParts(12345.6)
+  const group = parts.find((part) => part.type === "group")?.value ?? ","
+  const decimal = parts.find((part) => part.type === "decimal")?.value ?? "."
+
+  // Espaço comum, rígido e fino aparecem como separador de milhar em alguns locales.
+  let cleaned = trimmed.replace(/[\s\u00A0\u202F]/g, "")
+
+  cleaned = cleaned.replace(new RegExp(`${escapeRegExp(group)}(?=\\d{3}(?!\\d))`, "g"), "")
+  // O que sobrou do caractere de milhar era, na verdade, o decimal.
+  cleaned = cleaned.split(group).join(decimal)
+  cleaned = cleaned.split(decimal).join(".")
+
+  if (!/^-?(\d+(\.\d*)?|\.\d+)$/.test(cleaned)) return null
+
+  const value = Number(cleaned)
+  return Number.isFinite(value) ? value : null
+}
