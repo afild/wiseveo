@@ -215,7 +215,10 @@ export function BackupSettingsCard({ structureReady, tickConfigured, initial, re
               )}
             </div>
 
-            {view.driveConnected && (
+            {/* `files` so deixa de ser null quando a lista chega do servidor. Sem esta
+                condicao, o titulo aparecia sozinho enquanto o GET nao voltava, e ficava
+                orfao para sempre na demo, que nunca chama o servidor. */}
+            {view.driveConnected && files !== null && (
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <p className="font-medium">{t("files")}</p>
@@ -226,7 +229,7 @@ export function BackupSettingsCard({ structureReady, tickConfigured, initial, re
                     </a>
                   )}
                 </div>
-                {files === null ? null : files.length === 0 ? (
+                {files.length === 0 ? (
                   <p className="text-muted-foreground">{t("filesEmpty")}</p>
                 ) : (
                   <ul className="divide-y rounded-md border text-xs">
