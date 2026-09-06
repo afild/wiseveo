@@ -211,7 +211,20 @@ export function BackupSettingsCard({ structureReady, tickConfigured, initial, re
                 {t("runNow")}
               </Button>
             </div>
-            {running && <p className="text-xs text-muted-foreground">{t("running")}</p>}
+            {/* Circulo girando, nao barra: o servidor faz o backup numa chamada so e nao
+                relata em que passo esta, entao uma barra que enchesse sozinha inventaria um
+                numero e mentiria justo quando travasse. O circulo diz o que da para dizer:
+                esta trabalhando. `role="status"` faz o leitor de tela anunciar a frase. */}
+            {running && (
+              <div
+                className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3"
+                role="status"
+                aria-live="polite"
+              >
+                <Loader2 className="size-5 shrink-0 animate-spin text-primary" />
+                <p className="text-xs text-muted-foreground">{t("running")}</p>
+              </div>
+            )}
 
             <div className="space-y-1 text-sm">
               <p className="font-medium">{t("lastRun")}</p>
