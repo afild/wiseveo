@@ -28,6 +28,7 @@ describe("resolveRadarPreferences", () => {
   })
 
   it("limiares inconsistentes voltam aos três padrões juntos", () => {
+    // vermelho acima do verde não dá para consertar campo a campo sem inventar número
     expect(resolveRadarPreferences({ green: 100, amber: null, red: 300 })).toEqual(
       defaultRadarPreferences,
     )
@@ -51,6 +52,15 @@ describe("resolveRadarPreferences", () => {
 
   it("modo desconhecido vira lookahead", () => {
     expect(resolveRadarPreferences({ mode: "qualquer" }).mode).toBe("lookahead")
+  })
+
+  it("zero é piso vermelho válido na leitura", () => {
+    expect(resolveRadarPreferences({ green: 300, amber: null, red: 0 })).toEqual({
+      ...defaultRadarPreferences,
+      green: 300,
+      amber: null,
+      red: 0,
+    })
   })
 })
 
@@ -92,5 +102,23 @@ describe("validateRadarPreferences", () => {
 
   it("aceita zero como piso vermelho", () => {
     expect(validateRadarPreferences({ mode: "lookahead", horizonDays: 30, green: 300, amber: null, red: 0 }).ok).toBe(true)
+  })
+
+  it("âmbar ausente é o mesmo que âmbar nulo: automático", () => {
+    expect(
+      validateRadarPreferences({ mode: "lookahead", horizonDays: 30, green: 300, red: 100 }),
+    ).toEqual({
+      ok: true,
+      value: { mode: "lookahead", horizonDays: 30, green: 300, amber: null, red: 100 },
+    })
+  })
+
+  it("recusa o âmbar encostado nas bordas, que é onde a rampa colapsaria", () => {
+    expect(
+      validateRadarPreferences({ mode: "lookahead", horizonDays: 30, green: 300, amber: 300, red: 100 }).ok,
+    ).toBe(false)
+    expect(
+      validateRadarPreferences({ mode: "lookahead", horizonDays: 30, green: 300, amber: 100, red: 100 }).ok,
+    ).toBe(false)
   })
 })

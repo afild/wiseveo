@@ -47,11 +47,6 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value)
 }
 
-/** O par verde/vermelho só serve junto: um sem o outro não define rampa nenhuma. */
-function thresholdPairIsSane(green: unknown, red: unknown): green is number {
-  return isFiniteNumber(green) && isFiniteNumber(red) && red >= 0 && red < green
-}
-
 export function effectiveAmber(preferences: RadarPreferences): number {
   return preferences.amber ?? (preferences.green + preferences.red) / 2
 }
@@ -70,7 +65,14 @@ export function resolveRadarPreferences(value: unknown): RadarPreferences {
       ? value.horizonDays
       : defaultRadarPreferences.horizonDays
 
-  if (!thresholdPairIsSane(value.green, value.red)) {
+  const green = value.green
+  const red = value.red
+
+  // Verde e vermelho só servem juntos: um sem o outro não define rampa nenhuma, e não dá para
+  // consertar um campo só sem inventar número. Por isso os três voltam ao padrão de uma vez.
+  // Esta é a MESMA desigualdade que `validateRadarPreferences` exige na escrita, e é dela que a
+  // rampa de cor depende para nunca dividir por zero.
+  if (!isFiniteNumber(green) || !isFiniteNumber(red) || red < 0 || red >= green) {
     return {
       mode,
       horizonDays,
@@ -80,8 +82,6 @@ export function resolveRadarPreferences(value: unknown): RadarPreferences {
     }
   }
 
-  const green = value.green as number
-  const red = value.red as number
   const amber =
     isFiniteNumber(value.amber) && value.amber > red && value.amber < green ? value.amber : null
 
@@ -115,6 +115,7 @@ export function validateRadarPreferences(value: unknown): RadarPreferencesValida
   if (!isFiniteNumber(green) || !isFiniteNumber(red)) return { ok: false }
   if (red < 0 || red >= green) return { ok: false }
 
+  // Campo ausente e `null` são a mesma coisa: âmbar automático, acompanhando a média.
   if (amber !== null && amber !== undefined) {
     if (!isFiniteNumber(amber) || amber <= red || amber >= green) return { ok: false }
   }
