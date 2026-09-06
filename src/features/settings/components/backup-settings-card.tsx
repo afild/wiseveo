@@ -116,11 +116,15 @@ export function BackupSettingsCard({ structureReady, tickConfigured, initial, re
         return
       }
       toast.success(t("runNowDone", { file: data.fileName ?? "", size: size(data.sizeBytes ?? 0) }))
-      await load()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("error"))
     } finally {
       setRunning(false)
+      // Recarrega em TODOS os caminhos, inclusive na falha. O servidor grava o resultado
+      // (`recordLastRun`) mesmo quando o backup quebra, e sem esta linha o cartao seguia
+      // dizendo "Ainda nao rodou" depois de uma tentativa que falhou: o aviso aparecia so
+      // no toast, que some. O criterio 3 do desenho pede que a falha fique visivel no cartao.
+      await load()
     }
   }
 
