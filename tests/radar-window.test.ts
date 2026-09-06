@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest"
 import {
+  dateKey,
   endOfPeriodUtc,
   nextPeriod,
+  periodKeyOf,
   pickWorstAhead,
+  resolveHorizon,
   resolveLaunchedThrough,
+  resolveRadarRange,
 } from "../src/features/radar/lib/radar-window"
 
 describe("nextPeriod", () => {
@@ -210,5 +214,110 @@ describe("resolveLaunchedThrough", () => {
       kind: "launched",
       through: "202809",
     })
+  })
+})
+
+describe("dateKey e periodKeyOf", () => {
+  it("formatam em UTC, com zero à esquerda", () => {
+    expect(dateKey(new Date(Date.UTC(2026, 8, 6)))).toBe("2026-09-06")
+    expect(dateKey(new Date(Date.UTC(2026, 11, 31)))).toBe("2026-12-31")
+    expect(periodKeyOf(new Date(Date.UTC(2026, 0, 1)))).toBe("202601")
+    expect(periodKeyOf(new Date(Date.UTC(2026, 8, 30)))).toBe("202609")
+  })
+
+  it("não escorrega um dia no fuso do dono", () => {
+    // O vitest.config.ts fixa TZ=America/New_York. Meia-noite UTC do dia 1 é dia 30 às 20h
+    // em Nova York; se alguém trocar getUTC* por get*, este teste cai.
+    expect(dateKey(new Date(Date.UTC(2026, 9, 1)))).toBe("2026-10-01")
+    expect(periodKeyOf(new Date(Date.UTC(2026, 9, 1)))).toBe("202610")
+  })
+})
+
+describe("resolveRadarRange", () => {
+  it("começa no dia 1 do mês corrente, nunca em hoje", () => {
+    const range = resolveRadarRange(new Date(Date.UTC(2026, 8, 6)), 30)
+    expect(dateKey(range.from)).toBe("2026-09-01")
+    expect(dateKey(range.today)).toBe("2026-09-06")
+    expect(dateKey(range.monthEnd)).toBe("2026-09-30")
+    expect(dateKey(range.requestedEnd)).toBe("2026-10-06")
+    expect(dateKey(range.lastDay)).toBe("2026-10-06")
+  })
+
+  it("o fim é o mais distante entre o fim do mês e a janela pedida", () => {
+    // janela curta: o fim do mês manda
+    const short = resolveRadarRange(new Date(Date.UTC(2026, 8, 6)), 5)
+    expect(dateKey(short.lastDay)).toBe("2026-09-30")
+    // janela longa: a janela manda
+    const long = resolveRadarRange(new Date(Date.UTC(2026, 8, 6)), 60)
+    expect(dateKey(long.lastDay)).toBe("2026-11-05")
+  })
+
+  it("atravessa a virada de ano e o fevereiro bissexto", () => {
+    const newYear = resolveRadarRange(new Date(Date.UTC(2026, 11, 31)), 30)
+    expect(dateKey(newYear.from)).toBe("2026-12-01")
+    expect(dateKey(newYear.monthEnd)).toBe("2026-12-31")
+    expect(dateKey(newYear.lastDay)).toBe("2027-01-30")
+
+    const leap = resolveRadarRange(new Date(Date.UTC(2024, 1, 29)), 1)
+    expect(dateKey(leap.monthEnd)).toBe("2024-02-29")
+    expect(dateKey(leap.lastDay)).toBe("2024-03-01")
+
+    const shortFeb = resolveRadarRange(new Date(Date.UTC(2026, 1, 15)), 1)
+    expect(dateKey(shortFeb.monthEnd)).toBe("2026-02-28")
+  })
+
+  it("o fim do dia fecha no último milissegundo", () => {
+    const range = resolveRadarRange(new Date(Date.UTC(2026, 8, 6)), 30)
+    expect(range.to.toISOString()).toBe("2026-10-06T23:59:59.999Z")
+    expect(range.to.getTime()).toBeGreaterThan(range.from.getTime())
+  })
+
+  it("hoje e o fim do mês estão sempre dentro da janela", () => {
+    for (const days of [1, 30, 365]) {
+      const range = resolveRadarRange(new Date(Date.UTC(2026, 8, 6)), days)
+      expect(range.from.getTime()).toBeLessThanOrEqual(range.today.getTime())
+      expect(range.lastDay.getTime()).toBeGreaterThanOrEqual(range.today.getTime())
+      expect(range.lastDay.getTime()).toBeGreaterThanOrEqual(range.monthEnd.getTime())
+    }
+  })
+})
+
+describe("resolveHorizon", () => {
+  const today = new Date(Date.UTC(2026, 8, 6))
+  const requestedEnd = new Date(Date.UTC(2026, 9, 6))
+
+  it("sem base, olha a janela inteira e não trunca", () => {
+    const horizon = resolveHorizon({ kind: "no-baseline" }, today, requestedEnd)
+    expect(dateKey(horizon.horizonDay)).toBe("2026-10-06")
+    expect(horizon.horizonDays).toBe(30)
+    expect(horizon.truncated).toBe(false)
+  })
+
+  it("mês corrente vazio para em hoje e trunca", () => {
+    const horizon = resolveHorizon({ kind: "current-month-empty" }, today, requestedEnd)
+    expect(dateKey(horizon.horizonDay)).toBe("2026-09-06")
+    expect(horizon.horizonDays).toBe(0)
+    expect(horizon.truncated).toBe(true)
+  })
+
+  it("lançado até o mês corrente encurta a janela", () => {
+    const horizon = resolveHorizon({ kind: "launched", through: "202609" }, today, requestedEnd)
+    expect(dateKey(horizon.horizonDay)).toBe("2026-09-30")
+    expect(horizon.horizonDays).toBe(24)
+    expect(horizon.truncated).toBe(true)
+  })
+
+  it("lançado além da janela não estica além do pedido", () => {
+    const horizon = resolveHorizon({ kind: "launched", through: "202712" }, today, requestedEnd)
+    expect(dateKey(horizon.horizonDay)).toBe("2026-10-06")
+    expect(horizon.horizonDays).toBe(30)
+    expect(horizon.truncated).toBe(false)
+  })
+
+  it("período no passado é travado em hoje, nunca em dias negativos", () => {
+    const horizon = resolveHorizon({ kind: "launched", through: "202501" }, today, requestedEnd)
+    expect(dateKey(horizon.horizonDay)).toBe("2026-09-06")
+    expect(horizon.horizonDays).toBe(0)
+    expect(horizon.truncated).toBe(true)
   })
 })

@@ -22,6 +22,7 @@ export const BASELINE_MONTHS = 3
 export const LAUNCHED_RATIO = 0.4
 /** Trava do passo para frente: 24 meses cobre qualquer janela aceita (máx. 365 dias). */
 const MAX_MONTHS_AHEAD = 24
+const DAY_MS = 24 * 60 * 60 * 1000
 
 export function nextPeriod(period: string): string {
   const year = Number(period.slice(0, 4))
@@ -121,4 +122,87 @@ export function resolveLaunchedThrough(
 
   if (launched === null) return { kind: "current-month-empty" }
   return { kind: "launched", through: launched }
+}
+
+/** Chave de dia em UTC, no formato "AAAA-MM-DD" que `pickWorstAhead` exige. */
+export function dateKey(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`
+}
+
+/** Chave de mês em UTC, no formato "AAAAMM" que `resolveLaunchedThrough` espera. */
+export function periodKeyOf(date: Date): string {
+  return `${date.getUTCFullYear()}${String(date.getUTCMonth() + 1).padStart(2, "0")}`
+}
+
+/** Meia-noite UTC do dia da data. Tudo aqui nasce e morre em UTC, então fuso não entra. */
+export function startOfUtcDay(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+}
+
+export interface RadarRange {
+  today: Date
+  from: Date
+  monthEnd: Date
+  requestedEnd: Date
+  lastDay: Date
+  to: Date
+}
+
+/**
+ * A janela que o radar consulta.
+ *
+ * `from` é o dia 1 do mês corrente, NUNCA hoje, e isso não é preferência de estilo. O saldo é
+ * montado em duas metades com universos de conta diferentes: a semente (`getAccountsWithBalance`)
+ * descarta lançamentos de conta desativada, e o extrato do período (`getDailyStatement`) não
+ * descarta. Mover a linha entre as duas metades muda o saldo de hoje já exibido na barra lateral,
+ * sem ninguém ter tocado no saldo. Por isso só se acrescentam dias no fim.
+ */
+export function resolveRadarRange(now: Date, requestedDays: number): RadarRange {
+  const today = startOfUtcDay(now)
+  const from = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1))
+  // Dia 0 do mês seguinte é o último dia deste.
+  const monthEnd = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0))
+  const requestedEnd = new Date(today.getTime() + requestedDays * DAY_MS)
+  const lastDay = requestedEnd.getTime() > monthEnd.getTime() ? requestedEnd : monthEnd
+  const to = new Date(lastDay.getTime() + DAY_MS - 1)
+
+  return { today, from, monthEnd, requestedEnd, lastDay, to }
+}
+
+export interface ResolvedHorizon {
+  horizonDay: Date
+  /** Sempre inteiro e nunca negativo: as duas pontas são meia-noite UTC. */
+  horizonDays: number
+  /** true quando o horizonte de dados encurtou a janela pedida. */
+  truncated: boolean
+}
+
+/**
+ * Até onde o radar de fato olha: o menor entre a janela pedida e o fim do último mês lançado.
+ *
+ * A trava final contra data no passado é defesa de contrato, não necessidade: hoje
+ * `resolveLaunchedThrough` só anda para frente a partir do mês corrente, então `through` nunca
+ * é passado. Fica para o dia em que esse contrato mudar.
+ */
+export function resolveHorizon(
+  launched: LaunchedThrough,
+  today: Date,
+  requestedEnd: Date,
+): ResolvedHorizon {
+  let horizonDay: Date
+  if (launched.kind === "no-baseline") {
+    horizonDay = requestedEnd
+  } else if (launched.kind === "current-month-empty") {
+    horizonDay = today
+  } else {
+    const launchedEnd = endOfPeriodUtc(launched.through)
+    horizonDay = launchedEnd.getTime() < requestedEnd.getTime() ? launchedEnd : requestedEnd
+  }
+  if (horizonDay.getTime() < today.getTime()) horizonDay = today
+
+  return {
+    horizonDay,
+    horizonDays: Math.round((horizonDay.getTime() - today.getTime()) / DAY_MS),
+    truncated: horizonDay.getTime() < requestedEnd.getTime(),
+  }
 }
