@@ -1024,7 +1024,6 @@
       "currentBalance": "Saldo Atual",
       "projected": "Projetado:",
       "tooltipCollapsed": "Hoje: {today} | Projetado: {projected}",
-      "tooltipExpanded": "Projetado para o fim do mês: {projected}",
       "tooltipHorizonShort": "Olhando até {horizon}. Os dias seguintes ainda não foram lançados.",
       "tooltipNoData": "Sem lançamentos à frente. Cor pelo saldo de hoje.",
       "tooltipToday": "Cor pelo saldo de hoje.",

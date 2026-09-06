@@ -1024,7 +1024,6 @@
       "currentBalance": "Current Balance",
       "projected": "Projected:",
       "tooltipCollapsed": "Today: {today} | Projected: {projected}",
-      "tooltipExpanded": "Projected for month end: {projected}",
       "tooltipHorizonShort": "Looking through {horizon}. The days after that have not been entered yet.",
       "tooltipNoData": "Nothing entered ahead. Color follows today's balance.",
       "tooltipToday": "Color follows today's balance.",
