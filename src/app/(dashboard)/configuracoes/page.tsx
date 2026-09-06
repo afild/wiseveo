@@ -18,6 +18,7 @@ import { getTelegramBotStatus } from "@/features/telegram/services/telegram-conf
 import { getAiStatusSummary } from "@/features/ai/services/ai-config.service"
 import { getMonthUsage } from "@/features/ai/services/ai-usage.service"
 import { getTickSecretStatus } from "@/features/notifications/services/tick-secret.service"
+import { getBackupStatus } from "@/features/backup/services/backup-config.service"
 import { getAccountOwnership } from "@/features/settings/services/admin-users-service"
 import { listPendingInvitations } from "@/features/settings/services/invitations-service"
 import { defaultMonetarySettings } from "@/lib/monetary"
@@ -105,14 +106,15 @@ export default async function ConfiguracoesPage({
   // SUPERADMIN vê a aba; na demo ela não existe, como os convites.
   const showIntegrations =
     currentUser?.role === "SUPERADMIN" && process.env.NEXT_PUBLIC_DEMO_MODE !== "true"
-  const [telegramBot, aiSummary, aiUsage, tickStatus] = showIntegrations
+  const [telegramBot, aiSummary, aiUsage, tickStatus, backupStatus] = showIntegrations
     ? await Promise.all([
         getTelegramBotStatus().catch(() => null),
         getAiStatusSummary().catch(() => null),
         getMonthUsage().catch(() => null),
         getTickSecretStatus().catch(() => null),
+        getBackupStatus().catch(() => null),
       ])
-    : [null, null, null, null]
+    : [null, null, null, null, null]
 
   // Avisos automáticos são de CADA PESSOA (o bot é da casa, o boletim é de quem
   // pediu). Na demo, como tudo que depende do Telegram, a aba não existe.
@@ -192,6 +194,7 @@ export default async function ConfiguracoesPage({
                       }
                     : null,
                 tick: tickStatus,
+                backup: backupStatus,
               }
             : undefined
       }

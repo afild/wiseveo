@@ -22,6 +22,7 @@ import { NotificationsForm } from "./notifications-form"
 import type { NotificationPreferences } from "@/features/notifications/lib/preferences"
 import type { AiSettingsSnapshot } from "./ai-settings-card"
 import type { TickSecretView } from "./tick-settings-card"
+import type { BackupSettingsView } from "./backup-settings-card"
 import type { AppSettingsStructure } from "../lib/app-settings-structure"
 import { PartyPopper } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -59,6 +60,7 @@ interface ConfiguracoesPageClientProps {
     bot: TelegramBotSummary
     ai: AiSettingsSnapshot | null
     tick: TickSecretView | null
+    backup: BackupSettingsView | null
   }
   /**
    * Aba Segurança (qualquer sessão real): estado do fechamento e do PIN. Vem da SESSÃO, nunca de
@@ -204,6 +206,7 @@ export function ConfiguracoesPageClient({
                 initialBot={integrationsContext.bot}
                 initialAi={integrationsContext.ai}
                 initialTick={integrationsContext.tick}
+                initialBackup={integrationsContext.backup}
                 readOnly={demoShowcase}
               />
             </div>

@@ -36,6 +36,7 @@ import {
 } from "../lib/app-settings-structure"
 import { AiSettingsCard, type AiSettingsSnapshot } from "./ai-settings-card"
 import { TickSettingsCard, type TickSecretView } from "./tick-settings-card"
+import { BackupSettingsCard, type BackupSettingsView } from "./backup-settings-card"
 
 /**
  * Cada tabela tem a SUA explicação na lista do que falta. Mapa explícito para
@@ -64,6 +65,8 @@ interface IntegrationsFormProps {
   initialAi: AiSettingsSnapshot | null
   /** null = leitura falhou; o cartão do despertador fica de fora nesta visita. */
   initialTick: TickSecretView | null
+  /** null = leitura falhou; o cartão de backup fica de fora nesta visita. */
+  initialBackup: BackupSettingsView | null
   /** Demo ilustrativa: campos e ações travados; nada chama o servidor. */
   readOnly?: boolean
 }
@@ -80,6 +83,7 @@ export function IntegrationsForm({
   initialBot,
   initialAi,
   initialTick,
+  initialBackup,
   readOnly = false,
 }: IntegrationsFormProps) {
   const t = useTranslations("settings.integrations")
@@ -289,6 +293,15 @@ export function IntegrationsForm({
 
       {initialTick && (
         <TickSettingsCard structureReady={secretsReady} initial={initialTick} readOnly={readOnly} />
+      )}
+
+      {initialBackup && (
+        <BackupSettingsCard
+          structureReady={secretsReady}
+          tickConfigured={initialTick?.configured === true}
+          initial={initialBackup}
+          readOnly={readOnly}
+        />
       )}
 
       <AlertDialog open={confirmPrepare} onOpenChange={(open) => !open && setConfirmPrepare(false)}>

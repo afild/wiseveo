@@ -64,6 +64,16 @@ export function demoIntegrationsContext() {
       usage: { period: now.toISOString().slice(0, 7), calls: 128, costUsd: 2.41 },
     },
     tick: { configured: true, source: "db" as const },
+    backup: {
+      driveConnected: true,
+      enabled: true,
+      hour: 3,
+      minute: 0 as const,
+      keep: 30,
+      timezone: "America/New_York",
+      lastRun: { at: now.toISOString(), ok: true, fileName: "wiseveo-app-demo.dump", sizeBytes: 271679, message: null },
+      folderId: null,
+    },
   }
 }
 
