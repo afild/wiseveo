@@ -51,6 +51,18 @@ describe("runPgDumpInSandbox", () => {
 
     const installs = m.commands.filter((c) => c.cmd === "apt-get")
     expect(installs.every((c) => c.sudo === true)).toBe(true)
+    // A imagem do Sandbox chega com as listas do apt vazias. Sem o update, o install
+    // seguinte morre com "Unable to locate package" e o backup so quebra em producao.
+    // Esta e a sequencia provada na Tarefa 1 (05/09/2026, contra a DEMO).
+    expect(m.commands.map((c) => `${c.cmd} ${(c.args ?? []).join(" ")}`.trim())).toEqual([
+      "apt-get update",
+      "apt-get install -y postgresql-common",
+      "/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y",
+      "apt-get install -y postgresql-client-18",
+      "pg_dump --version",
+      "pg_dump --schema=public --format=custom --no-owner --no-privileges --file /tmp/wiseveo.dump",
+      "pg_restore --list /tmp/wiseveo.dump",
+    ])
     const dump = m.commands.find((c) => c.cmd === "pg_dump" && c.args?.includes("--format=custom"))
     expect(dump?.env).toMatchObject({
       PGHOST: "aws-0-us-east-1.pooler.supabase.com",
