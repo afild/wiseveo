@@ -14,6 +14,11 @@ import {
   type MonetarySettings,
 } from "@/lib/monetary"
 import {
+  resolveRadarPreferences,
+  validateRadarPreferences,
+  type RadarPreferences,
+} from "@/features/radar/lib/radar-preferences"
+import {
   normalizeThemePreferences,
   type ThemePreferences,
 } from "@/lib/theme-preferences"
@@ -309,6 +314,33 @@ export async function updateUserMonetarySettings(
   await setUserPreferenceKey(prisma, userId, "monetary", nextMonetary)
 
   return nextMonetary
+}
+
+export async function getUserRadarPreferences(userId: string): Promise<RadarPreferences> {
+  const prefs = await getUserPreferences(userId)
+  return resolveRadarPreferences(prefs.radar)
+}
+
+/**
+ * Grava a chave de PRIMEIRO NÍVEL `radar`, no mesmo padrão de `backup` e `dateClosing`.
+ * Nunca dentro de `monetary`: `resolveMonetarySettings` remonta um literal de três chaves e
+ * apagaria estes campos na próxima gravação de moeda.
+ *
+ * Diferente de `updateUserMonetarySettings`, aqui a entrada é RECUSADA quando está errada, em
+ * vez de trocada por padrão em silêncio. São valores numéricos digitados pelo dono, e um erro
+ * de digitação escondido pinta o radar da cor errada sem ninguém perceber.
+ *
+ * Devolve `null` quando recusa, e nada é gravado nesse caso.
+ */
+export async function updateUserRadarPreferences(
+  userId: string,
+  value: unknown,
+): Promise<RadarPreferences | null> {
+  const validation = validateRadarPreferences(value)
+  if (!validation.ok) return null
+
+  await setUserPreferenceKey(prisma, userId, "radar", validation.value)
+  return validation.value
 }
 
 export async function updateUserQuickPaymentSettings(
