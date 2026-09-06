@@ -60,6 +60,7 @@ import {
   updateUserNotificationSettings,
   updateUserProfile,
   updateUserQuickPaymentSettings,
+  updateUserRadarPreferences,
 } from "@/features/settings/services/user-settings-service"
 import {
   deleteBudgetCard,
@@ -105,6 +106,11 @@ describe("escritores de preferences_json gravam só a própria chave", () => {
   it("updateUserMonetarySettings grava 'monetary' completo", async () => {
     await updateUserMonetarySettings("u1", { currency: "USD" } as never)
     expect(keysWritten()).toContain("monetary")
+    expect(sentPreferencesJson()).toBe(false)
+  })
+  it("updateUserRadarPreferences grava 'radar'", async () => {
+    await updateUserRadarPreferences("u1", { mode: "lookahead", horizonDays: 30, green: 300, amber: null, red: 100 })
+    expect(keysWritten()).toContain("radar")
     expect(sentPreferencesJson()).toBe(false)
   })
   it("updateUserNotificationSettings grava 'notifications'", async () => {

@@ -49,6 +49,11 @@ vi.mock("@/features/settings/services/user-settings-service", () => ({
   setUserLocale: async (userId: string) => {
     m.writes.push({ fn: "setUserLocale", userId })
   },
+  getUserRadarPreferences: async () => ({}),
+  updateUserRadarPreferences: async (userId: string) => {
+    m.writes.push({ fn: "updateUserRadarPreferences", userId })
+    return {}
+  },
 }))
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -99,6 +104,7 @@ import { DELETE as telegramDisconnect } from "@/app/api/telegram/disconnect/rout
 import { GET as generalGet, PUT as generalPut } from "@/app/api/user/general-preferences/route"
 import { GET as monetaryGet, PUT as monetaryPut } from "@/app/api/user/monetary-preferences/route"
 import { PATCH as preferencesPatch, PUT as preferencesPut } from "@/app/api/user/preferences/route"
+import { PUT as radarPut } from "@/app/api/user/radar-preferences/route"
 
 const READS = new Set(["getUserMonetarySettings"])
 const json = (body: unknown, method: string) =>
@@ -127,6 +133,12 @@ const WRITE_ROUTES: Array<{ name: string; call: () => Promise<Response>; writeFn
   { name: "PUT /api/user/monetary-preferences", call: () => monetaryPut(json({}, "PUT")), writeFn: "updateUserMonetarySettings" },
   { name: "PUT /api/user/preferences", call: () => preferencesPut(json({}, "PUT")), writeFn: "updateUserAppearance" },
   { name: "PATCH /api/user/preferences", call: () => preferencesPatch(json({ locale: "en-US" }, "PATCH")), writeFn: "setUserLocale" },
+  {
+    name: "PUT /api/user/radar-preferences",
+    call: () =>
+      radarPut(json({ mode: "lookahead", horizonDays: 30, green: 300, amber: null, red: 100 }, "PUT")),
+    writeFn: "updateUserRadarPreferences",
+  },
 ]
 
 beforeEach(() => {
@@ -173,6 +185,7 @@ describe("catraca: nenhum handler de escrita dessas rotas chama o atalho de leit
     "src/app/api/user/general-preferences/route.ts",
     "src/app/api/user/monetary-preferences/route.ts",
     "src/app/api/user/preferences/route.ts",
+    "src/app/api/user/radar-preferences/route.ts",
   ]
   // Agulha montada em partes para a própria varredura não se achar.
   const NEEDLE = ["getSettings", "UserId("].join("")
