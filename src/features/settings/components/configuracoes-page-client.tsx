@@ -14,6 +14,7 @@ import type { InvitationSummary } from "../services/invitations-service"
 import { GeneralForm } from "./general-form"
 import { AppearanceForm } from "./appearance-form"
 import { MonetaryFormatForm } from "./monetary-format-form"
+import { RadarSettingsCard } from "./radar-settings-card"
 import { ProfileForm } from "./profile-form"
 import { AccountForm } from "./account-form"
 import { AdminUsersForm } from "./admin-users-form"
@@ -166,8 +167,9 @@ export function ConfiguracoesPageClient({
         </TabsContent>
 
         <TabsContent value="monetary" className="border-none p-0 mt-6 outline-none">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl space-y-6">
             <MonetaryFormatForm initialValues={initialMonetarySettings} />
+            <RadarSettingsCard />
           </div>
         </TabsContent>
         
