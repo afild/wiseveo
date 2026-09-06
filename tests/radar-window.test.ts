@@ -61,6 +61,25 @@ describe("pickWorstAhead", () => {
     expect(pickWorstAhead(points, "2026-10-01", "2026-10-30")).toBeNull()
     expect(pickWorstAhead([], "2026-09-06", "2026-09-30")).toBeNull()
   })
+
+  it("o próprio dia do horizonte entra na janela", () => {
+    const dipOnLastDay = [
+      { date: "2026-09-06", balance: 8000 },
+      { date: "2026-09-10", balance: 300 },
+    ]
+    expect(pickWorstAhead(dipOnLastDay, "2026-09-06", "2026-09-10")).toEqual({
+      date: "2026-09-10",
+      balance: 300,
+    })
+  })
+
+  it("o desempate não depende da ordem em que os dias chegam", () => {
+    const outOfOrder = [
+      { date: "2026-09-20", balance: 500 },
+      { date: "2026-09-06", balance: 500 },
+    ]
+    expect(pickWorstAhead(outOfOrder, "2026-09-06", "2026-09-30")?.date).toBe("2026-09-06")
+  })
 })
 
 describe("resolveLaunchedThrough", () => {
@@ -138,12 +157,58 @@ describe("resolveLaunchedThrough", () => {
     })
   })
 
-  it("usa só os três fechados mais recentes como base", () => {
-    const withOldHuge = [{ period: "202601", count: 5000 }, ...counts]
-    // se os 5000 entrassem na mediana, o piso subiria e setembro reprovaria
-    expect(resolveLaunchedThrough(withOldHuge, "202609")).toEqual({
+  it("usa só os três fechados mais recentes como base, não os mais antigos", () => {
+    // Três fechados antigos magros e três recentes gordos. Pela base recente (mediana 100) o
+    // piso é 40 e o mês corrente, com 20, reprova. Pela base antiga (mediana 10) o piso seria 4
+    // e ele passaria. O resultado diz qual das duas foi usada.
+    const shifted = [
+      { period: "202603", count: 10 },
+      { period: "202604", count: 10 },
+      { period: "202605", count: 10 },
+      { period: "202606", count: 100 },
+      { period: "202607", count: 100 },
+      { period: "202608", count: 100 },
+      { period: "202609", count: 20 },
+    ]
+    expect(resolveLaunchedThrough(shifted, "202609")).toEqual({ kind: "current-month-empty" })
+  })
+
+  it("o mês corrente não entra na própria linha de base", () => {
+    // Fechados 10, 10, 100 dão mediana 10 e piso 4. Se o corrente (100) entrasse na base, a
+    // mediana viraria 100, o piso 40, e o mês seguinte com 30 reprovaria.
+    const counts = [
+      { period: "202606", count: 10 },
+      { period: "202607", count: 10 },
+      { period: "202608", count: 100 },
+      { period: "202609", count: 100 },
+      { period: "202610", count: 30 },
+    ]
+    expect(resolveLaunchedThrough(counts, "202609")).toEqual({
       kind: "launched",
-      through: "202609",
+      through: "202610",
+    })
+  })
+
+  it("exatamente dois meses fechados ainda é ausência de base", () => {
+    const counts = [
+      { period: "202607", count: 90 },
+      { period: "202608", count: 90 },
+      { period: "202609", count: 90 },
+    ]
+    expect(resolveLaunchedThrough(counts, "202609")).toEqual({ kind: "no-baseline" })
+  })
+
+  it("a trava de 24 meses limita o horizonte mesmo com tudo lançado", () => {
+    // 40 meses seguidos densos a partir de 202609. O horizonte para 24 meses à frente.
+    const counts = []
+    let cursor = "202606"
+    for (let i = 0; i < 43; i++) {
+      counts.push({ period: cursor, count: 90 })
+      cursor = nextPeriod(cursor)
+    }
+    expect(resolveLaunchedThrough(counts, "202609")).toEqual({
+      kind: "launched",
+      through: "202809",
     })
   })
 })

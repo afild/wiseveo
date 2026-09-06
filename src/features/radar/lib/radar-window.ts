@@ -49,6 +49,10 @@ function median(values: number[]): number {
 /**
  * Menor saldo entre hoje e o horizonte, os dois inclusive. Empate fica com o dia mais próximo:
  * o vale que chega antes é o que dá menos tempo de reagir.
+ *
+ * As três datas têm que estar no formato estrito "AAAA-MM-DD": a comparação é lexicográfica,
+ * que só coincide com a cronológica em largura fixa e com zero à esquerda. Um "2026-9-7" ou um
+ * ISO completo com hora escorregam da janela sem erro nenhum.
  */
 export function pickWorstAhead(
   points: BalancePoint[],
@@ -58,7 +62,15 @@ export function pickWorstAhead(
   let worst: BalancePoint | null = null
   for (const point of points) {
     if (point.date < todayKey || point.date > horizonKey) continue
-    if (worst === null || point.balance < worst.balance) worst = point
+    if (
+      worst === null ||
+      point.balance < worst.balance ||
+      // Empate: fica o dia mais próximo. Comparado explicitamente para a promessa valer mesmo
+      // quando `points` chega fora de ordem, já que este módulo é puro e o chamador pode mudar.
+      (point.balance === worst.balance && point.date < worst.date)
+    ) {
+      worst = point
+    }
   }
   return worst
 }
