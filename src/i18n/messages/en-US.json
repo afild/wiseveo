@@ -256,6 +256,15 @@
       "signupReceived": "Registration received. Please wait for an administrator's approval.",
       "signupSuccess": "Account created successfully"
     },
+    "backup": {
+      "driveFailed": "Google Drive refused the operation. Try again in a moment.",
+      "driveNotConnected": "Connect Google Drive before running a backup.",
+      "dumpFailed": "The database could not be read for the copy. Try again in a moment.",
+      "dumpRejected": "The generated copy failed verification and was not sent. The previous copy is still in Drive.",
+      "invalidPayload": "Invalid request: check the time and how many copies to keep.",
+      "notPrepared": "Before configuring backups, prepare your database here in Integrations.",
+      "sandboxFailed": "The temporary backup machine could not be created. Try again in a moment."
+    },
     "calendar": {
       "clearFailed": "Failed to clear events",
       "syncFailed": "Failed to sync"

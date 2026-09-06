@@ -256,6 +256,15 @@
       "signupReceived": "Cadastro recebido. Aguarde a aprovação de um administrador.",
       "signupSuccess": "Conta criada com sucesso"
     },
+    "backup": {
+      "driveFailed": "O Google Drive recusou a operação. Tente de novo em instantes.",
+      "driveNotConnected": "Conecte o Google Drive antes de fazer o backup.",
+      "dumpFailed": "Não foi possível ler o banco para a cópia. Tente de novo em instantes.",
+      "dumpRejected": "A cópia gerada não passou na conferência e não foi enviada. A cópia anterior continua no Drive.",
+      "invalidPayload": "Pedido inválido: confira o horário e quantas cópias guardar.",
+      "notPrepared": "Antes de configurar o backup, prepare o seu banco aqui em Integrações.",
+      "sandboxFailed": "A máquina temporária do backup não pôde ser criada. Tente de novo em instantes."
+    },
     "calendar": {
       "clearFailed": "Erro ao limpar eventos",
       "syncFailed": "Erro ao sincronizar"

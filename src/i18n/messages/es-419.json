@@ -256,6 +256,15 @@
       "signupReceived": "Registro recibido. Espera la aprobación de un administrador.",
       "signupSuccess": "Cuenta creada con éxito"
     },
+    "backup": {
+      "driveFailed": "Google Drive rechazó la operación. Intenta de nuevo en un momento.",
+      "driveNotConnected": "Conecta Google Drive antes de hacer la copia de seguridad.",
+      "dumpFailed": "No se pudo leer la base de datos para la copia. Intenta de nuevo en un momento.",
+      "dumpRejected": "La copia generada no pasó la verificación y no se envió. La copia anterior sigue en Drive.",
+      "invalidPayload": "Solicitud inválida: revisa el horario y cuántas copias guardar.",
+      "notPrepared": "Antes de configurar la copia de seguridad, prepara tu base de datos aquí en Integraciones.",
+      "sandboxFailed": "No se pudo crear la máquina temporal de la copia. Intenta de nuevo en un momento."
+    },
     "calendar": {
       "clearFailed": "Error al limpiar eventos",
       "syncFailed": "Error al sincronizar"
