@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   dateKey,
   endOfPeriodUtc,
+  horizonIsShort,
   nextPeriod,
   periodKeyOf,
   pickWorstAhead,
@@ -319,5 +320,25 @@ describe("resolveHorizon", () => {
     expect(dateKey(horizon.horizonDay)).toBe("2026-09-06")
     expect(horizon.horizonDays).toBe(0)
     expect(horizon.truncated).toBe(true)
+  })
+})
+
+describe("horizonIsShort", () => {
+  it("com janela de 30, vira curto em 14 e não em 15", () => {
+    expect(horizonIsShort(14, 30)).toBe(true)
+    expect(horizonIsShort(15, 30)).toBe(false)
+    expect(horizonIsShort(0, 30)).toBe(true)
+    expect(horizonIsShort(30, 30)).toBe(false)
+  })
+
+  it("metade exata não é menos da metade", () => {
+    expect(horizonIsShort(5, 10)).toBe(false)
+    expect(horizonIsShort(4, 10)).toBe(true)
+  })
+
+  it("degrada bem no mínimo da faixa", () => {
+    // janela de 1 dia: só é curto quando não se enxerga nem amanhã
+    expect(horizonIsShort(0, 1)).toBe(true)
+    expect(horizonIsShort(1, 1)).toBe(false)
   })
 })

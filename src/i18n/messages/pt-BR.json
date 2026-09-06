@@ -1021,6 +1021,10 @@
       "toggle": "Alternar Barra Lateral"
     },
     "sidebarRadar": {
+      "bandAmber": "Faixa do meio",
+      "bandGreen": "Faixa de cima",
+      "bandNeutral": "Sem leitura ainda",
+      "bandRed": "Faixa de baixo",
       "currentBalance": "Saldo Atual",
       "projected": "Projetado:",
       "tooltipCollapsed": "Hoje: {today} | Projetado: {projected}",
@@ -1999,10 +2003,12 @@
       "radarAmberAuto": "Média: {value}",
       "radarDays": "Dias à frente",
       "radarDaysDesc": "Quantos dias o radar olha adiante. Se os seus lançamentos acabarem antes disso, ele para onde eles param e mostra até onde olhou.",
+      "radarDaysRange": "O horizonte precisa ficar entre 1 e 365 dias.",
       "radarDesc": "O ponto colorido no topo da barra lateral. Os valores seguem a moeda escolhida acima.",
       "radarError": "Não foi possível salvar as faixas do radar.",
       "radarGreen": "Verde a partir de",
       "radarInvalidOrder": "O vermelho precisa ser menor que o verde, e o âmbar precisa ficar entre os dois.",
+      "radarLoadError": "Não foi possível ler as faixas salvas. Recarregue a página antes de salvar, para não gravar por cima.",
       "radarMode": "O que o ponto mede",
       "radarModeDesc": "O menor saldo à frente mostra até onde o saldo desce no caminho. O saldo de hoje ignora o futuro.",
       "radarModeLookahead": "Menor saldo à frente",

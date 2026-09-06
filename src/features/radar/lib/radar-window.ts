@@ -206,3 +206,12 @@ export function resolveHorizon(
     truncated: horizonDay.getTime() < requestedEnd.getTime(),
   }
 }
+
+/**
+ * O horizonte cobre menos da metade da janela pedida. É o que faz o ponto da barra lateral
+ * ficar vazado: dá para ver de longe que o radar está enxergando pouco, sem precisar do balão.
+ * Metade exata NÃO conta como curto.
+ */
+export function horizonIsShort(horizonDays: number, requestedDays: number): boolean {
+  return horizonDays * 2 < requestedDays
+}

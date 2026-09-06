@@ -23,10 +23,13 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { useMonetaryPreferences } from "@/contexts/monetary-preferences-context"
-import { radarColorFor } from "@/features/radar/lib/radar-color"
+import {
+  radarColorFor,
+  rampGradient,
+  rampValueAt,
+} from "@/features/radar/lib/radar-color"
 import {
   defaultRadarPreferences,
-  effectiveAmber,
   MAX_HORIZON_DAYS,
   MIN_HORIZON_DAYS,
   resolveRadarPreferences,
@@ -38,13 +41,26 @@ import { formatNumberValue } from "@/lib/monetary"
 /** Amostras da rampa, da esquerda para a direita, como fração entre vermelho e verde. */
 const PREVIEW_STOPS = [0, 0.25, 0.5, 0.75, 1]
 
+/** O rascunho da tela aceita campo vazio; `RadarPreferences` não. A validação é a ponte. */
+type RadarDraft = Omit<RadarPreferences, "green" | "red"> & {
+  green: number | null
+  red: number | null
+}
+
+/**
+ * Sem isto, uma falha de rede deixava a tela mostrando os padrões de fábrica com o botão Salvar
+ * habilitado, e um clique distraído gravava 300/100 por cima do que o dono tinha configurado.
+ */
+type EstadoDaCarga = "carregando" | "pronto" | "falhou"
+
 export function RadarSettingsCard() {
   const t = useTranslations("settings.monetary")
   const { preferences: monetary } = useMonetaryPreferences()
 
-  const [draft, setDraft] = React.useState<RadarPreferences>(defaultRadarPreferences)
+  const [draft, setDraft] = React.useState<RadarDraft>(defaultRadarPreferences)
   const [daysText, setDaysText] = React.useState(String(defaultRadarPreferences.horizonDays))
   const [saving, setSaving] = React.useState(false)
+  const [carga, setCarga] = React.useState<EstadoDaCarga>("carregando")
 
   React.useEffect(() => {
     let active = true
@@ -56,14 +72,24 @@ export function RadarSettingsCard() {
           cache: "no-store",
           signal: controller.signal,
         })
-        if (!res.ok) return
+        if (!active) return
+        if (!res.ok) {
+          setCarga("falhou")
+          return
+        }
         const json = await res.json()
-        if (!active || !json.success) return
+        if (!active) return
+        if (!json.success) {
+          setCarga("falhou")
+          return
+        }
         const loaded = resolveRadarPreferences(json.data)
         setDraft(loaded)
         setDaysText(String(loaded.horizonDays))
+        setCarga("pronto")
       } catch {
-        // Mantém os padrões; o cartão continua utilizável.
+        // Pedido cancelado no desmonte cai aqui com `active` já falso e não mexe em estado.
+        if (active) setCarga("falhou")
       }
     }
 
@@ -76,7 +102,19 @@ export function RadarSettingsCard() {
 
   const validation = React.useMemo(() => validateRadarPreferences(draft), [draft])
 
+  const daysOutOfRange = React.useMemo(() => {
+    const parsed = Number(daysText)
+    return (
+      daysText === "" ||
+      !Number.isInteger(parsed) ||
+      parsed < MIN_HORIZON_DAYS ||
+      parsed > MAX_HORIZON_DAYS
+    )
+  }, [daysText])
+
   const amberPlaceholder = React.useMemo(() => {
+    // Campo vazio não tem média para sugerir, e `null` não se compara com número.
+    if (draft.green === null || draft.red === null) return ""
     if (draft.red >= draft.green) return ""
     return t("radarAmberAuto", {
       value: formatNumberValue((draft.green + draft.red) / 2, undefined, monetary),
@@ -84,7 +122,6 @@ export function RadarSettingsCard() {
   }, [draft.green, draft.red, monetary, t])
 
   const previewPrefs = validation.ok ? validation.value : defaultRadarPreferences
-  const previewAmber = effectiveAmber(previewPrefs)
 
   async function handleSave() {
     if (!validation.ok) {
@@ -171,6 +208,9 @@ export function RadarSettingsCard() {
               onBlur={() => setDaysText(String(draft.horizonDays))}
             />
             <p className="text-sm text-muted-foreground">{t("radarDaysDesc")}</p>
+            {daysOutOfRange && (
+              <p className="text-sm text-destructive">{t("radarDaysRange")}</p>
+            )}
           </div>
         )}
 
@@ -191,9 +231,7 @@ export function RadarSettingsCard() {
                 value={draft.green}
                 settings={monetary}
                 disabled={saving}
-                onChange={(value) =>
-                  setDraft((current) => ({ ...current, green: value ?? current.green }))
-                }
+                onChange={(value) => setDraft((current) => ({ ...current, green: value }))}
               />
             </div>
 
@@ -228,9 +266,7 @@ export function RadarSettingsCard() {
                 value={draft.red}
                 settings={monetary}
                 disabled={saving}
-                onChange={(value) =>
-                  setDraft((current) => ({ ...current, red: value ?? current.red }))
-                }
+                onChange={(value) => setDraft((current) => ({ ...current, red: value }))}
               />
             </div>
           </div>
@@ -244,19 +280,10 @@ export function RadarSettingsCard() {
 
         <div className="space-y-3">
           <div className="text-sm text-muted-foreground">{t("radarPreview")}</div>
-          <div
-            className="h-2.5 rounded-full"
-            style={{
-              background:
-                "linear-gradient(90deg, var(--destructive) 0%, var(--warning) 50%, var(--positive) 100%)",
-            }}
-          />
+          <div className="h-2.5 rounded-full" style={{ background: rampGradient(previewPrefs) }} />
           <div className="flex items-start justify-between gap-2">
             {PREVIEW_STOPS.map((stop) => {
-              const amount =
-                stop <= 0.5
-                  ? previewPrefs.red + (previewAmber - previewPrefs.red) * (stop / 0.5)
-                  : previewAmber + (previewPrefs.green - previewAmber) * ((stop - 0.5) / 0.5)
+              const amount = rampValueAt(previewPrefs, stop)
               return (
                 <div key={stop} className="flex flex-col items-center gap-1.5">
                   <span
@@ -272,11 +299,15 @@ export function RadarSettingsCard() {
           </div>
         </div>
 
+        {carga === "falhou" && (
+          <p className="text-sm text-destructive">{t("radarLoadError")}</p>
+        )}
+
         <Button
           type="button"
           className="cursor-pointer"
           onClick={handleSave}
-          disabled={saving || !validation.ok}
+          disabled={saving || carga !== "pronto" || !validation.ok}
         >
           {saving ? t("radarSaving") : t("radarSave")}
         </Button>

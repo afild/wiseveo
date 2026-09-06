@@ -5,12 +5,18 @@ import { useLocale, useTranslations } from "next-intl"
 import { useSidebar } from "@/components/ui/sidebar"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { createDateFormatter } from "@/i18n/format"
-import { radarColorFor, RADAR_NEUTRAL } from "@/features/radar/lib/radar-color"
+import {
+  radarBandFor,
+  radarColorFor,
+  RADAR_NEUTRAL,
+  type RadarBand,
+} from "@/features/radar/lib/radar-color"
 import {
   defaultRadarPreferences,
   resolveRadarPreferences,
   type RadarPreferences,
 } from "@/features/radar/lib/radar-preferences"
+import { horizonIsShort } from "@/features/radar/lib/radar-window"
 
 interface RadarLookahead {
   worstDate: string
@@ -28,11 +34,18 @@ interface RadarPayload {
   lookahead: RadarLookahead | null
 }
 
-/** Vazado quando o horizonte real cobre menos da metade da janela pedida. */
-function horizonIsShort(lookahead: RadarLookahead | null): boolean {
-  if (!lookahead) return false
-  return lookahead.horizonDays * 2 < lookahead.requestedDays
-}
+/**
+ * Chave de tradução da faixa, por POSIÇÃO e não por cor. Objeto constante e fora do componente
+ * para as quatro chaves ficarem visíveis num lugar só, inclusive para o `check:i18n:code`.
+ */
+const BAND_KEY = {
+  amber: "bandAmber",
+  green: "bandGreen",
+  neutral: "bandNeutral",
+  red: "bandRed",
+  // `as const` e não `Record<RadarBand, string>`: o `t()` do next-intl só aceita chave literal,
+  // e `string` genérico seria recusado na compilação.
+} as const satisfies Record<RadarBand, string>
 
 export function SidebarRadar() {
   const { state } = useSidebar()
@@ -97,7 +110,7 @@ export function SidebarRadar() {
   const hollow =
     payload !== null &&
     preferences.mode === "lookahead" &&
-    (lookahead === null || horizonIsShort(lookahead))
+    (lookahead === null || horizonIsShort(lookahead.horizonDays, lookahead.requestedDays))
 
   // `createDateFormatter` devolve um Intl.DateTimeFormat, então o uso é `.format(data)`.
   // As chaves vêm em UTC e o formatador precisa ler em UTC, senão a oeste de Greenwich
@@ -124,7 +137,7 @@ export function SidebarRadar() {
     reason = t("tooltipToday")
   } else if (lookahead === null) {
     reason = t("tooltipNoData")
-  } else if (horizonIsShort(lookahead)) {
+  } else if (horizonIsShort(lookahead.horizonDays, lookahead.requestedDays)) {
     reason = t("tooltipHorizonShort", { horizon: formatKey(lookahead.horizonDate) })
   } else {
     reason = t("tooltipWorst", {
@@ -135,6 +148,9 @@ export function SidebarRadar() {
   }
 
   const tooltip = `${t("tooltipCollapsed", { today: todayText, projected: projectedText })}\n${reason}`
+  // O ponto se anuncia por palavra antes de se anunciar por cor: quem usa leitor de tela não
+  // enxerga o ponto, e verde contra vermelho é justamente o eixo que um deuteranope não separa.
+  const bandKey = BAND_KEY[radarBandFor(measured, preferences)]
 
   return (
     <div
@@ -161,6 +177,9 @@ export function SidebarRadar() {
         className={`status-radar w-3 h-3 min-w-3 min-h-3 shrink-0${hollow ? " is-hollow" : ""}`}
         style={{ color }}
         title={tooltip}
+        role="img"
+        tabIndex={0}
+        aria-label={`${t(bandKey)}. ${tooltip}`}
       >
         <div className="ring" />
       </div>

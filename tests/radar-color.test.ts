@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest"
 import { defaultRadarPreferences } from "../src/features/radar/lib/radar-preferences"
-import { radarColorFor } from "../src/features/radar/lib/radar-color"
+import {
+  RADAR_AMBER,
+  RADAR_GREEN,
+  RADAR_NEUTRAL,
+  RADAR_RED,
+  radarBandFor,
+  radarColorFor,
+  rampGradient,
+  rampValueAt,
+} from "../src/features/radar/lib/radar-color"
 
 const prefs = { ...defaultRadarPreferences, green: 10000, amber: null, red: 5000 }
 
@@ -105,5 +114,111 @@ describe("radarColorFor", () => {
     expect(radarColorFor(5013, prefs)).toBe(
       "color-mix(in oklab, var(--warning) 1%, var(--destructive))",
     )
+  })
+})
+
+describe("rampValueAt", () => {
+  it("as cinco paradas da prévia caem nos valores redondos da rampa", () => {
+    // verde 10000, vermelho 5000, âmbar automático no meio (7500)
+    expect(rampValueAt(prefs, 0)).toBe(5000)
+    expect(rampValueAt(prefs, 0.25)).toBe(6250)
+    expect(rampValueAt(prefs, 0.5)).toBe(7500)
+    expect(rampValueAt(prefs, 0.75)).toBe(8750)
+    expect(rampValueAt(prefs, 1)).toBe(10000)
+  })
+
+  it("o pivô fixado desloca as duas metades, e cada uma continua linear", () => {
+    const fixed = { ...prefs, amber: 6000 }
+    expect(rampValueAt(fixed, 0)).toBe(5000)
+    expect(rampValueAt(fixed, 0.5)).toBe(6000)
+    expect(rampValueAt(fixed, 0.25)).toBe(5500)
+    expect(rampValueAt(fixed, 0.75)).toBe(8000)
+    expect(rampValueAt(fixed, 1)).toBe(10000)
+  })
+
+  it("fração fora de [0,1] trava nas âncoras em vez de extrapolar", () => {
+    expect(rampValueAt(prefs, -1)).toBe(5000)
+    expect(rampValueAt(prefs, 2)).toBe(10000)
+  })
+
+  it("é o inverso de radarColorFor nas âncoras: 0 sai vermelho, 0,5 âmbar, 1 verde", () => {
+    expect(radarColorFor(rampValueAt(prefs, 0), prefs)).toBe(RADAR_RED)
+    expect(radarColorFor(rampValueAt(prefs, 0.5), prefs)).toBe(RADAR_AMBER)
+    expect(radarColorFor(rampValueAt(prefs, 1), prefs)).toBe(RADAR_GREEN)
+  })
+})
+
+describe("rampGradient", () => {
+  // A razão de existir da função: a barra da prévia tem que misturar em oklab, igual ao ponto.
+  it("as paradas saem de radarColorFor, então a barra mistura em oklab", () => {
+    // Nove paradas (steps = 8), cada cor idêntica à que o ponto daquele valor recebe.
+    expect(rampGradient(prefs)).toBe(
+      "linear-gradient(90deg, " +
+        "var(--destructive) 0%, " +
+        "color-mix(in oklab, var(--warning) 25%, var(--destructive)) 13%, " +
+        "color-mix(in oklab, var(--warning) 50%, var(--destructive)) 25%, " +
+        "color-mix(in oklab, var(--warning) 75%, var(--destructive)) 38%, " +
+        "var(--warning) 50%, " +
+        "color-mix(in oklab, var(--positive) 25%, var(--warning)) 63%, " +
+        "color-mix(in oklab, var(--positive) 50%, var(--warning)) 75%, " +
+        "color-mix(in oklab, var(--positive) 75%, var(--warning)) 88%, " +
+        "var(--positive) 100%)",
+    )
+    expect(rampGradient(prefs)).not.toContain("NaN")
+  })
+
+  it("o número de paradas acompanha o parâmetro", () => {
+    expect(rampGradient(prefs, 2)).toBe(
+      "linear-gradient(90deg, var(--destructive) 0%, var(--warning) 50%, var(--positive) 100%)",
+    )
+  })
+})
+
+describe("radarBandFor", () => {
+  it("sem leitura: neutro", () => {
+    expect(radarBandFor(null, prefs)).toBe("neutral")
+    expect(radarBandFor(Number.NaN, prefs)).toBe("neutral")
+    expect(radarBandFor(Number.POSITIVE_INFINITY, prefs)).toBe("neutral")
+  })
+
+  it("negativo cai na faixa de baixo, mesmo com piso em zero", () => {
+    expect(radarBandFor(-0.01, { ...prefs, red: 0 })).toBe("red")
+    expect(radarBandFor(-9999, prefs)).toBe("red")
+  })
+
+  it("as duas pontas travam", () => {
+    expect(radarBandFor(4000, prefs)).toBe("red")
+    expect(radarBandFor(5000, prefs)).toBe("red")
+    expect(radarBandFor(10000, prefs)).toBe("green")
+    expect(radarBandFor(99999, prefs)).toBe("green")
+  })
+
+  it("os dois meios ficam de lados diferentes do pivô", () => {
+    expect(radarBandFor(6250, prefs)).toBe("amber")
+    expect(radarBandFor(7500, prefs)).toBe("amber")
+    expect(radarBandFor(8750, prefs)).toBe("green")
+  })
+
+  it("o pivô fixado move a divisa junto", () => {
+    const fixed = { ...prefs, amber: 9000 }
+    expect(radarBandFor(8750, fixed)).toBe("amber")
+    expect(radarBandFor(9500, fixed)).toBe("green")
+  })
+
+  // A palavra e a cor têm que sair da MESMA escada, senão o rótulo do leitor de tela
+  // contradiz o que a tela mostra.
+  it("concorda com radarColorFor nas âncoras", () => {
+    const pairs: Array<[number | null, string]> = [
+      [null, RADAR_NEUTRAL],
+      [-1, RADAR_RED],
+      [prefs.red, RADAR_RED],
+      [7500, RADAR_AMBER],
+      [prefs.green, RADAR_GREEN],
+    ]
+    const bandColor = { neutral: RADAR_NEUTRAL, red: RADAR_RED, amber: RADAR_AMBER, green: RADAR_GREEN }
+    for (const [balance, expected] of pairs) {
+      expect(radarColorFor(balance, prefs)).toBe(expected)
+      expect(bandColor[radarBandFor(balance, prefs)]).toBe(expected)
+    }
   })
 })

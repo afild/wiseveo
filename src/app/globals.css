@@ -276,10 +276,20 @@ html {
   }
 
   /* Horizonte curto: o ponto fica vazado para se ver de longe que o radar enxerga pouco.
-     A cor calculada continua valendo, e os anéis de pulso também, porque eles usam
-     `currentColor` e `currentColor` vem do `style` inline do componente. */
+     A cor calculada continua valendo, e os anéis viram aro também, na regra abaixo. */
   .status-radar.is-hollow {
     background-color: transparent;
+    box-shadow: inset 0 0 0 2px currentColor;
+  }
+
+  /* Vazado de verdade: os anéis também viram aro, senão eles cobrem o miolo. Com a animação
+     rodando isso já tingia o centro a 40% três vezes por ciclo; com `prefers-reduced-motion`
+     (que zera a animação) eles ficam parados no tamanho do disco e apagavam o vazado por
+     completo. Medido no navegador: 12px, opacidade 1, pintando acima do box-shadow do pai. */
+  .status-radar.is-hollow::before,
+  .status-radar.is-hollow::after,
+  .status-radar.is-hollow .ring {
+    background: transparent;
     box-shadow: inset 0 0 0 2px currentColor;
   }
 }

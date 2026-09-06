@@ -1021,6 +1021,10 @@
       "toggle": "Toggle Sidebar"
     },
     "sidebarRadar": {
+      "bandAmber": "Middle band",
+      "bandGreen": "Upper band",
+      "bandNeutral": "No reading yet",
+      "bandRed": "Lower band",
       "currentBalance": "Current Balance",
       "projected": "Projected:",
       "tooltipCollapsed": "Today: {today} | Projected: {projected}",
@@ -1999,10 +2003,12 @@
       "radarAmberAuto": "Average: {value}",
       "radarDays": "Days ahead",
       "radarDaysDesc": "How far ahead the radar looks. If your entries run out before that, it stops where they stop and shows how far it looked.",
+      "radarDaysRange": "The horizon must be between 1 and 365 days.",
       "radarDesc": "The colored dot at the top of the sidebar. Values follow the currency chosen above.",
       "radarError": "Could not save the radar bands.",
       "radarGreen": "Green from",
       "radarInvalidOrder": "Red must be lower than green, and amber must sit between them.",
+      "radarLoadError": "Could not read the saved bands. Reload the page before saving, so you do not write over them.",
       "radarMode": "What the dot measures",
       "radarModeDesc": "The lowest balance ahead shows how far the balance dips along the way. Today's balance ignores the future.",
       "radarModeLookahead": "Lowest balance ahead",
