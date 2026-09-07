@@ -41,20 +41,16 @@ interface CashflowPoint {
   balance: number
 }
 
-const tooltipSeriesMap = {
-  income: {
-    labelClassName: "text-positive",
-    dotClassName: "bg-positive",
-  },
-  expense: {
-    labelClassName: "text-destructive",
-    dotClassName: "bg-destructive",
-  },
-  balance: {
-    labelClassName: "text-primary",
-    dotClassName: "bg-primary",
-  },
-} as const
+// Séries que o tooltip mostra. Os nomes precisam bater com as chaves do ChartConfig
+// e com o `name` de cada Area/Bar: o ChartContainer injeta `--color-<chave>` a partir
+// delas, e o tooltip pinta rótulo e bolinha com essa mesma variável para nunca
+// divergir da cor da linha/barra (inclusive ao trocar tema ou preset).
+const TOOLTIP_SERIES = ["income", "expense", "balance"] as const
+type TooltipSeriesKey = (typeof TOOLTIP_SERIES)[number]
+
+function isTooltipSeriesKey(key: string): key is TooltipSeriesKey {
+  return (TOOLTIP_SERIES as readonly string[]).includes(key)
+}
 
 function formatDateLabel(dateIso: string, locale: string) {
   const date = normalizeDate(dateIso)
@@ -117,19 +113,19 @@ function TrialTooltipContent({ active, label, payload }: TrialTooltipContentProp
   if (!active || !payload?.length) return null
 
   const rows: Array<{
-    key: keyof typeof tooltipSeriesMap
+    key: TooltipSeriesKey
     value: number
   }> = []
 
   for (const item of payload) {
     const key = typeof item.name === "string" ? item.name : ""
-    if (!(key in tooltipSeriesMap)) continue
+    if (!isTooltipSeriesKey(key)) continue
 
     const parsedValue = Number(item.value ?? 0)
     if (!Number.isFinite(parsedValue)) continue
 
     rows.push({
-      key: key as keyof typeof tooltipSeriesMap,
+      key,
       value: key === "balance" ? parsedValue : Math.abs(parsedValue),
     })
   }
@@ -141,7 +137,9 @@ function TrialTooltipContent({ active, label, payload }: TrialTooltipContentProp
       <p className="text-foreground font-medium">{formatTooltipTitle(label, locale)}</p>
       <div className="mt-1.5 grid gap-1.5">
         {rows.map((row) => {
-          const series = tooltipSeriesMap[row.key]
+          // Mesma variável que a série usa no gráfico (não usar item.color do Recharts:
+          // o saldo é um gradiente url(#...), que não é uma cor CSS válida).
+          const colorVar = `var(--color-${row.key})`
 
           return (
             <div
@@ -151,8 +149,8 @@ function TrialTooltipContent({ active, label, payload }: TrialTooltipContentProp
                 row.key === "balance" && "mt-1 border-t border-border/60 pt-2"
               )}
             >
-              <span className={cn("flex items-center gap-2 text-xs font-medium", series.labelClassName)}>
-                <span className={cn("size-2.5 shrink-0 rounded-full", series.dotClassName)} />
+              <span className="flex items-center gap-2 text-xs font-medium" style={{ color: colorVar }}>
+                <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: colorVar }} />
                 {t(row.key)}:
               </span>
               <span className="text-foreground font-medium tabular-nums">
