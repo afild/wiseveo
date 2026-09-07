@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { isPaidStatusName } from "@/lib/paid-status"
+import { normalizeStatusName, type TransactionStatusKey } from "@/lib/paid-status"
 import type { SerializedTransaction, TransactionFilterOptions } from "../types"
 import { Prisma } from "@/generated/prisma_new/client"
 
@@ -9,19 +9,14 @@ interface GetTransactionsParams {
   to: Date
 }
 
-type TxStatus = "PAID" | "PENDING" | "OVERDUE" | "SCHEDULED"
+type TxStatus = TransactionStatusKey
 type TxType = "INCOME" | "EXPENSE" | "TRANSFER"
 
 function mapLegacyStatus(status: string | null): TxStatus {
-  const key = (status ?? "").toUpperCase().trim()
-  // "Pago" pelo critério único do sistema (src/lib/paid-status.ts): antes, um
-  // status chamado "Quitado" ou "Realizado" caía no fim da função e aparecia
-  // como PENDENTE na tabela, embora contasse como pago nos insights.
-  if (isPaidStatusName(key)) return "PAID"
-  if (key === "VENCIDO" || key === "OVERDUE") return "OVERDUE"
-  if (key === "ABERTO" || key === "SCHEDULED") return "SCHEDULED"
-  if (key === "PENDENTE" || key === "PENDING") return "PENDING"
-  return "PENDING"
+  // Significado pelo NOME, com o critério único de src/lib/paid-status.ts (o
+  // mesmo que rotula o formulário): nome fora do conjunto conhecido continua
+  // aparecendo como pendente na tabela.
+  return normalizeStatusName(status) ?? "PENDING"
 }
 
 function mapLegacyType(type: string | null): TxType {

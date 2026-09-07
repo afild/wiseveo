@@ -39,3 +39,33 @@ export function isPaidStatusName(name: string | null | undefined): boolean {
   const normalized = name.trim().toUpperCase()
   return (PAID_STATUS_NAMES as readonly string[]).includes(normalized)
 }
+
+/** Os quatro significados que o sistema reconhece para um status. */
+export type TransactionStatusKey = "PAID" | "PENDING" | "OVERDUE" | "SCHEDULED"
+
+const OVERDUE_STATUS_NAMES = ["VENCIDO", "OVERDUE"] as const
+const SCHEDULED_STATUS_NAMES = ["ABERTO", "AGENDADO", "SCHEDULED"] as const
+const PENDING_STATUS_NAMES = ["PENDENTE", "PENDING"] as const
+
+/**
+ * SIGNIFICADO DE UM STATUS: SEMPRE pelo NOME, nunca pelo código.
+ *
+ * O código (`transaction_statuses.COD_ST`) é só chave estrangeira. Catálogos
+ * antigos amarram os códigos de outro jeito: o banco do dono tem 1 PAGO,
+ * 2 ABERTO, 3 PENDENTE, 4 VENCIDO, enquanto o seed atual cria 1 Paid,
+ * 2 Pending, 3 Overdue, 4 Scheduled. Como o user-init nunca renomeia linha
+ * existente, os dois mundos convivem, e qualquer tabela "código -> rótulo"
+ * mostra o status errado num deles.
+ *
+ * Devolve `null` para nome fora do conjunto conhecido: quem chama decide o
+ * fallback (a tabela cai em PENDING, o rótulo cai no nome cru do banco).
+ */
+export function normalizeStatusName(name: string | null | undefined): TransactionStatusKey | null {
+  const key = (name ?? "").trim().toUpperCase()
+  if (!key) return null
+  if (isPaidStatusName(key)) return "PAID"
+  if ((OVERDUE_STATUS_NAMES as readonly string[]).includes(key)) return "OVERDUE"
+  if ((SCHEDULED_STATUS_NAMES as readonly string[]).includes(key)) return "SCHEDULED"
+  if ((PENDING_STATUS_NAMES as readonly string[]).includes(key)) return "PENDING"
+  return null
+}

@@ -8,8 +8,12 @@ import { prisma } from "@/lib/prisma"
  * `TransactionStatusLookup.code` é `@unique` GLOBAL no schema
  * (`code Int @unique @map("COD_ST")`), e tanto `Transaction.statusCode` quanto
  * `RecurringTransaction.statusCode` são chaves estrangeiras para esse `code`.
- * Existem, portanto, no máximo quatro linhas na base inteira (1 Paid, 2 Pending,
- * 3 Overdue, 4 Scheduled), e os lançamentos de TODO mundo já apontam para elas.
+ * Existem, portanto, no máximo quatro linhas na base inteira, e os lançamentos
+ * de TODO mundo já apontam para elas. A ordem 1 Paid, 2 Pending, 3 Overdue,
+ * 4 Scheduled é só a do seed atual: banco criado antes dele amarra os códigos
+ * de outro jeito (o do dono tem 1 PAGO, 2 ABERTO, 3 PENDENTE, 4 VENCIDO). O
+ * código é chave estrangeira, nunca significado; o significado vem do NOME,
+ * via `normalizeStatusName` em `src/lib/paid-status.ts`.
  * O `user_id` da linha é apenas o dono de referência, nunca isolamento: está
  * escrito assim no desenho, em `src/lib/user-init.ts`, onde os dois ramos do
  * `initializeUserData` fazem upsert por `code` (o ramo phantom/demo com

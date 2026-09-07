@@ -5,6 +5,7 @@ import {
   defaultCategories,
   defaultGroups,
 } from "../../prisma/data/default-chart-of-accounts"
+import { normalizeStatusName } from "@/lib/paid-status"
 
 /**
  * Rotulos padrao do plano de contas traduzidos na EXIBICAO (decisao D9).
@@ -159,14 +160,20 @@ export function resolveAccountLabel(t: Translate, account: { name: string }): st
 }
 
 /**
- * Rotulo do status: SEMPRE pelo codigo. Os quatro status sao um lookup global
- * (`TransactionStatusLookup.code` e `@unique` no schema e usuarios phantom
- * reusam as mesmas linhas 1-4) e o usuario nao os renomeia.
+ * Rotulo do status: SEMPRE pelo NOME. O `code` e so a chave estrangeira
+ * (`TransactionStatusLookup.code`, `@unique`) e nao carrega significado: a
+ * ordem do seed (1 Paid, 2 Pending, 3 Overdue, 4 Scheduled) nao vale em banco
+ * criado antes dele (o do dono tem 1 PAGO, 2 ABERTO, 3 PENDENTE, 4 VENCIDO), e
+ * rotular pelo codigo mostrava "Vencido" num status que o banco chama de
+ * PENDENTE. O significado sai de `normalizeStatusName`, o mesmo criterio da
+ * tabela e do calendario; nome desconhecido volta como esta no banco.
+ *
+ * `code` continua no parametro so para os chamadores passarem a linha inteira.
  */
 export function resolveStatusLabel(
   t: Translate,
   status: { code: number | string; name: string },
 ): string {
-  const code = Number(status.code)
-  return code >= 1 && code <= 4 ? translate(t, `chartOfAccounts.statuses.${code}`) : status.name
+  const key = normalizeStatusName(status.name)
+  return key ? translate(t, `chartOfAccounts.statuses.${key.toLowerCase()}`) : status.name
 }

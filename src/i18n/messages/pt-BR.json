@@ -855,10 +855,10 @@
       "900": "Transferências"
     },
     "statuses": {
-      "1": "Pago",
-      "2": "Pendente",
-      "3": "Vencido",
-      "4": "Agendado"
+      "overdue": "Vencido",
+      "paid": "Pago",
+      "pending": "Pendente",
+      "scheduled": "Agendado"
     }
   },
   "chat": {

@@ -9,7 +9,7 @@ import { useDateClosingGuard } from "@/features/security/components/date-closing
 import { closedInstallments } from "@/features/security/lib/batch-loops"
 import { dayKeyOfLocal } from "@/features/security/lib/date-closing"
 import { periodFromDate } from "@/lib/financial"
-import { PAID_STATUS_NAMES } from "@/lib/paid-status"
+import { normalizeStatusName, PAID_STATUS_NAMES } from "@/lib/paid-status"
 import type {
   FormCategory,
   FormCategoryGroup,
@@ -140,9 +140,11 @@ export function useTransactionForm({
       dateToUse = defaultDateStr
     }
 
-    const defaultStatus = formOptions.statuses.find(
-      (s) => s.name.toUpperCase() === "ABERTO"
-    )
+    // Pelo significado, não pelo nome: o catálogo do dono chama de ABERTO o
+    // que o seed chama de Scheduled, e o padrão tem que funcionar nos dois.
+    const defaultStatus =
+      formOptions.statuses.find((s) => normalizeStatusName(s.name) === "SCHEDULED") ??
+      formOptions.statuses.find((s) => s.name.toUpperCase() === "ABERTO")
     const defaultAccount = formOptions.accounts.find(
       (a) => a.name.toUpperCase() === "DEFINIR"
     )
