@@ -1586,6 +1586,9 @@
         "groupLabel": "Grupo",
         "historyLabel": "Histórico",
         "historyPlaceholder": "Beneficiário ou descrição rápida...",
+        "periodHint": "A competência é diferente do mês da data. Essa diferença é mantida a cada lançamento.",
+        "periodLabel": "Período",
+        "periodPlaceholder": "YYYYMM",
         "refLabel": "REF",
         "refPlaceholder": "ex: Conta de luz",
         "saving": "Salvando...",
@@ -1637,6 +1640,7 @@
       "editError": "Erro ao editar recorrência",
       "editSuccess": "Recorrência atualizada com sucesso",
       "invalidAmount": "Informe um valor válido",
+      "invalidPeriod": "Período inválido. Use o formato YYYYMM.",
       "launchError": "Erro ao lançar transação recorrente",
       "launchSuccess": "Transação lançada com sucesso",
       "requiredFields": "Preencha todos os campos obrigatórios"

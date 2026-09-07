@@ -65,7 +65,7 @@ vi.mock("@/lib/prisma", () => ({
         return m.existing
       },
       update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
-        m.writes.push({ op: "recurring.update", id: where.id })
+        m.writes.push({ op: "recurring.update", id: where.id, data })
         return { id: where.id, ...data }
       },
       delete: async ({ where }: { where: { id: string } }) => {
@@ -202,7 +202,7 @@ describe("PATCH /api/recurring-transactions/[id]", () => {
     const res = await recurringPatch(req("PATCH", "/api/recurring-transactions/r1", { description: "x" }), byId)
     expect(res.status).toBe(200)
     expect(m.lookups).toEqual([{ op: "recurring.findFirst", userId: "dono" }])
-    expect(m.writes).toEqual([{ op: "recurring.update", id: "r1" }])
+    expect(m.writes).toMatchObject([{ op: "recurring.update", id: "r1" }])
     expectNothingAsActor()
   })
 
@@ -222,6 +222,53 @@ describe("PATCH /api/recurring-transactions/[id]", () => {
     const res = await recurringPatch(req("PATCH", "/api/recurring-transactions/r1", { description: "x" }), byId)
     expect(res.status).toBe(404)
     expect(m.writes).toEqual([])
+  })
+
+  /**
+   * Competência do modelo (campo PERÍODO do painel): explícita e válida sempre vence, mesmo junto
+   * com lastDate; só lastDate (edição em lote de datas) continua rederivando do mês da data; presente
+   * e ilegível é 400 antes de qualquer escrita, com ou sem lastDate.
+   */
+  it("competência explícita vence a data: lastDate normalizado e período como veio", async () => {
+    const res = await recurringPatch(
+      req("PATCH", "/api/recurring-transactions/r1", { lastDate: "2026-09-15", period: "202608" }),
+      byId,
+    )
+    expect(res.status).toBe(200)
+    expect(m.writes).toHaveLength(1)
+    const data = m.writes[0].data as Record<string, unknown>
+    expect(data.period).toBe("202608")
+    expect(data.lastDate).toEqual(new Date("2026-09-15T12:00:00.000Z"))
+  })
+
+  it("só lastDate ainda rederiva a competência do mês da data", async () => {
+    const res = await recurringPatch(req("PATCH", "/api/recurring-transactions/r1", { lastDate: "2026-09-15" }), byId)
+    expect(res.status).toBe(200)
+    expect((m.writes[0].data as Record<string, unknown>).period).toBe("202609")
+  })
+
+  it("só período válido grava a competência sem mexer na data", async () => {
+    const res = await recurringPatch(req("PATCH", "/api/recurring-transactions/r1", { period: "202608" }), byId)
+    expect(res.status).toBe(200)
+    const data = m.writes[0].data as Record<string, unknown>
+    expect(data.period).toBe("202608")
+    expect(data).not.toHaveProperty("lastDate")
+  })
+
+  it("período ilegível responde 400 sem gravar, com ou sem lastDate", async () => {
+    for (const body of [{ period: "202613" }, { lastDate: "2026-09-15", period: "2026-08" }, { period: 202608.5 }]) {
+      m.writes = []
+      const res = await recurringPatch(req("PATCH", "/api/recurring-transactions/r1", body), byId)
+      expect(res.status).toBe(400)
+      expect((await res.json()).error).toMatch(/invalidPeriod$/)
+      expect(m.writes).toEqual([])
+    }
+  })
+
+  it("período com espaços em volta é aceito aparado", async () => {
+    const res = await recurringPatch(req("PATCH", "/api/recurring-transactions/r1", { period: " 202608 " }), byId)
+    expect(res.status).toBe(200)
+    expect((m.writes[0].data as Record<string, unknown>).period).toBe("202608")
   })
 })
 

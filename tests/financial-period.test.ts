@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { endOfUTCDay, periodFromDate, startOfUTCDay } from "../src/lib/financial"
+import { addMonthsToPeriod, endOfUTCDay, monthsBetweenPeriods, periodFromDate, startOfUTCDay } from "../src/lib/financial"
 
 /**
  * Regressão: `periodFromDate` lia componentes LOCAIS enquanto todo o resto do
@@ -31,5 +31,37 @@ describe("periodFromDate — fronteiras de intervalo em UTC", () => {
 
   it("data inválida cai no mês corrente em vez de quebrar", () => {
     expect(periodFromDate("não é data")).toMatch(/^\d{6}$/)
+  })
+})
+
+/**
+ * Aritmética de mês das recorrências: a competência do modelo pode ficar defasada do mês da data
+ * (conta paga em N com competência N-1) e o lançamento mantém essa defasagem. Tudo puro, sem Date.
+ */
+describe("addMonthsToPeriod / monthsBetweenPeriods", () => {
+  it("soma e subtrai dentro do mesmo ano", () => {
+    expect(addMonthsToPeriod("202605", 2)).toBe("202607")
+    expect(addMonthsToPeriod("202605", -2)).toBe("202603")
+    expect(addMonthsToPeriod("202605", 0)).toBe("202605")
+  })
+
+  it("vira o ano nos dois sentidos", () => {
+    expect(addMonthsToPeriod("202612", 1)).toBe("202701")
+    expect(addMonthsToPeriod("202601", -1)).toBe("202512")
+    expect(addMonthsToPeriod("202609", -13)).toBe("202508")
+    expect(addMonthsToPeriod("202609", 16)).toBe("202801")
+  })
+
+  it("mede a distância com sinal", () => {
+    expect(monthsBetweenPeriods("202609", "202608")).toBe(-1)
+    expect(monthsBetweenPeriods("202608", "202609")).toBe(1)
+    expect(monthsBetweenPeriods("202512", "202601")).toBe(1)
+    expect(monthsBetweenPeriods("202609", "202609")).toBe(0)
+  })
+
+  it("uma desfaz a outra", () => {
+    for (const [a, b] of [["202609", "202608"], ["202601", "202512"], ["202503", "202711"]]) {
+      expect(addMonthsToPeriod(a, monthsBetweenPeriods(a, b))).toBe(b)
+    }
   })
 })

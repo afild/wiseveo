@@ -1586,6 +1586,9 @@
         "groupLabel": "Group",
         "historyLabel": "Notes",
         "historyPlaceholder": "Payee or quick description...",
+        "periodHint": "The accounting period differs from the month of the date. This offset is kept on every launch.",
+        "periodLabel": "Period",
+        "periodPlaceholder": "YYYYMM",
         "refLabel": "REF",
         "refPlaceholder": "e.g.: Utility bill",
         "saving": "Saving...",
@@ -1637,6 +1640,7 @@
       "editError": "Failed to edit recurrence",
       "editSuccess": "Recurrence updated successfully",
       "invalidAmount": "Enter a valid amount",
+      "invalidPeriod": "Invalid period. Use the YYYYMM format.",
       "launchError": "Failed to launch recurring transaction",
       "launchSuccess": "Transaction launched successfully",
       "requiredFields": "Fill in all required fields"

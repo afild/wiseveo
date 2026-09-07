@@ -2,7 +2,8 @@ import { NextResponse } from "next/server"
 import { getTranslations } from "next-intl/server"
 import { prisma } from "@/lib/prisma"
 import { getWriteContext } from "@/features/security/services/write-context"
-import { normalizeDate, periodFromDate, isValidPeriod } from "@/lib/financial"
+import { toPeriodInput } from "@/features/security/lib/date-closing"
+import { normalizeDate, periodFromDate } from "@/lib/financial"
 
 export async function PATCH(
     request: Request,
@@ -23,20 +24,24 @@ export async function PATCH(
     const isUpdatingLastDate =
         typeof data.lastDate === "string" && data.lastDate.trim().length > 0
 
+    // Competência explícita e válida sempre vence; presente e ilegível é 400, com ou sem lastDate
+    // (o corpo vai direto ao prisma, então nada entra sem passar por aqui). Só lastDate (edição em
+    // lote de datas) continua rederivando a competência do mês da data.
+    const hasPeriod = Object.prototype.hasOwnProperty.call(data, "period")
+    const explicitPeriod = hasPeriod ? toPeriodInput(data.period) : null
+    if (hasPeriod && explicitPeriod === null) {
+        return NextResponse.json(
+            { error: t("invalidPeriod") },
+            { status: 400 }
+        )
+    }
+
     if (isUpdatingLastDate) {
         const nextLastDate = normalizeDate(String(data.lastDate))
         data.lastDate = nextLastDate
-        data.period = periodFromDate(nextLastDate)
-    }
-
-    if (!isUpdatingLastDate && Object.prototype.hasOwnProperty.call(data, "period")) {
-        const p = data.period
-        if (typeof p !== "string" || !isValidPeriod(p)) {
-            return NextResponse.json(
-                { error: t("invalidPeriod") },
-                { status: 400 }
-            )
-        }
+        data.period = explicitPeriod ?? periodFromDate(nextLastDate)
+    } else if (explicitPeriod !== null) {
+        data.period = explicitPeriod
     }
 
     // Sanitize text fields

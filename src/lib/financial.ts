@@ -121,3 +121,28 @@ export function parsePeriod(period: string): { year: number; month: number } {
 export function formatPeriod(period: string): string {
   return `${period.slice(4, 6)}/${period.slice(0, 4)}`
 }
+
+/** Índice absoluto de meses de um YYYYMM (janeiro do ano 0 = 0): aritmética de mês sem Date. */
+function monthIndex(period: string): number {
+  const { year, month } = parsePeriod(period)
+  return year * 12 + (month - 1)
+}
+
+/**
+ * Soma `months` (pode ser negativo) a um período YYYYMM. Puro, sem `Date`: o mês vira e o ano
+ * acompanha ("202601" - 1 = "202512"). É o que mantém a defasagem de competência das recorrências.
+ */
+export function addMonthsToPeriod(period: string, months: number): string {
+  const total = monthIndex(period) + months
+  const year = Math.floor(total / 12)
+  const month = total - year * 12 + 1
+  return `${String(year).padStart(4, "0")}${String(month).padStart(2, "0")}`
+}
+
+/**
+ * Meses de `a` até `b` (positivo quando `b` vem depois). Inverso de `addMonthsToPeriod`:
+ * `addMonthsToPeriod(a, monthsBetweenPeriods(a, b)) === b`.
+ */
+export function monthsBetweenPeriods(a: string, b: string): number {
+  return monthIndex(b) - monthIndex(a)
+}

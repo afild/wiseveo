@@ -22,7 +22,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { useDateClosingGuard } from "@/features/security/components/date-closing-guard"
-import { dayKeyOfLocal } from "@/features/security/lib/date-closing"
+import { dayKeyOfLocal, isDayKey, storedPeriod } from "@/features/security/lib/date-closing"
+import { isValidPeriod, periodFromDate } from "@/lib/financial"
 import {
   summarizeBatch,
   type BatchRowResult,
@@ -66,6 +67,7 @@ interface RecurringClientProps {
 
 interface EditFormState {
   date: string
+  period: string
   note: string
   description: string
   reference: string
@@ -99,6 +101,7 @@ function getTypeAccentClass(type: TransactionType) {
 function getInitialEditForm(): EditFormState {
   return {
     date: dayKeyOfLocal(new Date()),
+    period: periodFromDate(dayKeyOfLocal(new Date())),
     note: "",
     description: "",
     reference: "",
@@ -198,10 +201,14 @@ export function RecurringClient({
 
     setFilteredGroups(groupsForType)
     setFilteredCategories(categoriesForGroup)
+    // Linha antiga pode trazer competência ilegível (char(6) com lixo): cai no mês da data para a
+    // validação do formulário não travar num valor que a pessoa nem vê.
+    const seedDate = recurring.lastDate
+      ? recurring.lastDate.slice(0, 10)
+      : dayKeyOfLocal(new Date())
     setEditForm({
-      date: recurring.lastDate
-        ? recurring.lastDate.slice(0, 10)
-        : dayKeyOfLocal(new Date()),
+      date: seedDate,
+      period: storedPeriod(recurring.period) ?? periodFromDate(seedDate),
       note: recurring.note ?? "",
       description: recurring.description ?? "",
       reference: recurring.reference ?? "",
@@ -342,6 +349,12 @@ export function RecurringClient({
     }
   }
 
+  // Competência fora do mês da data: a dica avisa que essa defasagem é mantida a cada lançamento.
+  const periodDiverges =
+    editForm.period.length === 6 &&
+    isDayKey(editForm.date) &&
+    editForm.period !== periodFromDate(editForm.date)
+
   const handleSaveEdit = async () => {
     if (!editTarget) return
 
@@ -363,6 +376,11 @@ export function RecurringClient({
       return
     }
 
+    if (!isValidPeriod(editForm.period)) {
+      toast.error(t("toasts.invalidPeriod"))
+      return
+    }
+
     const normalizedAmount =
       editForm.type === "EXPENSE"
         ? -Math.abs(parsedAmount)
@@ -375,6 +393,7 @@ export function RecurringClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           lastDate: editForm.date,
+          period: editForm.period,
           note: editForm.note.trim() || null,
           description: editForm.description.trim() || null,
           reference: editForm.reference.trim() || null,
@@ -439,7 +458,7 @@ export function RecurringClient({
                 period:
                   typeof payload.period === "string"
                     ? payload.period
-                    : item.period,
+                    : editForm.period,
                 note: editForm.note.trim() || null,
                 description: editForm.description.trim() || null,
                 reference: editForm.reference.trim() || null,
@@ -794,9 +813,21 @@ export function RecurringClient({
               <Input
                 type="date"
                 value={editForm.date}
-                onChange={(event) =>
-                  setEditForm((prev) => ({ ...prev, date: event.target.value }))
-                }
+                onChange={(event) => {
+                  const value = event.target.value
+                  setEditForm((prev) => {
+                    // Mesma regra do formulário de lançamentos: a competência segue a data até a
+                    // pessoa divergir de propósito; depois disso fica como está.
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return { ...prev, date: value }
+                    const prevDerived = periodFromDate(prev.date)
+                    const shouldSyncPeriod = !prev.period || prev.period === prevDerived
+                    return {
+                      ...prev,
+                      date: value,
+                      period: shouldSyncPeriod ? periodFromDate(value) : prev.period,
+                    }
+                  })
+                }}
                 className="w-full"
               />
             </div>
@@ -998,20 +1029,45 @@ export function RecurringClient({
             </div>
           </DetailPanelSection>
 
-          {/* Detalhes: REF · Descrição */}
+          {/* Detalhes: Período · REF · Descrição */}
           <DetailPanelSection title={tCommon("formSections.details")}>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-                {t("dialogs.editRecurring.refLabel")}
-              </Label>
-              <Input
-                value={editForm.reference}
-                onChange={(event) =>
-                  setEditForm((prev) => ({ ...prev, reference: event.target.value }))
-                }
-                placeholder={t("dialogs.editRecurring.refPlaceholder")}
-              />
+            <div className="grid grid-cols-[96px_1fr] gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                  {t("dialogs.editRecurring.periodLabel")}
+                </Label>
+                <Input
+                  value={editForm.period}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      period: event.target.value.replace(/\D/g, "").slice(0, 6),
+                    }))
+                  }
+                  placeholder={t("dialogs.editRecurring.periodPlaceholder")}
+                  maxLength={6}
+                  inputMode="numeric"
+                  className="text-center tabular-nums"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                  {t("dialogs.editRecurring.refLabel")}
+                </Label>
+                <Input
+                  value={editForm.reference}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, reference: event.target.value }))
+                  }
+                  placeholder={t("dialogs.editRecurring.refPlaceholder")}
+                />
+              </div>
             </div>
+            {periodDiverges && (
+              <p className="text-[10px] text-muted-foreground">
+                {t("dialogs.editRecurring.periodHint")}
+              </p>
+            )}
             <div className="space-y-1.5">
               <Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
                 {t("dialogs.editRecurring.descriptionLabel")}

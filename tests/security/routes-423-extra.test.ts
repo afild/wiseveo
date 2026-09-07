@@ -13,6 +13,9 @@ const m = vi.hoisted(() => ({
   /** Opções com que a rota montou o contexto: o launch precisa descartar o token. */
   ctxOpts: [] as unknown[],
   closed: false,
+  /** Corte de fechamento lido pelo launch antes de lançar (só quando a competência está defasada). */
+  closedThrough: null as string | null,
+  closingReads: 0,
   row: null as Record<string, unknown> | null,
   recurring: null as Record<string, unknown> | null,
   /** Cada conferência com o cliente por onde saiu ("tx" só existe dentro de $transaction). */
@@ -42,6 +45,10 @@ vi.mock("@/features/security/services/date-closing.service", () => ({
     m.guardCalls.push({ via: tx?.__via, days: input.days, periods: input.periods })
     if (m.closed) throw new DateClosedError([CLOSED_DAY], [], CLOSED_DAY, true)
     return {}
+  },
+  getDateClosingState: async () => {
+    m.closingReads += 1
+    return { closedThrough: m.closedThrough }
   },
 }))
 
@@ -208,7 +215,10 @@ beforeEach(() => {
     payeeId: null,
     reference: null,
     lastDate: new Date("2026-07-05T12:00:00.000Z"),
+    period: "202607",
   }
+  m.closedThrough = null
+  m.closingReads = 0
   m.guardCalls = []
   m.reads = []
   m.writes = []
@@ -397,6 +407,7 @@ describe("POST /api/recurring-transactions/[id]/launch", () => {
     const res = await launchPost(jsonReq("/api/recurring-transactions/r1/launch"), txRoute)
     expect(res.status).toBe(201)
     expect(m.launchArgs[0].date).toBe("2026-07-05")
+    expect(m.launchArgs[0].period).toBe("202607")
     expect(m.recurringUpdates).toEqual([{ lastDate: new Date("2026-07-05T12:00:00.000Z"), period: "202607" }])
   })
 
@@ -407,6 +418,63 @@ describe("POST /api/recurring-transactions/[id]/launch", () => {
     expect(m.launchArgs[0].period).toBe("202609")
     expect(m.recurringUpdates).toEqual([{ lastDate: new Date(`${OTHER_DAY}T12:00:00.000Z`), period: "202609" }])
     expect(await res.json()).toMatchObject({ recurring: { id: "r1", period: "202609" } })
+    // Sem defasagem não há competência a conferir: nenhuma leitura extra do fechamento.
+    expect(m.closingReads).toBe(0)
+  })
+
+  /**
+   * Competência defasada do mês da data (conta paga em N com competência N-1): a defasagem é medida
+   * entre a competência gravada e o mês do lastDate e mantida no lançamento e no modelo.
+   */
+  it("competência um mês atrás do lastDate: o lançamento e o modelo mantêm a defasagem", async () => {
+    m.recurring = { ...m.recurring, period: "202606" }
+    const res = await launchPost(jsonReq("/api/recurring-transactions/r1/launch", { date: OTHER_DAY }), txRoute)
+    expect(res.status).toBe(201)
+    expect(m.launchArgs[0].period).toBe("202608")
+    expect(m.recurringUpdates).toEqual([{ lastDate: new Date(`${OTHER_DAY}T12:00:00.000Z`), period: "202608" }])
+    expect(await res.json()).toMatchObject({ recurring: { id: "r1", period: "202608" } })
+  })
+
+  it("competência um mês à frente vira o ano junto com a data", async () => {
+    m.recurring = { ...m.recurring, period: "202608" }
+    const res = await launchPost(jsonReq("/api/recurring-transactions/r1/launch", { date: "2026-12-10" }), txRoute)
+    expect(res.status).toBe(201)
+    expect(m.launchArgs[0].period).toBe("202701")
+    expect(m.recurringUpdates[0].period).toBe("202701")
+  })
+
+  it("competência antiga ilegível no modelo conta como defasagem zero", async () => {
+    for (const legacy of ["20268 ", "      ", "000000", ""]) {
+      m.launchArgs = []
+      m.recurringUpdates = []
+      m.recurring = { ...m.recurring, period: legacy }
+      const res = await launchPost(jsonReq("/api/recurring-transactions/r1/launch", { date: OTHER_DAY }), txRoute)
+      expect(res.status).toBe(201)
+      expect(m.launchArgs[0].period).toBe("202609")
+      expect(m.recurringUpdates[0].period).toBe("202609")
+    }
+  })
+
+  /**
+   * Competência defasada dentro do período fechado: este caminho nunca oferece o PIN, então todas as
+   * datas da janela dariam 423. O lançamento cai na competência do mês da data, que está aberta.
+   */
+  it("competência defasada fechada cai no mês da data em vez de 423", async () => {
+    m.recurring = { ...m.recurring, period: "202606" }
+    m.closedThrough = CLOSED_DAY
+    const res = await launchPost(jsonReq("/api/recurring-transactions/r1/launch", { date: OTHER_DAY }), txRoute)
+    expect(res.status).toBe(201)
+    expect(m.closingReads).toBe(1)
+    expect(m.launchArgs[0].period).toBe("202609")
+    expect(m.recurringUpdates).toEqual([{ lastDate: new Date(`${OTHER_DAY}T12:00:00.000Z`), period: "202609" }])
+  })
+
+  it("competência defasada ainda aberta é mantida mesmo com corte gravado", async () => {
+    m.recurring = { ...m.recurring, period: "202606" }
+    m.closedThrough = "2026-07-31"
+    const res = await launchPost(jsonReq("/api/recurring-transactions/r1/launch", { date: OTHER_DAY }), txRoute)
+    expect(res.status).toBe(201)
+    expect(m.launchArgs[0].period).toBe("202608")
   })
 
   it("data ilegível responde 400 antes de lançar", async () => {

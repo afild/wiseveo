@@ -1586,6 +1586,9 @@
         "groupLabel": "Grupo",
         "historyLabel": "Notas",
         "historyPlaceholder": "Beneficiario o descripción rápida...",
+        "periodHint": "El período contable es distinto del mes de la fecha. Esa diferencia se mantiene en cada lanzamiento.",
+        "periodLabel": "Período",
+        "periodPlaceholder": "AAAAMM",
         "refLabel": "REF",
         "refPlaceholder": "ej: Factura de servicios",
         "saving": "Guardando...",
@@ -1637,6 +1640,7 @@
       "editError": "Error al editar la recurrencia",
       "editSuccess": "Recurrencia actualizada con éxito",
       "invalidAmount": "Ingrese un monto válido",
+      "invalidPeriod": "Período inválido. Use el formato AAAAMM.",
       "launchError": "Error al lanzar el movimiento recurrente",
       "launchSuccess": "Movimiento lanzado con éxito",
       "requiredFields": "Complete todos los campos obligatorios"
