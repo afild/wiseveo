@@ -7,6 +7,8 @@ import {
   format,
   addMonths,
   subMonths,
+  addYears,
+  subYears,
   startOfMonth,
   endOfMonth,
   startOfWeek,
@@ -35,7 +37,12 @@ interface DatePickerProps {
   highlightDate?: Date;
 }
 
-function getPresetGroups(t: ReturnType<typeof useTranslations<'common.datePicker'>>) {
+type PickerT = ReturnType<typeof useTranslations<'common.datePicker'>>;
+
+/** Qual grade o seletor mostra: dias (padrão), meses do ano ou anos da década. */
+type PickerView = 'days' | 'months' | 'years';
+
+function getPresetGroups(t: PickerT) {
   return [
     {
       items: [
@@ -63,6 +70,126 @@ function getPresetGroups(t: ReturnType<typeof useTranslations<'common.datePicker
 
 const SINGLE_DROPDOWN_HEIGHT = 340;
 
+/** Primeiro ano da década (2026 -> 2020). A grade mostra 12 anos a partir dele. */
+const decadeStart = (d: Date) => Math.floor(d.getFullYear() / 10) * 10;
+
+interface MonthYearPanelProps {
+  view: 'months' | 'years';
+  anchor: Date;
+  monthNames: string[];
+  /** Datas que devem aparecer marcadas (valor atual ou seleção em andamento). */
+  selected: Date[];
+  locale: string;
+  cellClass: string;
+  /** Mobile já tem a linha de título no cabeçalho da Sheet; o desktop precisa dela aqui. */
+  showTitle?: boolean;
+  onPickMonth: (monthIndex: number) => void;
+  onPickYear: (year: number) => void;
+  onHeaderClick: () => void;
+  t: PickerT;
+}
+
+/** Grade 3x4 de meses ou anos, compartilhada pelo dropdown (desktop) e pela Sheet (mobile). */
+function MonthYearPanel({
+  view,
+  anchor,
+  monthNames,
+  selected,
+  locale,
+  cellClass,
+  showTitle = true,
+  onPickMonth,
+  onPickYear,
+  onHeaderClick,
+  t,
+}: MonthYearPanelProps) {
+  const today = new Date();
+  const start = decadeStart(anchor);
+  const years = Array.from({ length: 12 }, (_, i) => start + i);
+
+  const cellBase =
+    'flex items-center justify-center rounded-md text-sm cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground';
+
+  return (
+    <div className="flex flex-col gap-2">
+      {showTitle && (
+        <div className="flex h-7 items-center justify-center" aria-live="polite">
+          {view === 'months' ? (
+            <button
+              type="button"
+              aria-label={t('chooseYear')}
+              className="rounded-md px-2 py-0.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              onClick={onHeaderClick}
+            >
+              {formatAppDate(anchor, 'yyyy', locale)}
+            </button>
+          ) : (
+            <span className="text-sm font-medium text-foreground">
+              {t('decadeRange', { start, end: start + 11 })}
+            </span>
+          )}
+        </div>
+      )}
+      {view === 'months' ? (
+        <div className="grid grid-cols-3 gap-2">
+          {monthNames.map((name, i) => {
+            const isSelected = selected.some(
+              (d) => d.getFullYear() === anchor.getFullYear() && d.getMonth() === i
+            );
+            const isCurrent =
+              today.getFullYear() === anchor.getFullYear() && today.getMonth() === i;
+            return (
+              <button
+                key={name + i}
+                type="button"
+                className={[
+                  cellBase,
+                  cellClass,
+                  'capitalize',
+                  isSelected && 'bg-primary text-primary-foreground font-medium hover:bg-primary hover:text-primary-foreground',
+                  isCurrent && !isSelected && 'font-bold text-foreground',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                onClick={() => onPickMonth(i)}
+              >
+                {name}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-2">
+          {years.map((year) => {
+            const isSelected = selected.some((d) => d.getFullYear() === year);
+            const isCurrent = today.getFullYear() === year;
+            // Os dois últimos já pertencem à próxima década: ficam apagados, mas clicáveis.
+            const isOutside = year >= start + 10;
+            return (
+              <button
+                key={year}
+                type="button"
+                className={[
+                  cellBase,
+                  cellClass,
+                  isOutside && !isSelected && 'text-muted-foreground/60',
+                  isSelected && 'bg-primary text-primary-foreground font-medium hover:bg-primary hover:text-primary-foreground',
+                  isCurrent && !isSelected && 'font-bold text-foreground',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                onClick={() => onPickYear(year)}
+              >
+                {year}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DatePicker({
   value,
   onChange,
@@ -77,6 +204,11 @@ export default function DatePicker({
   const PRESET_GROUPS = getPresetGroups(t);
   const weekDays = Array.from({ length: 7 }, (_, i) =>
     dateFnsLocale.localize?.day((i as 0 | 1 | 2 | 3 | 4 | 5 | 6), { width: 'narrow' }) ?? ''
+  );
+  const monthNames = Array.from({ length: 12 }, (_, i) =>
+    dateFnsLocale.localize?.month((i as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11), {
+      width: 'abbreviated',
+    }) ?? ''
   );
   const [isOpen, setIsOpen] = useState(false);
   const [activePreset, setActivePreset] = useState<string | null>(null);
@@ -101,6 +233,14 @@ export default function DatePicker({
   } | null>(null);
   const [pendingDate, setPendingDate] = useState<Date | null>(null);
 
+  // Salto por mês/ano: a view só existe enquanto o seletor está aberto,
+  // por isso ela volta para 'days' sempre que o seletor é aberto.
+  const [view, setView] = useState<PickerView>('days');
+  // Mês/ano que as grades de meses/anos estão olhando.
+  const [anchor, setAnchor] = useState<Date>(currentMonth);
+  // Qual grade abriu o painel (range: 0 = esquerda, 1 = direita).
+  const [anchorIndex, setAnchorIndex] = useState<0 | 1>(0);
+
   // Close on click outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -122,6 +262,23 @@ export default function DatePicker({
     document.addEventListener('scroll', handleScroll, true);
     return () => document.removeEventListener('scroll', handleScroll, true);
   }, [isOpen]);
+
+  // Desktop: Escape volta para os dias primeiro; nos dias, fecha como o Cancelar.
+  useEffect(() => {
+    if (!isOpen || isMobile) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      if (view !== 'days') {
+        setView('days');
+      } else {
+        setPendingDate(null);
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isMobile, view]);
 
   const computeDropdownStyle = (): React.CSSProperties => {
     if (!triggerRef.current) return { position: 'fixed', top: 0, left: 0 };
@@ -152,21 +309,68 @@ export default function DatePicker({
   const handleOpen = () => {
     if (!isOpen) {
       setDropdownStyle(computeDropdownStyle());
+      setView('days');
     }
     setIsOpen((prev) => !prev);
   };
 
-  const handlePrevMonth = (e: React.MouseEvent) => {
+  // As setas navegam conforme a view: 1 mês, 1 ano ou 10 anos.
+  const handlePrev = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentMonth(subMonths(currentMonth, 1));
+    if (view === 'days') setCurrentMonth(subMonths(currentMonth, 1));
+    else if (view === 'months') setAnchor(subYears(anchor, 1));
+    else setAnchor(subYears(anchor, 10));
   };
 
-  const handleNextMonth = (e: React.MouseEvent) => {
+  const handleNext = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentMonth(addMonths(currentMonth, 1));
+    if (view === 'days') setCurrentMonth(addMonths(currentMonth, 1));
+    else if (view === 'months') setAnchor(addYears(anchor, 1));
+    else setAnchor(addYears(anchor, 10));
   };
+
+  const navTitles =
+    view === 'days'
+      ? { prev: t('prevMonth'), next: t('nextMonth') }
+      : view === 'months'
+        ? { prev: t('prevYear'), next: t('nextYear') }
+        : { prev: t('prevDecade'), next: t('nextDecade') };
+
+  const openMonths = (month: Date, index: 0 | 1) => {
+    setAnchor(startOfMonth(month));
+    setAnchorIndex(index);
+    setView('months');
+  };
+
+  const pickYear = (year: number) => {
+    setAnchor(new Date(year, anchor.getMonth(), 1));
+    setView('months');
+  };
+
+  const pickMonth = (monthIndex: number) => {
+    const m = new Date(anchor.getFullYear(), monthIndex, 1);
+    // Range: o mês escolhido cai na grade cujo cabeçalho foi clicado.
+    setCurrentMonth(mode === 'range' ? subMonths(m, anchorIndex) : m);
+    setView('days');
+  };
+
+  // Datas marcadas nas grades de meses/anos (valor atual ou seleção em andamento).
+  const selectedDates: Date[] = (() => {
+    if (mode === 'single') {
+      const d = pendingDate ?? (value instanceof Date ? value : null);
+      return d ? [d] : [];
+    }
+    if (tempRange) {
+      return tempRange.to ? [tempRange.from, tempRange.to] : [tempRange.from];
+    }
+    if (value && 'from' in value) {
+      const v = value as { from: Date; to: Date };
+      return [v.from, v.to];
+    }
+    return [];
+  })();
 
   const handleDayClick = (day: Date) => {
     setActivePreset(null);
@@ -247,7 +451,7 @@ export default function DatePicker({
     }
   };
 
-  const renderCalendar = (month: Date) => {
+  const renderCalendar = (month: Date, index: 0 | 1) => {
     const monthStart = startOfMonth(month);
     const monthEnd = endOfMonth(monthStart);
     const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -325,9 +529,14 @@ export default function DatePicker({
 
     return (
       <div className="flex flex-col gap-2">
-        <div className="text-center text-sm font-medium capitalize text-foreground">
+        <button
+          type="button"
+          aria-label={t('chooseMonth')}
+          className="mx-auto rounded-md px-2 text-sm font-medium capitalize text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          onClick={() => openMonths(month, index)}
+        >
           {formatAppDate(month, 'MMMM yyyy', locale)}
-        </div>
+        </button>
         <div className="grid grid-cols-7 gap-0.5">
           {weekDays.map((d, i) => (
             <div
@@ -409,55 +618,88 @@ export default function DatePicker({
           <button
             type="button"
             className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            onClick={handlePrevMonth}
-            title={t('prevMonth')}
+            onClick={handlePrev}
+            title={navTitles.prev}
           >
             <ChevronLeft size={16} />
           </button>
 
-          <div className="flex flex-1 justify-center gap-6">
-            {renderCalendar(currentMonth)}
-            {mode === 'range' && renderCalendar(addMonths(currentMonth, 1))}
+          {/* min-h fixa a altura da caixa entre as views (a posição é calculada só ao abrir). */}
+          <div className="flex min-h-[300px] flex-1 justify-center gap-6">
+            {view === 'days' ? (
+              <>
+                {renderCalendar(currentMonth, 0)}
+                {mode === 'range' && renderCalendar(addMonths(currentMonth, 1), 1)}
+              </>
+            ) : (
+              <div className="w-[236px]">
+                <MonthYearPanel
+                  view={view}
+                  anchor={anchor}
+                  monthNames={monthNames}
+                  selected={selectedDates}
+                  locale={locale}
+                  cellClass="h-10"
+                  onPickMonth={pickMonth}
+                  onPickYear={pickYear}
+                  onHeaderClick={() => setView('years')}
+                  t={t}
+                />
+              </div>
+            )}
           </div>
 
           <button
             type="button"
             className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            onClick={handleNextMonth}
-            title={t('nextMonth')}
+            onClick={handleNext}
+            title={navTitles.next}
           >
             <ChevronRight size={16} />
           </button>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-border px-3 py-2">
-          <button
-            type="button"
-            className="rounded-md px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            onClick={() => {
-              setPendingDate(null);
-              setIsOpen(false);
-            }}
-          >
-            {tCommon('cancel')}
-          </button>
-          {mode === 'single' && (
+        <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
+          <div>
+            {view !== 'days' && (
+              <button
+                type="button"
+                className="rounded-md px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                onClick={() => setView('days')}
+              >
+                {t('backToDays')}
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-              disabled={!pendingDate}
+              className="rounded-md px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               onClick={() => {
-                if (pendingDate) {
-                  onChange(pendingDate);
-                  setPendingDate(null);
-                  setIsOpen(false);
-                }
+                setPendingDate(null);
+                setIsOpen(false);
               }}
             >
-              {tCommon('confirm')}
+              {tCommon('cancel')}
             </button>
-          )}
+            {mode === 'single' && (
+              <button
+                type="button"
+                className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                disabled={!pendingDate}
+                onClick={() => {
+                  if (pendingDate) {
+                    onChange(pendingDate);
+                    setPendingDate(null);
+                    setIsOpen(false);
+                  }
+                }}
+              >
+                {tCommon('confirm')}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -472,7 +714,10 @@ export default function DatePicker({
           ref={triggerRef}
           type="button"
           className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setView('days');
+            setIsOpen(true);
+          }}
           aria-label={t('openPicker')}
         >
           <CalendarIcon size={14} className="text-muted-foreground" />
@@ -485,7 +730,17 @@ export default function DatePicker({
         </button>
 
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetContent side="bottom" className="h-auto max-h-[90dvh] flex flex-col gap-0 pb-safe px-0">
+          <SheetContent
+            side="bottom"
+            className="h-auto max-h-[90dvh] flex flex-col gap-0 pb-safe px-0"
+            onEscapeKeyDown={(e) => {
+              // Escape volta para os dias antes de fechar a Sheet.
+              if (view !== 'days') {
+                e.preventDefault();
+                setView('days');
+              }
+            }}
+          >
             <SheetHeader className="px-4 pt-4 pb-3 border-b">
               <SheetTitle className="text-sm font-semibold">
                 {mode === 'single' ? t('selectDate') : tCommon('selectPeriod')}
@@ -519,29 +774,67 @@ export default function DatePicker({
 
               {/* Calendário único centralizado */}
               <div className="px-4 py-4">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-3" aria-live="polite">
                   <button
                     type="button"
                     className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent"
-                    onClick={handlePrevMonth}
-                    title={t('prevMonth')}
+                    onClick={handlePrev}
+                    title={navTitles.prev}
                   >
                     <ChevronLeft size={16} />
                   </button>
-                  <span className="text-sm font-medium capitalize">
-                    {formatAppDate(currentMonth, 'MMMM yyyy', locale)}
-                  </span>
+                  {view === 'days' ? (
+                    <button
+                      type="button"
+                      aria-label={t('chooseMonth')}
+                      className="rounded-md px-2 py-1 text-sm font-medium capitalize transition-colors hover:bg-accent"
+                      onClick={() => openMonths(currentMonth, 0)}
+                    >
+                      {formatAppDate(currentMonth, 'MMMM yyyy', locale)}
+                    </button>
+                  ) : view === 'months' ? (
+                    <button
+                      type="button"
+                      aria-label={t('chooseYear')}
+                      className="rounded-md px-2 py-1 text-sm font-medium transition-colors hover:bg-accent"
+                      onClick={() => setView('years')}
+                    >
+                      {formatAppDate(anchor, 'yyyy', locale)}
+                    </button>
+                  ) : (
+                    <span className="text-sm font-medium">
+                      {t('decadeRange', {
+                        start: decadeStart(anchor),
+                        end: decadeStart(anchor) + 11,
+                      })}
+                    </span>
+                  )}
                   <button
                     type="button"
                     className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent"
-                    onClick={handleNextMonth}
-                    title={t('nextMonth')}
+                    onClick={handleNext}
+                    title={navTitles.next}
                   >
                     <ChevronRight size={16} />
                   </button>
                 </div>
-                {/* Grid do calendário — sem o header de mês (já temos acima) */}
-                {(() => {
+                {view !== 'days' ? (
+                  <MonthYearPanel
+                    view={view}
+                    anchor={anchor}
+                    monthNames={monthNames}
+                    selected={selectedDates}
+                    locale={locale}
+                    cellClass="h-12 touch-target"
+                    showTitle={false}
+                    onPickMonth={pickMonth}
+                    onPickYear={pickYear}
+                    onHeaderClick={() => setView('years')}
+                    t={t}
+                  />
+                ) : (
+                  /* Grid do calendário — sem o header de mês (já temos acima) */
+                  (() => {
                   const monthStart = startOfMonth(currentMonth);
                   const monthEnd = endOfMonth(monthStart);
                   const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -615,38 +908,52 @@ export default function DatePicker({
                       {rows}
                     </>
                   );
-                })()}
+                  })()
+                )}
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">
-              <button
-                type="button"
-                className="rounded-md px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent"
-                onClick={() => {
-                  setPendingDate(null);
-                  setIsOpen(false);
-                }}
-              >
-                {tCommon('cancel')}
-              </button>
-              {mode === 'single' && (
+            <div className="flex items-center justify-between gap-2 border-t px-4 py-3">
+              <div>
+                {view !== 'days' && (
+                  <button
+                    type="button"
+                    className="rounded-md px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent"
+                    onClick={() => setView('days')}
+                  >
+                    {t('backToDays')}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-                  disabled={!pendingDate}
+                  className="rounded-md px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent"
                   onClick={() => {
-                    if (pendingDate) {
-                      onChange(pendingDate);
-                      setPendingDate(null);
-                      setIsOpen(false);
-                    }
+                    setPendingDate(null);
+                    setIsOpen(false);
                   }}
                 >
-                  {tCommon('confirm')}
+                  {tCommon('cancel')}
                 </button>
-              )}
+                {mode === 'single' && (
+                  <button
+                    type="button"
+                    className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                    disabled={!pendingDate}
+                    onClick={() => {
+                      if (pendingDate) {
+                        onChange(pendingDate);
+                        setPendingDate(null);
+                        setIsOpen(false);
+                      }
+                    }}
+                  >
+                    {tCommon('confirm')}
+                  </button>
+                )}
+              </div>
             </div>
           </SheetContent>
         </Sheet>

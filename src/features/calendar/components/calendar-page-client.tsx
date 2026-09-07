@@ -69,6 +69,7 @@ export function CalendarPageClient({
         cal.selectDate(date)
         setSheetOpen(false)
       }}
+      onMonthChange={cal.goToMonth}
       days={cal.days}
       hasGoogle={hasGoogleCalendar}
       googleSlot={googleSlot}

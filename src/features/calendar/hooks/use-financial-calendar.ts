@@ -119,6 +119,11 @@ export function useFinancialCalendar({
     setCurrentDate(new Date())
   }, [])
 
+  // Salto direto de mês/ano (mini calendário da sidebar).
+  const goToMonth = useCallback((date: Date) => {
+    setCurrentDate(startOfMonth(date))
+  }, [])
+
   const selectDate = useCallback((date: Date) => {
     setSelectedDate(date)
     setShowDayDetail(true)
@@ -153,6 +158,7 @@ export function useFinancialCalendar({
     toParam,
     navigateMonth,
     goToToday,
+    goToMonth,
     selectDate,
     closeDayDetail,
     refetch: fetchCalendarData,

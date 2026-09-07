@@ -6,27 +6,47 @@ import {
   ChevronRightIcon,
 } from "lucide-react"
 import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
+import { useLocale, useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
+import { formatAppDate, getDateFnsLocale } from "@/i18n/format"
 import { Button, buttonVariants } from "@/components/ui/button"
 
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  captionLayout = "label",
+  captionLayout = "dropdown",
   buttonVariant = "ghost",
   formatters,
   components,
+  labels,
+  startMonth,
+  endMonth,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
 }) {
   const defaultClassNames = getDefaultClassNames()
+  const locale = useLocale()
+  const t = useTranslations("common.datePicker")
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      locale={getDateFnsLocale(locale)}
+      // O app inteiro começa a semana no domingo (o locale es começa na segunda).
+      weekStartsOn={0}
+      // Sem limites explícitos a biblioteca esconde o ano que vem nos dropdowns.
+      startMonth={startMonth ?? new Date(1990, 0, 1)}
+      endMonth={endMonth ?? new Date(new Date().getFullYear() + 10, 11, 31)}
+      labels={{
+        labelMonthDropdown: () => t("chooseMonth"),
+        labelYearDropdown: () => t("chooseYear"),
+        labelPrevious: () => t("prevMonth"),
+        labelNext: () => t("nextMonth"),
+        ...labels,
+      }}
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
@@ -35,8 +55,7 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+        formatMonthDropdown: (date) => formatAppDate(date, "LLL", locale),
         ...formatters,
       }}
       classNames={{

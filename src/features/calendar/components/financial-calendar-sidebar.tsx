@@ -17,6 +17,7 @@ interface FinancialCalendarSidebarProps {
   currentDate: Date
   selectedDate: Date | null
   onSelectDate: (date: Date) => void
+  onMonthChange: (month: Date) => void
   days: CalendarDayStatement[]
   hasGoogle: boolean
   googleSlot?: React.ReactNode
@@ -26,6 +27,7 @@ export function FinancialCalendarSidebar({
   currentDate,
   selectedDate,
   onSelectDate,
+  onMonthChange,
   days,
   googleSlot,
 }: FinancialCalendarSidebarProps) {
@@ -43,7 +45,8 @@ export function FinancialCalendarSidebar({
         mode="single"
         selected={selectedDate ?? undefined}
         onSelect={(date) => date && onSelectDate(date)}
-        defaultMonth={currentDate}
+        month={currentDate}
+        onMonthChange={onMonthChange}
         className="rounded-md border"
       />
 
