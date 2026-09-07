@@ -17,10 +17,7 @@ import { useDateRange } from "@/contexts/date-range-context"
 import { useMonetaryFormattingSafe } from "@/hooks/use-monetary-formatting"
 import { formatAppDate } from "@/i18n/format"
 import { useDateClosingGuard } from "@/features/security/components/date-closing-guard"
-import {
-  DateClosingSwitch,
-  useDateClosingLabel,
-} from "@/features/security/components/date-closing-switch"
+import { DateClosingSwitch } from "@/features/security/components/date-closing-switch"
 import {
   summarizeBatch,
   type BatchRowResult,
@@ -74,8 +71,6 @@ export function TransactionsClient({
   const tRoot = useTranslations()
   const locale = useLocale()
   const { dateRange, setDateRange } = useDateRange()
-  // Texto de estado do fechamento; o switch em si mora no CardAction do mesmo cabeçalho.
-  const closingLabel = useDateClosingLabel()
   const guard = useDateClosingGuard()
   const pathname = usePathname()
   const [transactions, setTransactions] = useState(initialTransactions)
@@ -639,10 +634,11 @@ export function TransactionsClient({
       <div className="px-4 lg:px-6">
         <Card>
           <CardHeader>
-            <CardTitle>{t("table.title")}</CardTitle>
-            <CardDescription>
+            {/* Título e descrição presos às células da coluna 1: em cartões estreitos o Switch
+                libera a coluna 2 e a grade tentaria puxar a descrição para o lado do título. */}
+            <CardTitle className="col-start-1 row-start-1">{t("table.title")}</CardTitle>
+            <CardDescription className="col-start-1 row-start-2">
               {t("table.description", { count: transactions.length })}
-              {closingLabel && <span className="mt-0.5 block">{closingLabel}</span>}
             </CardDescription>
             <DateClosingSwitch />
           </CardHeader>

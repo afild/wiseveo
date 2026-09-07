@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { CardAction } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useDateRange } from "@/contexts/date-range-context"
 import { createDateFormatter } from "@/i18n/format"
@@ -73,32 +74,13 @@ function useClosingSwitch() {
 }
 
 /**
- * Texto de estado do fechamento, para a `CardDescription` do cartão (o `CardAction` não comporta
- * texto variável no celular). Devolve null enquanto o estado não chegou.
- */
-export function useDateClosingLabel(): string | null {
-  const t = useTranslations("transactions.closing")
-  const locale = useLocale()
-  const { view } = useClosingSwitch()
-
-  const dayFormatter = React.useMemo(
-    () => createDateFormatter(locale, { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }),
-    [locale],
-  )
-
-  if (view.label === null) return null
-
-  const text =
-    view.label === "closedThrough" && view.labelDate
-      ? t("stateClosedThrough", { date: dayFormatter.format(new Date(`${view.labelDate}T12:00:00.000Z`)) })
-      : t(LABEL_KEYS[view.label === "closedThrough" ? "closed" : view.label])
-
-  return view.note === null ? text : `${text} ${t("askOwnerPin")}`
-}
-
-/**
  * O switch de fechamento no cabeçalho do "Registro de Transações". Ligar fecha até o último dia
  * do período em tela que já passou; desligar reabre a partir do primeiro dia dele.
+ *
+ * Renderiza um grupo que se explica sozinho: [switch][rótulo visível][texto de estado]. O rótulo
+ * (`<Label htmlFor>`) é o nome acessível do controle e o texto de estado vai em `aria-describedby`.
+ * Em cartões largos o grupo fica no canto superior direito; em cartões estreitos (container abaixo
+ * de 36rem) desce para uma linha própria sob a descrição, para não esmagar o título.
  *
  * As três janelas que ele comanda (confirmar o fechamento, os bloqueadores não pagos e a
  * reabertura) vivem aqui dentro e SEMPRE têm saída: cancelar, Escape ou o X voltam para a tela,
@@ -137,6 +119,17 @@ export function DateClosingSwitch() {
     (key: string) => dayFormatter.format(new Date(`${key}T12:00:00.000Z`)),
     [dayFormatter],
   )
+
+  const switchId = React.useId()
+  const stateId = React.useId()
+  // Texto e recado separados: o recado (`askOwnerPin`) é uma frase inteira e ganha linha própria.
+  const stateText =
+    view.label === null
+      ? null
+      : view.label === "closedThrough" && view.labelDate
+        ? t("stateClosedThrough", { date: formatDay(view.labelDate) })
+        : t(LABEL_KEYS[view.label === "closedThrough" ? "closed" : view.label])
+  const noteText = view.note === null ? null : t("askOwnerPin")
 
   /**
    * `retryAfterPin` só é verdadeiro na primeira volta: um 428 leva à criação do PIN e a UMA
@@ -212,13 +205,26 @@ export function DateClosingSwitch() {
   const closingToday = displayThrough !== null && displayThrough === dayKeyOfLocal(new Date())
 
   return (
-    <CardAction className="flex items-center">
-      <Switch
-        checked={view.checked}
-        disabled={view.disabled || busy}
-        aria-label={t("switchAria")}
-        onCheckedChange={(next) => void handleToggle(next)}
-      />
+    <CardAction className="col-span-2 col-start-1 row-span-1 row-start-3 flex flex-col items-start gap-1 justify-self-start @[36rem]/card-header:col-span-1 @[36rem]/card-header:col-start-2 @[36rem]/card-header:row-span-2 @[36rem]/card-header:row-start-1 @[36rem]/card-header:items-end @[36rem]/card-header:justify-self-end">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        {/* O Switch precisa vir logo antes do Label (irmãos) para o `peer-disabled` do Label valer. */}
+        <Switch
+          id={switchId}
+          checked={view.checked}
+          disabled={view.disabled || busy}
+          aria-describedby={stateText ? stateId : undefined}
+          onCheckedChange={(next) => void handleToggle(next)}
+        />
+        <Label htmlFor={switchId} className="cursor-pointer">
+          {t("switchLabel")}
+        </Label>
+        {stateText && (
+          <span id={stateId} className="text-sm text-muted-foreground">
+            {stateText}
+          </span>
+        )}
+      </div>
+      {noteText && <span className="text-xs text-muted-foreground">{noteText}</span>}
 
       <AlertDialog
         open={confirmThrough !== null}
