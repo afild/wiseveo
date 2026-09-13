@@ -1890,6 +1890,11 @@
         "connected": "Google Drive connected",
         "connectedToast": "Google Drive connected. Turn on automatic backup and pick a time.",
         "desc": "Every day, at the time you choose, WISEVEO creates a full copy of your database and sends it to the WISEVEO Backups folder in your Google Drive. Only that folder: the app cannot see the rest of your Drive.",
+        "disconnect": "Disconnect",
+        "disconnectConfirm": "Disconnect",
+        "disconnectConfirmDesc": "WISEVEO stops sending backups and loses access to the WISEVEO Backups folder. Copies already in Drive stay there. Google Calendar uses the same connection and will be disconnected too.",
+        "disconnectConfirmTitle": "Disconnect Google Drive?",
+        "disconnectedToast": "Google Drive disconnected.",
         "enabled": "Automatic backup",
         "error": "Could not complete. Try again.",
         "errorGeneric": "Could not connect Google Drive. Try again.",
@@ -1922,6 +1927,7 @@
         "save": "Save",
         "saved": "Backup configured.",
         "saving": "Saving…",
+        "switchAccount": "Switch account",
         "title": "Google Drive backup"
       },
       "bot": {

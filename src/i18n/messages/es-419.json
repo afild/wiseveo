@@ -1890,6 +1890,11 @@
         "connected": "Google Drive conectado",
         "connectedToast": "Google Drive conectado. Activa la copia automática y elige el horario.",
         "desc": "Todos los días, en el horario elegido, WISEVEO genera una copia completa de tu base de datos y la envía a la carpeta WISEVEO Backups en tu Google Drive. Solo esa carpeta: la app no ve el resto de tu Drive.",
+        "disconnect": "Desconectar",
+        "disconnectConfirm": "Desconectar",
+        "disconnectConfirmDesc": "WISEVEO deja de enviar copias de seguridad y pierde el acceso a la carpeta WISEVEO Backups. Las copias que ya están en Drive se quedan ahí. Google Calendar usa la misma conexión y también se desconectará.",
+        "disconnectConfirmTitle": "¿Desconectar Google Drive?",
+        "disconnectedToast": "Google Drive desconectado.",
         "enabled": "Copia automática",
         "error": "No se pudo completar. Intenta de nuevo.",
         "errorGeneric": "No se pudo conectar Google Drive. Intenta de nuevo.",
@@ -1922,6 +1927,7 @@
         "save": "Guardar",
         "saved": "Copia configurada.",
         "saving": "Guardando…",
+        "switchAccount": "Cambiar cuenta",
         "title": "Copia de seguridad en Google Drive"
       },
       "bot": {

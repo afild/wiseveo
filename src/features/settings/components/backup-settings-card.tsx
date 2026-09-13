@@ -3,7 +3,17 @@
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { toast } from "sonner"
-import { CheckCircle2, ChevronDown, CloudUpload, ExternalLink, HardDriveDownload, Loader2 } from "lucide-react"
+import { CheckCircle2, ChevronDown, CloudUpload, ExternalLink, HardDriveDownload, Loader2, RefreshCw, Unplug } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -31,6 +41,7 @@ const MINUTES = [0, 15, 30, 45] as const
 
 export function BackupSettingsCard({ structureReady, tickConfigured, initial, readOnly = false }: BackupSettingsCardProps) {
   const t = useTranslations("settings.integrations.backup")
+  const tCommon = useTranslations("common")
   const locale = useLocale()
   const [view, setView] = React.useState(initial)
   const [enabled, setEnabled] = React.useState(initial.enabled)
@@ -41,6 +52,8 @@ export function BackupSettingsCard({ structureReady, tickConfigured, initial, re
   const [saving, setSaving] = React.useState(false)
   const [running, setRunning] = React.useState(false)
   const [showRestore, setShowRestore] = React.useState(false)
+  const [confirmDisconnect, setConfirmDisconnect] = React.useState(false)
+  const [disconnecting, setDisconnecting] = React.useState(false)
 
   const formatDate = React.useMemo(() => createDateFormatter(locale, { dateStyle: "medium", timeStyle: "short" }), [locale])
   const formatNumber = React.useMemo(() => createNumberFormatter(locale, { maximumFractionDigits: 1 }), [locale])
@@ -128,6 +141,29 @@ export function BackupSettingsCard({ structureReady, tickConfigured, initial, re
     }
   }
 
+  // Conectar e "Trocar conta" são o mesmo caminho: o Google sempre pergunta a conta, e a
+  // volta grava os tokens da conta escolhida por cima dos anteriores.
+  function connectDrive() {
+    window.location.href = "/api/admin/backup/connect-google"
+  }
+
+  async function disconnect() {
+    setDisconnecting(true)
+    try {
+      const response = await fetch("/api/admin/backup", { method: "DELETE" })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok || !payload?.success) throw new Error(payload?.message ?? t("error"))
+      setView((current) => ({ ...current, driveConnected: false, folderId: null }))
+      setFiles(null)
+      setConfirmDisconnect(false)
+      toast.success(t("disconnectedToast"))
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("error"))
+    } finally {
+      setDisconnecting(false)
+    }
+  }
+
   const folderUrl = view.folderId ? `https://drive.google.com/drive/folders/${view.folderId}` : null
 
   return (
@@ -146,19 +182,29 @@ export function BackupSettingsCard({ structureReady, tickConfigured, initial, re
         ) : (
           <fieldset disabled={readOnly} className="space-y-4">
             {view.driveConnected ? (
-              <p className="inline-flex items-center gap-2 rounded-md border bg-muted/50 p-3 text-sm">
-                <CheckCircle2 className="size-4 text-positive" />
-                {t("connected")}
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="inline-flex items-center gap-2 rounded-md border bg-muted/50 p-3 text-sm">
+                  <CheckCircle2 className="size-4 text-positive" />
+                  {t("connected")}
+                </p>
+                <Button type="button" variant="outline" size="sm" className="cursor-pointer" disabled={disconnecting || running} onClick={connectDrive}>
+                  <RefreshCw className="size-4" />
+                  {t("switchAccount")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="cursor-pointer text-destructive hover:text-destructive"
+                  disabled={disconnecting || running}
+                  onClick={() => setConfirmDisconnect(true)}
+                >
+                  <Unplug className="size-4" />
+                  {t("disconnect")}
+                </Button>
+              </div>
             ) : (
-              <Button
-                type="button"
-                variant="outline"
-                className="cursor-pointer"
-                onClick={() => {
-                  window.location.href = "/api/admin/backup/connect-google"
-                }}
-              >
+              <Button type="button" variant="outline" className="cursor-pointer" onClick={connectDrive}>
                 <HardDriveDownload className="size-4" />
                 {t("connect")}
               </Button>
@@ -294,6 +340,30 @@ export function BackupSettingsCard({ structureReady, tickConfigured, initial, re
           </fieldset>
         )}
       </CardContent>
+
+      <AlertDialog open={confirmDisconnect} onOpenChange={(open) => !open && setConfirmDisconnect(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("disconnectConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("disconnectConfirmDesc")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="cursor-pointer">{tCommon("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="cursor-pointer"
+              disabled={disconnecting}
+              onClick={(event) => {
+                // Fica aberto até o servidor responder; fecha no sucesso.
+                event.preventDefault()
+                void disconnect()
+              }}
+            >
+              {disconnecting ? <Loader2 className="size-4 animate-spin" /> : null}
+              {t("disconnectConfirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }

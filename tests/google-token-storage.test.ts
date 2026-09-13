@@ -16,7 +16,7 @@ const m = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: m.prisma }))
 
-import { getValidAccessToken } from "@/lib/google-auth"
+import { disconnectGoogle, getValidAccessToken } from "@/lib/google-auth"
 import { encryptGoogleToken, readGoogleToken } from "@/lib/google-token-cipher"
 
 const ACCESS_ANTIGO = "ya29.acesso-guardado"
@@ -177,5 +177,34 @@ describe("acesso revogado pela pessoa na conta Google", () => {
       googleRefreshToken: null,
       googleTokenExpiresAt: null,
     })
+  })
+})
+
+describe("disconnectGoogle (botão Desconectar)", () => {
+  it("avisa o Google para cancelar o acesso com o refresh DECIFRADO e limpa as três colunas", async () => {
+    m.prisma.user.findUnique.mockResolvedValue({ googleRefreshToken: encryptGoogleToken(REFRESH) })
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 200 })))
+
+    await disconnectGoogle("u1")
+
+    const [url, init] = vi.mocked(fetch).mock.calls[0]
+    expect(String(url)).toBe("https://oauth2.googleapis.com/revoke")
+    expect(String((init as RequestInit).body)).toContain(encodeURIComponent(REFRESH))
+    expect(dadosGravados()).toEqual({ googleAccessToken: null, googleRefreshToken: null, googleTokenExpiresAt: null })
+  })
+
+  it("se o Google não responder, limpa do mesmo jeito (o app esquece o acesso)", async () => {
+    m.prisma.user.findUnique.mockResolvedValue({ googleRefreshToken: encryptGoogleToken(REFRESH) })
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("rede fora") }))
+
+    await expect(disconnectGoogle("u1")).resolves.toBeUndefined()
+    expect(dadosGravados()).toEqual({ googleAccessToken: null, googleRefreshToken: null, googleTokenExpiresAt: null })
+  })
+
+  it("sem token guardado, não chama o Google e limpa", async () => {
+    m.prisma.user.findUnique.mockResolvedValue({ googleRefreshToken: null })
+    await disconnectGoogle("u1")
+    expect(fetch).not.toHaveBeenCalled()
+    expect(dadosGravados()).toEqual({ googleAccessToken: null, googleRefreshToken: null, googleTokenExpiresAt: null })
   })
 })

@@ -3,11 +3,11 @@ import { getTranslations } from "next-intl/server"
 import { z } from "zod"
 import { isSuperAdminSession } from "@/lib/setup-access"
 import { getSessionUserId } from "@/lib/session"
-import { getValidAccessToken } from "@/lib/google-auth"
+import { disconnectGoogle, getValidAccessToken } from "@/lib/google-auth"
 import { AppSettingsError } from "@/features/settings/services/app-settings-service"
 import { BackupError, type BackupErrorCode } from "@/features/backup/lib/backup-error"
 import { MAX_KEEP, MIN_KEEP } from "@/features/backup/lib/backup-preferences"
-import { getBackupStatus, updateBackupSettings } from "@/features/backup/services/backup-config.service"
+import { disconnectBackupDrive, getBackupStatus, updateBackupSettings } from "@/features/backup/services/backup-config.service"
 import { createDriveClient } from "@/features/backup/services/google-drive.client"
 import { runBackup } from "@/features/backup/services/run-backup.service"
 
@@ -16,6 +16,7 @@ import { runBackup } from "@/features/backup/services/run-backup.service"
  *   GET  → view + lista de cópias na pasta do Drive
  *   PUT  → liga/desliga, horário, quantas guardar
  *   POST → "Fazer backup agora" (roda o ciclo inteiro, até 300 s)
+ *   DELETE → "Desconectar" (cancela o acesso no Google e esquece o Drive do backup)
  * Só SUPERADMIN, fora da demo: 404 vazio nos dois casos, como as rotas admin irmãs.
  */
 export const dynamic = "force-dynamic"
@@ -70,6 +71,19 @@ export async function POST() {
     const result = await runBackup({ trigger: "manual" })
     if (result.outcome === "failed") throw new BackupError(result.code as BackupError["code"], result.message)
     return NextResponse.json({ success: true, data: result })
+  } catch (error) {
+    return failure(error)
+  }
+}
+
+export async function DELETE() {
+  if (!(await guard())) return new NextResponse(null, { status: 404 })
+  try {
+    const userId = await getSessionUserId()
+    if (!userId) return new NextResponse(null, { status: 404 })
+    await disconnectGoogle(userId)
+    await disconnectBackupDrive(userId)
+    return NextResponse.json({ success: true })
   } catch (error) {
     return failure(error)
   }

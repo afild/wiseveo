@@ -1890,6 +1890,11 @@
         "connected": "Google Drive conectado",
         "connectedToast": "Google Drive conectado. Ligue o backup automático e escolha o horário.",
         "desc": "Todo dia, no horário escolhido, o WISEVEO gera uma cópia completa do seu banco e envia para a pasta WISEVEO Backups no seu Google Drive. Só essa pasta: o app não enxerga o resto do Drive.",
+        "disconnect": "Desconectar",
+        "disconnectConfirm": "Desconectar",
+        "disconnectConfirmDesc": "O WISEVEO deixa de enviar backups e perde o acesso à pasta WISEVEO Backups. As cópias que já estão no Drive ficam lá. A Agenda do Google usa a mesma conexão e também será desconectada.",
+        "disconnectConfirmTitle": "Desconectar o Google Drive?",
+        "disconnectedToast": "Google Drive desconectado.",
         "enabled": "Backup automático",
         "error": "Não foi possível concluir. Tente de novo.",
         "errorGeneric": "Não foi possível conectar o Google Drive. Tente de novo.",
@@ -1922,6 +1927,7 @@
         "save": "Salvar",
         "saved": "Backup configurado.",
         "saving": "Salvando…",
+        "switchAccount": "Trocar conta",
         "title": "Backup no Google Drive"
       },
       "bot": {

@@ -81,7 +81,10 @@ describe("getGoogleDriveAuthUrl (conectar Drive para o backup)", () => {
   it("é incremental: soma ao que a pessoa já concedeu, para a Agenda não cair", () => {
     expect(p.get("include_granted_scopes")).toBe("true")
     expect(p.get("access_type")).toBe("offline")
-    expect(p.get("prompt")).toBe("consent")
+  })
+
+  it("sempre pergunta qual conta usar (trocar conta) e pede consentimento", () => {
+    expect(p.get("prompt")?.split(" ").sort()).toEqual(["consent", "select_account"])
   })
 
   it("volta pelo callback da Agenda, com o state inteiro", () => {

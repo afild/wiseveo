@@ -22,6 +22,9 @@ vi.mock("@/features/settings/services/app-settings-service", () => ({
   writeAppSecrets: async (entries: Record<string, string>) => {
     for (const [k, v] of Object.entries(entries)) m.secrets.set(k, v)
   },
+  deleteAppSettings: async (keys: string[]) => {
+    for (const k of keys) m.secrets.delete(k)
+  },
 }))
 vi.mock("@/features/settings/services/user-preferences-write", () => ({
   mergeUserPreferenceKey: async (_executor: unknown, userId: string, key: string, patch: Record<string, unknown>) => {
@@ -31,7 +34,7 @@ vi.mock("@/features/settings/services/user-preferences-write", () => ({
   },
 }))
 
-import { findBackupOwner, getBackupStatus, readLastRun, recordLastRun, updateBackupSettings } from "@/features/backup/services/backup-config.service"
+import { disconnectBackupDrive, findBackupOwner, getBackupStatus, readLastRun, recordLastRun, updateBackupSettings } from "@/features/backup/services/backup-config.service"
 
 beforeEach(() => {
   m.users = [
@@ -95,5 +98,17 @@ describe("getBackupStatus", () => {
     expect((await getBackupStatus())?.driveConnected).toBe(false)
     // e o agendador pula em vez de falhar todo dia com o mesmo aviso
     expect((await findBackupOwner())?.preferences.driveGrantedAt).toBeNull()
+  })
+})
+
+describe("disconnectBackupDrive", () => {
+  it("apaga o consentimento por mesclagem e esquece a pasta, mantendo horário e último resultado", async () => {
+    m.secrets.set("backup.driveFolderId", "pasta-1")
+    m.secrets.set("backup.lastRun", "{}")
+    await disconnectBackupDrive("admin")
+    expect(m.merged).toEqual([{ userId: "admin", key: "backup", patch: { driveGrantedAt: null } }])
+    expect(m.secrets.has("backup.driveFolderId")).toBe(false)
+    expect(m.secrets.has("backup.lastRun")).toBe(true)
+    expect((await findBackupOwner())?.preferences).toMatchObject({ enabled: true, driveGrantedAt: null })
   })
 })

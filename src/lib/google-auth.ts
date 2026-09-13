@@ -138,7 +138,9 @@ export function getGoogleDriveAuthUrl(state: string, appUrl?: string): string {
     scope: GOOGLE_DRIVE_FILE_SCOPE,
     include_granted_scopes: "true",
     access_type: "offline",
-    prompt: "consent",
+    // select_account: o Google sempre pergunta a conta, senão "Trocar conta" reusaria em
+    // silêncio a conta já logada no navegador (foi assim que a conta errada entrou em 13/09).
+    prompt: "consent select_account",
     state,
   })
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
@@ -277,7 +279,27 @@ export async function getValidAccessToken(
   return access_token
 }
 
-/** Apaga as três colunas de uma vez. Único jeito de "desconectar" a Agenda hoje. */
+/**
+ * Botão "Desconectar" do Drive: pede ao Google para cancelar o acesso e apaga os tokens.
+ * Existe um único conjunto de tokens por pessoa, então a Agenda cai junto. Se o Google
+ * não responder, apaga do mesmo jeito: o app esquece o acesso, e a pessoa ainda pode
+ * removê-lo em myaccount.google.com.
+ */
+export async function disconnectGoogle(userId: string): Promise<void> {
+  const { prisma } = await import("@/lib/prisma")
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { googleRefreshToken: true } })
+  const refreshToken = readGoogleToken(user?.googleRefreshToken ?? null)
+  if (refreshToken) {
+    await fetch("https://oauth2.googleapis.com/revoke", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token: refreshToken }),
+    }).catch((error) => console.error("[Google] revoke failed:", error instanceof Error ? error.message : error)) // i18n-ignore: prefixo de log de servidor, nunca exibido em tela
+  }
+  await disconnectGoogleCalendar(userId)
+}
+
+/** Apaga as três colunas de uma vez. */
 async function disconnectGoogleCalendar(userId: string): Promise<void> {
   const { prisma } = await import("@/lib/prisma")
   await prisma.user.update({

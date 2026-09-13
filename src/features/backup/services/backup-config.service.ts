@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { readAppSecrets, writeAppSecrets } from "@/features/settings/services/app-settings-service"
+import { deleteAppSettings, readAppSecrets, writeAppSecrets } from "@/features/settings/services/app-settings-service"
 import { mergeUserPreferenceKey } from "@/features/settings/services/user-preferences-write"
 import { resolveNotificationPreferences } from "@/features/notifications/lib/preferences"
 import { resolveLocaleOrInstallDefault } from "@/i18n/install-locale"
@@ -72,6 +72,15 @@ export async function updateBackupSettings(userId: string, input: BackupSettings
   await mergeUserPreferenceKey(prisma, userId, "backup", patch)
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { preferencesJson: true } })
   return resolveBackupPreferences(asRecord(user?.preferencesJson).backup)
+}
+
+/**
+ * "Desconectar": esquece o consentimento e a pasta (ela é da conta que sai; a próxima
+ * conta cria ou acha a sua). Horário, quantas guardar e o último resultado ficam.
+ */
+export async function disconnectBackupDrive(userId: string): Promise<void> {
+  await mergeUserPreferenceKey(prisma, userId, "backup", { driveGrantedAt: null })
+  await deleteAppSettings([BACKUP_FOLDER_KEY])
 }
 
 export interface BackupLastRun {

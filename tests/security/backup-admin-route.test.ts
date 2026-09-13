@@ -7,6 +7,7 @@ const m = vi.hoisted(() => ({
   status: { driveConnected: true, enabled: false, hour: 3, minute: 0, keep: 30, timezone: "America/New_York", lastRun: null, folderId: "pasta-1" },
   updates: [] as unknown[],
   runs: [] as string[],
+  disconnected: [] as string[],
   files: [{ id: "a", name: "a.dump", sizeBytes: 10, createdAt: "2026-09-01T00:00:00Z" }],
 }))
 
@@ -15,6 +16,9 @@ vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: async () => (m.se
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }))
 vi.mock("@/features/backup/services/backup-config.service", () => ({
   getBackupStatus: async () => m.status,
+  disconnectBackupDrive: async (id: string) => {
+    m.disconnected.push(`backup:${id}`)
+  },
   updateBackupSettings: async (_u: string, input: unknown) => {
     m.updates.push(input)
     return { ...m.status, ...(input as object) }
@@ -26,12 +30,17 @@ vi.mock("@/features/backup/services/run-backup.service", () => ({
     return { outcome: "sent", occurrenceKey: "k", fileName: "f.dump", sizeBytes: 1, objects: 196, durationMs: 1 }
   },
 }))
-vi.mock("@/lib/google-auth", () => ({ getValidAccessToken: async () => "ya29.x" }))
+vi.mock("@/lib/google-auth", () => ({
+  getValidAccessToken: async () => "ya29.x",
+  disconnectGoogle: async (id: string) => {
+    m.disconnected.push(`google:${id}`)
+  },
+}))
 vi.mock("@/features/backup/services/google-drive.client", () => ({
   createDriveClient: () => ({ listFiles: async () => m.files }),
 }))
 
-import { GET, POST, PUT } from "@/app/api/admin/backup/route"
+import { DELETE, GET, POST, PUT } from "@/app/api/admin/backup/route"
 
 const url = "https://app.wiseveo.com/api/admin/backup"
 const json = (method: string, body: unknown) => new NextRequest(url, { method, body: JSON.stringify(body), headers: { "content-type": "application/json" } })
@@ -41,6 +50,7 @@ beforeEach(() => {
   m.role = "SUPERADMIN"
   m.updates = []
   m.runs = []
+  m.disconnected = []
   delete process.env.NEXT_PUBLIC_DEMO_MODE
 })
 
@@ -53,6 +63,8 @@ describe("guarda", () => {
     expect((await GET()).status).toBe(404)
     expect((await PUT(json("PUT", { enabled: true, hour: 3, minute: 0, keep: 30 }))).status).toBe(404)
     expect((await POST()).status).toBe(404)
+    expect((await DELETE()).status).toBe(404)
+    expect(m.disconnected).toEqual([])
     expect(m.updates).toEqual([])
     expect(m.runs).toEqual([])
   })
@@ -87,5 +99,14 @@ describe("POST (fazer agora)", () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toMatchObject({ success: true, data: { outcome: "sent", fileName: "f.dump" } })
     expect(m.runs).toEqual(["manual"])
+  })
+})
+
+describe("DELETE (desconectar o Drive)", () => {
+  it("cancela o acesso no Google e esquece o Drive do backup, para quem está logado", async () => {
+    const res = await DELETE()
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ success: true })
+    expect(m.disconnected).toEqual(["google:admin", "backup:admin"])
   })
 })
