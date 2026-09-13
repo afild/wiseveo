@@ -13,6 +13,8 @@ const m = vi.hoisted(() => ({
   lastRun: null as unknown,
   messages: [] as string[],
   folder: null as string | null,
+  /** O que `ensureFolder` devolve; null = "pasta-1". */
+  retryFolder: null as string | null,
 }))
 
 vi.mock("@/features/backup/services/backup-config.service", () => ({
@@ -39,10 +41,13 @@ vi.mock("@/lib/google-auth", () => ({ getValidAccessToken: async () => m.token }
 vi.mock("@/features/backup/services/sandbox-dump.service", () => ({
   runPgDumpInSandbox: async () => ({ ...m.dump, toc: m.toc }),
 }))
-vi.mock("@/features/backup/services/google-drive.client", () => ({
+vi.mock("@/features/backup/services/google-drive.client", async () => {
+  const { BackupError } = await import("@/features/backup/lib/backup-error")
+  return {
   createDriveClient: () => ({
-    ensureFolder: async () => "pasta-1",
-    uploadFile: async ({ name }: { name: string }) => {
+    ensureFolder: async () => m.retryFolder ?? "pasta-1",
+    uploadFile: async ({ name, folderId }: { name: string; folderId: string }) => {
+      if (folderId === "pasta-sumida") throw new BackupError("driveFailed", 'HTTP 404 {"error":{"code":404,"message":"File not found"}}')
       m.uploaded.push(name)
       return { id: "novo", name, sizeBytes: 200_000, createdAt: "2026-09-05T07:00:00Z" }
     },
@@ -51,7 +56,8 @@ vi.mock("@/features/backup/services/google-drive.client", () => ({
       m.deleted.push(id)
     },
   }),
-}))
+  }
+})
 vi.mock("@/features/notifications/services/notification-channel.service", () => ({
   sendTextNotification: async (_chat: string, text: string) => {
     m.messages.push(text)
@@ -84,6 +90,7 @@ beforeEach(() => {
   m.lastRun = null
   m.messages = []
   m.folder = null
+  m.retryFolder = null
   vi.stubEnv("DATABASE_URL", "postgresql://postgres.ref:pw@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true")
 })
 
@@ -129,6 +136,21 @@ describe("runBackup pelo despertador", () => {
     expect(m.uploaded).toEqual([])
     // o aviso diz o que fazer (reconectar), não um código cru
     expect(m.messages[0]).toBe("backup.failedDriveNotConnected")
+  })
+
+  it("pasta guardada que o Drive não acha mais (404): cria de novo, guarda o id novo e envia (caso real de 13/09/2026)", async () => {
+    m.folder = "pasta-sumida"
+    const out = await runBackup({ trigger: "tick", now: NOW })
+    expect(out).toMatchObject({ outcome: "sent" })
+    expect(m.folder).toBe("pasta-1")
+    expect(m.uploaded).toEqual(["wiseveo-app-20260905-0330.dump"])
+  })
+
+  it("outra falha do Drive no envio não recria a pasta: marca falha", async () => {
+    m.folder = "pasta-sumida"
+    m.retryFolder = "pasta-sumida"
+    const out = await runBackup({ trigger: "tick", now: NOW })
+    expect(out).toMatchObject({ outcome: "failed", code: "driveFailed" })
   })
 
   it("retenção: apaga as mais velhas além de keep, nunca o que acabou de subir", async () => {

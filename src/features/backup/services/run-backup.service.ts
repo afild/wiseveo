@@ -87,12 +87,26 @@ export async function runBackup(input: RunBackupInput): Promise<BackupRunResult>
       folderId = await drive.ensureFolder(BACKUP_FOLDER_NAME)
       await saveFolderId(folderId)
     }
-    const uploaded = await drive.uploadFile({
-      folderId,
-      name: fileName,
-      description: `${check.objects} objects; ${produced.pgDumpVersion}; ${formatSize(produced.dump.length)}`, // i18n-ignore: descrição técnica do arquivo no Drive, dado e não texto de tela
-      content: produced.dump,
-    })
+    const upload = (target: string) =>
+      drive.uploadFile({
+        folderId: target,
+        name: fileName,
+        description: `${check.objects} objects; ${produced.pgDumpVersion}; ${formatSize(produced.dump.length)}`, // i18n-ignore: descrição técnica do arquivo no Drive, dado e não texto de tela
+        content: produced.dump,
+      })
+    let uploaded: Awaited<ReturnType<typeof upload>>
+    try {
+      uploaded = await upload(folderId)
+    } catch (error) {
+      // A pasta guardada pode sumir para o app: apagada no Drive, ou invisível a um acesso
+      // novo (drive.file só enxerga o que o próprio acesso criou). Visto em 13/09/2026 logo
+      // depois de reconectar. Recria uma vez e tenta de novo; qualquer outra falha segue.
+      const folderGone = error instanceof BackupError && error.code === "driveFailed" && error.message.includes("HTTP 404")
+      if (!folderGone) throw error
+      folderId = await drive.ensureFolder(BACKUP_FOLDER_NAME)
+      await saveFolderId(folderId)
+      uploaded = await upload(folderId)
+    }
 
     const existing = await drive.listFiles(folderId)
     for (const old of pickBackupsToDelete(existing, owner.preferences.keep)) {
