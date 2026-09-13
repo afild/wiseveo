@@ -1472,6 +1472,7 @@
   "notifications": {
     "backup": {
       "failed": "Backup do WISEVEO falhou hoje: {reason}. A cópia anterior no Drive continua lá.",
+      "failedDriveNotConnected": "Backup do WISEVEO falhou hoje: o acesso ao Google Drive expirou. Conecte de novo em Configurações, na aba Integrações. A cópia anterior no Drive continua lá.",
       "ok": "Backup do WISEVEO feito: {file}, {size}, {objects} objetos, enviado ao Google Drive."
     },
     "bills": {
@@ -1906,6 +1907,7 @@
         "needsPrepare": "Prepare o banco acima para poder configurar o backup.",
         "needsTick": "O backup usa o despertador dos avisos. Cadastre o endereço no cartão acima antes de ligar o backup automático.",
         "openFolder": "Abrir a pasta no Drive",
+        "reasonDriveNotConnected": "o acesso ao Google Drive expirou. Conecte de novo pelo botão acima",
         "restoreStep1": "Crie um projeto novo no Supabase e copie a URL direta dele (porta 5432).",
         "restoreStep2": "Baixe a cópia mais recente da pasta WISEVEO Backups.",
         "restoreStep3": "No seu computador, restaure com pg_restore usando a receita do manual: sem --clean, com --use-list sem a entrada SCHEMA - public.",

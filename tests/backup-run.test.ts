@@ -127,6 +127,8 @@ describe("runBackup pelo despertador", () => {
     m.token = null
     expect(await runBackup({ trigger: "tick", now: NOW })).toMatchObject({ outcome: "failed", code: "driveNotConnected" })
     expect(m.uploaded).toEqual([])
+    // o aviso diz o que fazer (reconectar), não um código cru
+    expect(m.messages[0]).toBe("backup.failedDriveNotConnected")
   })
 
   it("retenção: apaga as mais velhas além de keep, nunca o que acabou de subir", async () => {

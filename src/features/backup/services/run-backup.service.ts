@@ -50,7 +50,7 @@ function formatSize(bytes: number): string {
   return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`
 }
 
-async function notify(owner: BackupOwner, key: "ok" | "failed", values: Record<string, string | number>): Promise<void> {
+async function notify(owner: BackupOwner, key: "ok" | "failed" | "failedDriveNotConnected", values?: Record<string, string | number>): Promise<void> {
   if (!owner.chatId) return
   try {
     const t = await getTranslations({ locale: owner.locale, namespace: "notifications" })
@@ -113,7 +113,8 @@ export async function runBackup(input: RunBackupInput): Promise<BackupRunResult>
     console.error(`[BACKUP] ${decision.occurrenceKey} failed:`, message) // i18n-ignore: prefixo de log de servidor, nunca exibido em tela
     await markFailed(ref, `${code}: ${message}`.slice(0, 500))
     await recordLastRun({ at: now.toISOString(), ok: false, fileName: null, sizeBytes: null, message: code })
-    await notify(owner, "failed", { reason: code })
+    if (code === "driveNotConnected") await notify(owner, "failedDriveNotConnected")
+    else await notify(owner, "failed", { reason: code })
     return { outcome: "failed", occurrenceKey: decision.occurrenceKey, code, message }
   }
 }

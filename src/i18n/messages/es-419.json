@@ -1472,6 +1472,7 @@
   "notifications": {
     "backup": {
       "failed": "La copia de seguridad de WISEVEO falló hoy: {reason}. La copia anterior en Drive sigue ahí.",
+      "failedDriveNotConnected": "La copia de seguridad de WISEVEO falló hoy: el acceso a Google Drive venció. Conéctalo de nuevo en Configuración, en la pestaña Integraciones. La copia anterior en Drive sigue ahí.",
       "ok": "Copia de seguridad de WISEVEO lista: {file}, {size}, {objects} objetos, enviada a Google Drive."
     },
     "bills": {
@@ -1906,6 +1907,7 @@
         "needsPrepare": "Prepara la base de datos arriba para poder configurar la copia.",
         "needsTick": "La copia usa el despertador de los avisos. Registra su dirección en la tarjeta de arriba antes de activar la copia automática.",
         "openFolder": "Abrir la carpeta en Drive",
+        "reasonDriveNotConnected": "el acceso a Google Drive venció. Conéctalo de nuevo con el botón de arriba",
         "restoreStep1": "Crea un proyecto nuevo en Supabase y copia su URL directa (puerto 5432).",
         "restoreStep2": "Descarga la copia más reciente de la carpeta WISEVEO Backups.",
         "restoreStep3": "En tu computadora, restaura con pg_restore usando la receta del manual: sin --clean, con --use-list sin la entrada SCHEMA - public.",

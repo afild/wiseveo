@@ -133,6 +133,37 @@ describe("acesso revogado pela pessoa na conta Google", () => {
     })
   })
 
+  it("unauthorized_client desconecta: o token não serve mais para este app (caso real de 11/09/2026)", async () => {
+    m.prisma.user.findUnique.mockResolvedValue({
+      googleAccessToken: encryptGoogleToken(ACCESS_ANTIGO),
+      googleRefreshToken: encryptGoogleToken(REFRESH),
+      googleTokenExpiresAt: JA_VENCIDO,
+    })
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ error: "unauthorized_client", error_description: "Unauthorized" }), { status: 401 })),
+    )
+
+    expect(await getValidAccessToken("u1")).toBeNull()
+    expect(dadosGravados()).toEqual({
+      googleAccessToken: null,
+      googleRefreshToken: null,
+      googleTokenExpiresAt: null,
+    })
+  })
+
+  it("falha passageira do Google (500) NÃO desconecta: estoura e mantém os tokens", async () => {
+    m.prisma.user.findUnique.mockResolvedValue({
+      googleAccessToken: encryptGoogleToken(ACCESS_ANTIGO),
+      googleRefreshToken: encryptGoogleToken(REFRESH),
+      googleTokenExpiresAt: JA_VENCIDO,
+    })
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("backend error", { status: 500 })))
+
+    await expect(getValidAccessToken("u1")).rejects.toThrow(/Google token refresh failed/)
+    expect(m.prisma.user.update).not.toHaveBeenCalled()
+  })
+
   it("token guardado que não decifra (senha do banco trocada) desconecta em vez de estourar", async () => {
     m.prisma.user.findUnique.mockResolvedValue({
       googleAccessToken: encryptGoogleToken(ACCESS_ANTIGO, "origem-antiga"),

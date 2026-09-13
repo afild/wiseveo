@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const m = vi.hoisted(() => ({
-  users: [] as Array<{ id: string; role: string; status: string; preferencesJson: unknown; createdAt: Date }>,
+  users: [] as Array<{ id: string; role: string; status: string; preferencesJson: unknown; createdAt: Date; googleRefreshToken?: string | null }>,
   connection: null as null | { telegramChatId: bigint },
   secrets: new Map<string, string>(),
   merged: [] as Array<{ userId: string; key: string; patch: Record<string, unknown> }>,
@@ -35,7 +35,7 @@ import { findBackupOwner, getBackupStatus, readLastRun, recordLastRun, updateBac
 
 beforeEach(() => {
   m.users = [
-    { id: "admin", role: "SUPERADMIN", status: "ACTIVE", preferencesJson: { notifications: { timezone: "America/New_York" }, backup: { enabled: true, driveGrantedAt: "2026-09-05T00:00:00Z" } }, createdAt: new Date("2026-01-01") },
+    { id: "admin", role: "SUPERADMIN", status: "ACTIVE", preferencesJson: { notifications: { timezone: "America/New_York" }, backup: { enabled: true, driveGrantedAt: "2026-09-05T00:00:00Z" } }, createdAt: new Date("2026-01-01"), googleRefreshToken: "cifrado" },
     { id: "u2", role: "USER", status: "ACTIVE", preferencesJson: {}, createdAt: new Date("2026-02-01") },
   ]
   m.connection = { telegramChatId: BigInt("123456") }
@@ -89,5 +89,11 @@ describe("getBackupStatus", () => {
       lastRun: null,
       folderId: null,
     })
+  })
+  it("consentimento dado mas acesso caído (sem refresh token): o cartão volta a oferecer Conectar", async () => {
+    m.users[0].googleRefreshToken = null
+    expect((await getBackupStatus())?.driveConnected).toBe(false)
+    // e o agendador pula em vez de falhar todo dia com o mesmo aviso
+    expect((await findBackupOwner())?.preferences.driveGrantedAt).toBeNull()
   })
 })

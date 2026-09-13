@@ -250,7 +250,10 @@ export async function getValidAccessToken(
     refreshed = await refreshAccessToken(refreshToken)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    if (message.includes("invalid_grant")) {
+    // `unauthorized_client` = o token não vale mais para este app (visto em produção em
+    // 11/09/2026 no token do Drive). Desfecho igual: sem desconectar, o cartão seguia
+    // "conectado" e o backup falhava todo dia com internalError, sem botão para reconectar.
+    if (message.includes("invalid_grant") || message.includes("unauthorized_client")) {
       await disconnectGoogleCalendar(userId)
       return null
     }

@@ -1472,6 +1472,7 @@
   "notifications": {
     "backup": {
       "failed": "WISEVEO backup failed today: {reason}. The previous copy in Drive is still there.",
+      "failedDriveNotConnected": "WISEVEO backup failed today: Google Drive access expired. Connect it again in Settings, on the Integrations tab. The previous copy in Drive is still there.",
       "ok": "WISEVEO backup done: {file}, {size}, {objects} objects, sent to Google Drive."
     },
     "bills": {
@@ -1906,6 +1907,7 @@
         "needsPrepare": "Prepare the database above before configuring backups.",
         "needsTick": "Backups use the notifications alarm. Register its address in the card above before turning on automatic backup.",
         "openFolder": "Open the folder in Drive",
+        "reasonDriveNotConnected": "Google Drive access expired. Connect it again with the button above",
         "restoreStep1": "Create a new Supabase project and copy its direct URL (port 5432).",
         "restoreStep2": "Download the most recent copy from the WISEVEO Backups folder.",
         "restoreStep3": "On your computer, restore with pg_restore using the manual's recipe: no --clean, with --use-list without the SCHEMA - public entry.",

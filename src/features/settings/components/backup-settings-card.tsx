@@ -235,7 +235,12 @@ export function BackupSettingsCard({ structureReady, tickConfigured, initial, re
                   {t("lastRunOk", { date: formatDate.format(new Date(view.lastRun.at)), file: view.lastRun.fileName ?? "", size: size(view.lastRun.sizeBytes ?? 0) })}
                 </p>
               ) : (
-                <p className="text-destructive">{t("lastRunFailed", { date: formatDate.format(new Date(view.lastRun.at)), reason: view.lastRun.message ?? "" })}</p>
+                <p className="text-destructive">
+                  {t("lastRunFailed", {
+                    date: formatDate.format(new Date(view.lastRun.at)),
+                    reason: view.lastRun.message === "driveNotConnected" ? t("reasonDriveNotConnected") : (view.lastRun.message ?? ""),
+                  })}
+                </p>
               )}
             </div>
 

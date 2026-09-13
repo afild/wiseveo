@@ -37,16 +37,21 @@ export async function findBackupOwner(): Promise<BackupOwner | null> {
   const user = await prisma.user.findFirst({
     where: { role: "SUPERADMIN", status: "ACTIVE" },
     orderBy: { createdAt: "asc" },
-    select: { id: true, preferencesJson: true },
+    select: { id: true, preferencesJson: true, googleRefreshToken: true },
   })
   if (!user) return null
   const prefs = asRecord(user.preferencesJson)
   const connection = await prisma.telegramConnection
     .findUnique({ where: { userId: user.id }, select: { telegramChatId: true, isActive: true } })
     .catch(() => null)
+  const preferences = resolveBackupPreferences(prefs.backup)
+  // O consentimento fica gravado, mas o acesso pode cair depois (o Google recusa a
+  // renovação e `getValidAccessToken` apaga os tokens). Sem token, o Drive não está
+  // conectado: o cartão volta a oferecer "Conectar" e o agendador pula em vez de falhar.
+  if (!user.googleRefreshToken) preferences.driveGrantedAt = null
   return {
     userId: user.id,
-    preferences: resolveBackupPreferences(prefs.backup),
+    preferences,
     timezone: resolveNotificationPreferences(prefs.notifications).timezone,
     locale: resolveLocaleOrInstallDefault(prefs.locale),
     chatId: connection && connection.isActive !== false ? connection.telegramChatId.toString() : null,
